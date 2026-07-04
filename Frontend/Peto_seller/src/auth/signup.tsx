@@ -2,6 +2,7 @@
 import  { useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { Visibility,VisibilityOff,ShoppingBasket } from '@mui/icons-material';
+import Button from '../components/button';
 
 
 const GoogleIcon = () => (
@@ -248,14 +249,7 @@ export default function signup() {
                                         I agree to the <a href="#" onClick={e => e.preventDefault()} className="text-primary hover:underline">Merchant Terms & Conditions</a> and the <a href="#" onClick={e => e.preventDefault()} className="text-primary hover:underline">Seller Fee Policy</a>.
                                     </label>
                                 </div>
-
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="w-full bg-primary text-on-primary font-headline-md text-headline-md py-4 rounded-xl shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 mt-4 font-bold disabled:opacity-70 flex items-center justify-center gap-2"
-                                >
-                                    {loading ? <><span className="material-symbols-outlined animate-spin">progress_activity</span> Submitting...</> : 'Submit Application'}
-                                </button>
+                                <Button isloading={loading} Button_name={'Submit Application'}  Button_loading_name="Submitting..." />
                             </form>
                         )}
 

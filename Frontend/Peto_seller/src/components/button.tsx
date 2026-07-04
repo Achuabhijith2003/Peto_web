@@ -1,4 +1,3 @@
-import React from 'react'
 import { Pets } from '@mui/icons-material';
 
 type Props = {
@@ -8,7 +7,7 @@ type Props = {
   onClick?: () => void;
 };
 
-export default function button({ isloading = false, Button_name = 'Sign In to Console', Button_loading_name = 'Signing In...', onClick }: Props) {
+export default function button({ isloading = false, Button_name = 'Sign In to Console', Button_loading_name = 'Loading...', onClick }: Props) {
   return (
     <button
       type="submit"

@@ -74,9 +74,22 @@
 
 
 @theme {
-  /* This automatically generates bg-primary, text-primary, etc. */
-  --color-primary: #8a6d1e;       /* Put your background color here */
+  /* Primary Colors */
+  --color-primary: #8a6d1e;
+  --color-on-primary: #ffffff;
   
-  /* This automatically generates bg-on-primary, text-on-primary, etc. */
-  --color-on-primary: #ffffff;    /* Put your text/icon color here */
+  /* Primary Container (Often used for backgrounds behind primary text) */
+  --color-primary-container: #fcf4d9;
+  --color-on-primary-container: #261900;
+
+  /* Surface Colors (Standard for sidebars and cards) */
+  --color-surface-container-low: #f7f9f9;
+  --color-surface-container-high: #eef2f2;
+  --color-on-surface: #1a1c1c;
+  --color-on-surface-variant: #444748;
+
+  /* Utility Colors */
+  --color-outline-variant: #c3c7c7;
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
 }

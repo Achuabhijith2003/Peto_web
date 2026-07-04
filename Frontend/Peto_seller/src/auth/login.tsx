@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Lock, Email, Visibility, VisibilityOff, ShoppingBasket,Pets } from '@mui/icons-material';
+import { Lock, Email, Visibility, VisibilityOff, ShoppingBasket } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import Button from '../components/button';
 
@@ -20,10 +20,14 @@ export default function login() {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
+
+
   const handleSignin = async () => {
     setLoading(true);
     // setErrorMsg('');
+    navigate("/seller/dashboard")
   }
+
 
   return (
     <div className="min-h-screen flex flex-col font-body-md text-body-md text-on-surface bg-background select-none">
@@ -130,15 +134,6 @@ export default function login() {
                 </div>
               </div>
               <Button isloading={loading} Button_name={'Sign In to Console'} Button_loading_name={'Signing In...'} onClick={handleSignin}/>
-
-              {/* <button
-              onClick={handleSignin}
-                type="submit"
-                disabled={loading}
-                className="w-full py-4 bg-primary text-on-primary font-bold rounded-xl shadow-md hover:brightness-105 active:scale-[0.98] transition-all disabled:opacity-70 flex items-center justify-center gap-2"
-              >
-                {loading ? <><span className="material-symbols-outlined animate-spin"><Pets/></span> Signing In...</> : 'Sign In to Console'}
-              </button> */}
 
               <p className="text-center text-sm text-on-surface-variant">
                 Interested in listing items?{' '}

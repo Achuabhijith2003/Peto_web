@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Email, ChevronLeft, VerifiedUser, ArrowForward, MarkEmailRead, Info } from '@mui/icons-material';
+import { Email, ChevronLeft, VerifiedUser, MarkEmailRead, Info } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import Button from '../components/button';
 
@@ -60,12 +60,7 @@ export default function forgot_password() {
                                 <Info className="material-symbols-outlined text-[16px] shrink-0 mt-0.5" />
                                 Check your spam folder if you don't see it. The reset link expires in 1 hour.
                             </div>
-                            <button
-                                onClick={() => navigate('/seller/login')}
-                                className="w-full py-3.5 bg-secondary text-on-secondary rounded-xl font-bold hover:brightness-105 active:scale-[0.98] transition-all shadow-sm"
-                            >
-                                Back to Login
-                            </button>
+                            <Button isloading={loading} Button_name={'Back to Login'} onClick={() => navigate('/seller/login')} />
                         </div>
                     ) : (
                         /* ── Form ── */
@@ -102,18 +97,8 @@ export default function forgot_password() {
                                     </div>
                                 </div>
 
-                                <button
-                                    onClick={sendMail}
-                                    type="submit"
-                                    disabled={loading}
-                                    className="w-full h-14 bg-primary text-on-primary font-headline-md font-bold rounded-lg shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 group disabled:opacity-70"
-                                >
-                                    {loading ? (
-                                        <><span className="material-symbols-outlined animate-spin">progress_activity</span> Sending...</>
-                                    ) : (
-                                        <><span>Send Recovery Link</span><ArrowForward className="material-symbols-outlined group-hover:translate-x-1 transition-transform" /></>
-                                    )}
-                                </button>
+                                <Button Button_loading_name="Sending...." Button_name="Send Recovery Link" isloading={loading} onClick={sendMail} />
+
                             </form>
 
                             <div className="mt-8">
