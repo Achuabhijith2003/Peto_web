@@ -14,7 +14,7 @@ const Layout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   return (
-    <div className="flex w-full h-screen bg-gray-50 overflow-hidden">
+    <div className="flex w-full h-screen bg-gray-50 ">
       {/* Sidebar */}
       <Sidebar isOpen={!isSidebarOpen} />
 

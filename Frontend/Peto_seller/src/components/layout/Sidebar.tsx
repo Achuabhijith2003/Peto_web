@@ -76,7 +76,7 @@ export default function Sidebar({ isOpen, }: SidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-grow overflow-y-auto py-4 px-3 space-y-1">
+      <nav className="flex-grow overflow-y-auto py-4 px-3">
         {navigationGroups.map((group) => (
           <div key={group.id}>
             {group.icon ? (

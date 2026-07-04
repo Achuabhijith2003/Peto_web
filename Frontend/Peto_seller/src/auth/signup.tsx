@@ -67,7 +67,7 @@ export default function signup() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-primary/30 to-black/30"></div>
 
-                    <div className="absolute inset-0 flex flex-col justify-end p-16 text-white space-y-8 z-10">
+                    <div className="absolute inset-0 flex flex-col justify-end p-16 text-white  z-10">
                         <div className="max-w-md">
                             <h2 className="font-headline-xl text-headline-xl mb-4 leading-tight drop-shadow-md">
                                 Empowering Pet Merchants.
