@@ -50,10 +50,11 @@ export default function Sidebar({ isOpen, }: SidebarProps) {
   const handleNavigation = (url: string) => navigate(`/${url}`);
 
   return (
-    <aside
+  <aside
       style={{ transition: 'width 0.25s cubic-bezier(0.4,0,0.2,1)' }}
-      className={`fixed top-0 left-0 z-40 h-screen flex flex-col bg-surface-container-low border-r border-outline-variant/30 select-none overflow-hidden ${isOpen ? 'w-[100px]' : 'w-68'
-        }`}
+      className={`fixed top-0 left-0 z-40 h-screen flex flex-col bg-surface-container-low border-r border-outline-variant/30 select-none overflow-hidden ${
+        isOpen ? 'w-[100px]' : 'w-64' 
+      }`}
     >
       {/* Header */}
       <div className="flex items-center px-4 py-5 border-b border-outline-variant/20">

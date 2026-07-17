@@ -10,18 +10,19 @@ import {
 } from '@mui/icons-material';
 
 const Layout = () => {
-  // Note: Adjust the true/false logic based on your Sidebar's prop expectations.
+  // true = expanded (sidebar is w-64), false = collapsed (sidebar is w-[100px])
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   return (
-    <div className="flex w-full h-screen bg-gray-50 ">
-      {/* Sidebar */}
+    <div className="flex w-full h-screen bg-surface-container-lowest overflow-hidden">
+      
+      {/* Sidebar receives the inverted state */}
       <Sidebar isOpen={!isSidebarOpen} />
 
       {/* Main Content Area */}
       <main 
         className={`flex-1 flex flex-col transition-all duration-300 ${
-          isSidebarOpen ? 'ml-60' : 'ml-[60px]'
+          isSidebarOpen ? 'ml-64' : 'ml-[100px]'
         }`}
       >
         {/* Top Header Bar */}
@@ -46,13 +47,12 @@ const Layout = () => {
           </div>
 
           {/* Right Side: Actions & Profile */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center">
             
             {/* Action Icons */}
             <div className="flex items-center gap-2 text-gray-700">
               <button className="relative p-2 hover:bg-gray-200 rounded-full transition-colors flex items-center justify-center">
                 <NotificationsNone className="h-6 w-6" />
-                {/* Red Notification Dot */}
                 <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-600 rounded-full border border-white"></span>
               </button>
               
@@ -65,7 +65,6 @@ const Layout = () => {
               </button>
             </div>
 
-            {/* Vertical Divider */}
             <div className="h-8 w-px bg-gray-300 mx-1"></div>
 
             {/* User Profile */}
@@ -91,7 +90,8 @@ const Layout = () => {
         </header>
 
         {/* Dynamic Content Area */}
-        <div className="flex-1 overflow-auto p-4 hide-scrollbar">
+        {/* 3. Restored flex-1 and overflow-y-auto to restrict scrollbar to this container */}
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-surface-container-low/30">
           <Outlet />
         </div>
       </main>
