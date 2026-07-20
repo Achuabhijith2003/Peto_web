@@ -4,6 +4,11 @@ import Home from "../pages/Home";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import ForgotPassword from "../pages/ForgotPassword";
+import Community from "../pages/Community";
+import Social from "../pages/Social";
+
+
+
 
 const AppRoutes = () => {
   return (
@@ -17,6 +22,8 @@ const AppRoutes = () => {
       <Route path="/forgot-password" element={<ForgotPassword />} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="/community" element={<Community />} />
+      <Route path="/social" element={<Social />} />
     </Routes>
   );
 };
