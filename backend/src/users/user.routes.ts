@@ -1,0 +1,24 @@
+import { Router } from "express";
+import * as userController from "./user.controller";
+import { authenticate } from "../auth/auth.middleware";
+
+const router = Router();
+
+router.get("/me", authenticate, userController.getCurrentUser);
+
+router.get("/search", authenticate, userController.searchUsers);
+
+router.get("/check-username", userController.checkUsername);
+
+router.get("/:id", authenticate, userController.getUserById);
+
+router.patch("/me", authenticate, userController.updateProfile);
+
+router.patch("/avatar", authenticate, userController.updateAvatar);
+
+router.patch("/cover", authenticate, userController.updateCover);
+
+router.delete("/me", authenticate, userController.deleteAccount);
+router.post("/profile", authenticate, userController.createProfile);
+
+export default router;

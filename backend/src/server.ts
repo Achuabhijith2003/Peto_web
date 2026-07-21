@@ -6,6 +6,7 @@ import cors from "cors";
 import compression from "compression";
 import morgan from "morgan";
 import authRoutes from "./auth/auth.routes";
+import userRoutes from "./users/user.routes";
 
 // Register routes
 
@@ -49,6 +50,7 @@ app.use(
   })
 );
 app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
 app.use(morgan("dev"));
 
 // ----------------------

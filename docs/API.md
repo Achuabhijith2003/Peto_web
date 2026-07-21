@@ -1,8 +1,12 @@
 # Peto Backend API Documentation
 
-Version: 1.0.0
+Version: 1.1.0
 
-Base URL
+---
+
+# Base URL
+
+Development
 
 ```
 http://localhost:5000/api
@@ -18,9 +22,9 @@ https://api.peto.com/api
 
 # Authentication
 
-Authentication is handled using **Supabase Auth**.
+Peto uses **Supabase Authentication**.
 
-The frontend authenticates with Supabase and sends the JWT Access Token to the backend.
+Frontend authenticates with Supabase and sends the Access Token to every protected endpoint.
 
 Header
 
@@ -28,40 +32,54 @@ Header
 Authorization: Bearer <access_token>
 ```
 
+Protected endpoints require this header.
+
 ---
 
-# Health Check
+# Response Format
 
-## GET /health
-
-Check server status.
-
-### Response
+## Success
 
 ```json
 {
     "success": true,
-    "status": "OK"
+    "data": {}
+}
+```
+
+## Error
+
+```json
+{
+    "success": false,
+    "message": "Error message"
+}
+```
+
+## Validation Error
+
+```json
+{
+    "success": false,
+    "errors": []
 }
 ```
 
 ---
 
-# API Status
+# Health
 
-## GET /api
+## GET /health
+
+Server health check.
+
+---
+
+# API
+
+## GET /
 
 Returns API information.
-
-Response
-
-```json
-{
-    "name": "Peto API",
-    "version": "1.0.0",
-    "status": "Running"
-}
-```
 
 ---
 
@@ -71,7 +89,7 @@ Response
 
 Register a new user.
 
-### Body
+Body
 
 ```json
 {
@@ -81,38 +99,18 @@ Register a new user.
 }
 ```
 
-### Success
-
-```json
-{
-    "success":true,
-    "user":{},
-    "session":{}
-}
-```
-
 ---
 
 ## POST /auth/login
 
 Login user.
 
-### Body
+Body
 
 ```json
 {
     "email":"john@gmail.com",
     "password":"Password@123"
-}
-```
-
-### Success
-
-```json
-{
-    "success":true,
-    "user":{},
-    "session":{}
 }
 ```
 
@@ -136,29 +134,39 @@ Authorization Required
 
 # Users
 
-## GET /users/:id
+## GET /users/me
 
-Get user profile.
+Returns logged in user's profile.
 
 Authorization Required
 
 ---
 
-## PATCH /users/:id
+## GET /users/:id
 
-Update profile.
+Get public profile.
 
 Authorization Required
+
+---
+
+## PATCH /users/me
+
+Update profile.
 
 Body
 
 ```json
 {
     "fullName":"John Doe",
+    "username":"john_doe",
     "bio":"Pet Lover",
+    "website":"https://example.com",
     "location":"India"
 }
 ```
+
+Authorization Required
 
 ---
 
@@ -166,12 +174,76 @@ Body
 
 Upload avatar.
 
+Content-Type
+
+```
+multipart/form-data
+```
+
+Field
+
+```
+avatar
+```
+
 Authorization Required
+
+---
+
+## PATCH /users/cover
+
+Upload cover image.
 
 Content-Type
 
 ```
 multipart/form-data
+```
+
+Field
+
+```
+cover
+```
+
+Authorization Required
+
+---
+
+## DELETE /users/me
+
+Delete account.
+
+Authorization Required
+
+---
+
+## GET /users/search
+
+Search users.
+
+Example
+
+```
+/users/search?q=john&page=1&limit=20
+```
+
+---
+
+## GET /users/check-username
+
+Example
+
+```
+/users/check-username?username=john_doe
+```
+
+Response
+
+```json
+{
+    "available": true
+}
 ```
 
 ---
@@ -182,13 +254,11 @@ multipart/form-data
 
 Create pet profile.
 
-Authorization Required
-
 ---
 
 ## GET /pets
 
-Get user's pets.
+Get current user's pets.
 
 ---
 
@@ -216,27 +286,30 @@ Delete pet.
 
 Create post.
 
-Authorization Required
+Supports
+
+- Text
+- Images
+- Videos
+- Multiple media
 
 ---
 
 ## GET /posts
 
-News Feed.
+Feed
 
-Pagination
+Supports pagination
 
 ```
-?page=1
-
-&limit=20
+?page=1&limit=20
 ```
 
 ---
 
 ## GET /posts/:id
 
-Get single post.
+Get post.
 
 ---
 
@@ -276,13 +349,13 @@ Delete comment.
 
 ## POST /likes
 
-Like post.
+Like content.
 
 ---
 
-## DELETE /likes/:postId
+## DELETE /likes/:id
 
-Unlike post.
+Remove like.
 
 ---
 
@@ -294,7 +367,7 @@ Bookmark post.
 
 ---
 
-## DELETE /bookmarks/:postId
+## DELETE /bookmarks/:id
 
 Remove bookmark.
 
@@ -311,6 +384,18 @@ Follow user.
 ## DELETE /follow/:userId
 
 Unfollow user.
+
+---
+
+## GET /followers
+
+Get followers.
+
+---
+
+## GET /following
+
+Get following.
 
 ---
 
@@ -331,6 +416,12 @@ Community list.
 ## GET /communities/:id
 
 Community details.
+
+---
+
+## PATCH /communities/:id
+
+Update community.
 
 ---
 
@@ -356,7 +447,7 @@ Conversation list.
 
 ## GET /messages/:userId
 
-Chat messages.
+Conversation.
 
 ---
 
@@ -376,7 +467,7 @@ Get notifications.
 
 ## PATCH /notifications/read
 
-Mark as read.
+Mark notifications as read.
 
 ---
 
@@ -421,25 +512,28 @@ Returns
 
 ---
 
+## DELETE /media/:id
+
+Delete uploaded media.
+
+---
+
 # Search
 
 ## GET /search
 
-Query
+Example
 
 ```
-?q=golden retriever
+/search?q=golden retriever
 ```
 
-Returns
+Searches
 
-Users
-
-Posts
-
-Communities
-
-Pets
+- Users
+- Pets
+- Posts
+- Communities
 
 ---
 
@@ -447,13 +541,19 @@ Pets
 
 ## POST /ai/chat
 
-Chat with AI assistant.
+AI Chat.
 
 ---
 
 ## POST /ai/analyze-pet
 
-Analyze pet image.
+Pet image analysis.
+
+---
+
+## POST /ai/caption
+
+Generate captions.
 
 ---
 
@@ -461,7 +561,12 @@ Analyze pet image.
 
 ## POST /reports
 
-Report post/user/community.
+Report
+
+- User
+- Post
+- Comment
+- Community
 
 ---
 
@@ -469,44 +574,25 @@ Report post/user/community.
 
 ## GET /admin/users
 
-Admin only.
+List users.
 
 ---
 
-## DELETE /admin/user/:id
+## PATCH /admin/users/:id
 
-Admin only.
+Update user.
 
 ---
 
-# Response Format
+## DELETE /admin/users/:id
 
-Success
+Delete user.
 
-```json
-{
-    "success":true,
-    "data":{}
-}
-```
+---
 
-Error
+## GET /admin/reports
 
-```json
-{
-    "success":false,
-    "message":"Error message"
-}
-```
-
-Validation Error
-
-```json
-{
-    "success":false,
-    "errors":[]
-}
-```
+Reported content.
 
 ---
 
@@ -528,19 +614,21 @@ Validation Error
 
 ---
 
-# Future APIs
+# API Development Roadmap
 
-- Stories
-- Reels
-- Live Streaming
-- Voice Chat
-- Marketplace
-- Pet Adoption
-- Veterinary Booking
-- AI Recommendation Engine
-- AI Pet Health Detection
-- Push Notifications
-- Analytics
-- Premium Subscription
-- Payments
-- Moderation System
+- ✅ Foundation
+- ✅ Authentication
+- ✅ User Profile
+- ⏳ Media Upload
+- ⏳ Pets
+- ⏳ Posts
+- ⏳ Comments
+- ⏳ Likes
+- ⏳ Bookmarks
+- ⏳ Follow System
+- ⏳ Communities
+- ⏳ Notifications
+- ⏳ Chat
+- ⏳ Search
+- ⏳ AI
+- ⏳ Admin
