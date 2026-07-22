@@ -19,6 +19,7 @@ router.patch("/avatar", authenticate, userController.updateAvatar);
 router.patch("/cover", authenticate, userController.updateCover);
 
 router.delete("/me", authenticate, userController.deleteAccount);
+
 router.post("/profile", authenticate, userController.createProfile);
 
 export default router;

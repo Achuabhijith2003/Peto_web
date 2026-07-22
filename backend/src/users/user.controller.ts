@@ -187,12 +187,60 @@ export const searchUsers = async (
     }
 };
 
-export const checkUsername = async (req: Request, res: Response) => {
-    res.json({
-        success: true,
-        username: req.query.username,
-        available: true,
-    });
+export const checkUsername = async (
+    req: Request,
+    res: Response
+) => {
+    try {
+        const username = (req.query.username as string)?.trim().toLowerCase();
+
+        if (!username) {
+            return res.status(400).json({
+                success: false,
+                message: "Username is required.",
+            });
+        }
+
+        // Username validation
+        const usernameRegex = /^[a-z0-9_]{3,20}$/;
+
+        if (!usernameRegex.test(username)) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Username must be 3-20 characters and contain only lowercase letters, numbers, and underscores.",
+            });
+        }
+
+        const { data, error } = await supabase
+            .from("profiles")
+            .select("id")
+            .eq("username", username)
+            .maybeSingle();
+
+        if (error) {
+            return res.status(500).json({
+                success: false,
+                message: error.message,
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            username,
+            available: !data,
+            message: data
+                ? "Username is already taken."
+                : "Username is available.",
+        });
+    } catch (err) {
+        console.error("Check Username Error:", err);
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error",
+        });
+    }
 };
 
 export const createProfile = async (

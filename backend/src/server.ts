@@ -7,6 +7,9 @@ import compression from "compression";
 import morgan from "morgan";
 import authRoutes from "./auth/auth.routes";
 import userRoutes from "./users/user.routes";
+import mediaRoutes from "./media/media.routes";
+import postRoutes from "./posts/post.routes";
+
 
 // Register routes
 
@@ -49,8 +52,15 @@ app.use(
     limit: "10mb",
   })
 );
+
+// ----------------------
+// Routes
+// ----------------------
+
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/media", mediaRoutes);
+app.use("/api/posts", postRoutes);
 app.use(morgan("dev"));
 
 // ----------------------
