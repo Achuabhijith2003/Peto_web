@@ -6,7 +6,7 @@ const router = Router();
 
 router.get("/me", authenticate, userController.getCurrentUser);
 
-router.get("/search", authenticate, userController.searchUsers);
+router.get("/search",  userController.searchUsers);
 
 router.get("/check-username", userController.checkUsername);
 

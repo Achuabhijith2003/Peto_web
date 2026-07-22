@@ -36,11 +36,61 @@ export const getCurrentUser = async (
     }
 };
 
-export const getUserById = async (req: Request, res: Response) => {
-    res.json({
-        success: true,
-        userId: req.params.id,
-    });
+
+export const getUserById = async (
+    req: Request,
+    res: Response
+) => {
+    try {
+        const { id } = req.params;
+
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                message: "User ID is required.",
+            });
+        }
+
+        const { data, error } = await supabase
+            .from("profiles")
+            .select(`
+        id,
+        username,
+        full_name,
+        bio,
+        avatar_url,
+        cover_url,
+        location,
+        website,
+        verified,
+        followers_count,
+        following_count,
+        posts_count,
+        created_at
+      `)
+            .eq("id", id)
+            .single();
+
+        if (error) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found.",
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            data,
+        });
+
+    } catch (err) {
+        console.error("Get User By ID Error:", err);
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error",
+        });
+    }
 };
 
 export const updateProfile = async (req: Request, res: Response) => {
@@ -71,11 +121,70 @@ export const deleteAccount = async (_req: Request, res: Response) => {
     });
 };
 
-export const searchUsers = async (req: Request, res: Response) => {
-    res.json({
-        success: true,
-        query: req.query.q,
-    });
+export const searchUsers = async (
+    req: Request,
+    res: Response
+) => {
+    try {
+        const q = (req.query.q as string)?.trim();
+
+        const page = Number(req.query.page ?? 1);
+        const limit = Math.min(Number(req.query.limit ?? 20), 50);
+
+        if (!q) {
+            return res.status(400).json({
+                success: false,
+                message: "Search query is required.",
+            });
+        }
+
+        const from = (page - 1) * limit;
+        const to = from + limit - 1;
+
+        const { data, error, count } = await supabase
+            .from("profiles")
+            .select(
+                `
+        id,
+        username,
+        full_name,
+        avatar_url,
+        bio,
+        verified,
+        followers_count,
+        following_count,
+        posts_count
+      `,
+                { count: "exact" }
+            )
+            .or(`username.ilike.%${q}%,full_name.ilike.%${q}%`)
+            .range(from, to);
+
+        if (error) {
+            return res.status(500).json({
+                success: false,
+                message: error.message,
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            data,
+            pagination: {
+                page,
+                limit,
+                total: count ?? 0,
+                totalPages: Math.ceil((count ?? 0) / limit),
+            },
+        });
+    } catch (err) {
+        console.error(err);
+
+        return res.status(500).json({
+            success: false,
+            message: "Internal Server Error",
+        });
+    }
 };
 
 export const checkUsername = async (req: Request, res: Response) => {
