@@ -105,3 +105,26 @@ export async function uploadThumbnail(
         .data.publicUrl;
 
 }
+
+
+
+
+export async function deleteStorageFile(
+    fileUrl: string
+) {
+
+    if (!fileUrl) return;
+
+    const parts = fileUrl.split("/");
+
+    const bucket = parts[parts.length - 2];
+
+    const file = parts[parts.length - 1];
+
+    await supabase.storage
+
+        .from(bucket)
+
+        .remove([file]);
+
+}
