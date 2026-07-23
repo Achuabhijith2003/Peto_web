@@ -506,3 +506,171 @@ export async function deletePostById(
     };
 
 }
+
+
+export async function getMyPostsService(
+    userId: string,
+    page: number,
+    limit: number
+) {
+
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    //-----------------------------------
+    // Count
+    //-----------------------------------
+
+    const { count } = await supabase
+
+        .from("posts")
+
+        .select("*", {
+
+            count: "exact",
+
+            head: true
+
+        })
+
+        .eq("user_id", userId);
+
+    //-----------------------------------
+    // Posts
+    //-----------------------------------
+
+    const { data, error } = await supabase
+
+        .from("posts")
+
+        .select(`
+            *,
+            profiles(
+                id,
+                username,
+                full_name,
+                avatar_url,
+                verified
+            ),
+            media(
+                *
+            )
+        `)
+
+        .eq("user_id", userId)
+
+        .order("created_at", {
+
+            ascending: false
+
+        })
+
+        .range(from, to);
+
+    if (error) throw error;
+
+    return {
+
+        posts: data,
+
+        pagination: {
+
+            page,
+
+            limit,
+
+            total: count,
+
+            totalPages: Math.ceil((count || 0) / limit)
+
+        }
+
+    };
+
+}
+
+
+export async function getUserPostsService(
+    userId: string,
+    page: number,
+    limit: number
+) {
+
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    //----------------------------------
+    // Count
+    //----------------------------------
+
+    const { count } = await supabase
+
+        .from("posts")
+
+        .select("*", {
+
+            count: "exact",
+
+            head: true
+
+        })
+
+        .eq("user_id", userId)
+
+        .eq("visibility", "public");
+
+    //----------------------------------
+    // Posts
+    //----------------------------------
+
+    const { data, error } = await supabase
+
+        .from("posts")
+
+        .select(`
+            *,
+            profiles(
+                id,
+                username,
+                full_name,
+                avatar_url,
+                verified
+            ),
+            media(
+                *
+            )
+        `)
+
+        .eq("user_id", userId)
+
+        .eq("visibility", "public")
+
+        .order("created_at", {
+
+            ascending: false
+
+        })
+
+        .range(from, to);
+
+    if (error) throw error;
+
+    return {
+
+        posts: data,
+
+        pagination: {
+
+            page,
+
+            limit,
+
+            total: count,
+
+            totalPages: Math.ceil((count || 0) / limit)
+
+        }
+
+    };
+
+}

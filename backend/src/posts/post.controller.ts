@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 
 import { createPostSchema } from "./post.validation";
 
-import { createPostService, getPostById, updatePostById, deletePostById } from "./post.service";
+import { createPostService, getPostById, updatePostById, deletePostById, getMyPostsService, getUserPostsService } from "./post.service";
 
 export const createPost = async (
 
@@ -72,6 +72,8 @@ export async function getPost(req: Request, res: Response) {
         const postId = (req as any).params.id;
 
         console.log("UserID: ", userId, "\nPostid: ", postId);
+        console.log("Calling Function: getPost");
+        
 
 
         const post = await getPostById(postId, userId);
@@ -226,6 +228,80 @@ export async function deletePost(
 
             message: err.message
 
+        });
+
+    }
+}
+
+
+export async function getMyPosts(
+    req: Request,
+    res: Response
+) {
+    try {
+
+        const userId = (req as any).user.id;
+
+        const page = Number(req.query.page) || 1;
+        const limit = Number(req.query.limit) || 10;
+
+        const data = await getMyPostsService(
+            userId,
+            page,
+            limit
+        );
+
+        return res.json({
+            success: true,
+            ...data
+        });
+
+    } catch (err: any) {
+
+        console.error(err);
+
+        return res.status(500).json({
+
+            success: false,
+
+            message: err.message
+
+        });
+
+    }
+}
+
+
+export async function getUserPosts(
+    req: Request,
+    res: Response
+) {
+    try {
+
+        const userId = (req as any).params.id;
+
+        const page = Number(req.query.page) || 1;
+
+        const limit = Number(req.query.limit) || 10;
+
+        const result = await getUserPostsService(
+            userId,
+            page,
+            limit
+        );
+
+        return res.json({
+            success: true,
+            ...result
+        });
+
+    } catch (err: any) {
+
+        console.error(err);
+
+        return res.status(500).json({
+            success: false,
+            message: err.message
         });
 
     }
