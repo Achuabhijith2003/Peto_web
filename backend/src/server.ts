@@ -11,6 +11,7 @@ import mediaRoutes from "./media/media.routes";
 import postRoutes from "./posts/post.routes";
 import likeRoutes from "./likes/like.routes";
 import commentRoutes from "./comments/comment.routes";
+import bookmarkRoutes from "./bookmarks/bookmark.routes";
 
 
 // Register routes
@@ -65,6 +66,8 @@ app.use("/api/media", mediaRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api", likeRoutes);
 app.use("/api", commentRoutes);
+app.use("/api/my", bookmarkRoutes);
+
 app.use(morgan("dev"));
 
 // ----------------------
