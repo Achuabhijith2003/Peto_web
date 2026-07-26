@@ -1,35 +1,11 @@
 import { supabase } from "../config/supabase";
 
-export async function mapPostForFeed(
+export function mapPostForFeed(
     post: any,
-    currentUserId: string
+    currentUserId: string,
+    likedPosts: Set<string>,
+    bookmarkedPosts: Set<string>
 ) {
-
-    // Check if current user liked the post
-    const { data: like } = await supabase
-
-        .from("likes")
-
-        .select("id")
-
-        .eq("post_id", post.id)
-
-        .eq("user_id", currentUserId)
-
-        .maybeSingle();
-
-    // Check if current user bookmarked the post
-    const { data: bookmark } = await supabase
-
-        .from("bookmarks")
-
-        .select("id")
-
-        .eq("post_id", post.id)
-
-        .eq("user_id", currentUserId)
-
-        .maybeSingle();
 
     return {
 
@@ -57,23 +33,23 @@ export async function mapPostForFeed(
 
         },
 
-        media: post.media || [],
+        media: post.media ?? [],
 
         stats: {
 
-            likes: post.likes_count || 0,
+            likes: post.likes_count,
 
-            comments: post.comments_count || 0,
+            comments: post.comments_count,
 
-            bookmarks: post.bookmarks_count || 0
+            bookmarks: post.bookmarks_count
 
         },
 
         viewer: {
 
-            liked: !!like,
+            liked: likedPosts.has(post.id),
 
-            bookmarked: !!bookmark,
+            bookmarked: bookmarkedPosts.has(post.id),
 
             owner: post.user_id === currentUserId
 

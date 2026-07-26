@@ -1,5 +1,7 @@
 import { supabase } from "../config/supabase";
 import { deleteStorageFile } from "../media/storage.service";
+import { mapPostForFeed } from "./feed.mapper";
+
 
 interface CreatePostData {
 
@@ -89,16 +91,9 @@ export async function createPostService(
 
 
 export async function getPostById(
-
-    postId: string,
-
+   postId: string,
     currentUserId: string
-
 ) {
-
-    //--------------------------------------------------
-    // Get Post
-    //--------------------------------------------------
 
     const { data: post, error } = await supabase
 
@@ -106,177 +101,70 @@ export async function getPostById(
 
         .select(`
             *,
-            profiles (
+            profiles(
                 id,
                 username,
                 full_name,
                 avatar_url,
                 verified
-            )
+            ),
+            media(*)
         `)
 
         .eq("id", postId)
 
         .single();
 
-    if (error || !post) {
+    if (error)
+        throw error;
 
-        return null;
-
-    }
-
-    //--------------------------------------------------
-    // Visibility Check
-    //--------------------------------------------------
-
-    if (
-
-        post.visibility === "private"
-
-        &&
-
-        post.user_id !== currentUserId
-
-    ) {
-
-        return null;
-
-    }
-
-    //--------------------------------------------------
-    // Media
-    //--------------------------------------------------
-
-    const { data: media } = await supabase
-
-        .from("media")
-
-        .select("*")
-
-        .eq("post_id", postId)
-
-        .order("created_at");
-
-    //--------------------------------------------------
-    // Like Count
-    //--------------------------------------------------
-
-    const { count: likeCount } = await supabase
+    const { data: like } = await supabase
 
         .from("likes")
 
-        .select("*", {
-
-            head: true,
-
-            count: "exact"
-
-        })
-
-        .eq("post_id", postId);
-
-    //--------------------------------------------------
-    // Comment Count
-    //--------------------------------------------------
-
-    const { count: commentCount } = await supabase
-
-        .from("comments")
-
-        .select("*", {
-
-            head: true,
-
-            count: "exact"
-
-        })
-
-        .eq("post_id", postId);
-
-    //--------------------------------------------------
-    // Bookmark Count
-    //--------------------------------------------------
-
-    const { count: bookmarkCount } = await supabase
-
-        .from("bookmarks")
-
-        .select("*", {
-
-            head: true,
-
-            count: "exact"
-
-        })
-
-        .eq("post_id", postId);
-
-    //--------------------------------------------------
-    // Did current user like?
-    //--------------------------------------------------
-
-    const { data: liked } = await supabase
-
-        .from("likes")
-
-        .select("id")
-
-        .eq("post_id", postId)
+        .select("post_id")
 
         .eq("user_id", currentUserId)
 
+        .eq("post_id", post.id)
+
         .maybeSingle();
 
-    //--------------------------------------------------
-    // Did current user bookmark?
-    //--------------------------------------------------
-
-    const { data: bookmarked } = await supabase
+    const { data: bookmark } = await supabase
 
         .from("bookmarks")
 
-        .select("id")
-
-        .eq("post_id", postId)
+        .select("post_id")
 
         .eq("user_id", currentUserId)
 
+        .eq("post_id", post.id)
+
         .maybeSingle();
 
-    //--------------------------------------------------
-    // Response
-    //--------------------------------------------------
+    const likedPosts = new Set<string>();
 
-    return {
+    const bookmarkedPosts = new Set<string>();
 
-        ...post,
+    if (like)
+        likedPosts.add(post.id);
 
-        media,
+    if (bookmark)
+        bookmarkedPosts.add(post.id);
 
-        stats: {
+    return mapPostForFeed(
 
-            likes: likeCount ?? 0,
+        post,
 
-            comments: commentCount ?? 0,
+        currentUserId,
 
-            bookmarks: bookmarkCount ?? 0
+        likedPosts,
 
-        },
+        bookmarkedPosts
 
-        viewer: {
-
-            liked: !!liked,
-
-            bookmarked: !!bookmarked,
-
-            owner: post.user_id === currentUserId
-
-        }
-
-    };
+    );
 
 }
-
 
 
 export async function updatePostById(
@@ -515,31 +403,10 @@ export async function getMyPostsService(
 ) {
 
     const from = (page - 1) * limit;
+
     const to = from + limit - 1;
 
-    //-----------------------------------
-    // Count
-    //-----------------------------------
-
-    const { count } = await supabase
-
-        .from("posts")
-
-        .select("*", {
-
-            count: "exact",
-
-            head: true
-
-        })
-
-        .eq("user_id", userId);
-
-    //-----------------------------------
-    // Posts
-    //-----------------------------------
-
-    const { data, error } = await supabase
+    const { data: posts, count } = await supabase
 
         .from("posts")
 
@@ -552,26 +419,76 @@ export async function getMyPostsService(
                 avatar_url,
                 verified
             ),
-            media(
-                *
-            )
-        `)
+            media(*)
+        `, { count: "exact" })
 
         .eq("user_id", userId)
 
-        .order("created_at", {
-
-            ascending: false
-
-        })
+        .order("created_at", { ascending: false })
 
         .range(from, to);
 
-    if (error) throw error;
+    const postIds = (posts ?? []).map(post => post.id);
+
+    const { data: likes } = await supabase
+
+        .from("likes")
+
+        .select("post_id")
+
+        .eq("user_id", userId)
+
+        .in("post_id", postIds);
+
+    const { data: bookmarks } = await supabase
+
+        .from("bookmarks")
+
+        .select("post_id")
+
+        .eq("user_id", userId)
+
+        .in("post_id", postIds);
+
+    const likedPosts = new Set(
+
+        (likes ?? []).map(
+
+            x => x.post_id
+
+        )
+
+    );
+
+    const bookmarkedPosts = new Set(
+
+        (bookmarks ?? []).map(
+
+            x => x.post_id
+
+        )
+
+    );
+
+    const feed = posts?.map(post =>
+
+        mapPostForFeed(
+
+            post,
+
+            userId,
+
+            likedPosts,
+
+            bookmarkedPosts
+
+        )
+
+    );
 
     return {
 
-        posts: data,
+        posts: feed,
 
         pagination: {
 
@@ -581,7 +498,7 @@ export async function getMyPostsService(
 
             total: count,
 
-            totalPages: Math.ceil((count || 0) / limit)
+            totalPages: Math.ceil((count ?? 0) / limit)
 
         }
 
@@ -589,41 +506,18 @@ export async function getMyPostsService(
 
 }
 
-
 export async function getUserPostsService(
-    userId: string,
+    profileId: string,
+    currentUserId: string,
     page: number,
     limit: number
 ) {
 
     const from = (page - 1) * limit;
+
     const to = from + limit - 1;
 
-    //----------------------------------
-    // Count
-    //----------------------------------
-
-    const { count } = await supabase
-
-        .from("posts")
-
-        .select("*", {
-
-            count: "exact",
-
-            head: true
-
-        })
-
-        .eq("user_id", userId)
-
-        .eq("visibility", "public");
-
-    //----------------------------------
-    // Posts
-    //----------------------------------
-
-    const { data, error } = await supabase
+    const { data: posts, count } = await supabase
 
         .from("posts")
 
@@ -636,28 +530,78 @@ export async function getUserPostsService(
                 avatar_url,
                 verified
             ),
-            media(
-                *
-            )
-        `)
+            media(*)
+        `, { count: "exact" })
 
-        .eq("user_id", userId)
+        .eq("user_id", profileId)
 
         .eq("visibility", "public")
 
-        .order("created_at", {
-
-            ascending: false
-
-        })
+        .order("created_at", { ascending: false })
 
         .range(from, to);
 
-    if (error) throw error;
+    const postIds = (posts ?? []).map(post => post.id);
+
+    const { data: likes } = await supabase
+
+        .from("likes")
+
+        .select("post_id")
+
+        .eq("user_id", currentUserId)
+
+        .in("post_id", postIds);
+
+    const { data: bookmarks } = await supabase
+
+        .from("bookmarks")
+
+        .select("post_id")
+
+        .eq("user_id", currentUserId)
+
+        .in("post_id", postIds);
+
+    const likedPosts = new Set(
+
+        (likes ?? []).map(
+
+            x => x.post_id
+
+        )
+
+    );
+
+    const bookmarkedPosts = new Set(
+
+        (bookmarks ?? []).map(
+
+            x => x.post_id
+
+        )
+
+    );
+
+    const feed = posts?.map(post =>
+
+        mapPostForFeed(
+
+            post,
+
+            currentUserId,
+
+            likedPosts,
+
+            bookmarkedPosts
+
+        )
+
+    );
 
     return {
 
-        posts: data,
+        posts: feed,
 
         pagination: {
 
@@ -667,7 +611,7 @@ export async function getUserPostsService(
 
             total: count,
 
-            totalPages: Math.ceil((count || 0) / limit)
+            totalPages: Math.ceil((count ?? 0) / limit)
 
         }
 
