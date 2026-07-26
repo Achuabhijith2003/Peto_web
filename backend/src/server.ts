@@ -1,6 +1,11 @@
 import "dotenv/config";
 
 import express from "express";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 import helmet from "helmet";
 import cors from "cors";
 import compression from "compression";
@@ -92,6 +97,20 @@ app.get("/api", (_, res) => {
     version: "1.0.0",
     status: "Running",
   });
+});
+
+// ----------------------
+// Frontend Serving
+// ----------------------
+
+const frontendPath = path.join(__dirname, "../../Frontend/Peto_user/dist");
+app.use(express.static(frontendPath));
+
+app.use((req, res, next) => {
+  if (req.method !== "GET" || req.originalUrl.startsWith("/api")) {
+    return next();
+  }
+  res.sendFile(path.join(frontendPath, "index.html"));
 });
 
 // ----------------------
