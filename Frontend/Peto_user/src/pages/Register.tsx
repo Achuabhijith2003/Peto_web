@@ -1,6 +1,10 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
+import api from "../utils/api";
+import { useAuth } from "../context/AuthContext";
+import { useState } from "react";
 
 import AuthLayout from "../components/auth/AuthLayout";
 import InputField from "../components/auth/InputField";
@@ -29,8 +33,25 @@ const Register = () => {
 
   const password = watch("password");
 
-  const onSubmit = (data: RegisterForm) => {
-    console.log(data);
+  const navigate = useNavigate();
+  const { login } = useAuth();
+  const [serverError, setServerError] = useState("");
+
+  const onSubmit = async (data: RegisterForm) => {
+    try {
+      setServerError("");
+      const response = await api.post("/auth/signup", {
+        email: data.email,
+        password: data.password,
+        username: data.fullName.toLowerCase().replace(/\s+/g, ""), // Generating a simple username for signup
+      });
+      if (response.data.success) {
+        login(response.data.token, response.data.user);
+        navigate("/create-profile");
+      }
+    } catch (error: any) {
+      setServerError(error.response?.data?.message || "Registration failed");
+    }
   };
 
   return (
@@ -111,6 +132,10 @@ const Register = () => {
           <p className="text-sm text-red-500">
             {errors.agree.message}
           </p>
+        )}
+
+        {serverError && (
+          <p className="text-sm text-red-500 text-center">{serverError}</p>
         )}
 
         <Button type="submit">

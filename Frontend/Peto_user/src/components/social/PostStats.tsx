@@ -7,13 +7,13 @@ import {
 interface PostStatsProps {
   likes: number;
   comments: number;
-  shares: number;
+  bookmarks: number;
 }
 
 const PostStats = ({
   likes,
   comments,
-  shares,
+  bookmarks,
 }: PostStatsProps) => {
   return (
     <div className="flex items-center justify-between border-y px-6 py-3 text-sm text-slate-500">
@@ -27,7 +27,7 @@ const PostStats = ({
 
       <div>{comments} Comments</div>
 
-      <div>{shares} Shares</div>
+      <div>{bookmarks} Bookmarks</div>
     </div>
   );
 };

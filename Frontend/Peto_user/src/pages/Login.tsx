@@ -1,6 +1,10 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
+import api from "../utils/api";
+import { useAuth } from "../context/AuthContext";
+import { useState } from "react";
 
 import AuthLayout from "../components/auth/AuthLayout";
 import InputField from "../components/auth/InputField";
@@ -24,8 +28,34 @@ const Login = () => {
     formState: { errors },
   } = useForm<LoginForm>();
 
-  const onSubmit = (data: LoginForm) => {
-    console.log(data);
+  const navigate = useNavigate();
+  const { login } = useAuth();
+  const [serverError, setServerError] = useState("");
+
+  const onSubmit = async (data: LoginForm) => {
+    try {
+      setServerError("");
+      const response = await api.post("/auth/login", data);
+      if (response.data.success) {
+        const token = response.data.session?.access_token || response.data.token;
+        login(token, response.data.user);
+        
+        try {
+          // Check if profile exists
+          const meRes = await api.get("/users/me", { headers: { Authorization: `Bearer ${token}` } });
+          if (!meRes.data.profile) {
+            navigate("/create-profile");
+          } else {
+            navigate("/profile");
+          }
+        } catch (err: any) {
+          // If checking fails, fallback to create profile
+          navigate("/create-profile");
+        }
+      }
+    } catch (error: any) {
+      setServerError(error.response?.data?.message || "Login failed");
+    }
   };
 
   return (
@@ -54,7 +84,15 @@ const Login = () => {
         <PasswordField
           label="Password"
           placeholder="Enter your password"
+          error={errors.password?.message}
+          {...register("password", {
+            required: "Password is required",
+          })}
         />
+
+        {serverError && (
+          <p className="text-sm text-red-500 text-center">{serverError}</p>
+        )}
 
         <div className="flex items-center justify-between">
           <RememberCheckbox label="Remember me" />

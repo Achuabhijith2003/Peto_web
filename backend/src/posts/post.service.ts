@@ -618,3 +618,65 @@ export async function getUserPostsService(
     };
 
 }
+
+export async function getGlobalFeedService(
+    currentUserId: string,
+    page: number,
+    limit: number
+) {
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    const { data: posts, count } = await supabase
+        .from("posts")
+        .select(`
+            *,
+            profiles(
+                id,
+                username,
+                full_name,
+                avatar_url,
+                verified
+            ),
+            media(*)
+        `, { count: "exact" })
+        .eq("visibility", "public")
+        .order("created_at", { ascending: false })
+        .range(from, to);
+
+    const postIds = (posts ?? []).map(post => post.id);
+
+    const { data: likes } = await supabase
+        .from("likes")
+        .select("post_id")
+        .eq("user_id", currentUserId)
+        .in("post_id", postIds);
+
+    const { data: bookmarks } = await supabase
+        .from("bookmarks")
+        .select("post_id")
+        .eq("user_id", currentUserId)
+        .in("post_id", postIds);
+
+    const likedPosts = new Set((likes ?? []).map(x => x.post_id));
+    const bookmarkedPosts = new Set((bookmarks ?? []).map(x => x.post_id));
+
+    const feed = posts?.map(post =>
+        mapPostForFeed(
+            post,
+            currentUserId,
+            likedPosts,
+            bookmarkedPosts
+        )
+    );
+
+    return {
+        posts: feed,
+        pagination: {
+            page,
+            limit,
+            total: count,
+            totalPages: Math.ceil((count ?? 0) / limit)
+        }
+    };
+}

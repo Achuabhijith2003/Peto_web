@@ -1,45 +1,43 @@
+import { useEffect, useState } from "react";
+import api from "../../utils/api";
 import Stories from "./Stories";
 import CreatePost from "./CreatePost";
 import PostCard from "./PostCard";
 
-import avatar1 from "../../assets/hero.png";
-import avatar2 from "../../assets/hero.png";
-
-import post1 from "../../assets/hero.png";
-import post2 from "../../assets/hero.png";
-
 const Feed = () => {
+    const [posts, setPosts] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    const fetchFeed = async () => {
+        try {
+            const response = await api.get("/posts/feed");
+            setPosts(response.data.posts || []);
+        } catch (error) {
+            console.error("Error fetching feed:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchFeed();
+    }, []);
+
     return (
         <section className="space-y-8">
             <Stories />
 
-            <CreatePost />
+            <CreatePost onPostCreated={fetchFeed} />
 
-            <PostCard
-                avatar={avatar1}
-                user="Emma Wilson"
-                location="California"
-                time="12 min ago"
-                pet="Golden Retriever"
-                caption="Charlie enjoyed his first beach day! 🌊🐶"
-                images={[post1,post2]}
-                likes={328}
-                comments={41}
-                shares={17}
-            />
-
-            <PostCard
-                avatar={avatar2}
-                user="Alex Brown"
-                location="New York"
-                time="1 hour ago"
-                pet="Persian Cat"
-                caption="Luna's healthy breakfast today!"
-                images={[post2]}
-                likes={514}
-                comments={73}
-                shares={28}
-            />
+            {loading ? (
+                <div className="text-center py-10">Loading feed...</div>
+            ) : posts.length > 0 ? (
+                posts.map((post) => (
+                    <PostCard key={post.id} post={post} />
+                ))
+            ) : (
+                <div className="text-center py-10 text-gray-500">No posts yet.</div>
+            )}
         </section>
     );
 };

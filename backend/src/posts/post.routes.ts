@@ -3,7 +3,7 @@ import { Router } from "express";
 import { authenticate } from "../auth/auth.middleware";
 
 
-import { createPost, getPost, updatePost, deletePost, getMyPosts, getUserPosts } from "./post.controller";
+import { createPost, getPost, updatePost, deletePost, getMyPosts, getUserPosts, getGlobalFeed } from "./post.controller";
 import { validateUpdatePost } from "./post.validation";
 
 const router = Router();
@@ -26,6 +26,12 @@ router.get(
 
     getMyPosts
 
+);
+
+router.get(
+    "/feed",
+    authenticate,
+    getGlobalFeed
 );
 
 router.get("/:id", authenticate, getPost);

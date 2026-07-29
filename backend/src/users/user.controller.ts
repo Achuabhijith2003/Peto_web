@@ -14,16 +14,17 @@ export const getCurrentUser = async (
             .eq("id", user.id)
             .single();
 
-        if (error) {
-            return res.status(404).json({
+        if (error && error.code !== "PGRST116") { // PGRST116 is no rows returned
+            return res.status(400).json({
                 success: false,
-                message: "Profile not found",
+                message: error.message,
             });
         }
 
         return res.status(200).json({
             success: true,
-            data,
+            user,
+            profile: data || null,
         });
 
     } catch (err) {

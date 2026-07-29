@@ -6,6 +6,9 @@ import Register from "../pages/Register";
 import ForgotPassword from "../pages/ForgotPassword";
 import Community from "../pages/Community";
 import Social from "../pages/Social";
+import CreateProfile from "../pages/CreateProfile";
+import Profile from "../pages/Profile";
+import Bookmarks from "../pages/Bookmarks";
 
 
 
@@ -21,9 +24,12 @@ const AppRoutes = () => {
 
       <Route path="/forgot-password" element={<ForgotPassword />} />
 
-      <Route path="*" element={<Navigate to="/" replace />} />
       <Route path="/community" element={<Community />} />
       <Route path="/social" element={<Social />} />
+      <Route path="/create-profile" element={<CreateProfile />} />
+      <Route path="/profile/:id?" element={<Profile />} />
+      <Route path="/bookmarks" element={<Bookmarks />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 };
