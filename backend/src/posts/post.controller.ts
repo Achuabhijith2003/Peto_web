@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 
 import { createPostSchema } from "./post.validation";
 
-import { createPostService, getPostById, updatePostById, deletePostById, getMyPostsService, getUserPostsService, getGlobalFeedService } from "./post.service";
+import { createPostService, getPostById, updatePostById, deletePostById, getMyPostsService, getUserPostsService, getGlobalFeedService, searchPostsService } from "./post.service";
 
 export const createPost = async (
 
@@ -333,6 +333,36 @@ export async function getGlobalFeed(
         return res.status(500).json({
             success: false,
             message: err.message
+        });
+    }
+}
+
+export async function searchPosts(req: Request, res: Response) {
+    try {
+        const userId = (req as any).user.id;
+        const page = Number(req.query.page) || 1;
+        const limit = Number(req.query.limit) || 20;
+        const q = String(req.query.q || "");
+
+        if (!q.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: "Search query is required.",
+            });
+        }
+
+        const result = await searchPostsService(userId, q, page, limit);
+
+        return res.json({
+            success: true,
+            data: result.posts,
+            pagination: result.pagination,
+        });
+    } catch (err: any) {
+        console.error(err);
+        return res.status(500).json({
+            success: false,
+            message: err.message,
         });
     }
 }

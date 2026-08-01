@@ -1,4 +1,5 @@
 import { supabase } from "../config/supabase";
+import { createNotification, removeNotificationByEvent } from "../notifications/notification.service";
 
 export async function followUser(
     currentUserId: string,
@@ -47,6 +48,19 @@ export async function followUser(
         throw error;
     }
 
+    
+    await createNotification({
+
+    recipientId: targetUserId,
+
+    actorId: currentUserId,
+
+    type: "follow",
+
+    message: "started following you."
+
+});
+
     return data;
 }
 
@@ -76,6 +90,12 @@ export async function unfollowUser(
     if (error) {
         throw error;
     }
+
+    await removeNotificationByEvent({
+        recipientId: targetUserId,
+        actorId: currentUserId,
+        type: "follow"
+    });
 
     return {
         success: true,

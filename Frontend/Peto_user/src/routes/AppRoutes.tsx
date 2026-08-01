@@ -9,9 +9,7 @@ import Social from "../pages/Social";
 import CreateProfile from "../pages/CreateProfile";
 import Profile from "../pages/Profile";
 import Bookmarks from "../pages/Bookmarks";
-
-
-
+import SearchPage from "../pages/Search";
 
 const AppRoutes = () => {
   return (
@@ -26,6 +24,7 @@ const AppRoutes = () => {
 
       <Route path="/community" element={<Community />} />
       <Route path="/social" element={<Social />} />
+      <Route path="/search" element={<SearchPage />} />
       <Route path="/create-profile" element={<CreateProfile />} />
       <Route path="/profile/:id?" element={<Profile />} />
       <Route path="/bookmarks" element={<Bookmarks />} />

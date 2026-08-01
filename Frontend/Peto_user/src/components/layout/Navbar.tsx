@@ -1,5 +1,4 @@
 import {
-  Search,
   ShoppingBag,
   Heart,
   User,
@@ -9,6 +8,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
+import SearchDropdown from "./SearchDropdown";
 
 import Logo from "../common/Logo";
 import { useAuth } from "../../context/AuthContext";
@@ -47,13 +47,7 @@ const Navbar = () => {
         </nav>
 
         <div className="flex items-center gap-5">
-          <div className="hidden items-center rounded-full bg-slate-100 px-4 py-2 lg:flex">
-            <Search size={18} />
-            <input
-              placeholder="Search..."
-              className="ml-2 bg-transparent outline-none"
-            />
-          </div>
+          <SearchDropdown />
 
           <ShoppingBag size={20} className="cursor-pointer" />
           <Heart size={20} className="cursor-pointer" />

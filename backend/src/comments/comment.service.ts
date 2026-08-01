@@ -1,4 +1,5 @@
 import { supabase } from "../config/supabase";
+import { createNotification } from "../notifications/notification.service";
 
 export async function createCommentService(
     userId: string,
@@ -51,6 +52,57 @@ export async function createCommentService(
         })
 
         .eq("id", postId);
+
+    const { data: posts } = await supabase
+        .from("posts")
+        .select("user_id")
+        .eq("id", postId)
+        .single();
+
+    if (posts) {
+
+        await createNotification({
+
+            recipientId: posts.user_id,
+
+            actorId: userId,
+
+            postId,
+            commentId: data.id,
+
+            type: "comment",
+
+            message: "commented on your post."
+
+        });
+
+    }
+
+    // Mention notifications for @username
+    const mentionRegex = /@([a-zA-Z0-9_]+)/g;
+    const matches = comment.match(mentionRegex);
+    if (matches && matches.length > 0) {
+        const usernames = Array.from(new Set(matches.map((m) => m.substring(1))));
+        const { data: mentionedProfiles } = await supabase
+            .from("profiles")
+            .select("id, username")
+            .in("username", usernames);
+
+        if (mentionedProfiles) {
+            for (const profile of mentionedProfiles) {
+                if (profile.id !== userId && profile.id !== posts?.user_id) {
+                    await createNotification({
+                        recipientId: profile.id,
+                        actorId: userId,
+                        postId,
+                        commentId: data.id,
+                        type: "mention",
+                        message: "mentioned you in a comment.",
+                    });
+                }
+            }
+        }
+    }
 
     return data;
 

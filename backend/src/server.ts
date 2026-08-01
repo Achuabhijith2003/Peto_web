@@ -19,6 +19,7 @@ import commentRoutes from "./comments/comment.routes";
 import bookmarkRoutes from "./bookmarks/bookmark.routes";
 import followRoutes from "./followers/follow.routes";
 import presenceRoutes from "./presence/presence.routes";
+import notificationRoutes from "./notifications/notification.routes";
 
 
 
@@ -96,6 +97,13 @@ app.use(
 app.use("/api", likeRoutes);
 app.use("/api", commentRoutes);
 app.use("/api/my", bookmarkRoutes);
+app.use(
+
+    "/api/notifications",
+
+    notificationRoutes
+
+);
 
 app.use(morgan("dev"));
 

@@ -5,6 +5,7 @@ import {
   MessageCircle,
   PawPrint,
   Users,
+  Search,
 } from "lucide-react";
 
 import { useAuth } from "../../context/AuthContext";
@@ -12,6 +13,7 @@ import { Link } from "react-router-dom";
 
 const menu = [
   { icon: House, label: "Home", path: "/social" },
+  { icon: Search, label: "Search", path: "/search" },
   { icon: Users, label: "Communities", path: "/community" },
   { icon: MessageCircle, label: "Messages", path: "/messages" },
   { icon: Calendar, label: "Events", path: "/events" },

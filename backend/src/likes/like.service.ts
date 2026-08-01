@@ -1,158 +1,104 @@
 import { supabase } from "../config/supabase";
-import { createNotification } from "../notifications/notification.service";
+import { createNotification, removeNotificationByEvent } from "../notifications/notification.service";
 
 export async function likePostService(
     userId: string,
     postId: string
 ) {
-
     // Already liked?
-
     const { data: existing } = await supabase
-
         .from("likes")
-
         .select("id")
-
         .eq("user_id", userId)
-
         .eq("post_id", postId)
-
         .maybeSingle();
 
     if (existing) {
-
         return existing;
-
     }
 
     // Insert Like
-
     const { data, error } = await supabase
-
         .from("likes")
-
         .insert({
-
             user_id: userId,
-
             post_id: postId
-
         })
-
         .select()
-
         .single();
 
     if (error) throw error;
 
     // Increment Counter
-
     const { data: post } = await supabase
-
         .from("posts")
-
-        .select("likes_count")
-
+        .select("likes_count, user_id")
         .eq("id", postId)
-
         .single();
 
     await supabase
-
         .from("posts")
-
         .update({
-
             likes_count: (post?.likes_count || 0) + 1
-
         })
-
         .eq("id", postId);
 
-
-    const { data: posts } = await supabase
-        .from("posts")
-        .select("user_id")
-        .eq("id", postId)
-        .single();
-
-    if (posts) {
-
+    if (post) {
         await createNotification({
-
-            recipientId: posts.user_id,
-
+            recipientId: post.user_id,
             actorId: userId,
-
             postId,
-
             type: "like",
-
             message: "liked your post."
-
         });
-
     }
 
     return data;
-
 }
 
 export async function unlikePostService(
     userId: string,
     postId: string
 ) {
-
     const { data } = await supabase
-
         .from("likes")
-
         .select("id")
-
         .eq("user_id", userId)
-
         .eq("post_id", postId)
-
         .maybeSingle();
 
     if (!data) return;
 
     await supabase
-
         .from("likes")
-
         .delete()
-
         .eq("user_id", userId)
-
         .eq("post_id", postId);
 
     const { data: post } = await supabase
-
         .from("posts")
-
-        .select("likes_count")
-
+        .select("likes_count, user_id")
         .eq("id", postId)
-
         .single();
 
     await supabase
-
         .from("posts")
-
         .update({
-
             likes_count: Math.max(
                 0,
                 (post?.likes_count || 0) - 1
             )
-
         })
-
         .eq("id", postId);
 
+    if (post) {
+        await removeNotificationByEvent({
+            recipientId: post.user_id,
+            actorId: userId,
+            type: "like",
+            postId,
+        });
+    }
 }
 
 export async function getLikesService(

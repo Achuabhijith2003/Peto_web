@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@supabase/supabase-js": "^2.110.7",
+    "@types/web-push": "^3.6.4",
     "compression": "^1.8.1",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
@@ -12,6 +13,7 @@
     "morgan": "^1.11.0",
     "multer": "^2.2.0",
     "sharp": "^0.35.3",
+    "web-push": "^3.6.7",
     "zod": "^4.4.3"
   },
   "devDependencies": {
