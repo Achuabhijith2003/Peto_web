@@ -1,4 +1,5 @@
 import { supabase } from "../config/supabase";
+import { createNotification } from "../notifications/notification.service";
 
 export async function likePostService(
     userId: string,
@@ -68,6 +69,31 @@ export async function likePostService(
         })
 
         .eq("id", postId);
+
+
+    const { data: posts } = await supabase
+        .from("posts")
+        .select("user_id")
+        .eq("id", postId)
+        .single();
+
+    if (posts) {
+
+        await createNotification({
+
+            recipientId: posts.user_id,
+
+            actorId: userId,
+
+            postId,
+
+            type: "like",
+
+            message: "liked your post."
+
+        });
+
+    }
 
     return data;
 

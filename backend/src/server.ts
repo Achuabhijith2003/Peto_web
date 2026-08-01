@@ -17,6 +17,9 @@ import postRoutes from "./posts/post.routes";
 import likeRoutes from "./likes/like.routes";
 import commentRoutes from "./comments/comment.routes";
 import bookmarkRoutes from "./bookmarks/bookmark.routes";
+import followRoutes from "./followers/follow.routes";
+import presenceRoutes from "./presence/presence.routes";
+
 
 
 // Register routes
@@ -76,9 +79,20 @@ app.use(
 // ----------------------
 
 app.use("/api/auth", authRoutes);
+
 app.use("/api/users", userRoutes);
-app.use("/api/media", mediaRoutes);
+
+app.use("/api/user", followRoutes);
+
 app.use("/api/posts", postRoutes);
+
+app.use("/api/media", mediaRoutes);
+
+app.use(
+    "/api/presence",
+    presenceRoutes
+);
+
 app.use("/api", likeRoutes);
 app.use("/api", commentRoutes);
 app.use("/api/my", bookmarkRoutes);

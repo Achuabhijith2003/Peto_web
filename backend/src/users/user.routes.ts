@@ -5,8 +5,14 @@ import { authenticate } from "../auth/auth.middleware";
 const router = Router();
 
 router.get("/me", authenticate, userController.getCurrentUser);
+router.get("/search",authenticate, userController.search);
+router.get(
+    "/:id/profile",
+    authenticate,
+    userController.getProfile
+);
 
-router.get("/search",  userController.searchUsers);
+
 
 router.get("/check-username", userController.checkUsername);
 

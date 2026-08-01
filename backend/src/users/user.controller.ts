@@ -1,11 +1,13 @@
 import { Request, Response } from "express";
 import { supabase } from "../config/supabase";
+import { getUserProfile, searchUsers } from "./user.service";
 
 export const getCurrentUser = async (
     req: Request,
     res: Response
 ) => {
     try {
+
         const user = (req as any).user;
 
         const { data, error } = await supabase
@@ -43,6 +45,7 @@ export const getUserById = async (
     res: Response
 ) => {
     try {
+
         const { id } = req.params;
 
         if (!id) {
@@ -122,70 +125,64 @@ export const deleteAccount = async (_req: Request, res: Response) => {
     });
 };
 
-export const searchUsers = async (
+export const search = async (
     req: Request,
     res: Response
 ) => {
+
+    console.log("Search function in calling....");
+    const user = (req as any).user!.id;
+        console.log("UserId: ",user);
+        
+
     try {
-        const q = (req.query.q as string)?.trim();
+        
+        const page = Number(req.query.page) || 1;
 
-        const page = Number(req.query.page ?? 1);
-        const limit = Math.min(Number(req.query.limit ?? 20), 50);
+        const limit = Number(req.query.limit) || 20;
 
-        if (!q) {
+        const q = String(req.query.q || "");
+        
+
+        if (!q.trim()) {
+
             return res.status(400).json({
+
                 success: false,
-                message: "Search query is required.",
+
+                message: "Search query is required."
+
             });
+
         }
 
-        const from = (page - 1) * limit;
-        const to = from + limit - 1;
+        const users = await searchUsers(
+            user,
+            q,
+            page,
+            limit
+        );
 
-        const { data, error, count } = await supabase
-            .from("profiles")
-            .select(
-                `
-        id,
-        username,
-        full_name,
-        avatar_url,
-        bio,
-        verified,
-        followers_count,
-        following_count,
-        posts_count
-      `,
-                { count: "exact" }
-            )
-            .or(`username.ilike.%${q}%,full_name.ilike.%${q}%`)
-            .range(from, to);
+        return res.json({
 
-        if (error) {
-            return res.status(500).json({
-                success: false,
-                message: error.message,
-            });
-        }
-
-        return res.status(200).json({
             success: true,
-            data,
-            pagination: {
-                page,
-                limit,
-                total: count ?? 0,
-                totalPages: Math.ceil((count ?? 0) / limit),
-            },
+
+            data: users
+
         });
-    } catch (err) {
-        console.error(err);
+
+    } catch (error: any) {
 
         return res.status(500).json({
+
             success: false,
-            message: "Internal Server Error",
+
+            message: error.message
+
         });
+
     }
+
 };
 
 export const checkUsername = async (
@@ -314,4 +311,40 @@ export const createProfile = async (
             message: "Internal server error",
         });
     }
+};
+
+
+export const getProfile = async (
+    req: Request,
+    res: Response
+) => {
+
+    try {
+
+        const currentUserId = (req as any).user!.id;
+
+        const profileUserId = (req as any).params.id;
+
+        const profile = await getUserProfile(
+            currentUserId,
+            profileUserId
+        );
+
+        return res.json({
+            success: true,
+            data: profile
+        });
+
+    } catch (error: any) {
+
+        return res.status(404).json({
+
+            success: false,
+
+            message: error.message
+
+        });
+
+    }
+
 };
