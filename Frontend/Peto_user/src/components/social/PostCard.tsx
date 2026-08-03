@@ -23,7 +23,7 @@ interface PostCardProps {
 }
 
 const PostCard = ({ post }: PostCardProps) => {
-  const { user } = useAuth();
+  const { user, openAuthModal } = useAuth();
   const navigate = useNavigate();
 
   const [isLiked, setIsLiked] = useState(post.viewer?.liked || false);
@@ -98,6 +98,10 @@ const PostCard = ({ post }: PostCardProps) => {
   };
 
   const handleLike = async () => {
+    if (!user) {
+      openAuthModal("like posts");
+      return;
+    }
     try {
       if (isLiked) {
         setIsLiked(false);
@@ -116,6 +120,10 @@ const PostCard = ({ post }: PostCardProps) => {
   };
 
   const handleBookmark = async () => {
+    if (!user) {
+      openAuthModal("save posts");
+      return;
+    }
     try {
       if (isBookmarked) {
         setIsBookmarked(false);
@@ -134,6 +142,7 @@ const PostCard = ({ post }: PostCardProps) => {
   };
 
   const handleDeletePost = async () => {
+    if (!user) return;
     if (!window.confirm("Are you sure you want to delete this post?")) return;
     try {
       setDeleting(true);
@@ -150,7 +159,7 @@ const PostCard = ({ post }: PostCardProps) => {
 
   const handleUpdatePost = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editText.trim()) return;
+    if (!user || !editText.trim()) return;
     try {
       setUpdating(true);
       await api.patch(`/posts/${post.id}`, { text: editText });
@@ -181,6 +190,10 @@ const PostCard = ({ post }: PostCardProps) => {
 
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) {
+      openAuthModal("comment on posts");
+      return;
+    }
     if (!commentText.trim()) return;
 
     try {

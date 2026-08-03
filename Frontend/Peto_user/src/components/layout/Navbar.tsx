@@ -1,6 +1,6 @@
 import {
-  ShoppingBag,
-  Heart,
+  // ShoppingBag,
+  // Heart,
   User,
   LogOut,
   Bookmark,
@@ -35,22 +35,22 @@ const Navbar = () => {
         <Logo />
 
         <nav className="hidden items-center gap-8 text-sm lg:flex">
-          <Link className="font-semibold text-amber-600" to="#">
+          {/* <Link className="font-semibold text-amber-600" to="#">
             Shop
-          </Link>
-          <Link to="#">Pet Care AI</Link>
+          </Link> */}
+          {/* <Link to="#">Pet Care AI</Link>
           <Link to="#">Vets</Link>
           <Link to="#">Services</Link>
-          <Link to="#">About</Link>
-          <Link to="/social">Social</Link>
-          <Link to="/community">Communities</Link>
+          <Link to="#">About</Link> */}
+          {/* <Link to="/social">Social</Link> */}
+          {/* <Link to="/community">Communities</Link> */}
         </nav>
 
         <div className="flex items-center gap-5">
           <SearchDropdown />
 
-          <ShoppingBag size={20} className="cursor-pointer" />
-          <Heart size={20} className="cursor-pointer" />
+          {/* <ShoppingBag size={20} className="cursor-pointer" />
+          <Heart size={20} className="cursor-pointer" /> */}
 
           {isAuthenticated ? (
             <div className="relative" ref={dropdownRef}>

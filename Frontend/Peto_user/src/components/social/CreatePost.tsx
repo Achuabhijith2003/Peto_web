@@ -3,19 +3,37 @@ import { Image, Smile, X } from "lucide-react";
 import api from "../../utils/api";
 import { useAuth } from "../../context/AuthContext";
 
-const CreatePost = ({ onPostCreated }: { onPostCreated?: () => void }) => {
-  const { user } = useAuth();
+interface MediaItem {
+  file: File;
+  preview: string;
+  id?: string;
+}
+
+interface CreatePostProps {
+  onPostCreated?: () => void;
+}
+
+const CreatePost = ({ onPostCreated }: CreatePostProps) => {
+  const { user, openAuthModal } = useAuth();
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [uploadingMedia, setUploadingMedia] = useState(false);
-  const [mediaFiles, setMediaFiles] = useState<{ file: File; preview: string; id?: string }[]>([]);
+  const [mediaFiles, setMediaFiles] = useState<MediaItem[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handlePhotoClick = () => {
+    if (!user) {
+      openAuthModal("share photos or posts");
+      return;
+    }
     fileInputRef.current?.click();
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!user) {
+      openAuthModal("share photos or posts");
+      return;
+    }
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
 
@@ -51,6 +69,10 @@ const CreatePost = ({ onPostCreated }: { onPostCreated?: () => void }) => {
   };
 
   const handlePost = async () => {
+    if (!user) {
+      openAuthModal("share posts with pet lovers");
+      return;
+    }
     if (!text.trim() && mediaFiles.length === 0) return;
     try {
       setLoading(true);
@@ -73,21 +95,24 @@ const CreatePost = ({ onPostCreated }: { onPostCreated?: () => void }) => {
   };
 
   return (
-    <div className="mb-8 rounded-3xl bg-white p-6 shadow-sm">
+    <div className="mb-8 rounded-3xl bg-white p-6 shadow-sm border border-slate-100">
       <div className="flex gap-4">
         <img
-          src={user?.profile?.avatar_url || "https://ui-avatars.com/api/?name=" + (user?.username || "User")}
+          src={user?.profile?.avatar_url || user?.avatar_url || "https://ui-avatars.com/api/?name=" + (user?.username || "Guest") + "&background=f59e0b&color=fff"}
           alt="User"
-          className="h-12 w-12 rounded-full object-cover"
+          className="h-12 w-12 rounded-full object-cover shrink-0"
         />
 
         <div className="w-full space-y-4">
           <textarea
             rows={3}
-            placeholder="Share something about your pet..."
+            placeholder={user ? "Share something about your pet..." : "Log in to share something about your pet..."}
             value={text}
+            onFocus={() => {
+              if (!user) openAuthModal("share posts with pet lovers");
+            }}
             onChange={(e) => setText(e.target.value)}
-            className="w-full resize-none rounded-2xl border border-slate-200 p-4 outline-none focus:border-blue-500"
+            className="w-full resize-none rounded-2xl border border-slate-200 p-4 text-sm outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition"
           />
 
           {mediaFiles.length > 0 && (

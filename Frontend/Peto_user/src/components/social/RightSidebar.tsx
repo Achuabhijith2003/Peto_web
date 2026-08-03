@@ -9,7 +9,7 @@ import NotificationPanel from "./NotificationPanel";
 const RightSidebar = () => {
   return (
     <aside className="hidden xl:block">
-      <div className="sticky top-24 space-y-6">
+      <div className="sticky top-20 max-h-[calc(100vh-5.5rem)] overflow-y-auto space-y-6 pr-1.5 pb-8 [::-webkit-scrollbar]:w-1.5 [::-webkit-scrollbar-thumb]:bg-slate-200 [::-webkit-scrollbar-thumb]:rounded-full hover:[::-webkit-scrollbar-thumb]:bg-amber-300">
         <NotificationPanel />
 
         <SuggestedFriends />

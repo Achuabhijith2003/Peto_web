@@ -38,7 +38,8 @@ const Login = () => {
       const response = await api.post("/auth/login", data);
       if (response.data.success) {
         const token = response.data.session?.access_token || response.data.token;
-        login(token, response.data.user);
+        const refreshToken = response.data.session?.refresh_token || response.data.refreshToken;
+        login(token, refreshToken, response.data.user);
         
         try {
           // Check if profile exists

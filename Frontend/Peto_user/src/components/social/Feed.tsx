@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../../utils/api";
-import Stories from "./Stories";
+// import Stories from "./Stories";
 import CreatePost from "./CreatePost";
 import PostCard from "./PostCard";
 
@@ -25,7 +25,7 @@ const Feed = () => {
 
     return (
         <section className="space-y-8">
-            <Stories />
+            {/* <Stories /> */}
 
             <CreatePost onPostCreated={fetchFeed} />
 

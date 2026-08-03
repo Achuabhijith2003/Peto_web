@@ -14,7 +14,7 @@ import PostCard from "../components/social/PostCard";
 import FollowListModal, { type FollowUserItem } from "../components/social/FollowListModal";
 
 const ProfileCenter = ({ userId }: { userId?: string }) => {
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, openAuthModal } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [posts, setPosts] = useState<any[]>([]);
   const [followersList, setFollowersList] = useState<FollowUserItem[]>([]);
@@ -85,6 +85,10 @@ const ProfileCenter = ({ userId }: { userId?: string }) => {
   }, [fetchProfileData]);
 
   const handleToggleFollow = async () => {
+    if (!currentUser) {
+      openAuthModal("follow pet parents");
+      return;
+    }
     if (!fetchId || isOwnProfile) return;
     setFollowActionLoading(true);
 

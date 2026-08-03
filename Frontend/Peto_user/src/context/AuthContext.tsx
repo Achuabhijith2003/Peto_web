@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import api from "../utils/api";
 
+import AuthPromptModal from "../components/auth/AuthPromptModal";
+
 interface User {
   avatar_url: any;
   id: string;
@@ -12,9 +14,12 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  login: (token: string, user: User) => void;
+  login: (token: string, arg2: any, arg3?: User) => void;
   logout: () => void;
   loading: boolean;
+  isAuthModalOpen: boolean;
+  openAuthModal: (actionName?: string) => void;
+  closeAuthModal: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,6 +27,18 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [modalAction, setModalAction] = useState<string | undefined>();
+
+  const openAuthModal = (actionName?: string) => {
+    setModalAction(actionName);
+    setIsAuthModalOpen(true);
+  };
+
+  const closeAuthModal = () => {
+    setIsAuthModalOpen(false);
+    setModalAction(undefined);
+  };
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -34,6 +51,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } catch (error) {
           console.error("Auth check failed:", error);
           localStorage.removeItem("peto_token");
+          localStorage.removeItem("peto_refresh_token");
         }
       }
       setLoading(false);
@@ -42,13 +60,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     checkAuth();
   }, []);
 
-  const login = (token: string, userData: User) => {
+  const login = (token: string, arg2: any, arg3?: User) => {
+    let refreshToken: string | null | undefined = null;
+    let userData: User;
+
+    if (arg3 !== undefined) {
+      refreshToken = arg2;
+      userData = arg3;
+    } else {
+      userData = arg2;
+    }
+
     localStorage.setItem("peto_token", token);
+    if (refreshToken) {
+      localStorage.setItem("peto_refresh_token", refreshToken);
+    }
     setUser(userData);
   };
 
   const logout = () => {
     localStorage.removeItem("peto_token");
+    localStorage.removeItem("peto_refresh_token");
     setUser(null);
   };
 
@@ -60,9 +92,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         login,
         logout,
         loading,
+        isAuthModalOpen,
+        openAuthModal,
+        closeAuthModal,
       }}
     >
       {children}
+      <AuthPromptModal
+        isOpen={isAuthModalOpen}
+        onClose={closeAuthModal}
+        actionName={modalAction}
+      />
     </AuthContext.Provider>
   );
 };

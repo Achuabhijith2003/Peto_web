@@ -14,7 +14,7 @@ export interface SuggestedUser {
 }
 
 const SuggestedFriends: React.FC = () => {
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, openAuthModal } = useAuth();
   const navigate = useNavigate();
   const [suggestions, setSuggestions] = useState<SuggestedUser[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -23,7 +23,6 @@ const SuggestedFriends: React.FC = () => {
   const [visibleCount, setVisibleCount] = useState<number>(5);
 
   const fetchSuggested = useCallback(async () => {
-    if (!currentUser) return;
     try {
       setLoading(true);
       const res = await api.get("/user/suggested?page=1&limit=20");
@@ -35,7 +34,7 @@ const SuggestedFriends: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentUser]);
+  }, []);
 
   useEffect(() => {
     fetchSuggested();
@@ -43,6 +42,10 @@ const SuggestedFriends: React.FC = () => {
 
   const handleToggleFollow = async (targetId: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!currentUser) {
+      openAuthModal("follow pet parents");
+      return;
+    }
     const isFollowing = !!followingMap[targetId];
 
     setLoadingMap((prev) => ({ ...prev, [targetId]: true }));

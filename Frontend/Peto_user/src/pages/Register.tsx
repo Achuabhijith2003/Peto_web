@@ -46,7 +46,9 @@ const Register = () => {
         username: data.fullName.toLowerCase().replace(/\s+/g, ""), // Generating a simple username for signup
       });
       if (response.data.success) {
-        login(response.data.token, response.data.user);
+        const token = response.data.token || response.data.session?.access_token;
+        const refreshToken = response.data.refreshToken || response.data.session?.refresh_token;
+        login(token, refreshToken, response.data.user);
         navigate("/create-profile");
       }
     } catch (error: any) {
