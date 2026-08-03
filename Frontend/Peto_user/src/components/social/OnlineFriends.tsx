@@ -18,6 +18,7 @@ const OnlineFriends: React.FC = () => {
   const navigate = useNavigate();
   const [onlineList, setOnlineList] = useState<OnlineUser[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [visibleCount, setVisibleCount] = useState<number>(5);
 
   // Send heartbeat to mark self online
   const sendHeartbeat = useCallback(async () => {
@@ -66,6 +67,9 @@ const OnlineFriends: React.FC = () => {
     navigate(`/profile/${targetId}`);
   };
 
+  const visibleFriends = onlineList.slice(0, visibleCount);
+  const hasMoreVisible = onlineList.length > visibleCount;
+
   return (
     <div className="rounded-3xl bg-white p-6 shadow-sm border border-slate-100">
       <div className="mb-5 flex items-center justify-between">
@@ -89,8 +93,8 @@ const OnlineFriends: React.FC = () => {
           No friends currently online.
         </div>
       ) : (
-        <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
-          {onlineList.map((friend) => (
+        <div className="space-y-3">
+          {visibleFriends.map((friend) => (
             <div
               key={friend.id}
               onClick={() => handleProfileClick(friend.id)}
@@ -123,6 +127,18 @@ const OnlineFriends: React.FC = () => {
               </div>
             </div>
           ))}
+
+          {/* Read More button */}
+          {hasMoreVisible && (
+            <div className="pt-2 text-center">
+              <button
+                onClick={() => setVisibleCount((prev) => prev + 5)}
+                className="w-full rounded-2xl bg-emerald-50 px-4 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-100 transition shadow-sm border border-emerald-100"
+              >
+                Read More ({onlineList.length - visibleCount} more)
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

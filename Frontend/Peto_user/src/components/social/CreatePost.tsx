@@ -138,7 +138,7 @@ const CreatePost = ({ onPostCreated }: { onPostCreated?: () => void }) => {
         <button 
           onClick={handlePost}
           disabled={loading || uploadingMedia || (!text.trim() && mediaFiles.length === 0)}
-          className="rounded-xl bg-blue-600 px-6 py-2 font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+          className="rounded-xl bg-amber-500 px-6 py-2 font-semibold text-white hover:bg-amber-600 disabled:opacity-50 shadow-sm transition"
         >
           {loading ? "Posting..." : "Post"}
         </button>

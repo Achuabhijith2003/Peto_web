@@ -20,6 +20,7 @@ const NotificationPanel: React.FC = () => {
   } = useNotifications();
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [visibleCount, setVisibleCount] = useState<number>(5);
 
   const getNotificationIcon = (type: NotificationItem["type"]) => {
     switch (type) {
@@ -46,6 +47,18 @@ const NotificationPanel: React.FC = () => {
     if (diffSeconds < 3600) return `${Math.floor(diffSeconds / 60)}m ago`;
     if (diffSeconds < 86400) return `${Math.floor(diffSeconds / 3600)}h ago`;
     return `${Math.floor(diffSeconds / 86400)}d ago`;
+  };
+
+  const visibleNotifications = notifications.slice(0, visibleCount);
+  const canLoadMore = visibleCount < notifications.length || hasMore;
+
+  const handleReadMore = () => {
+    if (visibleCount < notifications.length) {
+      setVisibleCount((prev) => prev + 5);
+    } else if (hasMore) {
+      fetchNotifications(page + 1);
+      setVisibleCount((prev) => prev + 5);
+    }
   };
 
   return (
@@ -99,7 +112,7 @@ const NotificationPanel: React.FC = () => {
         </div>
       ) : (
         <div className="space-y-3">
-          {notifications.map((item) => (
+          {visibleNotifications.map((item) => (
             <div
               key={item.id}
               onClick={() => !item.is_read && markAsRead(item.id)}
@@ -156,16 +169,22 @@ const NotificationPanel: React.FC = () => {
             </div>
           ))}
 
-          {/* Load More Pagination */}
-          {hasMore && (
+          {/* Read More Button */}
+          {canLoadMore && (
             <div className="pt-2 text-center">
               <button
-                onClick={() => fetchNotifications(page + 1)}
+                onClick={handleReadMore}
                 disabled={loading}
-                className="text-xs font-semibold text-amber-600 hover:text-amber-700 hover:underline inline-flex items-center gap-1"
+                className="w-full rounded-2xl bg-amber-50 px-4 py-2 text-xs font-bold text-amber-700 hover:bg-amber-100 transition shadow-sm border border-amber-100 flex items-center justify-center gap-1.5 disabled:opacity-50"
               >
-                {loading && <Loader2 size={12} className="animate-spin" />}
-                Load earlier notifications
+                {loading ? (
+                  <>
+                    <Loader2 size={13} className="animate-spin text-amber-500" />
+                    <span>Loading...</span>
+                  </>
+                ) : (
+                  <span>Read More</span>
+                )}
               </button>
             </div>
           )}

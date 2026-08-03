@@ -160,11 +160,7 @@ const ProfileCenter = ({ userId }: { userId?: string }) => {
               <button
                 onClick={handleToggleFollow}
                 disabled={followActionLoading}
-                className={`flex items-center gap-2 rounded-2xl px-6 py-2.5 text-sm font-bold shadow-sm transition ${
-                  isFollowing
-                    ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                    : "bg-amber-500 text-white hover:bg-amber-600"
-                }`}
+                className="rounded-xl bg-blue-600 px-6 py-2 font-semibold text-white hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2 text-sm transition"
               >
                 {followActionLoading ? (
                   <Loader2 size={16} className="animate-spin" />

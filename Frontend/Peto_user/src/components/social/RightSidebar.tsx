@@ -1,10 +1,10 @@
 import SuggestedFriends from "./SuggestedFriends";
-import TrendingTopics from "./TrendingTopics";
-import UpcomingEvents from "./UpcomingEvents";
-import SponsoredCard from "./SponsoredCard";
+// import TrendingTopics from "./TrendingTopics";
+// import UpcomingEvents from "./UpcomingEvents";
+// import SponsoredCard from "./SponsoredCard";
 import OnlineFriends from "./OnlineFriends";
 import NotificationPanel from "./NotificationPanel";
-import ChatWidget from "./ChatWidget";
+// import ChatWidget from "./ChatWidget";
 
 const RightSidebar = () => {
   return (
@@ -14,15 +14,15 @@ const RightSidebar = () => {
 
         <SuggestedFriends />
 
-        <TrendingTopics />
+        {/* <TrendingTopics /> */}
 
-        <UpcomingEvents />
+        {/* <UpcomingEvents /> */}
 
         <OnlineFriends />
 
-        <SponsoredCard />
+        {/* <SponsoredCard /> */}
 
-        <ChatWidget />
+        {/* <ChatWidget /> */}
       </div>
     </aside>
   );

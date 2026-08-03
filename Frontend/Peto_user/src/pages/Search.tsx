@@ -278,11 +278,7 @@ const SearchPage: React.FC = () => {
                             <button
                               onClick={(e) => handleToggleFollow(u.id, u.isFollowing, e)}
                               disabled={followLoadingMap[u.id]}
-                              className={`ml-3 shrink-0 flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-semibold transition ${
-                                u.isFollowing
-                                  ? "bg-slate-200 text-slate-700 hover:bg-slate-300"
-                                  : "bg-amber-500 text-white hover:bg-amber-600 shadow-sm"
-                              }`}
+                              className="ml-3 shrink-0 rounded-xl bg-blue-600 px-6 py-2 font-semibold text-white hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1.5 text-xs transition"
                             >
                               {followLoadingMap[u.id] ? (
                                 <Loader2 size={14} className="animate-spin" />

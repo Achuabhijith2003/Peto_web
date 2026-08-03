@@ -20,12 +20,13 @@ const SuggestedFriends: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [followingMap, setFollowingMap] = useState<Record<string, boolean>>({});
   const [loadingMap, setLoadingMap] = useState<Record<string, boolean>>({});
+  const [visibleCount, setVisibleCount] = useState<number>(5);
 
   const fetchSuggested = useCallback(async () => {
     if (!currentUser) return;
     try {
       setLoading(true);
-      const res = await api.get("/user/suggested?page=1&limit=5");
+      const res = await api.get("/user/suggested?page=1&limit=20");
       if (res.data?.success) {
         setSuggestions(res.data.data || []);
       }
@@ -65,6 +66,9 @@ const SuggestedFriends: React.FC = () => {
     navigate(`/profile/${targetId}`);
   };
 
+  const visibleSuggestions = suggestions.slice(0, visibleCount);
+  const hasMoreVisible = suggestions.length > visibleCount;
+
   return (
     <div className="rounded-3xl bg-white p-6 shadow-sm border border-slate-100">
       <div className="mb-5 flex items-center justify-between">
@@ -82,7 +86,7 @@ const SuggestedFriends: React.FC = () => {
         <p className="text-xs text-slate-400 text-center py-4">No suggestions available.</p>
       ) : (
         <div className="space-y-4">
-          {suggestions.map((item) => {
+          {visibleSuggestions.map((item) => {
             const isFollowing = !!followingMap[item.id];
 
             return (
@@ -105,7 +109,7 @@ const SuggestedFriends: React.FC = () => {
                   )}
 
                   <div className="truncate text-xs">
-                    <div className="flex items-center gap-1 font-bold text-slate-900 truncate  transition">
+                    <div className="flex items-center gap-1 font-bold text-slate-900 truncate transition">
                       {item.full_name || item.username}
                       {item.verified && <CheckCircle2 size={13} className="text-blue-500 shrink-0" />}
                     </div>
@@ -116,30 +120,37 @@ const SuggestedFriends: React.FC = () => {
                 <button
                   onClick={(e) => handleToggleFollow(item.id, e)}
                   disabled={loadingMap[item.id]}
-                  //  
-                  className={`rounded-xl bg-blue-600 px-4 py-2 font-semibold ${
-                    isFollowing
-                      ? "text-white hover:bg-blue-700 disabled:opacity-50"
-                      : "text-white hover:bg-blue-700 disabled:opacity-50"
-                  }`}
+                  className="rounded-xl bg-blue-600 px-6 py-2 font-semibold text-white hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1.5 text-xs transition"
                 >
                   {loadingMap[item.id] ? (
                     <Loader2 size={12} className="animate-spin" />
                   ) : isFollowing ? (
                     <>
                       <UserCheck size={12} />
-                      <p className="ml-2" >Following</p>
+                      <span>Following</span>
                     </>
                   ) : (
                     <>
                       <UserPlus size={12} />
-                      Follow
+                      <span>Follow</span>
                     </>
                   )}
                 </button>
               </div>
             );
           })}
+
+          {/* Read More button */}
+          {hasMoreVisible && (
+            <div className="pt-2 text-center">
+              <button
+                onClick={() => setVisibleCount((prev) => prev + 5)}
+                className="w-full rounded-2xl bg-amber-50 px-4 py-2 text-xs font-bold text-amber-700 hover:bg-amber-100 transition shadow-sm border border-amber-100"
+              >
+                Read More ({suggestions.length - visibleCount} more)
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

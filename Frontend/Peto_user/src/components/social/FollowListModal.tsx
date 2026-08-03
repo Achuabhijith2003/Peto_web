@@ -195,11 +195,7 @@ const FollowListModal: React.FC<ModalProps> = ({
                     <button
                       onClick={(e) => handleToggleFollow(u.id, e)}
                       disabled={loadingMap[u.id]}
-                      className={`ml-2 shrink-0 flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-semibold transition ${
-                        isFollowingUser
-                          ? "bg-slate-100 text-slate-700 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 border border-slate-200"
-                          : "bg-amber-500 text-white hover:bg-amber-600 shadow-sm"
-                      }`}
+                      className="ml-2 shrink-0 rounded-xl bg-blue-600 px-6 py-2 font-semibold text-white hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1.5 text-xs transition"
                     >
                       {loadingMap[u.id] ? (
                         <Loader2 size={12} className="animate-spin" />
