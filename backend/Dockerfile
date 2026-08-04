@@ -3,17 +3,22 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Copy root & backend package files
+# Copy root, backend & frontend package files
 COPY package*.json ./
 COPY backend/package*.json ./backend/
+COPY Frontend/Peto_user/package*.json ./Frontend/Peto_user/
 
 # Install dependencies
 RUN npm install
 
-# Copy backend source code & tsconfig
-COPY backend/ ./backend/
+# Copy frontend source code & build frontend dist
+COPY Frontend/Peto_user/ ./Frontend/Peto_user/
+WORKDIR /app/Frontend/Peto_user
+RUN npm install && npm run build
 
-# Build TypeScript output to backend/dist
+# Copy backend source code & tsconfig
+WORKDIR /app
+COPY backend/ ./backend/
 WORKDIR /app/backend
 RUN npm run build
 
@@ -34,6 +39,9 @@ RUN npm install --omit=dev
 
 # Copy backend source code & config
 COPY backend/ ./backend/
+
+# Copy built frontend dist from builder stage
+COPY --from=builder /app/Frontend/Peto_user/dist ./Frontend/Peto_user/dist
 
 WORKDIR /app/backend
 

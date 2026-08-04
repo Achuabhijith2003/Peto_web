@@ -2,6 +2,7 @@ import "dotenv/config";
 
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -136,14 +137,18 @@ app.get("/api", (_, res) => {
 // ----------------------
 
 const frontendPath = path.join(__dirname, "../../Frontend/Peto_user/dist");
-app.use(express.static(frontendPath));
+const indexHtmlPath = path.join(frontendPath, "index.html");
 
-app.use((req, res, next) => {
-  if (req.method !== "GET" || req.originalUrl.startsWith("/api")) {
-    return next();
-  }
-  res.sendFile(path.join(frontendPath, "index.html"));
-});
+if (fs.existsSync(indexHtmlPath)) {
+  app.use(express.static(frontendPath));
+
+  app.use((req, res, next) => {
+    if (req.method !== "GET" || req.originalUrl.startsWith("/api")) {
+      return next();
+    }
+    res.sendFile(indexHtmlPath);
+  });
+}
 
 // ----------------------
 // 404
