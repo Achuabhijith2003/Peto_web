@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { follow, unfollow, followStatus, followers, following, suggestedFriends } from "./follow.controller";
-import { authenticate } from "../auth/auth.middleware";
+import { authenticate, optionalAuthenticate } from "../auth/auth.middleware";
 const router = Router();
-router.get("/suggested", authenticate, suggestedFriends);
+router.get("/suggested", optionalAuthenticate, suggestedFriends);
 /*
     POST /api/users/:id/follow
 */
@@ -14,13 +14,13 @@ router.delete("/:id/follow", authenticate, unfollow);
 /*
     GET /api/users/:id/follow-status
 */
-router.get("/:id/follow-status", authenticate, followStatus);
+router.get("/:id/follow-status", optionalAuthenticate, followStatus);
 /*
     GET /api/users/:id/followers
 */
-router.get("/:id/followers", authenticate, followers);
+router.get("/:id/followers", optionalAuthenticate, followers);
 /*
     GET /api/users/:id/following
 */
-router.get("/:id/following", authenticate, following);
+router.get("/:id/following", optionalAuthenticate, following);
 export default router;

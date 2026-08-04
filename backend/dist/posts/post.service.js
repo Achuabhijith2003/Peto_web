@@ -50,24 +50,26 @@ export async function getPostById(postId, currentUserId) {
         .single();
     if (error)
         throw error;
-    const { data: like } = await supabase
-        .from("likes")
-        .select("post_id")
-        .eq("user_id", currentUserId)
-        .eq("post_id", post.id)
-        .maybeSingle();
-    const { data: bookmark } = await supabase
-        .from("bookmarks")
-        .select("post_id")
-        .eq("user_id", currentUserId)
-        .eq("post_id", post.id)
-        .maybeSingle();
-    const likedPosts = new Set();
-    const bookmarkedPosts = new Set();
-    if (like)
-        likedPosts.add(post.id);
-    if (bookmark)
-        bookmarkedPosts.add(post.id);
+    let likeData = null;
+    let bookmarkData = null;
+    if (currentUserId) {
+        const { data: like } = await supabase
+            .from("likes")
+            .select("post_id")
+            .eq("user_id", currentUserId)
+            .eq("post_id", post.id)
+            .maybeSingle();
+        likeData = like;
+        const { data: bookmark } = await supabase
+            .from("bookmarks")
+            .select("post_id")
+            .eq("user_id", currentUserId)
+            .eq("post_id", post.id)
+            .maybeSingle();
+        bookmarkData = bookmark;
+    }
+    const likedPosts = new Set(likeData ? [post.id] : []);
+    const bookmarkedPosts = new Set(bookmarkData ? [post.id] : []);
     return mapPostForFeed(post, currentUserId, likedPosts, bookmarkedPosts);
 }
 export async function updatePostById(postId, userId, text, visibility) {
@@ -226,7 +228,7 @@ export async function getMyPostsService(userId, page, limit) {
         }
     };
 }
-export async function getUserPostsService(profileId, currentUserId, page, limit) {
+export async function getUserPostsService(profileId, currentUserId, page = 1, limit = 10) {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
     const { data: posts, count } = await supabase
@@ -247,30 +249,34 @@ export async function getUserPostsService(profileId, currentUserId, page, limit)
         .order("created_at", { ascending: false })
         .range(from, to);
     const postIds = (posts ?? []).map(post => post.id);
-    const { data: likes } = await supabase
-        .from("likes")
-        .select("post_id")
-        .eq("user_id", currentUserId)
-        .in("post_id", postIds);
-    const { data: bookmarks } = await supabase
-        .from("bookmarks")
-        .select("post_id")
-        .eq("user_id", currentUserId)
-        .in("post_id", postIds);
-    const likedPosts = new Set((likes ?? []).map(x => x.post_id));
-    const bookmarkedPosts = new Set((bookmarks ?? []).map(x => x.post_id));
-    const feed = posts?.map(post => mapPostForFeed(post, currentUserId, likedPosts, bookmarkedPosts));
+    let likedPosts = new Set();
+    let bookmarkedPosts = new Set();
+    if (currentUserId && postIds.length > 0) {
+        const { data: likes } = await supabase
+            .from("likes")
+            .select("post_id")
+            .eq("user_id", currentUserId)
+            .in("post_id", postIds);
+        const { data: bookmarks } = await supabase
+            .from("bookmarks")
+            .select("post_id")
+            .eq("user_id", currentUserId)
+            .in("post_id", postIds);
+        likedPosts = new Set((likes ?? []).map(x => x.post_id));
+        bookmarkedPosts = new Set((bookmarks ?? []).map(x => x.post_id));
+    }
+    const feed = (posts ?? []).map(post => mapPostForFeed(post, currentUserId, likedPosts, bookmarkedPosts));
     return {
         posts: feed,
         pagination: {
             page,
             limit,
-            total: count,
+            total: count ?? 0,
             totalPages: Math.ceil((count ?? 0) / limit)
         }
     };
 }
-export async function getGlobalFeedService(currentUserId, page, limit) {
+export async function getGlobalFeedService(currentUserId, page = 1, limit = 10) {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
     const { data: posts, count } = await supabase
@@ -290,30 +296,34 @@ export async function getGlobalFeedService(currentUserId, page, limit) {
         .order("created_at", { ascending: false })
         .range(from, to);
     const postIds = (posts ?? []).map(post => post.id);
-    const { data: likes } = await supabase
-        .from("likes")
-        .select("post_id")
-        .eq("user_id", currentUserId)
-        .in("post_id", postIds);
-    const { data: bookmarks } = await supabase
-        .from("bookmarks")
-        .select("post_id")
-        .eq("user_id", currentUserId)
-        .in("post_id", postIds);
-    const likedPosts = new Set((likes ?? []).map(x => x.post_id));
-    const bookmarkedPosts = new Set((bookmarks ?? []).map(x => x.post_id));
-    const feed = posts?.map(post => mapPostForFeed(post, currentUserId, likedPosts, bookmarkedPosts));
+    let likedPosts = new Set();
+    let bookmarkedPosts = new Set();
+    if (currentUserId && postIds.length > 0) {
+        const { data: likes } = await supabase
+            .from("likes")
+            .select("post_id")
+            .eq("user_id", currentUserId)
+            .in("post_id", postIds);
+        const { data: bookmarks } = await supabase
+            .from("bookmarks")
+            .select("post_id")
+            .eq("user_id", currentUserId)
+            .in("post_id", postIds);
+        likedPosts = new Set((likes ?? []).map(x => x.post_id));
+        bookmarkedPosts = new Set((bookmarks ?? []).map(x => x.post_id));
+    }
+    const feed = (posts ?? []).map(post => mapPostForFeed(post, currentUserId, likedPosts, bookmarkedPosts));
     return {
         posts: feed,
         pagination: {
             page,
             limit,
-            total: count,
+            total: count ?? 0,
             totalPages: Math.ceil((count ?? 0) / limit)
         }
     };
 }
-export async function searchPostsService(currentUserId, query, page = 1, limit = 20) {
+export async function searchPostsService(currentUserId, query = "", page = 1, limit = 20) {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
     const { data: posts, count } = await supabase
@@ -330,28 +340,33 @@ export async function searchPostsService(currentUserId, query, page = 1, limit =
             media(*)
         `, { count: "exact" })
         .ilike("text", `%${query}%`)
+        .eq("visibility", "public")
         .order("created_at", { ascending: false })
         .range(from, to);
     const postIds = (posts ?? []).map(post => post.id);
-    const { data: likes } = await supabase
-        .from("likes")
-        .select("post_id")
-        .eq("user_id", currentUserId)
-        .in("post_id", postIds);
-    const { data: bookmarks } = await supabase
-        .from("bookmarks")
-        .select("post_id")
-        .eq("user_id", currentUserId)
-        .in("post_id", postIds);
-    const likedPosts = new Set((likes ?? []).map(x => x.post_id));
-    const bookmarkedPosts = new Set((bookmarks ?? []).map(x => x.post_id));
-    const feed = posts?.map(post => mapPostForFeed(post, currentUserId, likedPosts, bookmarkedPosts));
+    let likedPosts = new Set();
+    let bookmarkedPosts = new Set();
+    if (currentUserId && postIds.length > 0) {
+        const { data: likes } = await supabase
+            .from("likes")
+            .select("post_id")
+            .eq("user_id", currentUserId)
+            .in("post_id", postIds);
+        const { data: bookmarks } = await supabase
+            .from("bookmarks")
+            .select("post_id")
+            .eq("user_id", currentUserId)
+            .in("post_id", postIds);
+        likedPosts = new Set((likes ?? []).map(x => x.post_id));
+        bookmarkedPosts = new Set((bookmarks ?? []).map(x => x.post_id));
+    }
+    const feed = (posts ?? []).map(post => mapPostForFeed(post, currentUserId, likedPosts, bookmarkedPosts));
     return {
         posts: feed || [],
         pagination: {
             page,
             limit,
-            total: count,
+            total: count ?? 0,
             totalPages: Math.ceil((count ?? 0) / limit)
         }
     };

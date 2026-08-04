@@ -17,5 +17,7 @@ export const login = async (req, res) => {
         success: true,
         user: data.user,
         session: data.session,
+        token: data.session?.access_token,
+        refreshToken: data.session?.refresh_token,
     });
 };
