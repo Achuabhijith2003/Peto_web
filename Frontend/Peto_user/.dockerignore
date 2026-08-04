@@ -1,0 +1,18 @@
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Dependencies & Build output
+node_modules
+dist
+build
+coverage
+
+# IDE and OS files
+.git
+.gitignore
+.vscode
+.idea
+.DS_Store
+*.log
