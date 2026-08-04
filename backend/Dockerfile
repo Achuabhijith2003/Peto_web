@@ -29,11 +29,11 @@ ENV PORT=5000
 COPY package*.json ./
 COPY backend/package*.json ./backend/
 
-# Install production dependencies
+# Install production dependencies (including tsx)
 RUN npm install --omit=dev
 
-# Copy compiled dist from builder stage
-COPY --from=builder /app/backend/dist ./backend/dist
+# Copy backend source code & config
+COPY backend/ ./backend/
 
 WORKDIR /app/backend
 
@@ -44,4 +44,4 @@ RUN mkdir -p uploads temp
 EXPOSE 5000
 
 # Start backend server
-CMD ["node", "dist/server.js"]
+CMD ["npm", "start"]
