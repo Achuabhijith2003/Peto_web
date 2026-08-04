@@ -20,17 +20,22 @@ RUN npm run build
 # Stage 2: Production Runtime Stage
 FROM node:20-alpine AS runner
 
-WORKDIR /app/backend
+WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=5000
 
-# Copy package files and install production dependencies
-COPY backend/package*.json ./
-RUN npm install --only=production
+# Copy root & backend package files
+COPY package*.json ./
+COPY backend/package*.json ./backend/
+
+# Install production dependencies
+RUN npm install --omit=dev
 
 # Copy compiled dist from builder stage
-COPY --from=builder /app/backend/dist ./dist
+COPY --from=builder /app/backend/dist ./backend/dist
+
+WORKDIR /app/backend
 
 # Create uploads directory
 RUN mkdir -p uploads temp
