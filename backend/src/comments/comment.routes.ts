@@ -5,7 +5,7 @@ import {
     updateComment,
     deleteComment
 } from "./comment.controller";
-import { authenticate } from "../auth/auth.middleware";
+import { authenticate, optionalAuthenticate } from "../auth/auth.middleware";
 
 const router = Router();
 
@@ -17,7 +17,7 @@ router.post(
 
 router.get(
     "/posts/:id/comments",
-    authenticate,
+    optionalAuthenticate,
     getComments
 );
 

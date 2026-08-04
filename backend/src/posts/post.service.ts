@@ -91,14 +91,12 @@ export async function createPostService(
 
 
 export async function getPostById(
-   postId: string,
-    currentUserId: string
+    postId: string,
+    currentUserId?: string
 ) {
 
     const { data: post, error } = await supabase
-
         .from("posts")
-
         .select(`
             *,
             profiles(
@@ -110,60 +108,42 @@ export async function getPostById(
             ),
             media(*)
         `)
-
         .eq("id", postId)
-
         .single();
 
     if (error)
         throw error;
 
-    const { data: like } = await supabase
+    let likeData = null;
+    let bookmarkData = null;
 
-        .from("likes")
+    if (currentUserId) {
+        const { data: like } = await supabase
+            .from("likes")
+            .select("post_id")
+            .eq("user_id", currentUserId)
+            .eq("post_id", post.id)
+            .maybeSingle();
+        likeData = like;
 
-        .select("post_id")
+        const { data: bookmark } = await supabase
+            .from("bookmarks")
+            .select("post_id")
+            .eq("user_id", currentUserId)
+            .eq("post_id", post.id)
+            .maybeSingle();
+        bookmarkData = bookmark;
+    }
 
-        .eq("user_id", currentUserId)
-
-        .eq("post_id", post.id)
-
-        .maybeSingle();
-
-    const { data: bookmark } = await supabase
-
-        .from("bookmarks")
-
-        .select("post_id")
-
-        .eq("user_id", currentUserId)
-
-        .eq("post_id", post.id)
-
-        .maybeSingle();
-
-    const likedPosts = new Set<string>();
-
-    const bookmarkedPosts = new Set<string>();
-
-    if (like)
-        likedPosts.add(post.id);
-
-    if (bookmark)
-        bookmarkedPosts.add(post.id);
+    const likedPosts = new Set(likeData ? [post.id] : []);
+    const bookmarkedPosts = new Set(bookmarkData ? [post.id] : []);
 
     return mapPostForFeed(
-
         post,
-
         currentUserId,
-
         likedPosts,
-
         bookmarkedPosts
-
     );
-
 }
 
 
@@ -508,19 +488,15 @@ export async function getMyPostsService(
 
 export async function getUserPostsService(
     profileId: string,
-    currentUserId: string,
-    page: number,
-    limit: number
+    currentUserId?: string,
+    page: number = 1,
+    limit: number = 10
 ) {
-
     const from = (page - 1) * limit;
-
     const to = from + limit - 1;
 
     const { data: posts, count } = await supabase
-
         .from("posts")
-
         .select(`
             *,
             profiles(
@@ -532,97 +508,57 @@ export async function getUserPostsService(
             ),
             media(*)
         `, { count: "exact" })
-
         .eq("user_id", profileId)
-
         .eq("visibility", "public")
-
         .order("created_at", { ascending: false })
-
         .range(from, to);
 
     const postIds = (posts ?? []).map(post => post.id);
 
-    const { data: likes } = await supabase
+    let likedPosts = new Set<string>();
+    let bookmarkedPosts = new Set<string>();
 
-        .from("likes")
+    if (currentUserId && postIds.length > 0) {
+        const { data: likes } = await supabase
+            .from("likes")
+            .select("post_id")
+            .eq("user_id", currentUserId)
+            .in("post_id", postIds);
 
-        .select("post_id")
+        const { data: bookmarks } = await supabase
+            .from("bookmarks")
+            .select("post_id")
+            .eq("user_id", currentUserId)
+            .in("post_id", postIds);
 
-        .eq("user_id", currentUserId)
+        likedPosts = new Set((likes ?? []).map(x => x.post_id));
+        bookmarkedPosts = new Set((bookmarks ?? []).map(x => x.post_id));
+    }
 
-        .in("post_id", postIds);
-
-    const { data: bookmarks } = await supabase
-
-        .from("bookmarks")
-
-        .select("post_id")
-
-        .eq("user_id", currentUserId)
-
-        .in("post_id", postIds);
-
-    const likedPosts = new Set(
-
-        (likes ?? []).map(
-
-            x => x.post_id
-
-        )
-
-    );
-
-    const bookmarkedPosts = new Set(
-
-        (bookmarks ?? []).map(
-
-            x => x.post_id
-
-        )
-
-    );
-
-    const feed = posts?.map(post =>
-
+    const feed = (posts ?? []).map(post =>
         mapPostForFeed(
-
             post,
-
             currentUserId,
-
             likedPosts,
-
             bookmarkedPosts
-
         )
-
     );
 
     return {
-
         posts: feed,
-
         pagination: {
-
             page,
-
             limit,
-
-            total: count,
-
+            total: count ?? 0,
             totalPages: Math.ceil((count ?? 0) / limit)
-
         }
-
     };
-
 }
 
 export async function getGlobalFeedService(
-    currentUserId: string,
-    page: number,
-    limit: number
+    currentUserId?: string,
+    page: number = 1,
+    limit: number = 10
 ) {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
@@ -646,22 +582,27 @@ export async function getGlobalFeedService(
 
     const postIds = (posts ?? []).map(post => post.id);
 
-    const { data: likes } = await supabase
-        .from("likes")
-        .select("post_id")
-        .eq("user_id", currentUserId)
-        .in("post_id", postIds);
+    let likedPosts = new Set<string>();
+    let bookmarkedPosts = new Set<string>();
 
-    const { data: bookmarks } = await supabase
-        .from("bookmarks")
-        .select("post_id")
-        .eq("user_id", currentUserId)
-        .in("post_id", postIds);
+    if (currentUserId && postIds.length > 0) {
+        const { data: likes } = await supabase
+            .from("likes")
+            .select("post_id")
+            .eq("user_id", currentUserId)
+            .in("post_id", postIds);
 
-    const likedPosts = new Set((likes ?? []).map(x => x.post_id));
-    const bookmarkedPosts = new Set((bookmarks ?? []).map(x => x.post_id));
+        const { data: bookmarks } = await supabase
+            .from("bookmarks")
+            .select("post_id")
+            .eq("user_id", currentUserId)
+            .in("post_id", postIds);
 
-    const feed = posts?.map(post =>
+        likedPosts = new Set((likes ?? []).map(x => x.post_id));
+        bookmarkedPosts = new Set((bookmarks ?? []).map(x => x.post_id));
+    }
+
+    const feed = (posts ?? []).map(post =>
         mapPostForFeed(
             post,
             currentUserId,
@@ -675,15 +616,15 @@ export async function getGlobalFeedService(
         pagination: {
             page,
             limit,
-            total: count,
+            total: count ?? 0,
             totalPages: Math.ceil((count ?? 0) / limit)
         }
     };
 }
 
 export async function searchPostsService(
-    currentUserId: string,
-    query: string,
+    currentUserId?: string,
+    query: string = "",
     page: number = 1,
     limit: number = 20
 ) {
@@ -704,27 +645,33 @@ export async function searchPostsService(
             media(*)
         `, { count: "exact" })
         .ilike("text", `%${query}%`)
+        .eq("visibility", "public")
         .order("created_at", { ascending: false })
         .range(from, to);
 
     const postIds = (posts ?? []).map(post => post.id);
 
-    const { data: likes } = await supabase
-        .from("likes")
-        .select("post_id")
-        .eq("user_id", currentUserId)
-        .in("post_id", postIds);
+    let likedPosts = new Set<string>();
+    let bookmarkedPosts = new Set<string>();
 
-    const { data: bookmarks } = await supabase
-        .from("bookmarks")
-        .select("post_id")
-        .eq("user_id", currentUserId)
-        .in("post_id", postIds);
+    if (currentUserId && postIds.length > 0) {
+        const { data: likes } = await supabase
+            .from("likes")
+            .select("post_id")
+            .eq("user_id", currentUserId)
+            .in("post_id", postIds);
 
-    const likedPosts = new Set((likes ?? []).map(x => x.post_id));
-    const bookmarkedPosts = new Set((bookmarks ?? []).map(x => x.post_id));
+        const { data: bookmarks } = await supabase
+            .from("bookmarks")
+            .select("post_id")
+            .eq("user_id", currentUserId)
+            .in("post_id", postIds);
 
-    const feed = posts?.map(post =>
+        likedPosts = new Set((likes ?? []).map(x => x.post_id));
+        bookmarkedPosts = new Set((bookmarks ?? []).map(x => x.post_id));
+    }
+
+    const feed = (posts ?? []).map(post =>
         mapPostForFeed(
             post,
             currentUserId,
@@ -738,7 +685,7 @@ export async function searchPostsService(
         pagination: {
             page,
             limit,
-            total: count,
+            total: count ?? 0,
             totalPages: Math.ceil((count ?? 0) / limit)
         }
     };

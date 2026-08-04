@@ -1,12 +1,11 @@
 import { Router } from "express";
 
-
 import {
     heartbeat,
     offline,
     onlineFriends
 } from "./presence.controller";
-import { authenticate } from "../auth/auth.middleware";
+import { authenticate, optionalAuthenticate } from "../auth/auth.middleware";
 
 const router = Router();
 
@@ -24,7 +23,7 @@ router.post(
 
 router.get(
     "/online",
-    authenticate,
+    optionalAuthenticate,
     onlineFriends
 );
 

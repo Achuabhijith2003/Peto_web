@@ -9,13 +9,13 @@ import {
     suggestedFriends
 } from "./follow.controller";
 
-import { authenticate } from "../auth/auth.middleware";
+import { authenticate, optionalAuthenticate } from "../auth/auth.middleware";
 
 const router = Router();
 
 router.get(
     "/suggested",
-    authenticate,
+    optionalAuthenticate,
     suggestedFriends
 );
 
@@ -42,7 +42,7 @@ router.delete(
 */
 router.get(
     "/:id/follow-status",
-    authenticate,
+    optionalAuthenticate,
     followStatus
 );
 
@@ -51,7 +51,7 @@ router.get(
 */
 router.get(
     "/:id/followers",
-    authenticate,
+    optionalAuthenticate,
     followers
 );
 
@@ -60,7 +60,7 @@ router.get(
 */
 router.get(
     "/:id/following",
-    authenticate,
+    optionalAuthenticate,
     following
 );
 

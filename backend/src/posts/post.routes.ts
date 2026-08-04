@@ -1,7 +1,6 @@
 import { Router } from "express";
 
-import { authenticate } from "../auth/auth.middleware";
-
+import { authenticate, optionalAuthenticate } from "../auth/auth.middleware";
 
 import { createPost, getPost, updatePost, deletePost, getMyPosts, getUserPosts, getGlobalFeed, searchPosts } from "./post.controller";
 import { validateUpdatePost } from "./post.validation";
@@ -22,41 +21,31 @@ router.get(
 
 router.get(
     "/feed",
-    authenticate,
+    optionalAuthenticate,
     getGlobalFeed
 );
 
-router.get("/search", authenticate, searchPosts);
+router.get("/search", optionalAuthenticate, searchPosts);
 
-router.get("/:id", authenticate, getPost);
+router.get("/:id", optionalAuthenticate, getPost);
 
 router.patch(
-
     "/:id",
-
     authenticate,
-
     validateUpdatePost,
-
     updatePost
-
 );
 
 router.delete(
-
     "/:id",
-
     authenticate,
-
     deletePost
-
 );
 
 router.get(
     "/users/:id/posts",
-    authenticate,
+    optionalAuthenticate,
     getUserPosts
 );
-
 
 export default router;

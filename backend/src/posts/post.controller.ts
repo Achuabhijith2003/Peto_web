@@ -64,10 +64,8 @@ export const createPost = async (
 
 
 export async function getPost(req: Request, res: Response) {
-
     try {
-
-        const userId = (req as any).user.id;
+        const userId = (req as any).user?.id;
 
         const postId = (req as any).params.id;
 
@@ -314,7 +312,7 @@ export async function getGlobalFeed(
     res: Response
 ) {
     try {
-        const userId = (req as any).user.id;
+        const userId = (req as any).user?.id;
         const page = Number(req.query.page) || 1;
         const limit = Number(req.query.limit) || 10;
 
@@ -339,7 +337,7 @@ export async function getGlobalFeed(
 
 export async function searchPosts(req: Request, res: Response) {
     try {
-        const userId = (req as any).user.id;
+        const userId = (req as any).user?.id;
         const page = Number(req.query.page) || 1;
         const limit = Number(req.query.limit) || 20;
         const q = String(req.query.q || "");
