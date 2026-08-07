@@ -75,9 +75,9 @@ const SuggestedFriends: React.FC = () => {
   return (
     <div className="rounded-3xl bg-white p-6 shadow-sm border border-slate-100">
       <div className="mb-5 flex items-center justify-between">
-        <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+        <h3 className="font-headline font-bold text-base text-slate-900 flex items-center gap-2">
           <Users size={18} className="text-amber-500" />
-          Suggested Friends
+          Suggested Pals
         </h3>
       </div>
 

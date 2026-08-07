@@ -74,7 +74,7 @@ const NotificationPanel: React.FC = () => {
               </span>
             )}
           </div>
-          <h3 className="font-bold text-slate-800 text-base">Notifications</h3>
+          <h3 className="font-headline font-bold text-slate-900 text-base">Notifications</h3>
         </div>
 
         <div className="flex items-center gap-2">

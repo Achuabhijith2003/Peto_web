@@ -73,13 +73,13 @@ const OnlineFriends: React.FC = () => {
   return (
     <div className="rounded-3xl bg-white p-6 shadow-sm border border-slate-100">
       <div className="mb-5 flex items-center justify-between">
-        <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+        <h3 className="font-headline font-bold text-base text-slate-900 flex items-center gap-2">
           <Wifi size={18} className="text-emerald-500" />
-          Online Friends
+          Active Pals
         </h3>
         {onlineList.length > 0 && (
-          <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700">
-            {onlineList.length} online
+          <span className="rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-bold text-emerald-800 border border-emerald-200/50">
+            {onlineList.length} Online
           </span>
         )}
       </div>

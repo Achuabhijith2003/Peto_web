@@ -1,6 +1,15 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Quicksand:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Quicksand:wght@500;600;700&display=swap');
 
 @import "tailwindcss";
+
+@layer utilities {
+  .font-headline {
+    font-family: "Quicksand", sans-serif;
+  }
+  .font-sans {
+    font-family: "Inter", sans-serif;
+  }
+}
 
 html,
 body,
@@ -15,6 +24,11 @@ body {
     color: #151C27;
     font-family: "Inter", sans-serif;
     overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: "Quicksand", sans-serif;
 }
 
 * {
@@ -27,27 +41,84 @@ a {
 
 button {
     cursor: pointer;
-    transition: .25s;
+    transition: all 0.2s ease-in-out;
+}
+
+button:hover {
+    transform: translateY(-1px);
+}
+
+button:active {
+    transform: translateY(0);
 }
 
 input,
-button {
-    font-family: inherit;
+button,
+textarea,
+select {
+    font-family: "Inter", sans-serif;
 }
 
-img {
-    display: block;
-    max-width: 100%;
+/* Custom Design Tokens from DESIGN.md */
+.card-ambient {
+    background-color: #FFFFFF;
+    border-radius: 1.5rem;
+    box-shadow: 0 4px 20px -2px rgba(21, 28, 39, 0.05);
+    border: 1px solid rgba(226, 232, 248, 0.8);
+    transition: all 0.25s ease;
 }
 
-.container {
-    max-width: 1280px;
-    margin: auto;
-    padding-inline: 40px;
+.card-ambient:hover {
+    box-shadow: 0 10px 25px -3px rgba(21, 28, 39, 0.08);
 }
 
-@media (max-width:768px) {
-    .container {
-        padding-inline:20px;
-    }
+.input-organic {
+    background-color: #F3F4F6;
+    border: 2px solid transparent;
+    border-radius: 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.input-organic:focus {
+    background-color: #FFFFFF;
+    border-color: #0058be;
+    box-shadow: 0 0 0 4px rgba(0, 88, 190, 0.12);
+    outline: none;
+}
+
+.btn-primary {
+    background-color: #f59e0b;
+    color: #ffffff;
+    font-weight: 700;
+    border-radius: 0.75rem;
+    padding: 0.625rem 1.25rem;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+    background-color: #d97706;
+    transform: scale(1.02);
+    box-shadow: 0 6px 16px rgba(245, 158, 11, 0.35);
+}
+
+.btn-secondary {
+    border: 1.5px solid rgba(0, 88, 190, 0.3);
+    color: #0058be;
+    font-weight: 600;
+    border-radius: 0.75rem;
+    padding: 0.625rem 1.25rem;
+    transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+    background-color: rgba(0, 88, 190, 0.05);
+    border-color: #0058be;
+}
+
+.badge-pill {
+    border-radius: 9999px;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
 }

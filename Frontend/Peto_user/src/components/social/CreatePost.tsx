@@ -1,13 +1,7 @@
 import { useState, useRef } from "react";
-import { Image, Smile, X } from "lucide-react";
+import { Image, X, Loader2, Sparkles, PawPrint } from "lucide-react";
 import api from "../../utils/api";
 import { useAuth } from "../../context/AuthContext";
-
-interface MediaItem {
-  file: File;
-  preview: string;
-  id?: string;
-}
 
 interface CreatePostProps {
   onPostCreated?: () => void;
@@ -16,158 +10,179 @@ interface CreatePostProps {
 const CreatePost = ({ onPostCreated }: CreatePostProps) => {
   const { user, openAuthModal } = useAuth();
   const [text, setText] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [mediaFiles, setMediaFiles] = useState<{ file: File; preview: string; type: "image" | "video" }[]>([]);
   const [uploadingMedia, setUploadingMedia] = useState(false);
-  const [mediaFiles, setMediaFiles] = useState<MediaItem[]>([]);
+  const [submitting, setSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handlePhotoClick = () => {
     if (!user) {
-      openAuthModal("share photos or posts");
+      openAuthModal("share photos of your pets");
       return;
     }
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!user) {
-      openAuthModal("share photos or posts");
-      return;
-    }
-    const files = Array.from(e.target.files || []);
-    if (!files.length) return;
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const selectedFiles = Array.from(e.target.files);
 
-    try {
-      setUploadingMedia(true);
-      const formData = new FormData();
-      files.forEach((file) => formData.append("images", file));
+    const newMedia = selectedFiles.map((file) => ({
+      file,
+      preview: URL.createObjectURL(file),
+      type: file.type.startsWith("video/") ? ("video" as const) : ("image" as const),
+    }));
 
-      const response = await api.post("/media/image", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      if (response.data.success && Array.isArray(response.data.data)) {
-        const uploadedData = response.data.data;
-        const newMediaItems = files.map((file, idx) => ({
-          file,
-          preview: URL.createObjectURL(file),
-          id: uploadedData[idx]?.id,
-        }));
-        setMediaFiles((prev) => [...prev, ...newMediaItems]);
-      }
-    } catch (error) {
-      console.error("Failed to upload image(s)", error);
-    } finally {
-      setUploadingMedia(false);
-      // Reset input so same file can be chosen again if needed
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
+    setMediaFiles((prev) => [...prev, ...newMedia]);
   };
 
   const removeMedia = (index: number) => {
-    setMediaFiles((prev) => prev.filter((_, i) => i !== index));
+    setMediaFiles((prev) => {
+      const updated = [...prev];
+      URL.revokeObjectURL(updated[index].preview);
+      updated.splice(index, 1);
+      return updated;
+    });
   };
 
-  const handlePost = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!user) {
       openAuthModal("share posts with pet lovers");
       return;
     }
+
     if (!text.trim() && mediaFiles.length === 0) return;
+
     try {
-      setLoading(true);
-      const mediaIds = mediaFiles.map((m) => m.id).filter(Boolean);
-      
-      await api.post("/posts", { 
-        text, 
-        visibility: "public",
-        media: mediaIds
+      setSubmitting(true);
+      const uploadedMedia: { url: string; type: "image" | "video" }[] = [];
+
+      if (mediaFiles.length > 0) {
+        setUploadingMedia(true);
+        for (const item of mediaFiles) {
+          const formData = new FormData();
+          formData.append("file", item.file);
+
+          const uploadRes = await api.post("/media/upload", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+
+          if (uploadRes.data?.success && uploadRes.data?.mediaUrl) {
+            uploadedMedia.push({
+              url: uploadRes.data.mediaUrl,
+              type: item.type,
+            });
+          }
+        }
+      }
+
+      await api.post("/posts", {
+        content: text.trim(),
+        media: uploadedMedia,
       });
 
       setText("");
       setMediaFiles([]);
       if (onPostCreated) onPostCreated();
     } catch (error) {
-      console.error("Failed to create post", error);
+      console.error("Error creating post:", error);
     } finally {
-      setLoading(false);
+      setSubmitting(false);
+      setUploadingMedia(false);
     }
   };
 
   return (
-    <div className="mb-8 rounded-3xl bg-white p-6 shadow-sm border border-slate-100">
-      <div className="flex gap-4">
-        <img
-          src={user?.profile?.avatar_url || user?.avatar_url || "https://ui-avatars.com/api/?name=" + (user?.username || "Guest") + "&background=f59e0b&color=fff"}
-          alt="User"
-          className="h-12 w-12 rounded-full object-cover shrink-0"
-        />
-
-        <div className="w-full space-y-4">
-          <textarea
-            rows={3}
-            placeholder={user ? "Share something about your pet..." : "Log in to share something about your pet..."}
-            value={text}
-            onFocus={() => {
-              if (!user) openAuthModal("share posts with pet lovers");
-            }}
-            onChange={(e) => setText(e.target.value)}
-            className="w-full resize-none rounded-2xl border border-slate-200 p-4 text-sm outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-100 transition"
-          />
-
-          {mediaFiles.length > 0 && (
-            <div className="flex flex-wrap gap-3 pt-2">
-              {mediaFiles.map((item, idx) => (
-                <div key={idx} className="relative h-20 w-20 rounded-xl overflow-hidden border border-slate-200 group">
-                  <img src={item.preview} alt="Upload preview" className="h-full w-full object-cover" />
-                  <button
-                    onClick={() => removeMedia(idx)}
-                    className="absolute top-1 right-1 rounded-full bg-slate-900/60 p-1 text-white hover:bg-slate-900"
-                  >
-                    <X size={12} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+    <div className="rounded-3xl bg-white p-6 shadow-sm border border-slate-100/80 transition hover:shadow-md">
+      <div className="flex items-center gap-2 mb-4">
+        <Sparkles size={18} className="text-amber-500" />
+        <h3 className="font-headline font-bold text-base text-slate-900">
+          Create Post
+        </h3>
       </div>
 
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        multiple
-        accept="image/*"
-        className="hidden"
-      />
+      <form onSubmit={handleSubmit}>
+        <div className="flex gap-4">
+          {user?.profile?.avatar_url && user.profile.avatar_url !== "null" ? (
+            <img
+              src={user.profile.avatar_url}
+              alt={user.username}
+              className="h-11 w-11 rounded-2xl object-cover border border-slate-200 shrink-0"
+            />
+          ) : (
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 font-bold shrink-0">
+              <PawPrint size={20} />
+            </div>
+          )}
 
-      <div className="mt-5 flex items-center justify-between">
-        <div className="flex gap-3">
+          <div className="flex-1 space-y-3">
+            <textarea
+              rows={3}
+              placeholder={user ? "Share something wonderful about your pet..." : "Log in to share a post with the community..."}
+              value={text}
+              onFocus={() => {
+                if (!user) openAuthModal("share posts with pet lovers");
+              }}
+              onChange={(e) => setText(e.target.value)}
+              className="w-full resize-none rounded-2xl bg-slate-50 p-4 text-sm text-slate-900 placeholder-slate-400 outline-none border-2 border-transparent focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100/50 transition duration-200"
+            />
+
+            {mediaFiles.length > 0 && (
+              <div className="flex flex-wrap gap-3 pt-1">
+                {mediaFiles.map((item, idx) => (
+                  <div key={idx} className="relative h-20 w-20 rounded-2xl overflow-hidden border border-slate-200 group shadow-xs">
+                    <img src={item.preview} alt="Upload preview" className="h-full w-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => removeMedia(idx)}
+                      className="absolute top-1 right-1 rounded-full bg-slate-900/70 p-1 text-white hover:bg-slate-900 transition"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          multiple
+          accept="image/*"
+          className="hidden"
+        />
+
+        <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
           <button 
             type="button"
             onClick={handlePhotoClick}
             disabled={uploadingMedia}
-            className="flex items-center gap-2 rounded-xl bg-slate-100 px-4 py-2 hover:bg-slate-200 text-slate-700"
+            className="flex items-center gap-2 rounded-xl bg-amber-50 px-4 py-2 text-xs font-bold text-amber-700 hover:bg-amber-100 transition border border-amber-200/50"
           >
-            <Image size={18} />
-            {uploadingMedia ? "Uploading..." : "Photo"}
+            <Image size={16} className="text-amber-600" />
+            <span>{uploadingMedia ? "Uploading..." : "Add Photo"}</span>
           </button>
 
-          <button type="button" className="flex items-center gap-2 rounded-xl bg-slate-100 px-4 py-2 hover:bg-slate-200 text-slate-700">
-            <Smile size={18} />
-            Feeling
+          <button
+            type="submit"
+            disabled={submitting || (!text.trim() && mediaFiles.length === 0)}
+            className="flex items-center gap-2 rounded-xl bg-amber-500 px-6 py-2.5 text-xs font-bold text-white shadow-sm shadow-amber-500/25 hover:bg-amber-600 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 transition duration-200"
+          >
+            {submitting ? (
+              <>
+                <Loader2 size={14} className="animate-spin" />
+                <span>Posting...</span>
+              </>
+            ) : (
+              <span>Post</span>
+            )}
           </button>
         </div>
-
-        <button 
-          onClick={handlePost}
-          disabled={loading || uploadingMedia || (!text.trim() && mediaFiles.length === 0)}
-          className="rounded-xl bg-amber-500 px-6 py-2 font-semibold text-white hover:bg-amber-600 disabled:opacity-50 shadow-sm transition"
-        >
-          {loading ? "Posting..." : "Post"}
-        </button>
-      </div>
+      </form>
     </div>
   );
 };
