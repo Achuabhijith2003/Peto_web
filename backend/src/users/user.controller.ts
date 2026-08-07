@@ -98,10 +98,46 @@ export const getUserById = async (
 };
 
 export const updateProfile = async (req: Request, res: Response) => {
-    res.json({
-        success: true,
-        body: req.body,
-    });
+    try {
+        const user = (req as any).user;
+        const { username, full_name, fullName, bio, location, website, phone, dateOfBirth, avatar_url, cover_url } = req.body;
+
+        const updateData: any = {};
+        if (username !== undefined) updateData.username = username;
+        if (full_name !== undefined || fullName !== undefined) updateData.full_name = full_name || fullName;
+        if (bio !== undefined) updateData.bio = bio;
+        if (location !== undefined) updateData.location = location;
+        if (website !== undefined) updateData.website = website;
+        if (phone !== undefined) updateData.phone = phone;
+        if (dateOfBirth !== undefined) updateData.date_of_birth = dateOfBirth;
+        if (avatar_url !== undefined) updateData.avatar_url = avatar_url;
+        if (cover_url !== undefined) updateData.cover_url = cover_url;
+
+        const { data, error } = await supabase
+            .from("profiles")
+            .update(updateData)
+            .eq("id", user.id)
+            .select()
+            .single();
+
+        if (error) {
+            return res.status(400).json({
+                success: false,
+                message: error.message,
+            });
+        }
+
+        return res.json({
+            success: true,
+            message: "Profile updated successfully",
+            data,
+        });
+    } catch (err: any) {
+        return res.status(500).json({
+            success: false,
+            message: err.message || "Internal server error",
+        });
+    }
 };
 
 export const updateAvatar = async (_req: Request, res: Response) => {
@@ -250,6 +286,8 @@ export const createProfile = async (
 
         const {
             username,
+            fullName,
+            full_name,
             bio,
             location,
             website,
@@ -257,6 +295,14 @@ export const createProfile = async (
             dateOfBirth,
         } = req.body;
 
+        const resolvedFullName =
+            full_name ||
+            fullName ||
+            user?.user_metadata?.full_name ||
+            user?.user_metadata?.fullName ||
+            user?.user_metadata?.name ||
+            username ||
+            "Pet Parent";
 
         const { data: existing } = await supabase
             .from("profiles")
@@ -277,10 +323,7 @@ export const createProfile = async (
                 {
                     id: user.id,
                     username,
-                    full_name:
-                        user.user_metadata?.full_name ??
-                        user.user_metadata?.fullName,
-
+                    full_name: resolvedFullName,
                     bio,
                     location,
                     website,

@@ -7,16 +7,16 @@ const supabase = createClient(
 );
 
 export const signup = async (req: Request, res: Response) => {
-  const { email, password, fullName } = req.body;
-  console.log(email,password,fullName);
-  
+  const { email, password, fullName, full_name } = req.body;
+  const nameToSave = fullName || full_name || "";
 
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: {
-        full_name: fullName,
+        full_name: nameToSave,
+        fullName: nameToSave,
       },
     },
   });

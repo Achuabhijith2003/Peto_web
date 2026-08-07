@@ -11,6 +11,7 @@ import Button from "../components/common/Button";
 import heroImage from "../assets/hero.png";
 
 interface ProfileForm {
+  fullName?: string;
   username: string;
   bio: string;
   location: string;
@@ -20,9 +21,15 @@ interface ProfileForm {
 }
 
 const CreateProfile = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm<ProfileForm>();
+  const { user } = useAuth();
+  const userMeta = (user as any)?.user_metadata;
+
+  const { register, handleSubmit, formState: { errors } } = useForm<ProfileForm>({
+    defaultValues: {
+      fullName: userMeta?.full_name || userMeta?.fullName || user?.profile?.full_name || "",
+    }
+  });
   const navigate = useNavigate();
-  const {  } = useAuth();
   const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -30,7 +37,10 @@ const CreateProfile = () => {
     try {
       setLoading(true);
       setServerError("");
-      const response = await api.post("/users/profile", data);
+      const response = await api.post("/users/profile", {
+        ...data,
+        fullName: data.fullName || userMeta?.full_name || userMeta?.fullName || user?.profile?.full_name,
+      });
       if (response.data.success) {
         navigate("/profile");
       }
@@ -53,6 +63,13 @@ const CreateProfile = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >
+        <InputField
+          label="Full Name"
+          placeholder="e.g. John Doe"
+          error={errors.fullName?.message}
+          {...register("fullName")}
+        />
+
         <InputField
           label="Username"
           placeholder="e.g. john_doe"

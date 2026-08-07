@@ -43,7 +43,8 @@ const Register = () => {
       const response = await api.post("/auth/signup", {
         email: data.email,
         password: data.password,
-        username: data.fullName.toLowerCase().replace(/\s+/g, ""), // Generating a simple username for signup
+        fullName: data.fullName,
+        username: data.fullName.toLowerCase().replace(/\s+/g, ""),
       });
       if (response.data.success) {
         const token = response.data.token || response.data.session?.access_token;
