@@ -2,79 +2,51 @@ import multer from "multer";
 
 const storage = multer.memoryStorage();
 
-const allowedTypes = [
-    "image/jpeg",
-    "image/jpg",
-    "image/png",
-    "image/webp",
-    "image/heic"
-];
+const imageFilter: multer.Options["fileFilter"] = (req, file, cb) => {
+  if (file.mimetype.startsWith("image/") || file.mimetype === "application/octet-stream") {
+    return cb(null, true);
+  }
+  cb(new Error("Unsupported image format"));
+};
 
-const fileFilter: multer.Options["fileFilter"] = (req, file, cb) => {
+const videoFilter: multer.Options["fileFilter"] = (req, file, cb) => {
+  if (file.mimetype.startsWith("video/") || file.mimetype === "application/octet-stream") {
+    return cb(null, true);
+  }
+  cb(new Error("Invalid video format"));
+};
 
-    if (!allowedTypes.includes(file.mimetype)) {
-        return cb(new Error("Unsupported image format"));
-    }
-
-    cb(null, true);
-
+const mediaFilter: multer.Options["fileFilter"] = (req, file, cb) => {
+  if (
+    file.mimetype.startsWith("image/") ||
+    file.mimetype.startsWith("video/") ||
+    file.mimetype === "application/octet-stream"
+  ) {
+    return cb(null, true);
+  }
+  cb(new Error("Unsupported file format. Please upload an image or video."));
 };
 
 export const uploadImage = multer({
-
-    storage,
-
-    limits: {
-
-        fileSize: 20 * 1024 * 1024 //20MB
-
-    },
-
-    fileFilter
-
+  storage,
+  limits: {
+    fileSize: 30 * 1024 * 1024, // 30MB
+  },
+  fileFilter: imageFilter,
 });
-
-
-
 
 export const uploadVideo = multer({
-
-    storage,
-
-    limits: {
-        fileSize: 200 * 1024 * 1024
-    },
-
-    fileFilter(req, file, cb) {
-
-        const allowed = [
-            "video/mp4",
-            "video/quicktime",
-            "video/webm",
-            "video/x-matroska",
-            "video/x-msvideo"
-        ];
-
-        if (!allowed.includes(file.mimetype)) {
-            return cb(new Error("Invalid video format"));
-        }
-
-        cb(null, true);
-    }
-
+  storage,
+  limits: {
+    fileSize: 200 * 1024 * 1024, // 200MB
+  },
+  fileFilter: videoFilter,
 });
 
-
-
-
 export const upload = multer({
-
-    storage,
-
-    limits: {
-
-        fileSize: 200 * 1024 * 1024
-
-    }
-
+  storage,
+  limits: {
+    fileSize: 200 * 1024 * 1024, // 200MB
+  },
+  fileFilter: mediaFilter,
 });
