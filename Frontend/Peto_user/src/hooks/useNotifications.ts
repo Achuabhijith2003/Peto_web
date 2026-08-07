@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import api from "../utils/api";
-import { supabase } from "../utils/supabaseClient";
 import { useAuth } from "../context/AuthContext";
 
 export interface NotificationItem {
@@ -67,7 +66,7 @@ export const useNotifications = () => {
     }
   }, []);
 
-  // Fetch initial notifications
+  // Fetch initial notifications via Backend API
   const fetchNotifications = useCallback(async (pageNum = 1) => {
     if (!user) return;
     try {
@@ -102,64 +101,60 @@ export const useNotifications = () => {
     }
   }, [user]);
 
-  // Mark single notification as read
-  const markAsRead = async (notificationId: string) => {
-    // Optimistic UI update
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === notificationId ? { ...n, is_read: true } : n))
-    );
-    setUnreadCount((prev) => Math.max(0, prev - 1));
-
+  // Mark a single notification as read via Backend API
+  const markAsRead = async (id: string) => {
     try {
-      await api.patch(`/notifications/${notificationId}/read`);
+      setNotifications((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, is_read: true } : item))
+      );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+
+      await api.patch(`/notifications/${id}/read`);
     } catch (err) {
-      console.error("Failed to mark notification read:", err);
+      console.error("Failed to mark notification as read:", err);
     }
   };
 
-  // Mark all notifications as read
+  // Mark all notifications as read via Backend API
   const markAllAsRead = async () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-    setUnreadCount(0);
-
     try {
+      setNotifications((prev) => prev.map((item) => ({ ...item, is_read: true })));
+      setUnreadCount(0);
+
       await api.patch("/notifications/read-all");
     } catch (err) {
-      console.error("Failed to mark all notifications read:", err);
+      console.error("Failed to mark all as read:", err);
     }
   };
 
-  // Delete a notification
-  const removeNotification = async (notificationId: string) => {
-    setNotifications((prev) => {
-      const target = prev.find((n) => n.id === notificationId);
-      if (target && !target.is_read) {
-        setUnreadCount((cnt) => Math.max(0, cnt - 1));
-      }
-      return prev.filter((n) => n.id !== notificationId);
-    });
-
+  // Remove a notification via Backend API
+  const removeNotification = async (id: string) => {
     try {
-      await api.delete(`/notifications/${notificationId}`);
+      const targetNotif = notifications.find((item) => item.id === id);
+      setNotifications((prev) => prev.filter((item) => item.id !== id));
+
+      if (targetNotif && !targetNotif.is_read) {
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
+
+      await api.delete(`/notifications/${id}`);
     } catch (err) {
       console.error("Failed to delete notification:", err);
     }
   };
 
-  // Update Notification Settings
+  // Update notification settings via Backend API
   const updateSettings = async (newSettings: Partial<NotificationSettings>) => {
-    const updated = { ...settings, ...newSettings };
-    setSettings(updated);
-
     try {
-      await api.put("/notifications/settings", updated);
+      setSettings((prev) => ({ ...prev, ...newSettings }));
+      await api.put("/notifications/settings", newSettings);
     } catch (err) {
       console.error("Failed to update notification settings:", err);
     }
   };
 
-  // Web Push Registration
-  const requestPushPermission = async () => {
+  // Web Push Subscription via Backend API
+  const requestPushPermission = async (): Promise<boolean> => {
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
       alert("Push notifications are not supported in this browser.");
       return false;
@@ -172,26 +167,23 @@ export const useNotifications = () => {
         return false;
       }
 
-      const swReg = await navigator.serviceWorker.register("/sw.js");
-      const vapidRes = await api.get("/notifications/vapid-key");
-      const publicKey = vapidRes.data?.publicKey;
+      const registration = await navigator.serviceWorker.register("/sw.js");
+      await navigator.serviceWorker.ready;
 
-      if (!publicKey) return false;
+      // Get VAPID public key from backend API
+      const keyRes = await api.get("/notifications/push/vapid-key");
+      if (!keyRes.data?.publicKey) {
+        throw new Error("VAPID key unavailable");
+      }
 
-      const subscription = await swReg.pushManager.subscribe({
+      const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: publicKey,
+        applicationServerKey: keyRes.data.publicKey,
       });
 
-      const subJSON = subscription.toJSON();
-      await api.post("/notifications/push-subscribe", {
-        endpoint: subJSON.endpoint,
-        keys: subJSON.keys,
-        user_agent: navigator.userAgent,
-      });
-
+      // Send subscription object to Backend API
+      await api.post("/notifications/push/subscribe", subscription.toJSON());
       setPushSubscribed(true);
-      updateSettings({ push_enabled: true });
       return true;
     } catch (err) {
       console.error("Push registration error:", err);
@@ -199,48 +191,31 @@ export const useNotifications = () => {
     }
   };
 
-  // Realtime Supabase Subscription & Lifecycle
+  // Polling & Lifecycle (communicates exclusively with Backend Express API)
   useEffect(() => {
     if (!user?.id) return;
 
     fetchNotifications(1);
 
-    // Supabase Realtime channel subscription
-    const channel = supabase
-      .channel(`realtime:notifications:${user.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "notifications",
-          filter: `recipient_id=eq.${user.id}`,
-        },
-        (payload) => {
-          const newNotif = payload.new as NotificationItem;
-
-          // Fetch full notification with actor details
-          api.get(`/notifications?page=1&limit=1`).then((res) => {
-            if (res.data?.success && res.data.data.length > 0) {
-              const fullNotif = res.data.data[0];
-              setNotifications((prev) => [fullNotif, ...prev]);
-            } else {
-              setNotifications((prev) => [newNotif, ...prev]);
+    // Periodic unread check via backend API every 15 seconds
+    const interval = setInterval(async () => {
+      try {
+        const resUnread = await api.get("/notifications/unread-count");
+        if (resUnread.data?.success) {
+          setUnreadCount((prevCount) => {
+            const newCount = resUnread.data.unread;
+            if (newCount > prevCount && settings.sound_enabled) {
+              playNotificationSound();
             }
+            return newCount;
           });
-
-          setUnreadCount((prev) => prev + 1);
-
-          if (settings.sound_enabled) {
-            playNotificationSound();
-          }
         }
-      )
-      .subscribe();
+      } catch {
+        // Silent API polling fallback
+      }
+    }, 15000);
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => clearInterval(interval);
   }, [user?.id, fetchNotifications, settings.sound_enabled, playNotificationSound]);
 
   return {
