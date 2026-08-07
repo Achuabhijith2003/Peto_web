@@ -4,89 +4,65 @@ import { mapPostForFeed } from "./feed.mapper";
 
 
 interface CreatePostData {
-
     userId: string;
-
     text?: string;
-
     visibility: "public" | "followers" | "private";
-
-    media?: string[];
-
+    media?: any[];
 }
 
 export async function createPostService(
-
     data: CreatePostData
-
 ) {
-
     const {
-
         userId,
-
         text,
-
-        visibility,
-
+        visibility = "public",
         media = []
-
     } = data;
+
+    const mediaList = Array.isArray(media) ? media : [];
 
     // Create Post
     const { data: post, error } = await supabase
-
         .from("posts")
-
         .insert({
-
             user_id: userId,
-
-            text,
-
+            text: text || "",
             visibility,
-
-            media_count: media.length
-
+            media_count: mediaList.length
         })
-
         .select()
-
         .single();
 
     if (error) {
-
         throw error;
-
     }
 
-    // Attach uploaded media
-    if (media.length) {
+    // Attach uploaded media if present
+    if (mediaList.length > 0) {
+        const mediaToInsert = mediaList.map((item: any) => {
+            const url = typeof item === "string" ? item : item?.url || item?.path || item?.src || "";
+            const type = typeof item === "object" && item?.type ? item.type : "image";
+            return {
+                post_id: post.id,
+                user_id: userId,
+                url,
+                type
+            };
+        }).filter(m => m.url);
 
-        const { error: mediaError } = await supabase
+        if (mediaToInsert.length > 0) {
+            const { error: mediaError } = await supabase
+                .from("media")
+                .insert(mediaToInsert);
 
-            .from("media")
-
-            .update({
-
-                post_id: post.id
-
-            })
-
-            .in("id", media)
-
-            .eq("user_id", userId);
-
-        if (mediaError) {
-
-            throw mediaError;
-
+            if (mediaError) {
+                console.error("Error attaching media to post:", mediaError);
+            }
         }
-
     }
 
     return post;
-
 }
 
 

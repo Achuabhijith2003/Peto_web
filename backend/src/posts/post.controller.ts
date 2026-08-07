@@ -4,62 +4,46 @@ import { createPostSchema } from "./post.validation";
 
 import { createPostService, getPostById, updatePostById, deletePostById, getMyPostsService, getUserPostsService, getGlobalFeedService, searchPostsService } from "./post.service";
 
-export const createPost = async (
-
-    req: Request,
-
-    res: Response
-
-) => {
-
+export const createPost = async (req: Request, res: Response) => {
     try {
-
         const user = (req as any).user;
 
-        const parsed = createPostSchema.safeParse(req.body);
+        const textContent = req.body.text || req.body.content || "";
+        const visibility = req.body.visibility || "public";
+        const mediaInput = req.body.media || [];
+
+        const parsed = createPostSchema.safeParse({
+            text: textContent,
+            content: textContent,
+            visibility,
+            media: mediaInput,
+        });
 
         if (!parsed.success) {
-
             return res.status(400).json({
-
                 success: false,
-
-                errors: parsed.error.flatten()
-
+                errors: parsed.error.flatten(),
             });
-
         }
 
         const post = await createPostService({
-
             userId: user.id,
-
-            ...parsed.data
-
+            text: textContent,
+            visibility,
+            media: mediaInput,
         });
 
         return res.status(201).json({
-
             success: true,
-
-            data: post
-
+            data: post,
         });
-
     } catch (err: any) {
-
-        console.error(err);
-
+        console.error("Create post error:", err);
         return res.status(500).json({
-
             success: false,
-
-            message: err.message
-
+            message: err?.message || "Failed to create post",
         });
-
     }
-
 };
 
 
