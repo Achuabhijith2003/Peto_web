@@ -5,6 +5,7 @@ import ExpertCircles from "../components/community/ExpertCircles";
 import CreateCircleCTA from "../components/community/CreateCircleCTA";
 import Footer from "../components/layout/Footer";
 import Navbar from "../components/layout/Navbar";
+import MobileBottomNav from "../components/social/MobileBottomNav";
 
 const Community = () => {
   return (
@@ -20,6 +21,7 @@ const Community = () => {
       <CreateCircleCTA />
 
       <Footer />
+      <MobileBottomNav />
     </CommunityLayout>
   );
 };
