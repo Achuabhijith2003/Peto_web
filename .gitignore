@@ -1,4 +1,7 @@
 */.env
 */node_modules
-
+dist
+*/dist
 .env
+.DS_Store
+*.log
