@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 
 import { createPostSchema } from "./post.validation";
 
-import { createPostService, getPostById, updatePostById, deletePostById, getMyPostsService, getUserPostsService, getGlobalFeedService, searchPostsService } from "./post.service";
+import { createPostService, getPostById, updatePostById, deletePostById, getMyPostsService, getUserPostsService, getGlobalFeedService, searchPostsService, getReelsFeedService } from "./post.service";
 
 export const createPost = async (req: Request, res: Response) => {
     try {
@@ -345,6 +345,27 @@ export async function searchPosts(req: Request, res: Response) {
         return res.status(500).json({
             success: false,
             message: err.message,
+        });
+    }
+}
+
+export async function getReelsFeed(req: Request, res: Response) {
+    try {
+        const userId = (req as any).user?.id;
+        const page = Number(req.query.page) || 1;
+        const limit = Number(req.query.limit) || 10;
+
+        const result = await getReelsFeedService(userId, page, limit);
+
+        return res.json({
+            success: true,
+            ...result,
+        });
+    } catch (err: any) {
+        console.error("Get reels feed error:", err);
+        return res.status(500).json({
+            success: false,
+            message: err?.message || "Failed to fetch reels feed",
         });
     }
 }

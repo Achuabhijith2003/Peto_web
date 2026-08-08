@@ -163,7 +163,7 @@ export const suggestedFriends = async (
     req: Request,
     res: Response
 ) => {
-    console.log("Calling Suggested Friends");
+    // console.log("Calling Suggested Friends");
 
     try {
 

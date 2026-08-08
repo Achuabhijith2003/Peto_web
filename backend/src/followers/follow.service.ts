@@ -234,7 +234,7 @@ export async function getSuggestedFriends(
     const to = from + limit - 1;
 
     const excluded = excludedIds.map(id => `"${id}"`).join(",");
-    console.log(excludedIds);
+    // console.log(excludedIds);
 
     const { data: users, error } = await supabase
         .from("profiles")

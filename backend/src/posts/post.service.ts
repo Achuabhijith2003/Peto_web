@@ -10,6 +10,8 @@ interface CreatePostData {
     media?: any[];
 }
 
+const isUUID = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+
 export async function createPostService(
     data: CreatePostData
 ) {
@@ -40,24 +42,43 @@ export async function createPostService(
 
     // Attach uploaded media if present
     if (mediaList.length > 0) {
-        const mediaToInsert = mediaList.map((item: any) => {
-            const url = typeof item === "string" ? item : item?.url || item?.path || item?.src || "";
-            const type = typeof item === "object" && item?.type ? item.type : "image";
-            return {
-                post_id: post.id,
-                user_id: userId,
-                url,
-                type
-            };
-        }).filter(m => m.url);
+        const uuidList = mediaList.filter((item: any) => typeof item === "string" && isUUID(item));
+        const objectList = mediaList.filter((item: any) => !(typeof item === "string" && isUUID(item)));
 
-        if (mediaToInsert.length > 0) {
-            const { error: mediaError } = await supabase
+        // If UUIDs passed, update post_id in media table
+        if (uuidList.length > 0) {
+            const { error: updateError } = await supabase
                 .from("media")
-                .insert(mediaToInsert);
+                .update({ post_id: post.id })
+                .in("id", uuidList)
+                .eq("user_id", userId);
 
-            if (mediaError) {
-                console.error("Error attaching media to post:", mediaError);
+            if (updateError) {
+                console.error("Error linking UUID media to post:", updateError);
+            }
+        }
+
+        // If objects/URLs passed, insert new media rows
+        if (objectList.length > 0) {
+            const mediaToInsert = objectList.map((item: any) => {
+                const url = typeof item === "string" ? item : item?.url || item?.path || item?.src || "";
+                const type = typeof item === "object" && item?.type ? item.type : "image";
+                return {
+                    post_id: post.id,
+                    user_id: userId,
+                    url,
+                    type
+                };
+            }).filter(m => m.url);
+
+            if (mediaToInsert.length > 0) {
+                const { error: insertError } = await supabase
+                    .from("media")
+                    .insert(mediaToInsert);
+
+                if (insertError) {
+                    console.error("Error inserting media objects to post:", insertError);
+                }
             }
         }
     }
@@ -663,6 +684,82 @@ export async function searchPostsService(
             limit,
             total: count ?? 0,
             totalPages: Math.ceil((count ?? 0) / limit)
+        }
+    };
+}
+
+export async function getReelsFeedService(
+    currentUserId?: string,
+    page: number = 1,
+    limit: number = 10
+) {
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    const { data: posts } = await supabase
+        .from("posts")
+        .select(`
+            *,
+            profiles(
+                id,
+                username,
+                full_name,
+                avatar_url,
+                verified
+            ),
+            media(*)
+        `)
+        .eq("visibility", "public")
+        .order("created_at", { ascending: false })
+        .range(from, to * 2);
+
+    const videoPosts = (posts ?? []).filter(post => {
+        if (!post.media || !Array.isArray(post.media)) return false;
+        return post.media.some((m: any) => {
+            if (m.type === "video") return true;
+            const url = typeof m === "string" ? m : m?.url || m?.path || "";
+            return /\.(mp4|webm|mov|mkv|avi)(\?.*)?$/i.test(url);
+        });
+    }).slice(0, limit);
+
+    const postIds = videoPosts.map(post => post.id);
+
+    let likedPosts = new Set<string>();
+    let bookmarkedPosts = new Set<string>();
+
+    if (currentUserId && postIds.length > 0) {
+        const { data: likes } = await supabase
+            .from("likes")
+            .select("post_id")
+            .eq("user_id", currentUserId)
+            .in("post_id", postIds);
+
+        const { data: bookmarks } = await supabase
+            .from("bookmarks")
+            .select("post_id")
+            .eq("user_id", currentUserId)
+            .in("post_id", postIds);
+
+        likedPosts = new Set((likes ?? []).map(x => x.post_id));
+        bookmarkedPosts = new Set((bookmarks ?? []).map(x => x.post_id));
+    }
+
+    const feed = videoPosts.map(post =>
+        mapPostForFeed(
+            post,
+            currentUserId,
+            likedPosts,
+            bookmarkedPosts
+        )
+    );
+
+    return {
+        posts: feed,
+        pagination: {
+            page,
+            limit,
+            total: videoPosts.length,
+            totalPages: Math.ceil(videoPosts.length / limit)
         }
     };
 }

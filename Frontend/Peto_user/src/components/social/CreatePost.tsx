@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Image, X, Loader2, Sparkles, PawPrint } from "lucide-react";
+import { Image, Video, X, Loader2, Sparkles, PawPrint, Play } from "lucide-react";
 import api from "../../utils/api";
 import { useAuth } from "../../context/AuthContext";
 
@@ -13,25 +13,37 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
   const [mediaFiles, setMediaFiles] = useState<{ file: File; preview: string; type: "image" | "video" }[]>([]);
   const [uploadingMedia, setUploadingMedia] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   const handlePhotoClick = () => {
     if (!user) {
       openAuthModal("share photos of your pets");
       return;
     }
-    fileInputRef.current?.click();
+    photoInputRef.current?.click();
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleVideoClick = () => {
+    if (!user) {
+      openAuthModal("share videos of your pets");
+      return;
+    }
+    videoInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, forcedType?: "image" | "video") => {
     if (!e.target.files || e.target.files.length === 0) return;
     const selectedFiles = Array.from(e.target.files);
 
-    const newMedia = selectedFiles.map((file) => ({
-      file,
-      preview: URL.createObjectURL(file),
-      type: file.type.startsWith("video/") ? ("video" as const) : ("image" as const),
-    }));
+    const newMedia = selectedFiles.map((file) => {
+      const type = forcedType || (file.type.startsWith("video/") ? "video" : "image");
+      return {
+        file,
+        preview: URL.createObjectURL(file),
+        type,
+      };
+    });
 
     setMediaFiles((prev) => [...prev, ...newMedia]);
   };
@@ -56,30 +68,40 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 
     try {
       setSubmitting(true);
-      const uploadedMedia: { url: string; type: "image" | "video" }[] = [];
+      const mediaPayload: any[] = [];
 
       if (mediaFiles.length > 0) {
         setUploadingMedia(true);
         for (const item of mediaFiles) {
           const formData = new FormData();
-          formData.append("file", item.file);
+          formData.append("media", item.file);
 
           const uploadRes = await api.post("/media/upload", formData, {
             headers: { "Content-Type": "multipart/form-data" },
           });
 
-          if (uploadRes.data?.success && uploadRes.data?.mediaUrl) {
-            uploadedMedia.push({
-              url: uploadRes.data.mediaUrl,
-              type: item.type,
-            });
+          if (uploadRes.data?.success) {
+            const returnedItem = Array.isArray(uploadRes.data?.data) ? uploadRes.data.data[0] : uploadRes.data.data;
+            const mediaId = returnedItem?.id;
+            const mediaUrl = uploadRes.data?.mediaUrl || returnedItem?.url || returnedItem?.path;
+
+            if (mediaId) {
+              mediaPayload.push(mediaId);
+            } else if (mediaUrl) {
+              mediaPayload.push({
+                url: mediaUrl,
+                type: item.type,
+              });
+            }
           }
         }
       }
 
       await api.post("/posts", {
+        text: text.trim(),
         content: text.trim(),
-        media: uploadedMedia,
+        visibility: "public",
+        media: mediaPayload,
       });
 
       setText("");
@@ -131,12 +153,19 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
             {mediaFiles.length > 0 && (
               <div className="flex flex-wrap gap-3 pt-1">
                 {mediaFiles.map((item, idx) => (
-                  <div key={idx} className="relative h-20 w-20 rounded-2xl overflow-hidden border border-slate-200 group shadow-xs">
-                    <img src={item.preview} alt="Upload preview" className="h-full w-full object-cover" />
+                  <div key={idx} className="relative h-24 w-24 rounded-2xl overflow-hidden border border-slate-200 group shadow-xs bg-slate-900 flex items-center justify-center">
+                    {item.type === "video" ? (
+                      <div className="relative w-full h-full flex items-center justify-center bg-slate-950">
+                        <video src={item.preview} className="h-full w-full object-cover opacity-80" />
+                        <Play size={20} className="absolute text-white drop-shadow-md fill-white" />
+                      </div>
+                    ) : (
+                      <img src={item.preview} alt="Upload preview" className="h-full w-full object-cover" />
+                    )}
                     <button
                       type="button"
                       onClick={() => removeMedia(idx)}
-                      className="absolute top-1 right-1 rounded-full bg-slate-900/70 p-1 text-white hover:bg-slate-900 transition"
+                      className="absolute top-1 right-1 rounded-full bg-slate-900/80 p-1 text-white hover:bg-slate-900 transition"
                     >
                       <X size={12} />
                     </button>
@@ -149,23 +178,44 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
 
         <input
           type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
+          ref={photoInputRef}
+          onChange={(e) => handleFileChange(e, "image")}
           multiple
           accept="image/*"
           className="hidden"
         />
 
+        <input
+          type="file"
+          ref={videoInputRef}
+          onChange={(e) => handleFileChange(e, "video")}
+          multiple
+          accept="video/*"
+          className="hidden"
+        />
+
         <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
-          <button 
-            type="button"
-            onClick={handlePhotoClick}
-            disabled={uploadingMedia}
-            className="flex items-center gap-2 rounded-xl bg-amber-50 px-4 py-2 text-xs font-bold text-amber-700 hover:bg-amber-100 transition border border-amber-200/50"
-          >
-            <Image size={16} className="text-amber-600" />
-            <span>{uploadingMedia ? "Uploading..." : "Add Photo"}</span>
-          </button>
+          <div className="flex gap-2">
+            <button 
+              type="button"
+              onClick={handlePhotoClick}
+              disabled={uploadingMedia}
+              className="flex items-center gap-2 rounded-xl bg-amber-50 px-3.5 py-2 text-xs font-bold text-amber-700 hover:bg-amber-100 transition border border-amber-200/50"
+            >
+              <Image size={16} className="text-amber-600" />
+              <span>Photo</span>
+            </button>
+
+            <button 
+              type="button"
+              onClick={handleVideoClick}
+              disabled={uploadingMedia}
+              className="flex items-center gap-2 rounded-xl bg-rose-50 px-3.5 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100 transition border border-rose-200/50"
+            >
+              <Video size={16} className="text-rose-600" />
+              <span>Video</span>
+            </button>
+          </div>
 
           <button
             type="submit"
@@ -175,7 +225,7 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
             {submitting ? (
               <>
                 <Loader2 size={14} className="animate-spin" />
-                <span>Posting...</span>
+                <span>{uploadingMedia ? "Uploading..." : "Posting..."}</span>
               </>
             ) : (
               <span>Post</span>

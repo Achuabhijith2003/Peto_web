@@ -21,6 +21,7 @@ import bookmarkRoutes from "./bookmarks/bookmark.routes";
 import followRoutes from "./followers/follow.routes";
 import presenceRoutes from "./presence/presence.routes";
 import notificationRoutes from "./notifications/notification.routes";
+import { ensurePublicBuckets } from "./media/storage.service";
 
 
 
@@ -45,6 +46,7 @@ app.use(
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         imgSrc: ["'self'", "data:", "blob:", "https:"],
+        mediaSrc: ["'self'", "data:", "blob:", "https:"],
         connectSrc: ["'self'", "https:", "http://localhost:*", "ws://localhost:*"],
       },
     },
@@ -186,6 +188,7 @@ app.use(
 // ----------------------
 
 app.listen(PORT, () => {
+  ensurePublicBuckets();
   console.log("");
   console.log("====================================");
   console.log("🚀 Peto Backend Started");

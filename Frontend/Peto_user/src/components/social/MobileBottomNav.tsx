@@ -1,4 +1,4 @@
-import { House, Search, PlusSquare, Users, User } from "lucide-react";
+import { House, Search, PlusSquare, Users, User, Clapperboard } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
@@ -32,6 +32,7 @@ const MobileBottomNav = () => {
   };
 
   const isHomeActive = currentPath === "/" || currentPath === "/social";
+  const isReelsActive = currentPath === "/reels";
   const isSearchActive = currentPath === "/search";
   const isCommunityActive = currentPath === "/community";
   const isProfileActive = currentPath.startsWith("/profile");
@@ -41,22 +42,33 @@ const MobileBottomNav = () => {
       {/* Home */}
       <Link
         to="/social"
-        className={`flex flex-col items-center justify-center gap-1 py-1 px-3 text-xs font-medium transition ${
+        className={`flex flex-col items-center justify-center gap-1 py-1 px-2.5 text-xs font-medium transition ${
           isHomeActive ? "text-amber-600 font-semibold" : "text-slate-500 hover:text-slate-800"
         }`}
       >
-        <House size={22} className={isHomeActive ? "stroke-[2.5px]" : "stroke-[1.8px]"} />
+        <House size={20} className={isHomeActive ? "stroke-[2.5px]" : "stroke-[1.8px]"} />
         <span>Home</span>
+      </Link>
+
+      {/* Reels */}
+      <Link
+        to="/reels"
+        className={`flex flex-col items-center justify-center gap-1 py-1 px-2 text-xs font-medium transition ${
+          isReelsActive ? "text-amber-600 font-semibold" : "text-slate-500 hover:text-slate-800"
+        }`}
+      >
+        <Clapperboard size={20} className={isReelsActive ? "stroke-[2.5px]" : "stroke-[1.8px]"} />
+        <span>Reels</span>
       </Link>
 
       {/* Search */}
       <Link
         to="/search"
-        className={`flex flex-col items-center justify-center gap-1 py-1 px-3 text-xs font-medium transition ${
+        className={`flex flex-col items-center justify-center gap-1 py-1 px-2 text-xs font-medium transition ${
           isSearchActive ? "text-amber-600 font-semibold" : "text-slate-500 hover:text-slate-800"
         }`}
       >
-        <Search size={22} className={isSearchActive ? "stroke-[2.5px]" : "stroke-[1.8px]"} />
+        <Search size={20} className={isSearchActive ? "stroke-[2.5px]" : "stroke-[1.8px]"} />
         <span>Search</span>
       </Link>
 

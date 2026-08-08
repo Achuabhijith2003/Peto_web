@@ -14,105 +14,70 @@ export async function compressVideo(
     input: string,
     output: string
 ): Promise<void> {
-
     return new Promise<void>((resolve, reject) => {
-
         ffmpeg(input)
-
             .videoCodec("libx264")
-
             .audioCodec("aac")
-
-
             .outputOptions([
-                "-preset", "slow",
-                "-vcodec libx264",
-                "-b:v 300k",
-                "-maxrate 350k",
-                "-bufsize 700k",
-                "-acodec aac",
-                "-b:a 64k",
-                "-movflags", "+faststart",
-                "-pix_fmt", "yuv420p"
+                "-preset medium",
+                "-crf 23",
+                "-vf scale='min(1080,iw)':-2",
+                "-b:a 128k",
+                "-movflags +faststart",
+                "-pix_fmt yuv420p"
             ])
-
             .on("start", command => {
-                console.log(command);
+                console.log("FFmpeg compression started:", command);
             })
-
             .on("stderr", line => {
-                console.log(line);
+                // Keep verbose logs suppressed unless debugging
             })
-
             .on("end", () => resolve())
-
-            .on("error", err => reject(err))
-
+            .on("error", err => {
+                console.error("FFmpeg compression error:", err);
+                reject(err);
+            })
             .save(output);
-
     });
-
 }
 
 export async function createThumbnail(
     input: string,
     outputPath: string
 ): Promise<void> {
-
     const folder = path.dirname(outputPath);
     const filename = path.basename(outputPath);
 
     await fs.mkdir(folder, { recursive: true });
 
     return new Promise<void>((resolve, reject) => {
-
         ffmpeg(input)
-
             .on("end", async () => {
-
                 try {
-                    // Wait briefly to ensure FFmpeg releases the file handle
                     await new Promise(resolve => setTimeout(resolve, 300));
-
                     await fs.access(outputPath);
-
                     resolve();
                 } catch (err) {
                     reject(err);
                 }
-
             })
-
             .on("error", (err) => {
-
                 reject(err);
-
             })
-
             .screenshots({
-
                 count: 1,
-
                 folder,
-
                 filename,
-
                 size: "720x?"
-
             });
-
     });
-
 }
 
 export async function getMetadata(
     input: string
 ) {
-
     return new Promise((resolve, reject) => {
-
         ffmpeg.ffprobe(input, (err, metadata) => {
-
             if (err) return reject(err);
 
             const video = metadata.streams.find(
@@ -120,28 +85,21 @@ export async function getMetadata(
             );
 
             resolve({
-
                 width: video?.width,
-
                 height: video?.height,
-
-                duration: metadata.format.duration
-
+                duration: metadata.format.duration || 0
             });
-
         });
-
     });
-
 }
 
 async function deleteIfExists(file: string) {
     try {
         await fs.access(file);
         await fs.unlink(file);
-        console.log("Deleted:", file);
+        console.log("Deleted temp file:", file);
     } catch (err) {
-        console.log("Could not delete:", file);
+        // Ignore if file doesn't exist
     }
 }
 
@@ -149,55 +107,47 @@ export async function processVideo(
     userId: string,
     file: Express.Multer.File
 ) {
-
     const id = crypto.randomUUID();
-
     const tempDir = path.join(process.cwd(), "temp");
 
     await fs.mkdir(tempDir, { recursive: true });
 
     const inputPath = path.join(tempDir, `${id}-input.mp4`);
-
     const outputPath = path.join(tempDir, `${id}.mp4`);
-
     const thumbnailPath = path.join(tempDir, `${id}.jpg`);
 
     try {
-
-        // Save uploaded file
+        // Save uploaded raw file
         await fs.writeFile(inputPath, file.buffer);
 
-        // Compress video
+        // Compress video with high quality CRF 23 + FastStart
         await compressVideo(
             inputPath,
             outputPath
         );
 
-        // Generate thumbnail
-        // await createThumbnail(
-        //     outputPath,
-        //     `${id}.jpg`
-        // );
-
         // Read metadata
         const metadata: any = await getMetadata(outputPath);
 
-        // Upload compressed video
+        // Upload compressed MP4 video to storage
         const videoUrl = await uploadVideo(
             outputPath,
             `${id}.mp4`
         );
 
-        // Upload thumbnail
-        const thumbnailUrl = await createThumbnail(
-            outputPath,
-            thumbnailPath
-        );
+        // Generate and upload thumbnail
+        let thumbnailUrl = null;
+        try {
+            await createThumbnail(outputPath, thumbnailPath);
+            thumbnailUrl = await uploadThumbnail(thumbnailPath, `${id}.jpg`);
+        } catch (thumbErr) {
+            console.warn("Thumbnail generation skipped/failed:", thumbErr);
+        }
 
         // Compressed file size
         const stats = await fs.stat(outputPath);
 
-        // Save media record
+        // Save media record in Supabase
         const { data, error } = await supabase
             .from("media")
             .insert({
@@ -205,9 +155,9 @@ export async function processVideo(
                 type: "video",
                 url: videoUrl,
                 thumbnail_url: thumbnailUrl,
-                width: metadata.width,
-                height: metadata.height,
-                duration: Math.round(metadata.duration),
+                width: metadata.width || null,
+                height: metadata.height || null,
+                duration: Math.round(metadata.duration || 0),
                 size: stats.size,
                 mime_type: "video/mp4",
             })
@@ -219,16 +169,10 @@ export async function processVideo(
         }
 
         return data;
-
     } finally {
-
-        // Cleanup temp filesF
+        // Cleanup temp files
         await deleteIfExists(inputPath);
-
         await deleteIfExists(outputPath);
-
         await deleteIfExists(thumbnailPath);
-
     }
-
 }

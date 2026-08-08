@@ -223,13 +223,17 @@ const PostCard = ({ post }: PostCardProps) => {
       ? post.media_urls
       : [];
 
-  const images: string[] = mediaList
+  const images = mediaList
     .map((m: any) => {
-      let url = typeof m === "string" ? m : m?.url || m?.path || m?.src;
-      if (!url) return "";
-      url = url.replace("/posts-images/posts-images/", "/posts-images/");
-      url = url.replace("/posts-videos/posts-videos/", "/posts-videos/");
-      return url;
+      let rawUrl = typeof m === "string" ? m : m?.url || m?.path || m?.src || "";
+      if (!rawUrl) return null;
+      const url = rawUrl
+        .replace("/posts-images/posts-images/", "/posts-images/")
+        .replace("/posts-videos/posts-videos/", "/posts-videos/");
+      const type =
+        (typeof m === "object" && m?.type) ||
+        (/\.(mp4|webm|mov|mkv|avi)(\?.*)?$/i.test(url) ? "video" : "image");
+      return { url, type };
     })
     .filter(Boolean);
 

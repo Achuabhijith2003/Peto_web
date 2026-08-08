@@ -4,6 +4,7 @@ import {
   PawPrint,
   Users,
   Search,
+  Clapperboard,
 } from "lucide-react";
 
 import { useAuth } from "../../context/AuthContext";
@@ -11,6 +12,7 @@ import { Link, useLocation } from "react-router-dom";
 
 const menu = [
   { icon: House, label: "Home Feed", path: "/social" },
+  { icon: Clapperboard, label: "Pet Reels", path: "/reels" },
   { icon: Search, label: "Explore", path: "/search" },
   { icon: Users, label: "Communities", path: "/community" },
   { icon: Bookmark, label: "Saved Posts", path: "/bookmarks" },

@@ -6,7 +6,8 @@ import {
   Bell,
   Sparkles,
   Users,
-  Search
+  Search,
+  Clapperboard,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
@@ -59,6 +60,18 @@ const Navbar = () => {
           >
             <Sparkles size={16} className={isActive("/social") || isActive("/") ? "text-amber-500" : "text-slate-400"} />
             <span>Feed</span>
+          </Link>
+
+          <Link
+            to="/reels"
+            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition ${
+              isActive("/reels")
+                ? "bg-amber-50 text-amber-700 font-bold"
+                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+            }`}
+          >
+            <Clapperboard size={16} className={isActive("/reels") ? "text-amber-500" : "text-slate-400"} />
+            <span>Reels</span>
           </Link>
 
           <Link
