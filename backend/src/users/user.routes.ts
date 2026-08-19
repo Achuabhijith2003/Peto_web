@@ -1,6 +1,7 @@
 import { Router } from "express";
 import * as userController from "./user.controller";
 import { authenticate, optionalAuthenticate } from "../auth/auth.middleware";
+import { uploadImage } from "../media/upload.middleware";
 
 const router = Router();
 
@@ -18,9 +19,9 @@ router.get("/:id", optionalAuthenticate, userController.getUserById);
 
 router.patch("/me", authenticate, userController.updateProfile);
 
-router.patch("/avatar", authenticate, userController.updateAvatar);
+router.patch("/avatar", authenticate, uploadImage.any(), userController.updateAvatar);
 
-router.patch("/cover", authenticate, userController.updateCover);
+router.patch("/cover", authenticate, uploadImage.any(), userController.updateCover);
 
 router.delete("/me", authenticate, userController.deleteAccount);
 

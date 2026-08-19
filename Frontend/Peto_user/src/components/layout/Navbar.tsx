@@ -8,6 +8,7 @@ import {
   Users,
   Search,
   Clapperboard,
+  Edit3,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
@@ -165,6 +166,15 @@ const Navbar = () => {
                   >
                     <UserCircle size={18} className="text-slate-400 group-hover:text-amber-600" />
                     Profile
+                  </Link>
+
+                  <Link 
+                    to="/edit-profile" 
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-amber-50 hover:text-amber-700 transition"
+                    onClick={() => setDropdownOpen(false)}
+                  >
+                    <Edit3 size={18} className="text-slate-400 group-hover:text-amber-600" />
+                    Edit Profile
                   </Link>
 
                   <Link 

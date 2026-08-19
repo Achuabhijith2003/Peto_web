@@ -16,6 +16,10 @@ export async function getUserProfile(
             bio,
             avatar_url,
             cover_url,
+            location,
+            website,
+            phone,
+            date_of_birth,
             verified,
             created_at
         `)

@@ -20,6 +20,8 @@ interface AuthContextType {
   isAuthModalOpen: boolean;
   openAuthModal: (actionName?: string) => void;
   closeAuthModal: () => void;
+  updateUserProfile: (profileData: any) => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -38,6 +40,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const closeAuthModal = () => {
     setIsAuthModalOpen(false);
     setModalAction(undefined);
+  };
+
+  const refreshUser = async () => {
+    const token = localStorage.getItem("peto_token");
+    if (token) {
+      try {
+        const response = await api.get("/users/me");
+        const userData = response.data.user || response.data;
+        setUser({ ...userData, profile: response.data.profile });
+      } catch (error) {
+        console.error("User refresh failed:", error);
+      }
+    }
+  };
+
+  const updateUserProfile = (profileData: any) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const updatedProfile = { ...(prev.profile || {}), ...profileData };
+      return {
+        ...prev,
+        username: profileData.username || prev.username,
+        avatar_url: profileData.avatar_url || prev.avatar_url,
+        profile: updatedProfile,
+      };
+    });
   };
 
   useEffect(() => {
@@ -95,6 +123,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAuthModalOpen,
         openAuthModal,
         closeAuthModal,
+        updateUserProfile,
+        refreshUser,
       }}
     >
       {children}

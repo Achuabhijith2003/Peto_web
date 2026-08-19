@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
-import { useParams } from "react-router-dom";
-import { UserPlus, UserCheck, Loader2 } from "lucide-react";
+import { useParams, Link } from "react-router-dom";
+import { UserPlus, UserCheck, Loader2, Edit3 } from "lucide-react";
 import api from "../utils/api";
 import { useAuth } from "../context/AuthContext";
 
@@ -135,11 +135,19 @@ const ProfileCenter = ({ userId }: { userId?: string }) => {
   return (
     <div className="space-y-6">
       {/* Profile Header Card */}
-      <div className="bg-white rounded-3xl shadow-sm overflow-hidden border border-slate-100">
-        <div className="h-36 bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400"></div>
-        <div className="px-6 pb-6">
-          <div className="flex justify-between items-end -mt-16 mb-4">
-            <div className="w-28 h-28 rounded-full border-4 border-white bg-white overflow-hidden shadow-md flex items-center justify-center">
+      <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+        <div className="h-44 sm:h-52 w-full bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 relative overflow-hidden">
+          {profile.cover_url && profile.cover_url !== "null" && (
+            <img
+              src={profile.cover_url}
+              alt="Cover photo"
+              className="w-full h-full object-cover"
+            />
+          )}
+        </div>
+        <div className="px-6 pb-6 relative z-10">
+          <div className="flex justify-between items-end -mt-14 sm:-mt-16 mb-4">
+            <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-white bg-white overflow-hidden shadow-lg flex items-center justify-center shrink-0 relative z-20">
               <img
                 src={
                   profile.avatar_url && profile.avatar_url !== "null"
@@ -159,8 +167,16 @@ const ProfileCenter = ({ userId }: { userId?: string }) => {
               />
             </div>
 
-            {/* Follow Button for Other Profiles */}
-            {!isOwnProfile && (
+            {/* Edit Profile Button for Own Profile or Follow Button for Other Profiles */}
+            {isOwnProfile ? (
+              <Link
+                to="/edit-profile"
+                className="rounded-xl border border-slate-200 bg-white px-5 py-2 text-sm font-bold text-slate-700 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200 transition shadow-sm flex items-center gap-2"
+              >
+                <Edit3 size={16} className="text-amber-500" />
+                Edit Profile
+              </Link>
+            ) : (
               <button
                 onClick={handleToggleFollow}
                 disabled={followActionLoading}

@@ -56,6 +56,57 @@ export async function uploadImageToStorage(
     return data.publicUrl;
 }
 
+export async function uploadAvatarToStorage(
+    file: Buffer,
+    filename: string,
+    contentType: string = "image/jpeg"
+) {
+    const path = filename;
+
+    const { error } = await supabase.storage
+        .from("avatars")
+        .upload(path, file, {
+            contentType,
+            upsert: true
+        });
+
+    if (error) {
+        throw error;
+    }
+
+    const { data } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(path);
+
+    return data.publicUrl;
+}
+
+export async function uploadCoverToStorage(
+    file: Buffer,
+    filename: string,
+    contentType: string = "image/jpeg"
+) {
+    const path = filename;
+
+    const { error } = await supabase.storage
+        .from("covers")
+        .upload(path, file, {
+            contentType,
+            upsert: true
+        });
+
+    if (error) {
+        throw error;
+    }
+
+    const { data } = supabase.storage
+        .from("covers")
+        .getPublicUrl(path);
+
+    return data.publicUrl;
+}
+
+
 export async function uploadVideo(
     filePath: string,
     filename: string

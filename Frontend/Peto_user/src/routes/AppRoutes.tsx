@@ -7,6 +7,7 @@ import ForgotPassword from "../pages/ForgotPassword";
 import Community from "../pages/Community";
 import Social from "../pages/Social";
 import CreateProfile from "../pages/CreateProfile";
+import EditProfile from "../pages/EditProfile";
 import Profile from "../pages/Profile";
 import Bookmarks from "../pages/Bookmarks";
 import SearchPage from "../pages/Search";
@@ -28,6 +29,8 @@ const AppRoutes = () => {
       <Route path="/reels" element={<Reels />} />
       <Route path="/search" element={<SearchPage />} />
       <Route path="/create-profile" element={<CreateProfile />} />
+      <Route path="/edit-profile" element={<EditProfile />} />
+      <Route path="/profile/edit" element={<EditProfile />} />
       <Route path="/profile/:id?" element={<Profile />} />
       <Route path="/bookmarks" element={<Bookmarks />} />
       <Route path="*" element={<Navigate to="/" replace />} />

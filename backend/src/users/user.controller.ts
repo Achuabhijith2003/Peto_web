@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { supabase } from "../config/supabase";
 import { getUserProfile, searchUsers } from "./user.service";
+import { uploadAvatarToStorage, uploadCoverToStorage } from "../media/storage.service";
 
 export const getCurrentUser = async (
     req: Request,
@@ -100,18 +101,44 @@ export const getUserById = async (
 export const updateProfile = async (req: Request, res: Response) => {
     try {
         const user = (req as any).user;
-        const { username, full_name, fullName, bio, location, website, phone, dateOfBirth, avatar_url, cover_url } = req.body;
+        const { username, full_name, fullName, bio, location, website, phone, dateOfBirth, date_of_birth, avatar_url, cover_url } = req.body;
 
         const updateData: any = {};
-        if (username !== undefined) updateData.username = username;
         if (full_name !== undefined || fullName !== undefined) updateData.full_name = full_name || fullName;
         if (bio !== undefined) updateData.bio = bio;
         if (location !== undefined) updateData.location = location;
         if (website !== undefined) updateData.website = website;
         if (phone !== undefined) updateData.phone = phone;
-        if (dateOfBirth !== undefined) updateData.date_of_birth = dateOfBirth;
+        if (dateOfBirth !== undefined || date_of_birth !== undefined) updateData.date_of_birth = dateOfBirth || date_of_birth;
         if (avatar_url !== undefined) updateData.avatar_url = avatar_url;
         if (cover_url !== undefined) updateData.cover_url = cover_url;
+
+        if (username !== undefined && username !== "") {
+            const trimmedUsername = username.trim().toLowerCase();
+            const usernameRegex = /^[a-z0-9_]{3,20}$/;
+            if (!usernameRegex.test(trimmedUsername)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Username must be 3-20 characters and contain only lowercase letters, numbers, and underscores.",
+                });
+            }
+
+            const { data: existingUser } = await supabase
+                .from("profiles")
+                .select("id")
+                .eq("username", trimmedUsername)
+                .neq("id", user.id)
+                .maybeSingle();
+
+            if (existingUser) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Username is already taken by another account.",
+                });
+            }
+
+            updateData.username = trimmedUsername;
+        }
 
         const { data, error } = await supabase
             .from("profiles")
@@ -133,6 +160,7 @@ export const updateProfile = async (req: Request, res: Response) => {
             data,
         });
     } catch (err: any) {
+        console.error("Update profile error:", err);
         return res.status(500).json({
             success: false,
             message: err.message || "Internal server error",
@@ -140,18 +168,94 @@ export const updateProfile = async (req: Request, res: Response) => {
     }
 };
 
-export const updateAvatar = async (_req: Request, res: Response) => {
-    res.json({
-        success: true,
-        message: "Avatar updated",
-    });
+export const updateAvatar = async (req: Request, res: Response) => {
+    try {
+        const user = (req as any).user;
+        const file = req.file || (req.files && Array.isArray(req.files) ? req.files[0] : undefined);
+
+        if (!file) {
+            return res.status(400).json({
+                success: false,
+                message: "No image file provided for avatar.",
+            });
+        }
+
+        const ext = file.originalname ? file.originalname.split('.').pop() : 'jpg';
+        const filename = `${user.id}_avatar_${Date.now()}.${ext}`;
+        const avatar_url = await uploadAvatarToStorage(file.buffer, filename, file.mimetype || "image/jpeg");
+
+        const { data, error } = await supabase
+            .from("profiles")
+            .update({ avatar_url })
+            .eq("id", user.id)
+            .select()
+            .single();
+
+        if (error) {
+            return res.status(400).json({
+                success: false,
+                message: error.message,
+            });
+        }
+
+        return res.json({
+            success: true,
+            message: "Avatar updated successfully",
+            avatar_url,
+            data,
+        });
+    } catch (err: any) {
+        console.error("Update avatar error:", err);
+        return res.status(500).json({
+            success: false,
+            message: err.message || "Internal server error",
+        });
+    }
 };
 
-export const updateCover = async (_req: Request, res: Response) => {
-    res.json({
-        success: true,
-        message: "Cover image updated",
-    });
+export const updateCover = async (req: Request, res: Response) => {
+    try {
+        const user = (req as any).user;
+        const file = req.file || (req.files && Array.isArray(req.files) ? req.files[0] : undefined);
+
+        if (!file) {
+            return res.status(400).json({
+                success: false,
+                message: "No image file provided for cover photo.",
+            });
+        }
+
+        const ext = file.originalname ? file.originalname.split('.').pop() : 'jpg';
+        const filename = `${user.id}_cover_${Date.now()}.${ext}`;
+        const cover_url = await uploadCoverToStorage(file.buffer, filename, file.mimetype || "image/jpeg");
+
+        const { data, error } = await supabase
+            .from("profiles")
+            .update({ cover_url })
+            .eq("id", user.id)
+            .select()
+            .single();
+
+        if (error) {
+            return res.status(400).json({
+                success: false,
+                message: error.message,
+            });
+        }
+
+        return res.json({
+            success: true,
+            message: "Cover image updated successfully",
+            cover_url,
+            data,
+        });
+    } catch (err: any) {
+        console.error("Update cover error:", err);
+        return res.status(500).json({
+            success: false,
+            message: err.message || "Internal server error",
+        });
+    }
 };
 
 export const deleteAccount = async (_req: Request, res: Response) => {
