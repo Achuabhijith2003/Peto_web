@@ -5,12 +5,24 @@ export function mapPostForFeed(
     bookmarkedPosts?: Set<string>
 ) {
     const author = post.profiles || {};
+    const community = post.communities || null;
 
     return {
         id: post.id,
         user_id: post.user_id,
         text: post.text,
         visibility: post.visibility,
+        community_id: post.community_id || null,
+        is_locked: post.is_locked || false,
+        community: community
+            ? {
+                  id: community.id,
+                  name: community.name,
+                  slug: community.slug,
+                  icon_url: community.icon_url,
+                  visibility: community.visibility,
+              }
+            : null,
         created_at: post.created_at,
         updated_at: post.updated_at,
         author: {

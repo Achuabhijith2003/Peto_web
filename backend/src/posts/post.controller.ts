@@ -11,12 +11,14 @@ export const createPost = async (req: Request, res: Response) => {
         const textContent = req.body.text || req.body.content || "";
         const visibility = req.body.visibility || "public";
         const mediaInput = req.body.media || [];
+        const communityId = req.body.community_id || req.body.communityId || undefined;
 
         const parsed = createPostSchema.safeParse({
             text: textContent,
             content: textContent,
             visibility,
             media: mediaInput,
+            community_id: communityId,
         });
 
         if (!parsed.success) {
@@ -31,6 +33,7 @@ export const createPost = async (req: Request, res: Response) => {
             text: textContent,
             visibility,
             media: mediaInput,
+            communityId,
         });
 
         return res.status(201).json({

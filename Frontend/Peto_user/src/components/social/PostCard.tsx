@@ -10,6 +10,8 @@ import {
   CheckCircle2,
   Clock,
   MessageCircle,
+  Lock,
+  Users,
 } from "lucide-react";
 import api from "../../utils/api";
 import { useAuth } from "../../context/AuthContext";
@@ -264,7 +266,7 @@ const PostCard = ({ post }: PostCardProps) => {
 
           {/* Author info with click to profile */}
           <div className="flex flex-col justify-center">
-            <div className="flex items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-1.5">
               <h3
                 onClick={handleProfileClick}
                 className="cursor-pointer font-bold text-slate-900 transition-colors hover:text-amber-600 text-base leading-tight"
@@ -274,6 +276,26 @@ const PostCard = ({ post }: PostCardProps) => {
               </h3>
               {post.author?.verified && (
                 <CheckCircle2 size={16} className="shrink-0 text-amber-500 fill-amber-100" />
+              )}
+              {post.community && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/community/${post.community.slug || post.community.id}`);
+                  }}
+                  className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700 hover:bg-amber-100 transition border border-amber-200/60"
+                  title={`Posted in ${post.community.name}`}
+                >
+                  <Users size={11} className="shrink-0" />
+                  <span>c/{post.community.name}</span>
+                </button>
+              )}
+              {post.is_locked && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 border border-slate-200" title="Discussion is locked">
+                  <Lock size={10} className="shrink-0" />
+                  <span>Locked</span>
+                </span>
               )}
             </div>
 

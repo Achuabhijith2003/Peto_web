@@ -5,6 +5,7 @@ import Login from "../pages/Login";
 import Register from "../pages/Register";
 import ForgotPassword from "../pages/ForgotPassword";
 import Community from "../pages/Community";
+import CommunityDetail from "../pages/CommunityDetail";
 import Social from "../pages/Social";
 import CreateProfile from "../pages/CreateProfile";
 import EditProfile from "../pages/EditProfile";
@@ -25,6 +26,8 @@ const AppRoutes = () => {
       <Route path="/forgot-password" element={<ForgotPassword />} />
 
       <Route path="/community" element={<Community />} />
+      <Route path="/community/:id" element={<CommunityDetail />} />
+      <Route path="/communities/:id" element={<CommunityDetail />} />
       <Route path="/social" element={<Social />} />
       <Route path="/reels" element={<Reels />} />
       <Route path="/search" element={<SearchPage />} />

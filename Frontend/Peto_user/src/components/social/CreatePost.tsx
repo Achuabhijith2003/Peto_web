@@ -5,9 +5,11 @@ import { useAuth } from "../../context/AuthContext";
 
 interface CreatePostProps {
   onPostCreated?: () => void;
+  communityId?: string;
+  communityName?: string;
 }
 
-const CreatePost = ({ onPostCreated }: CreatePostProps) => {
+const CreatePost = ({ onPostCreated, communityId, communityName }: CreatePostProps) => {
   const { user, openAuthModal } = useAuth();
   const [text, setText] = useState("");
   const [mediaFiles, setMediaFiles] = useState<{ file: File; preview: string; type: "image" | "video" }[]>([]);
@@ -102,6 +104,7 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
         content: text.trim(),
         visibility: "public",
         media: mediaPayload,
+        community_id: communityId || undefined,
       });
 
       setText("");
@@ -120,7 +123,7 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
       <div className="flex items-center gap-2 mb-4">
         <Sparkles size={18} className="text-amber-500" />
         <h3 className="font-headline font-bold text-base text-slate-900">
-          Create Post
+          {communityName ? `Create Discussion in ${communityName}` : "Create Post"}
         </h3>
       </div>
 
@@ -141,13 +144,19 @@ const CreatePost = ({ onPostCreated }: CreatePostProps) => {
           <div className="flex-1 space-y-3">
             <textarea
               rows={3}
-              placeholder={user ? "Share something wonderful about your pet..." : "Log in to share a post with the community..."}
+              placeholder={
+                communityName
+                  ? `Share your thoughts with members of ${communityName}...`
+                  : user
+                  ? "Share something wonderful about your pet..."
+                  : "Log in to share a post with the community..."
+              }
               value={text}
               onFocus={() => {
                 if (!user) openAuthModal("share posts with pet lovers");
               }}
               onChange={(e) => setText(e.target.value)}
-              className="w-full resize-none rounded-2xl bg-slate-50 p-4 text-sm text-slate-900 placeholder-slate-400 outline-none border-2 border-transparent focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100/50 transition duration-200"
+              className="w-full resize-none rounded-2xl bg-slate-50 p-4 text-sm text-slate-900 placeholder-slate-400 outline-none border-2 border-transparent focus:border-amber-500 focus:bg-white focus:ring-4 focus:ring-amber-100/50 transition duration-200"
             />
 
             {mediaFiles.length > 0 && (

@@ -8,6 +8,7 @@ interface CreatePostData {
     text?: string;
     visibility: "public" | "followers" | "private";
     media?: any[];
+    communityId?: string;
 }
 
 const isUUID = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
@@ -19,8 +20,54 @@ export async function createPostService(
         userId,
         text,
         visibility = "public",
-        media = []
+        media = [],
+        communityId
     } = data;
+
+    // If posting to a community, verify membership & ban status
+    if (communityId) {
+        const { data: community, error: commError } = await supabase
+            .from("communities")
+            .select("id, owner_id, is_archived")
+            .eq("id", communityId)
+            .single();
+
+        if (commError || !community) {
+            throw new Error("Community not found.");
+        }
+
+        if (community.is_archived) {
+            throw new Error("This community is archived and cannot accept new posts.");
+        }
+
+        // Check if banned
+        const { data: ban } = await supabase
+            .from("community_bans")
+            .select("id, expires_at")
+            .eq("community_id", communityId)
+            .eq("user_id", userId)
+            .maybeSingle();
+
+        if (ban) {
+            if (!ban.expires_at || new Date(ban.expires_at).getTime() > Date.now()) {
+                throw new Error("You are banned from posting in this community.");
+            }
+        }
+
+        // Check membership if not owner
+        if (community.owner_id !== userId) {
+            const { data: member } = await supabase
+                .from("community_members")
+                .select("id, status")
+                .eq("community_id", communityId)
+                .eq("user_id", userId)
+                .maybeSingle();
+
+            if (!member || member.status !== "active") {
+                throw new Error("You must be an active member of this community to post.");
+            }
+        }
+    }
 
     const mediaList = Array.isArray(media) ? media : [];
 
@@ -31,6 +78,7 @@ export async function createPostService(
             user_id: userId,
             text: text || "",
             visibility,
+            community_id: communityId || null,
             media_count: mediaList.length
         })
         .select()
@@ -38,6 +86,22 @@ export async function createPostService(
 
     if (error) {
         throw error;
+    }
+
+    // If community post, increment post_count
+    if (communityId) {
+        const { data: commData } = await supabase
+            .from("communities")
+            .select("post_count")
+            .eq("id", communityId)
+            .single();
+
+        if (commData) {
+            await supabase
+                .from("communities")
+                .update({ post_count: (commData.post_count || 0) + 1 })
+                .eq("id", communityId);
+        }
     }
 
     // Attach uploaded media if present
@@ -760,6 +824,122 @@ export async function getReelsFeedService(
             limit,
             total: videoPosts.length,
             totalPages: Math.ceil(videoPosts.length / limit)
+        }
+    };
+}
+
+export async function getCommunityFeedService(
+    communityId: string,
+    currentUserId?: string,
+    page: number = 1,
+    limit: number = 20,
+    sort: "new" | "popular" = "new"
+) {
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(communityId);
+
+    // 1. Fetch community & verify private access
+    let commQuery = supabase.from("communities").select("id, visibility, owner_id");
+    if (isUUID) {
+        commQuery = commQuery.eq("id", communityId);
+    } else {
+        commQuery = commQuery.eq("slug", communityId);
+    }
+    const { data: community, error: commError } = await commQuery.single();
+
+    if (commError || !community) {
+        throw new Error("Community not found.");
+    }
+
+    const resolvedCommId = community.id;
+
+    if (community.visibility === "private" && community.owner_id !== currentUserId) {
+        if (!currentUserId) {
+            throw new Error("This community is private. Please join to view discussions.");
+        }
+        const { data: member } = await supabase
+            .from("community_members")
+            .select("status")
+            .eq("community_id", resolvedCommId)
+            .eq("user_id", currentUserId)
+            .maybeSingle();
+
+        if (!member || member.status !== "active") {
+            throw new Error("This community is private. Please join to view discussions.");
+        }
+    }
+
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    let query = supabase
+        .from("posts")
+        .select(`
+            *,
+            profiles(
+                id,
+                username,
+                full_name,
+                avatar_url,
+                verified
+            ),
+            communities(
+                id,
+                name,
+                slug,
+                icon_url,
+                visibility
+            ),
+            media(*)
+        `, { count: "exact" })
+        .eq("community_id", resolvedCommId);
+
+    if (sort === "popular") {
+        query = query.order("likes_count", { ascending: false }).order("comments_count", { ascending: false });
+    } else {
+        query = query.order("created_at", { ascending: false });
+    }
+
+    const { data: posts, count, error } = await query.range(from, to);
+    if (error) throw error;
+
+    const postIds = (posts ?? []).map(post => post.id);
+
+    let likedPosts = new Set<string>();
+    let bookmarkedPosts = new Set<string>();
+
+    if (currentUserId && postIds.length > 0) {
+        const { data: likes } = await supabase
+            .from("likes")
+            .select("post_id")
+            .eq("user_id", currentUserId)
+            .in("post_id", postIds);
+
+        const { data: bookmarks } = await supabase
+            .from("bookmarks")
+            .select("post_id")
+            .eq("user_id", currentUserId)
+            .in("post_id", postIds);
+
+        likedPosts = new Set((likes ?? []).map(x => x.post_id));
+        bookmarkedPosts = new Set((bookmarks ?? []).map(x => x.post_id));
+    }
+
+    const feed = (posts ?? []).map(post =>
+        mapPostForFeed(
+            post,
+            currentUserId,
+            likedPosts,
+            bookmarkedPosts
+        )
+    );
+
+    return {
+        posts: feed,
+        pagination: {
+            page,
+            limit,
+            total: count ?? 0,
+            totalPages: Math.ceil((count ?? 0) / limit)
         }
     };
 }

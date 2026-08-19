@@ -21,6 +21,7 @@ import bookmarkRoutes from "./bookmarks/bookmark.routes";
 import followRoutes from "./followers/follow.routes";
 import presenceRoutes from "./presence/presence.routes";
 import notificationRoutes from "./notifications/notification.routes";
+import communityRoutes from "./communities/community.routes";
 import { ensurePublicBuckets } from "./media/storage.service";
 
 
@@ -91,6 +92,8 @@ app.use("/api/user", followRoutes);
 app.use("/api/posts", postRoutes);
 
 app.use("/api/media", mediaRoutes);
+
+app.use("/api/communities", communityRoutes);
 
 app.use(
     "/api/presence",
