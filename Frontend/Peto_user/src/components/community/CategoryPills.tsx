@@ -12,7 +12,7 @@ const items = [
     icon: Dog,
   },
   {
-    title: "Health",
+    title: "Health & Nutrition",
     icon: HeartPulse,
   },
   {
@@ -20,29 +20,28 @@ const items = [
     icon: Dumbbell,
   },
   {
-    title: "Rescue",
+    title: "Rescue & Shelter",
     icon: Shield,
   },
   {
-    title: "More",
+    title: "More Categories",
     icon: MoreHorizontal,
   },
 ];
 
 const CategoryPills = () => {
   return (
-    <div className="mt-16 flex flex-wrap justify-center gap-4">
+    <div className="flex flex-wrap gap-2">
       {items.map((item) => {
         const Icon = item.icon;
 
         return (
           <button
             key={item.title}
-            className="flex items-center gap-2 rounded-full bg-white px-6 py-3 shadow-sm transition hover:bg-amber-500 hover:text-white"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200/80 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-micro hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900 transition-colors cursor-pointer active:scale-[0.98]"
           >
-            <Icon size={18} />
-
-            {item.title}
+            <Icon size={14} className="text-slate-400" />
+            <span>{item.title}</span>
           </button>
         );
       })}
@@ -50,4 +49,4 @@ const CategoryPills = () => {
   );
 };
 
-export default CategoryPills;
+export default CategoryPills;

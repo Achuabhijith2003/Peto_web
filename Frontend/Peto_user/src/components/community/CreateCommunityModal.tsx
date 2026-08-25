@@ -155,50 +155,50 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }: CreateCommunityMod
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-xl overflow-hidden rounded-3xl bg-white shadow-2xl transition-all border border-slate-100">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-xs animate-fade-in">
+      <div className="relative w-full max-w-lg overflow-hidden rounded-xl bg-white shadow-popover border border-slate-200/80">
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
-              <Sparkles size={18} />
+        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3.5">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 border border-slate-200/60 text-slate-700">
+              <Sparkles size={16} />
             </div>
             <div>
-              <h3 className="font-headline font-bold text-base text-slate-900">Create a Community</h3>
+              <h3 className="font-semibold text-sm text-slate-900 tracking-tight">Create a Circle</h3>
               <p className="text-[11px] text-slate-400">Step {step} of 4</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition cursor-pointer"
+            className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition cursor-pointer"
           >
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
 
         {/* Progress Bar */}
-        <div className="h-1 w-full bg-slate-100">
+        <div className="h-0.5 w-full bg-slate-100">
           <div
-            className="h-full bg-amber-500 transition-all duration-300"
+            className="h-full bg-slate-900 transition-all duration-300"
             style={{ width: `${(step / 4) * 100}%` }}
           />
         </div>
 
         {/* Modal Content */}
-        <div className="max-h-[75vh] overflow-y-auto p-6 space-y-5">
+        <div className="max-h-[70vh] overflow-y-auto p-5 space-y-4">
           {errorMsg && (
-            <div className="rounded-2xl bg-rose-50 p-3 text-xs font-semibold text-rose-700 border border-rose-100">
+            <div className="rounded-lg bg-rose-50 p-3 text-xs font-medium text-rose-700 border border-rose-200/60">
               {errorMsg}
             </div>
           )}
 
           {/* STEP 1: Basic Info */}
           {step === 1 && (
-            <div className="space-y-4">
+            <div className="space-y-3.5">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Community Name <span className="text-amber-500">*</span>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Community Name <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -206,16 +206,16 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }: CreateCommunityMod
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   maxLength={100}
-                  className="w-full rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none border border-slate-200 focus:border-amber-500 focus:bg-white focus:ring-4 focus:ring-amber-100/50 transition"
+                  className="w-full rounded-lg bg-white px-3.5 py-2 text-xs text-slate-900 outline-none border border-slate-200 shadow-micro focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 transition"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Category</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Category</label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none border border-slate-200 focus:border-amber-500 focus:bg-white transition cursor-pointer"
+                  className="w-full rounded-lg bg-white px-3.5 py-2 text-xs text-slate-900 outline-none border border-slate-200 shadow-micro focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 transition cursor-pointer"
                 >
                   {CATEGORIES.map((cat) => (
                     <option key={cat} value={cat}>
@@ -226,14 +226,14 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }: CreateCommunityMod
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Description</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Description</label>
                 <textarea
                   rows={3}
                   placeholder="What is this community all about? Who should join?"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   maxLength={2000}
-                  className="w-full resize-none rounded-2xl bg-slate-50 p-4 text-sm text-slate-900 outline-none border border-slate-200 focus:border-amber-500 focus:bg-white transition"
+                  className="w-full resize-none rounded-lg bg-white p-3.5 text-xs text-slate-900 outline-none border border-slate-200 shadow-micro focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10 transition"
                 />
               </div>
             </div>
@@ -241,24 +241,24 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }: CreateCommunityMod
 
           {/* STEP 2: Privacy / Visibility */}
           {step === 2 && (
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-2">Community Privacy</label>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <label className="block text-xs font-semibold text-slate-700 mb-2">Circle Privacy</label>
+                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                   <div
                     onClick={() => setVisibility("public")}
-                    className={`flex items-start gap-3 rounded-2xl p-4 border-2 transition cursor-pointer ${
+                    className={`flex items-start gap-2.5 rounded-lg p-3 border transition cursor-pointer ${
                       visibility === "public"
-                        ? "border-amber-500 bg-amber-50/50 shadow-xs"
+                        ? "border-slate-900 bg-slate-50/80 shadow-micro"
                         : "border-slate-200 bg-white hover:border-slate-300"
                     }`}
                   >
-                    <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
-                      <Globe size={18} />
+                    <div className="mt-0.5 flex h-7 w-7 items-center justify-center rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200/60 shrink-0">
+                      <Globe size={15} />
                     </div>
                     <div>
-                      <h4 className="font-bold text-sm text-slate-900">Public</h4>
-                      <p className="mt-0.5 text-xs text-slate-500">
+                      <h4 className="font-semibold text-xs text-slate-900">Public</h4>
+                      <p className="mt-0.5 text-[11px] text-slate-500 leading-normal">
                         Anyone can view, join, and post in this community instantly.
                       </p>
                     </div>
@@ -266,18 +266,18 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }: CreateCommunityMod
 
                   <div
                     onClick={() => setVisibility("private")}
-                    className={`flex items-start gap-3 rounded-2xl p-4 border-2 transition cursor-pointer ${
+                    className={`flex items-start gap-2.5 rounded-lg p-3 border transition cursor-pointer ${
                       visibility === "private"
-                        ? "border-amber-500 bg-amber-50/50 shadow-xs"
+                        ? "border-slate-900 bg-slate-50/80 shadow-micro"
                         : "border-slate-200 bg-white hover:border-slate-300"
                     }`}
                   >
-                    <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
-                      <Lock size={18} />
+                    <div className="mt-0.5 flex h-7 w-7 items-center justify-center rounded-md bg-amber-50 text-amber-700 border border-amber-200/60 shrink-0">
+                      <Lock size={15} />
                     </div>
                     <div>
-                      <h4 className="font-bold text-sm text-slate-900">Private</h4>
-                      <p className="mt-0.5 text-xs text-slate-500">
+                      <h4 className="font-semibold text-xs text-slate-900">Private</h4>
+                      <p className="mt-0.5 text-[11px] text-slate-500 leading-normal">
                         Users must request to join. Discussions are visible to members only.
                       </p>
                     </div>
@@ -289,23 +289,23 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }: CreateCommunityMod
 
           {/* STEP 3: Rules */}
           {step === 3 && (
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-2">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Community Rules (Optional)
                 </label>
                 <p className="text-xs text-slate-400 mb-3">
-                  Clear rules keep your community safe, friendly, and enjoyable for all pet lovers.
+                  Clear rules keep your community safe and friendly for all members.
                 </p>
 
-                <div className="space-y-2 mb-4">
+                <div className="space-y-2 mb-3">
                   {rules.map((rule, idx) => (
                     <div
                       key={idx}
-                      className="flex items-start justify-between rounded-2xl bg-slate-50 p-3 border border-slate-100"
+                      className="flex items-start justify-between rounded-lg bg-slate-50 p-2.5 border border-slate-200/60"
                     >
-                      <div className="pr-3">
-                        <h5 className="font-bold text-xs text-slate-800">
+                      <div className="pr-2">
+                        <h5 className="font-semibold text-xs text-slate-800">
                           {idx + 1}. {rule.title}
                         </h5>
                         {rule.description && (
@@ -315,36 +315,36 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }: CreateCommunityMod
                       <button
                         type="button"
                         onClick={() => handleRemoveRule(idx)}
-                        className="text-slate-400 hover:text-rose-500 transition cursor-pointer"
+                        className="text-slate-400 hover:text-rose-600 transition cursor-pointer p-1"
                       >
-                        <Trash2 size={14} />
+                        <Trash2 size={13} />
                       </button>
                     </div>
                   ))}
                 </div>
 
                 {/* Add Rule Form */}
-                <div className="rounded-2xl border border-dashed border-slate-200 p-4 space-y-2.5">
+                <div className="rounded-lg border border-dashed border-slate-200 p-3 space-y-2">
                   <input
                     type="text"
                     placeholder="Rule title (e.g. Respect all members)"
                     value={newRuleTitle}
                     onChange={(e) => setNewRuleTitle(e.target.value)}
-                    className="w-full rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-900 outline-none border border-slate-200 focus:bg-white"
+                    className="w-full rounded-md bg-white px-2.5 py-1.5 text-xs text-slate-900 outline-none border border-slate-200"
                   />
                   <input
                     type="text"
                     placeholder="Rule description (optional detail)"
                     value={newRuleDesc}
                     onChange={(e) => setNewRuleDesc(e.target.value)}
-                    className="w-full rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-900 outline-none border border-slate-200 focus:bg-white"
+                    className="w-full rounded-md bg-white px-2.5 py-1.5 text-xs text-slate-900 outline-none border border-slate-200"
                   />
                   <button
                     type="button"
                     onClick={handleAddRule}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-700 hover:bg-amber-100 transition cursor-pointer"
+                    className="inline-flex items-center gap-1 rounded-md border border-slate-200/80 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer shadow-micro"
                   >
-                    <Plus size={14} />
+                    <Plus size={13} />
                     <span>Add Rule</span>
                   </button>
                 </div>
@@ -354,25 +354,25 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }: CreateCommunityMod
 
           {/* STEP 4: Review & Branding */}
           {step === 4 && (
-            <div className="space-y-4">
-              <label className="block text-xs font-bold text-slate-700 mb-1">
+            <div className="space-y-3">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Visual Branding (Icon & Cover)
               </label>
 
               {/* Cover & Icon Upload Previews */}
-              <div className="relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-50">
-                <div className="relative h-24 w-full bg-gradient-to-r from-amber-400 to-amber-600 flex items-center justify-center">
+              <div className="relative rounded-lg overflow-hidden border border-slate-200/80 bg-slate-50 shadow-micro">
+                <div className="relative h-20 w-full bg-slate-200 flex items-center justify-center">
                   {coverUrl ? (
                     <img src={coverUrl} alt="Cover Preview" className="h-full w-full object-cover" />
                   ) : (
-                    <span className="text-xs font-semibold text-white/80">Default Cover Gradient</span>
+                    <span className="text-[11px] font-medium text-slate-500">Default Cover</span>
                   )}
                   <button
                     type="button"
                     onClick={() => coverInputRef.current?.click()}
-                    className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-black/40 px-3 py-1 text-[10px] font-bold text-white backdrop-blur-md hover:bg-black/60 transition cursor-pointer"
+                    className="absolute right-2.5 top-2.5 inline-flex items-center gap-1 rounded-md border border-slate-200/60 bg-white/90 px-2.5 py-1 text-[10px] font-semibold text-slate-700 backdrop-blur-xs hover:bg-white transition cursor-pointer shadow-micro"
                   >
-                    <Upload size={12} />
+                    <Upload size={11} />
                     <span>Change Cover</span>
                   </button>
                   <input
@@ -384,8 +384,8 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }: CreateCommunityMod
                   />
                 </div>
 
-                <div className="flex items-center gap-3 p-4">
-                  <div className="relative -mt-8 h-14 w-14 overflow-hidden rounded-2xl border-2 border-white bg-amber-100 shadow-md flex items-center justify-center font-bold text-amber-700">
+                <div className="flex items-center gap-3 p-3">
+                  <div className="relative -mt-6 h-12 w-12 overflow-hidden rounded-lg border-2 border-white bg-slate-100 shadow-micro flex items-center justify-center font-bold text-slate-700 text-sm">
                     {iconUrl ? (
                       <img src={iconUrl} alt="Icon Preview" className="h-full w-full object-cover" />
                     ) : (
@@ -396,7 +396,7 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }: CreateCommunityMod
                     <button
                       type="button"
                       onClick={() => iconInputRef.current?.click()}
-                      className="text-xs font-bold text-amber-600 hover:text-amber-700 cursor-pointer"
+                      className="text-xs font-semibold text-amber-600 hover:text-amber-700 cursor-pointer"
                     >
                       Upload Icon
                     </button>
@@ -413,19 +413,19 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }: CreateCommunityMod
               </div>
 
               {/* Summary */}
-              <div className="rounded-2xl bg-amber-50/50 p-4 border border-amber-100 text-xs space-y-1.5 text-slate-700">
+              <div className="rounded-lg bg-slate-50 p-3 border border-slate-200/80 text-xs space-y-1 text-slate-700">
                 <p>
-                  <strong className="text-slate-900">Name:</strong> {name}
+                  <strong className="text-slate-900 font-semibold">Name:</strong> {name}
                 </p>
                 <p>
-                  <strong className="text-slate-900">Category:</strong> {category}
+                  <strong className="text-slate-900 font-semibold">Category:</strong> {category}
                 </p>
                 <p>
-                  <strong className="text-slate-900">Visibility:</strong>{" "}
+                  <strong className="text-slate-900 font-semibold">Visibility:</strong>{" "}
                   <span className="capitalize">{visibility}</span>
                 </p>
                 <p>
-                  <strong className="text-slate-900">Rules configured:</strong> {rules.length}
+                  <strong className="text-slate-900 font-semibold">Rules configured:</strong> {rules.length}
                 </p>
               </div>
             </div>
@@ -433,14 +433,14 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }: CreateCommunityMod
         </div>
 
         {/* Modal Footer */}
-        <div className="flex items-center justify-between border-t border-slate-100 px-6 py-4 bg-slate-50/50">
+        <div className="flex items-center justify-between border-t border-slate-100 px-5 py-3 bg-slate-50/50">
           {step > 1 ? (
             <button
               type="button"
               onClick={handleBack}
-              className="inline-flex items-center gap-1.5 rounded-2xl px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-200/60 transition cursor-pointer"
+              className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-200/60 transition cursor-pointer"
             >
-              <ArrowLeft size={16} />
+              <ArrowLeft size={14} />
               <span>Back</span>
             </button>
           ) : (
@@ -451,27 +451,27 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }: CreateCommunityMod
             <button
               type="button"
               onClick={handleNext}
-              className="inline-flex items-center gap-1.5 rounded-2xl bg-amber-500 px-5 py-2.5 text-xs font-bold text-white shadow-md hover:bg-amber-600 transition cursor-pointer"
+              className="inline-flex items-center gap-1 rounded-lg bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-micro hover:bg-slate-800 transition cursor-pointer border border-slate-950/20 active:scale-[0.98]"
             >
               <span>Continue</span>
-              <ArrowRight size={16} />
+              <ArrowRight size={14} />
             </button>
           ) : (
             <button
               type="button"
               disabled={submitting || uploadingMedia}
               onClick={handleSubmit}
-              className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-2.5 text-xs font-bold text-white shadow-md hover:from-amber-600 hover:to-amber-700 transition cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2 text-xs font-semibold text-white shadow-micro hover:bg-slate-800 transition cursor-pointer border border-slate-950/20 disabled:opacity-50 active:scale-[0.98]"
             >
               {submitting ? (
                 <>
-                  <Loader2 size={16} className="animate-spin" />
-                  <span>Creating Community...</span>
+                  <Loader2 size={14} className="animate-spin" />
+                  <span>Creating Circle...</span>
                 </>
               ) : (
                 <>
-                  <CheckCircle2 size={16} />
-                  <span>Launch Community</span>
+                  <CheckCircle2 size={14} />
+                  <span>Launch Circle</span>
                 </>
               )}
             </button>
@@ -483,3 +483,4 @@ const CreateCommunityModal = ({ isOpen, onClose, onSuccess }: CreateCommunityMod
 };
 
 export default CreateCommunityModal;
+

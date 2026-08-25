@@ -131,33 +131,31 @@ const Community = () => {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
         {/* Top Header & Search Bar Banner */}
-        <div className="relative mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 p-6 sm:p-10 text-white shadow-md">
-          <div className="absolute -right-10 -bottom-10 h-48 w-48 rounded-full bg-white/10 blur-2xl pointer-events-none" />
-
-          <div className="relative z-10 max-w-3xl space-y-4">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/20 px-3.5 py-1 text-xs font-bold backdrop-blur-md">
-              <Compass size={14} className="text-amber-200" />
-              <span>Explore Pet Communities</span>
+        <div className="relative mb-6 overflow-hidden rounded-xl bg-slate-900 border border-slate-950 p-5 sm:p-8 text-white shadow-micro">
+          <div className="relative z-10 max-w-3xl space-y-3">
+            <div className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/10 px-2.5 py-0.5 text-xs font-semibold text-slate-200">
+              <Compass size={13} className="text-amber-400" />
+              <span>Explore Circles</span>
             </div>
 
-            <h1 className="font-headline text-2xl sm:text-4xl font-extrabold tracking-tight">
-              Connect with Passionate Pet Communities
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+              Connect with Specialized Pet Communities
             </h1>
 
-            <p className="text-xs sm:text-sm text-amber-100/90 leading-relaxed max-w-xl">
-              Join discussion groups, share heartwarming moments, exchange care tips, and build lasting friendships with pet parents worldwide.
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-xl">
+              Join focused discussion groups, share updates, exchange care advice, and connect with fellow pet parents.
             </p>
 
             {/* Search and Action Bar */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-1">
               <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <input
                   type="text"
-                  placeholder="Search communities by name, topic, or breed..."
+                  placeholder="Search circles by name, topic, or breed..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full rounded-2xl bg-white pl-11 pr-4 py-3 text-xs sm:text-sm text-slate-900 placeholder-slate-400 shadow-sm outline-none border-2 border-transparent focus:border-amber-300 focus:ring-4 focus:ring-amber-200/50 transition"
+                  className="w-full rounded-lg bg-white pl-9 pr-3.5 py-2 text-xs sm:text-sm text-slate-900 placeholder-slate-400 shadow-micro outline-none border border-slate-200 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition"
                 />
               </div>
 
@@ -170,21 +168,21 @@ const Community = () => {
                   }
                   setIsCreateModalOpen(true);
                 }}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 text-xs sm:text-sm font-bold text-white shadow-md hover:bg-slate-800 transition cursor-pointer shrink-0"
+                className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-white px-4 py-2 text-xs sm:text-sm font-semibold text-slate-900 shadow-micro hover:bg-slate-100 transition cursor-pointer shrink-0 border border-slate-200/80 active:scale-[0.98]"
               >
-                <Plus size={18} />
-                <span>Create Community</span>
+                <Plus size={16} />
+                <span>Create Circle</span>
               </button>
             </div>
           </div>
         </div>
 
         {/* Main Content Layout: 2 Columns on Desktop */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Main Feed Column (3 cols) */}
-          <div className="lg:col-span-3 space-y-6">
+          <div className="lg:col-span-3 space-y-4">
             {/* Tabs Navigation */}
-            <div className="flex items-center justify-between border-b border-slate-200/80 bg-white rounded-2xl p-1.5 shadow-xs overflow-x-auto no-scrollbar">
+            <div className="flex items-center justify-between border border-slate-200/80 bg-white rounded-xl p-1 shadow-micro overflow-x-auto no-scrollbar">
               <div className="flex items-center gap-1">
                 {TABS.map((tab) => {
                   const Icon = tab.icon;
@@ -194,13 +192,13 @@ const Community = () => {
                       key={tab.id}
                       type="button"
                       onClick={() => handleTabChange(tab.id)}
-                      className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                      className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors cursor-pointer whitespace-nowrap ${
                         isActive
-                          ? "bg-amber-500 text-white shadow-xs"
-                          : "text-slate-600 hover:bg-amber-50 hover:text-amber-700"
+                          ? "bg-slate-900 text-white shadow-micro border border-slate-950"
+                          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                       }`}
                     >
-                      <Icon size={15} />
+                      <Icon size={14} />
                       <span>{tab.label}</span>
                     </button>
                   );
@@ -210,13 +208,13 @@ const Community = () => {
               {selectedCategory !== "All" && (
                 <div className="hidden sm:flex items-center gap-2 pr-2">
                   <span className="text-xs text-slate-400">Category:</span>
-                  <span className="rounded-lg bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-800">
+                  <span className="rounded border border-slate-200/60 bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-700">
                     {selectedCategory}
                   </span>
                   <button
                     type="button"
                     onClick={() => setSelectedCategory("All")}
-                    className="text-xs text-slate-400 hover:text-rose-500"
+                    className="text-xs text-slate-400 hover:text-rose-600 font-medium"
                   >
                     Clear
                   </button>
@@ -226,21 +224,21 @@ const Community = () => {
 
             {/* Communities Grid */}
             {loading && communities.length === 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                 {[1, 2, 3, 4, 5, 6].map((n) => (
                   <div
                     key={n}
-                    className="h-64 rounded-3xl border border-slate-100 bg-white p-4 shadow-xs animate-pulse space-y-4"
+                    className="h-56 rounded-xl border border-slate-200/80 bg-white p-4 shadow-card animate-pulse space-y-3"
                   >
-                    <div className="h-28 w-full rounded-2xl bg-slate-100" />
+                    <div className="h-24 w-full rounded-lg bg-slate-100" />
                     <div className="h-4 w-3/4 rounded bg-slate-100" />
                     <div className="h-3 w-1/2 rounded bg-slate-100" />
                   </div>
                 ))}
               </div>
             ) : communities.length > 0 ? (
-              <div className="space-y-8">
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
                   {communities.map((community) => (
                     <CommunityCard
                       key={community.id}
@@ -267,47 +265,47 @@ const Community = () => {
 
                 {/* Load More Button */}
                 {hasMore && (
-                  <div className="flex justify-center pt-4">
+                  <div className="flex justify-center pt-2">
                     <button
                       type="button"
                       disabled={loading}
                       onClick={handleLoadMore}
-                      className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-2.5 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 hover:border-slate-300 transition cursor-pointer"
+                      className="inline-flex items-center gap-2 rounded-lg border border-slate-200/80 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-micro hover:bg-slate-50 transition cursor-pointer active:scale-[0.98]"
                     >
                       {loading ? (
-                        <Loader2 size={16} className="animate-spin text-amber-500" />
+                        <Loader2 size={14} className="animate-spin text-slate-600" />
                       ) : (
-                        <RefreshCw size={16} />
+                        <RefreshCw size={14} />
                       )}
-                      <span>Load More Communities</span>
+                      <span>Load More Circles</span>
                     </button>
                   </div>
                 )}
               </div>
             ) : (
               /* Useful Empty States */
-              <div className="flex flex-col items-center justify-center rounded-3xl border border-slate-100 bg-white p-12 text-center shadow-xs space-y-4">
-                <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-amber-100 text-amber-700">
-                  <Compass size={28} />
+              <div className="flex flex-col items-center justify-center rounded-xl border border-slate-200/80 bg-white p-10 text-center shadow-card space-y-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-slate-100 text-slate-600 border border-slate-200/60">
+                  <Compass size={22} />
                 </div>
                 <div className="max-w-md space-y-1">
-                  <h3 className="font-headline text-lg font-bold text-slate-900">
+                  <h3 className="font-semibold text-sm text-slate-900 tracking-tight">
                     {debouncedSearch
-                      ? `No communities matching "${debouncedSearch}"`
+                      ? `No circles matching "${debouncedSearch}"`
                       : activeTab === "joined"
-                      ? "You haven't joined any communities yet."
+                      ? "You haven't joined any circles yet."
                       : "No communities found in this category."}
                   </h3>
                   <p className="text-xs text-slate-500">
                     {debouncedSearch
-                      ? "Try searching with different keywords or create a new community for this topic!"
+                      ? "Try searching with different keywords or create a new circle for this topic!"
                       : activeTab === "joined"
                       ? "Explore trending groups or find companions tailored to your pet breed."
                       : "Be the leader! Create the very first community for this category."}
                   </p>
                 </div>
 
-                <div className="flex items-center gap-3 pt-2">
+                <div className="flex items-center gap-2 pt-1">
                   {(debouncedSearch || selectedCategory !== "All") && (
                     <button
                       type="button"
@@ -315,7 +313,7 @@ const Community = () => {
                         setSearchQuery("");
                         setSelectedCategory("All");
                       }}
-                      className="rounded-2xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 transition cursor-pointer"
+                      className="rounded-lg border border-slate-200/80 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition cursor-pointer shadow-micro"
                     >
                       Reset Filters
                     </button>
@@ -329,10 +327,10 @@ const Community = () => {
                       }
                       setIsCreateModalOpen(true);
                     }}
-                    className="inline-flex items-center gap-1.5 rounded-2xl bg-amber-500 px-5 py-2 text-xs font-bold text-white shadow-sm hover:bg-amber-600 transition cursor-pointer"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-1.5 text-xs font-semibold text-white shadow-micro hover:bg-slate-800 transition cursor-pointer border border-slate-950/20 active:scale-[0.98]"
                   >
-                    <Plus size={16} />
-                    <span>Create Community</span>
+                    <Plus size={14} />
+                    <span>Create Circle</span>
                   </button>
                 </div>
               </div>
@@ -366,4 +364,4 @@ const Community = () => {
   );
 };
 
-export default Community;
+export default Community;

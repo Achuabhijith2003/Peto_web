@@ -1,124 +1,138 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Quicksand:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Quicksand:wght@600;700&display=swap');
 
 @import "tailwindcss";
 
 @layer utilities {
   .font-headline {
-    font-family: "Quicksand", sans-serif;
+    font-family: "Quicksand", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
   .font-sans {
-    font-family: "Inter", sans-serif;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
 }
 
 html,
 body,
 #root {
-    width: 100%;
-    min-height: 100%;
+  width: 100%;
+  min-height: 100%;
 }
 
 body {
-    margin: 0;
-    background: #F9F9FF;
-    color: #151C27;
-    font-family: "Inter", sans-serif;
-    overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
+  margin: 0;
+  background-color: #F8FAFC;
+  color: #0F172A;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 h1, h2, h3, h4, h5, h6 {
-    font-family: "Quicksand", sans-serif;
+  letter-spacing: -0.02em;
 }
 
 * {
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 a {
-    text-decoration: none;
+  text-decoration: none;
 }
 
 button {
-    cursor: pointer;
-    transition: all 0.2s ease-in-out;
-}
-
-button:hover {
-    transform: translateY(-1px);
-}
-
-button:active {
-    transform: translateY(0);
+  cursor: pointer;
 }
 
 input,
 button,
 textarea,
 select {
-    font-family: "Inter", sans-serif;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-/* Custom Design Tokens from DESIGN.md */
+/* Precision Craft Design Tokens */
+.shadow-micro {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(15, 23, 42, 0.06);
+}
+
+.shadow-card {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(15, 23, 42, 0.07);
+}
+
+.shadow-card-hover {
+  box-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.03), 0 0 0 1px rgba(15, 23, 42, 0.1);
+}
+
+.shadow-popover {
+  box-shadow: 0 12px 32px -8px rgba(15, 23, 42, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.04), 0 0 0 1px rgba(15, 23, 42, 0.08);
+}
+
+.border-subtle {
+  border-color: rgba(226, 232, 240, 0.8);
+}
+
 .card-ambient {
-    background-color: #FFFFFF;
-    border-radius: 1.5rem;
-    box-shadow: 0 4px 20px -2px rgba(21, 28, 39, 0.05);
-    border: 1px solid rgba(226, 232, 248, 0.8);
-    transition: all 0.25s ease;
+  background-color: #FFFFFF;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(15, 23, 42, 0.07);
+  transition: all 0.15s ease-in-out;
 }
 
 .card-ambient:hover {
-    box-shadow: 0 10px 25px -3px rgba(21, 28, 39, 0.08);
+  box-shadow: 0 4px 14px -2px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(15, 23, 42, 0.1);
 }
 
 .input-organic {
-    background-color: #F3F4F6;
-    border: 2px solid transparent;
-    border-radius: 0.75rem;
-    transition: all 0.2s ease;
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  transition: all 0.15s ease;
 }
 
 .input-organic:focus {
-    background-color: #FFFFFF;
-    border-color: #0058be;
-    box-shadow: 0 0 0 4px rgba(0, 88, 190, 0.12);
-    outline: none;
+  background-color: #FFFFFF;
+  border-color: #0F172A;
+  box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.08);
+  outline: none;
 }
 
 .btn-primary {
-    background-color: #f59e0b;
-    color: #ffffff;
-    font-weight: 700;
-    border-radius: 0.75rem;
-    padding: 0.625rem 1.25rem;
-    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
-    transition: all 0.2s ease;
+  background-color: #0F172A;
+  color: #FFFFFF;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.1);
+  transition: all 0.15s ease;
 }
 
 .btn-primary:hover {
-    background-color: #d97706;
-    transform: scale(1.02);
-    box-shadow: 0 6px 16px rgba(245, 158, 11, 0.35);
+  background-color: #1E293B;
 }
 
 .btn-secondary {
-    border: 1.5px solid rgba(0, 88, 190, 0.3);
-    color: #0058be;
-    font-weight: 600;
-    border-radius: 0.75rem;
-    padding: 0.625rem 1.25rem;
-    transition: all 0.2s ease;
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  color: #334155;
+  font-weight: 600;
+  border-radius: 0.5rem;
+  padding: 0.5rem 1rem;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  transition: all 0.15s ease;
 }
 
 .btn-secondary:hover {
-    background-color: rgba(0, 88, 190, 0.05);
-    border-color: #0058be;
+  background-color: #F8FAFC;
+  border-color: #CBD5E1;
+  color: #0F172A;
 }
 
 .badge-pill {
-    border-radius: 9999px;
-    padding: 0.25rem 0.75rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-}
+  border-radius: 9999px;
+  padding: 0.125rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}

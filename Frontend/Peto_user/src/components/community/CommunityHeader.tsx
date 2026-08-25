@@ -7,7 +7,6 @@ import {
   Plus,
   Check,
   Settings,
-  Shield,
   Loader2,
   Copy,
   CheckCheck,
@@ -97,9 +96,9 @@ const CommunityHeader = ({
   };
 
   return (
-    <div className="overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-sm mb-6">
+    <div className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-card mb-6">
       {/* Cover Image Banner */}
-      <div className="relative h-48 sm:h-60 md:h-68 w-full bg-gradient-to-r from-amber-400 via-orange-400 to-amber-600 overflow-hidden">
+      <div className="relative h-36 sm:h-48 w-full bg-slate-100 overflow-hidden border-b border-slate-100">
         {community.cover_image_url && community.cover_image_url !== "null" ? (
           <img
             src={community.cover_image_url}
@@ -107,8 +106,8 @@ const CommunityHeader = ({
             className="h-full w-full object-cover"
           />
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-amber-400/95 via-amber-500/90 to-amber-600/95 flex items-center justify-end p-8">
-            <Shield className="h-32 w-32 text-white/10" />
+          <div className="h-full w-full bg-linear-to-br from-slate-100 via-slate-50 to-slate-200/60 flex items-center justify-center">
+            <div className="w-full h-full opacity-40 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:16px_16px]" />
           </div>
         )}
 
@@ -116,19 +115,19 @@ const CommunityHeader = ({
         <button
           type="button"
           onClick={handleShare}
-          className="absolute top-4 right-4 flex items-center gap-1.5 rounded-full bg-black/40 px-3.5 py-1.5 text-xs font-bold text-white backdrop-blur-md hover:bg-black/60 transition cursor-pointer z-10"
+          className="absolute top-3 right-3 flex items-center gap-1.5 rounded-lg border border-slate-200/60 bg-white/90 px-3 py-1 text-xs font-semibold text-slate-700 backdrop-blur-xs hover:bg-white transition shadow-micro cursor-pointer z-10"
         >
-          {copied ? <CheckCheck size={14} className="text-emerald-400" /> : <Copy size={14} />}
-          <span>{copied ? "Link Copied!" : "Share"}</span>
+          {copied ? <CheckCheck size={13} className="text-emerald-600" /> : <Copy size={13} />}
+          <span>{copied ? "Copied" : "Share"}</span>
         </button>
       </div>
 
       {/* Header Body Bar */}
-      <div className="px-6 pb-6 pt-0 relative z-10">
+      <div className="px-5 pb-5 pt-0 relative z-10">
         {/* Row 1: Floating Avatar + Action Buttons */}
-        <div className="flex justify-between items-end -mt-14 sm:-mt-16 mb-4">
+        <div className="flex justify-between items-end -mt-10 sm:-mt-12 mb-3">
           {/* Avatar Container */}
-          <div className="h-28 w-28 sm:h-32 sm:w-32 shrink-0 overflow-hidden rounded-3xl border-4 border-white bg-white shadow-lg relative z-20 flex items-center justify-center">
+          <div className="h-20 w-20 sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-xl border-2 border-white bg-slate-100 shadow-micro relative z-20 flex items-center justify-center font-bold text-slate-800 text-lg">
             {community.icon_url && community.icon_url !== "null" ? (
               <img
                 src={community.icon_url}
@@ -136,43 +135,41 @@ const CommunityHeader = ({
                 className="h-full w-full object-cover"
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center bg-amber-100 font-headline text-3xl font-bold text-amber-700">
-                {community.name.slice(0, 2).toUpperCase()}
-              </div>
+              <span>{community.name.slice(0, 2).toUpperCase()}</span>
             )}
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             <button
               type="button"
               disabled={loading}
               onClick={handleJoinToggle}
-              className={`inline-flex items-center gap-2 rounded-2xl px-5 py-2.5 text-xs sm:text-sm font-bold transition-all shadow-sm cursor-pointer ${
+              className={`inline-flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs sm:text-sm font-semibold transition-all shadow-micro cursor-pointer ${
                 isOwner
-                  ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  ? "bg-slate-100 text-slate-700 hover:bg-slate-200/70 border border-slate-200/60"
                   : isMember
-                  ? "bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200"
+                  ? "bg-amber-50 text-amber-800 hover:bg-amber-100/70 border border-amber-200/80"
                   : isPending
-                  ? "bg-slate-100 text-slate-500 cursor-default"
-                  : "bg-gradient-to-r from-amber-500 to-amber-600 text-white hover:from-amber-600 hover:to-amber-700 hover:shadow-md"
+                  ? "bg-slate-100 text-slate-500 border border-slate-200/40 cursor-default"
+                  : "bg-slate-900 text-white hover:bg-slate-800 border border-slate-950/20 active:scale-[0.98]"
               }`}
             >
               {loading ? (
-                <Loader2 size={16} className="animate-spin" />
+                <Loader2 size={14} className="animate-spin shrink-0" />
               ) : isOwner ? (
-                <span>You Own This Community</span>
+                <span>Owner</span>
               ) : isMember ? (
                 <>
-                  <Check size={16} />
+                  <Check size={14} className="text-amber-700" />
                   <span>Joined</span>
                 </>
               ) : isPending ? (
-                <span>Request Pending</span>
+                <span>Pending</span>
               ) : (
                 <>
-                  <Plus size={16} />
-                  <span>{community.visibility === "private" ? "Request to Join" : "Join Community"}</span>
+                  <Plus size={14} />
+                  <span>{community.visibility === "private" ? "Request" : "Join Circle"}</span>
                 </>
               )}
             </button>
@@ -181,30 +178,30 @@ const CommunityHeader = ({
               <button
                 type="button"
                 onClick={onOpenSettings}
-                className="flex items-center justify-center rounded-2xl border border-slate-200 p-2.5 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition cursor-pointer"
-                title="Community Settings & Moderation"
+                className="flex items-center justify-center rounded-lg border border-slate-200/80 bg-white p-2 text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition shadow-micro cursor-pointer"
+                title="Community Settings"
               >
-                <Settings size={18} />
+                <Settings size={16} />
               </button>
             )}
           </div>
         </div>
 
         {/* Row 2: Title, Badges & Handle */}
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="font-headline text-2xl sm:text-3xl font-extrabold text-slate-900 leading-tight">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
               {community.name}
             </h1>
 
-            <span className="rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-700 uppercase tracking-wider">
+            <span className="rounded border border-slate-200/60 bg-slate-100/80 px-2 py-0.5 text-xs font-medium text-slate-600">
               {community.category || "General"}
             </span>
 
-            <span className="flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+            <span className="inline-flex items-center gap-1 rounded border border-slate-200/60 bg-slate-100/80 px-2 py-0.5 text-xs font-medium text-slate-600">
               {community.visibility === "private" ? (
                 <>
-                  <Lock size={12} className="text-amber-600" />
+                  <Lock size={12} className="text-slate-500" />
                   <span>Private</span>
                 </>
               ) : (
@@ -216,21 +213,21 @@ const CommunityHeader = ({
             </span>
           </div>
 
-          <p className="text-xs font-semibold text-slate-400">c/{community.slug}</p>
+          <p className="text-xs font-mono text-slate-400">c/{community.slug}</p>
 
-          <p className="text-xs sm:text-sm text-slate-600 max-w-3xl leading-relaxed pt-1">
+          <p className="text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed pt-0.5">
             {community.description || "Welcome to our pet community! Share pictures, questions, and pet stories."}
           </p>
         </div>
 
         {/* Row 3: Stats Footer */}
-        <div className="mt-5 pt-4 border-t border-slate-100 flex items-center gap-6 text-xs font-semibold text-slate-600">
+        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center gap-5 text-xs font-medium text-slate-600">
           <div className="flex items-center gap-1.5">
-            <Users size={16} className="text-amber-500" />
+            <Users size={14} className="text-slate-400" />
             <span>{memberCount.toLocaleString()} Members</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <MessageSquare size={16} className="text-slate-400" />
+            <MessageSquare size={14} className="text-slate-400" />
             <span>{(community.post_count || 0).toLocaleString()} Posts</span>
           </div>
         </div>
@@ -240,3 +237,4 @@ const CommunityHeader = ({
 };
 
 export default CommunityHeader;
+

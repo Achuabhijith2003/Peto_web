@@ -45,63 +45,63 @@ const Navbar = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-100/80">
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6">
+    <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-micro">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
         <Logo />
 
         {/* Desktop Navigation Links */}
-        <nav className="hidden items-center gap-2 lg:flex">
+        <nav className="hidden items-center gap-1 lg:flex bg-slate-100/70 p-1 rounded-lg border border-slate-200/60">
           <Link
             to="/social"
-            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition ${
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all duration-150 ${
               isActive("/social") || isActive("/")
-                ? "bg-amber-50 text-amber-700 font-bold"
-                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                ? "bg-white text-slate-900 shadow-micro border border-slate-200/80 font-semibold"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"
             }`}
           >
-            <Sparkles size={16} className={isActive("/social") || isActive("/") ? "text-amber-500" : "text-slate-400"} />
+            <Sparkles size={14} className={isActive("/social") || isActive("/") ? "text-amber-600" : "text-slate-400"} />
             <span>Feed</span>
           </Link>
 
           <Link
             to="/reels"
-            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition ${
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all duration-150 ${
               isActive("/reels")
-                ? "bg-amber-50 text-amber-700 font-bold"
-                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                ? "bg-white text-slate-900 shadow-micro border border-slate-200/80 font-semibold"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"
             }`}
           >
-            <Clapperboard size={16} className={isActive("/reels") ? "text-amber-500" : "text-slate-400"} />
+            <Clapperboard size={14} className={isActive("/reels") ? "text-amber-600" : "text-slate-400"} />
             <span>Reels</span>
           </Link>
 
           <Link
             to="/community"
-            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition ${
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all duration-150 ${
               isActive("/community")
-                ? "bg-amber-50 text-amber-700 font-bold"
-                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                ? "bg-white text-slate-900 shadow-micro border border-slate-200/80 font-semibold"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"
             }`}
           >
-            <Users size={16} className={isActive("/community") ? "text-amber-500" : "text-slate-400"} />
+            <Users size={14} className={isActive("/community") ? "text-amber-600" : "text-slate-400"} />
             <span>Circles</span>
           </Link>
 
           <Link
             to="/search"
-            className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition ${
+            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all duration-150 ${
               isActive("/search")
-                ? "bg-amber-50 text-amber-700 font-bold"
-                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                ? "bg-white text-slate-900 shadow-micro border border-slate-200/80 font-semibold"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"
             }`}
           >
-            <Search size={16} className={isActive("/search") ? "text-amber-500" : "text-slate-400"} />
+            <Search size={14} className={isActive("/search") ? "text-amber-600" : "text-slate-400"} />
             <span>Discover</span>
           </Link>
         </nav>
 
         {/* Right Action Icons */}
-        <div className="flex items-center gap-3 sm:gap-4">
+        <div className="flex items-center gap-2.5">
           <SearchDropdown />
 
           {/* Notifications Icon & Dropdown */}
@@ -112,21 +112,23 @@ const Navbar = () => {
                   setNotifOpen(!notifOpen);
                   setDropdownOpen(false);
                 }}
-                className={`relative rounded-full p-2.5 transition focus:outline-none ${
-                  notifOpen ? "bg-amber-50 text-amber-600" : "text-slate-600 hover:bg-slate-100"
+                className={`relative rounded-lg p-2 transition-colors border ${
+                  notifOpen
+                    ? "bg-slate-100 border-slate-300 text-slate-900"
+                    : "border-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
                 aria-label="Notifications"
               >
-                <Bell size={20} />
+                <Bell size={18} />
                 {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-white">
+                  <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-amber-600 text-[10px] font-bold text-white shadow-micro ring-2 ring-white">
                     {unreadCount > 9 ? "9+" : unreadCount}
                   </span>
                 )}
               </button>
 
               {notifOpen && (
-                <div className="absolute right-0 mt-3 w-80 sm:w-96 max-w-[90vw] rounded-3xl bg-white shadow-2xl border border-slate-100 z-50 overflow-hidden max-h-[80vh] overflow-y-auto">
+                <div className="absolute right-0 mt-2 w-80 sm:w-96 max-w-[90vw] rounded-xl bg-white shadow-popover border border-slate-200/80 z-50 overflow-hidden max-h-[80vh] overflow-y-auto">
                   <NotificationPanel />
                 </div>
               )}
@@ -141,50 +143,52 @@ const Navbar = () => {
                   setDropdownOpen(!dropdownOpen);
                   setNotifOpen(false);
                 }}
-                className="flex items-center focus:outline-none group"
+                className="flex items-center focus:outline-none group p-0.5 rounded-full border border-slate-200/80 hover:border-slate-300 transition-colors"
               >
                 <img 
                   src={user?.profile?.avatar_url || "https://ui-avatars.com/api/?name=" + (user?.username || "User")} 
                   alt="Profile" 
-                  className="h-9 w-9 rounded-full object-cover border-2 border-amber-400/50 group-hover:border-amber-500 shadow-sm transition"
+                  className="h-8 w-8 rounded-full object-cover shadow-micro"
                 />
               </button>
 
               {dropdownOpen && (
-                <div className="absolute right-0 mt-3 w-52 rounded-2xl bg-white shadow-xl border border-slate-100 py-2 z-50">
-                  <div className="px-4 py-2 border-b border-slate-100">
-                    <p className="font-headline font-bold text-sm text-slate-900 truncate">
+                <div className="absolute right-0 mt-2 w-56 rounded-xl bg-white shadow-popover border border-slate-200/80 py-1.5 z-50">
+                  <div className="px-3.5 py-2 border-b border-slate-100">
+                    <p className="font-semibold text-xs text-slate-900 truncate">
                       {user?.profile?.full_name || user?.username || "User"}
                     </p>
-                    <p className="text-xs text-slate-400 truncate">@{user?.username}</p>
+                    <p className="text-[11px] text-slate-500 truncate">@{user?.username}</p>
                   </div>
 
-                  <Link 
-                    to="/profile" 
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-amber-50 hover:text-amber-700 transition"
-                    onClick={() => setDropdownOpen(false)}
-                  >
-                    <UserCircle size={18} className="text-slate-400 group-hover:text-amber-600" />
-                    Profile
-                  </Link>
+                  <div className="py-1">
+                    <Link 
+                      to="/profile" 
+                      className="flex items-center gap-2.5 px-3.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      <UserCircle size={15} className="text-slate-400" />
+                      Profile
+                    </Link>
 
-                  <Link 
-                    to="/edit-profile" 
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-amber-50 hover:text-amber-700 transition"
-                    onClick={() => setDropdownOpen(false)}
-                  >
-                    <Edit3 size={18} className="text-slate-400 group-hover:text-amber-600" />
-                    Edit Profile
-                  </Link>
+                    <Link 
+                      to="/edit-profile" 
+                      className="flex items-center gap-2.5 px-3.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      <Edit3 size={15} className="text-slate-400" />
+                      Edit Profile
+                    </Link>
 
-                  <Link 
-                    to="/bookmarks" 
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-amber-50 hover:text-amber-700 transition"
-                    onClick={() => setDropdownOpen(false)}
-                  >
-                    <Bookmark size={18} className="text-slate-400 group-hover:text-amber-600" />
-                    Saved Posts
-                  </Link>
+                    <Link 
+                      to="/bookmarks" 
+                      className="flex items-center gap-2.5 px-3.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      <Bookmark size={15} className="text-slate-400" />
+                      Saved Posts
+                    </Link>
+                  </div>
 
                   <div className="my-1 border-t border-slate-100"></div>
 
@@ -193,9 +197,9 @@ const Navbar = () => {
                       logout();
                       setDropdownOpen(false);
                     }}
-                    className="flex w-full items-center gap-3 px-4 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50 transition text-left"
+                    className="flex w-full items-center gap-2.5 px-3.5 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50 transition-colors text-left"
                   >
-                    <LogOut size={18} />
+                    <LogOut size={15} />
                     Logout
                   </button>
                 </div>
@@ -204,9 +208,9 @@ const Navbar = () => {
           ) : (
             <Link 
               to="/login"
-              className="flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-sm font-bold text-white shadow-sm shadow-amber-500/20 hover:bg-amber-600 transition"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3.5 py-1.5 text-xs font-semibold text-white shadow-micro hover:bg-slate-800 transition-all border border-slate-950/20 active:scale-[0.98]"
             >
-              <User size={16} />
+              <User size={14} />
               <span>Sign In</span>
             </Link>
           )}
@@ -216,4 +220,4 @@ const Navbar = () => {
   );
 };
 
-export default Navbar;
+export default Navbar;
