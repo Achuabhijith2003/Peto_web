@@ -19,13 +19,22 @@ export async function createComment(
 
         const {
             comment,
+            content,
             parent_comment_id
         } = req.body;
+
+        const commentText = (comment || content || "").toString().trim();
+        if (!commentText) {
+            return res.status(400).json({
+                success: false,
+                message: "Comment text cannot be empty."
+            });
+        }
 
         const data = await createCommentService(
             userId,
             postId,
-            comment,
+            commentText,
             parent_comment_id
         );
 

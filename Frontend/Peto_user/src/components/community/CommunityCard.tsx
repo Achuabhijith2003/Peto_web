@@ -16,6 +16,8 @@ export interface CommunityCardProps {
     visibility: "public" | "private";
     member_count: number;
     post_count: number;
+    owner_id?: string;
+    owner?: any;
     viewer?: {
       is_member: boolean;
       role: "owner" | "moderator" | "member" | null;
@@ -30,13 +32,15 @@ const CommunityCard = ({ community, onJoinChange }: CommunityCardProps) => {
   const navigate = useNavigate();
   const { user, openAuthModal } = useAuth();
 
-  const [isMember, setIsMember] = useState(community.viewer?.is_member || false);
-  const [memberStatus, setMemberStatus] = useState<string | null>(community.viewer?.status || null);
+  const isOwner =
+    community.viewer?.role === "owner" ||
+    (Boolean(user?.id) && (community.owner_id === user?.id || community.owner?.id === user?.id));
+  const [isMember, setIsMember] = useState(isOwner || community.viewer?.is_member || false);
+  const [memberStatus, setMemberStatus] = useState<string | null>(isOwner ? "active" : (community.viewer?.status || null));
   const [memberCount, setMemberCount] = useState(community.member_count || 1);
   const [loading, setLoading] = useState(false);
 
-  const isPending = memberStatus === "pending";
-  const isOwner = community.viewer?.role === "owner";
+  const isPending = !isOwner && memberStatus === "pending";
 
   const handleCardClick = () => {
     navigate(`/community/${community.slug || community.id}`);

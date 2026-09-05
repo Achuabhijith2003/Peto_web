@@ -33,6 +33,12 @@ export function mapPostForFeed(
             verified: author.verified || false
         },
         media: post.media ?? [],
+        content: post.text ?? "",
+        likes_count: post.likes_count ?? 0,
+        comments_count: post.comments_count ?? 0,
+        bookmarks_count: post.bookmarks_count ?? 0,
+        is_liked: likedPosts ? likedPosts.has(post.id) : false,
+        is_bookmarked: bookmarkedPosts ? bookmarkedPosts.has(post.id) : false,
         stats: {
             likes: post.likes_count ?? 0,
             comments: post.comments_count ?? 0,

@@ -49,7 +49,13 @@ const CommunityMemberItem = ({
 
   const isOwner = member.role === "owner";
   const isModerator = member.role === "moderator";
-  const canManage = viewerRole === "owner" && !isOwner;
+  const isViewerOwner = viewerRole === "owner";
+  const isViewerMod = viewerRole === "moderator";
+
+  // Owner can manage anyone except themselves. Moderator can ban regular members.
+  const canManage =
+    (isViewerOwner && !isOwner) ||
+    (isViewerMod && !isOwner && !isModerator);
 
   return (
     <div className="flex items-center justify-between rounded-2xl bg-white p-4 border border-slate-100 transition hover:border-amber-200/60 hover:shadow-xs">
@@ -91,7 +97,7 @@ const CommunityMemberItem = ({
         </div>
       </div>
 
-      {/* Role Management Actions for Owner */}
+      {/* Moderation Actions for Owner / Moderator */}
       {canManage && (
         <div className="relative" ref={menuRef}>
           <button
@@ -104,30 +110,32 @@ const CommunityMemberItem = ({
 
           {menuOpen && (
             <div className="absolute right-0 top-full mt-1 z-20 w-44 rounded-2xl bg-white p-1.5 shadow-xl border border-slate-100 animate-in fade-in zoom-in-95">
-              {isModerator ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    if (onDemoteModerator) onDemoteModerator(profile.id);
-                  }}
-                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
-                >
-                  <UserMinus size={14} className="text-slate-400" />
-                  <span>Demote to Member</span>
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    if (onPromoteModerator) onPromoteModerator(profile.id);
-                  }}
-                  className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-50 cursor-pointer"
-                >
-                  <ShieldCheck size={14} />
-                  <span>Make Moderator</span>
-                </button>
+              {isViewerOwner && (
+                isModerator ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      if (onDemoteModerator) onDemoteModerator(profile.id);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
+                  >
+                    <UserMinus size={14} className="text-slate-400" />
+                    <span>Demote to Member</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      if (onPromoteModerator) onPromoteModerator(profile.id);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-50 cursor-pointer"
+                  >
+                    <ShieldCheck size={14} />
+                    <span>Make Moderator</span>
+                  </button>
+                )
               )}
 
               <button

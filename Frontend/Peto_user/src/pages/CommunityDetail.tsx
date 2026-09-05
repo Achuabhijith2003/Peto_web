@@ -248,10 +248,12 @@ const CommunityDetail = () => {
     );
   }
 
-  const isOwner = community.viewer?.role === "owner" || community.owner_id === user?.id;
+  const isOwner =
+    community.viewer?.role === "owner" ||
+    (Boolean(user?.id) && (community.owner_id === user?.id || community.owner?.id === user?.id));
   const isModerator = community.viewer?.role === "moderator";
-  const isMember = community.viewer?.is_member;
-  const isPrivateRestricted = community.is_private_restricted;
+  const isMember = isOwner || community.viewer?.is_member;
+  const isPrivateRestricted = !isOwner && community.is_private_restricted;
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 pb-20 md:pb-10 font-sans">
@@ -538,7 +540,7 @@ const CommunityDetail = () => {
               <CommunityRulesAccordion
                 communityId={community.id}
                 rules={community.rules || []}
-                canEdit={isOwner || isModerator}
+                canEdit={isOwner}
                 onRulesUpdated={() => fetchCommunity()}
               />
             </div>

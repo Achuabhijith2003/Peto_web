@@ -102,6 +102,7 @@ app.use(
 
 app.use("/api", likeRoutes);
 app.use("/api", commentRoutes);
+app.use("/api", bookmarkRoutes);
 app.use("/api/my", bookmarkRoutes);
 app.use(
 

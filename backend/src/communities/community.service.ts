@@ -146,20 +146,29 @@ export async function getCommunityByIdService(
     };
 
     if (currentUserId) {
-        const { data: member } = await supabase
-            .from("community_members")
-            .select("role, status")
-            .eq("community_id", community.id)
-            .eq("user_id", currentUserId)
-            .maybeSingle();
-
-        if (member) {
+        if (community.owner_id === currentUserId) {
             viewerState = {
-                is_member: member.status === "active",
-                role: member.role,
-                status: member.status,
-                is_banned: member.status === "banned",
+                is_member: true,
+                role: "owner",
+                status: "active",
+                is_banned: false,
             };
+        } else {
+            const { data: member } = await supabase
+                .from("community_members")
+                .select("role, status")
+                .eq("community_id", community.id)
+                .eq("user_id", currentUserId)
+                .maybeSingle();
+
+            if (member) {
+                viewerState = {
+                    is_member: member.status === "active",
+                    role: member.role,
+                    status: member.status,
+                    is_banned: member.status === "banned",
+                };
+            }
         }
     }
 
@@ -596,8 +605,8 @@ export async function createCommunityRuleService(
     input: { title: string; description?: string; position?: number }
 ) {
     const role = await getCommunityUserRole(communityId, userId);
-    if (role !== "owner" && role !== "moderator") {
-        throw new Error("Unauthorized: Only owners and moderators can add rules.");
+    if (role !== "owner") {
+        throw new Error("Unauthorized: Only the community owner can add rules.");
     }
 
     let position = input.position;
@@ -631,8 +640,8 @@ export async function updateCommunityRuleService(
     input: { title?: string; description?: string; position?: number }
 ) {
     const role = await getCommunityUserRole(communityId, userId);
-    if (role !== "owner" && role !== "moderator") {
-        throw new Error("Unauthorized: Only owners and moderators can edit rules.");
+    if (role !== "owner") {
+        throw new Error("Unauthorized: Only the community owner can edit rules.");
     }
 
     const updates: any = { updated_at: new Date().toISOString() };
@@ -658,8 +667,8 @@ export async function deleteCommunityRuleService(
     userId: string
 ) {
     const role = await getCommunityUserRole(communityId, userId);
-    if (role !== "owner" && role !== "moderator") {
-        throw new Error("Unauthorized: Only owners and moderators can delete rules.");
+    if (role !== "owner") {
+        throw new Error("Unauthorized: Only the community owner can delete rules.");
     }
 
     const { error } = await supabase
@@ -766,13 +775,14 @@ export async function queryCommunitiesService(params: QueryCommunitiesInput) {
 
     const mapped = (communities || []).map((comm) => {
         const mem = userMembershipsMap.get(comm.id);
+        const isOwner = Boolean(userId && comm.owner_id === userId);
         return {
             ...comm,
             viewer: {
-                is_member: mem?.status === "active",
-                role: mem?.role || null,
-                status: mem?.status || null,
-                is_banned: mem?.status === "banned",
+                is_member: isOwner || mem?.status === "active",
+                role: isOwner ? ("owner" as CommunityRole) : (mem?.role || null),
+                status: isOwner ? ("active" as CommunityMemberStatus) : (mem?.status || null),
+                is_banned: !isOwner && mem?.status === "banned",
             },
         };
     });

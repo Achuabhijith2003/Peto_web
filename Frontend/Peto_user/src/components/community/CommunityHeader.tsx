@@ -27,15 +27,18 @@ const CommunityHeader = ({
 }: CommunityHeaderProps) => {
   const { user, openAuthModal } = useAuth();
 
-  const [isMember, setIsMember] = useState(community.viewer?.is_member || false);
-  const [memberStatus, setMemberStatus] = useState<string | null>(community.viewer?.status || null);
+  const isOwner =
+    community.viewer?.role === "owner" ||
+    (Boolean(user?.id) && (community.owner_id === user?.id || community.owner?.id === user?.id));
+  const isModerator = community.viewer?.role === "moderator";
+
+  const [isMember, setIsMember] = useState(isOwner || community.viewer?.is_member || false);
+  const [memberStatus, setMemberStatus] = useState<string | null>(isOwner ? "active" : (community.viewer?.status || null));
   const [memberCount, setMemberCount] = useState(community.member_count || 1);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const isOwner = community.viewer?.role === "owner" || community.owner_id === user?.id;
-  const isModerator = community.viewer?.role === "moderator";
-  const isPending = memberStatus === "pending";
+  const isPending = !isOwner && memberStatus === "pending";
 
   const handleJoinToggle = async () => {
     if (!user) {
