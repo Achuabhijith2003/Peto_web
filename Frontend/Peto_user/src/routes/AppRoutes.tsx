@@ -4,7 +4,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "../pages/Login";
 import Register from "../pages/Register";
 import ForgotPassword from "../pages/ForgotPassword";
-import ResetPassword from "../pages/ResetPassword";
+import ResetPassword from "../pages/ResetPasswords";
 import Community from "../pages/Community";
 import CommunityDetail from "../pages/CommunityDetail";
 import Social from "../pages/Social";
