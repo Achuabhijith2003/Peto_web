@@ -7,8 +7,9 @@ const supabase = createClient(
 );
 
 export const signup = async (req: Request, res: Response) => {
-  const { email, password, fullName, full_name } = req.body;
-  const nameToSave = fullName || full_name || "";
+  const { email, password, fullName, full_name, username } = req.body;
+  const nameToSave = fullName || full_name || username || "";
+  const usernameToSave = username || (nameToSave ? nameToSave.toLowerCase().replace(/\s+/g, "") : "");
 
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -17,12 +18,10 @@ export const signup = async (req: Request, res: Response) => {
       data: {
         full_name: nameToSave,
         fullName: nameToSave,
+        username: usernameToSave,
       },
     },
   });
-
-  console.log(error);
-  
 
   if (error) {
     return res.status(400).json({
@@ -35,5 +34,7 @@ export const signup = async (req: Request, res: Response) => {
     success: true,
     user: data.user,
     session: data.session,
+    token: data.session?.access_token,
+    refreshToken: data.session?.refresh_token,
   });
 };

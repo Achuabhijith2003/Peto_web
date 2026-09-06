@@ -391,11 +391,14 @@ export const createProfile = async (
             username,
             fullName,
             full_name,
+            avatar_url,
+            avatarUrl,
             bio,
             location,
             website,
             phone,
             dateOfBirth,
+            date_of_birth,
         } = req.body;
 
         const resolvedFullName =
@@ -407,6 +410,9 @@ export const createProfile = async (
             username ||
             "Pet Parent";
 
+        const resolvedAvatarUrl = avatar_url || avatarUrl || null;
+        const resolvedDob = dateOfBirth || date_of_birth || null;
+
         const { data: existing } = await supabase
             .from("profiles")
             .select("id")
@@ -414,9 +420,33 @@ export const createProfile = async (
             .maybeSingle();
 
         if (existing) {
-            return res.status(409).json({
-                success: false,
-                message: "Profile already exists",
+            const { data: updated, error: updateError } = await supabase
+                .from("profiles")
+                .update({
+                    username,
+                    full_name: resolvedFullName,
+                    avatar_url: resolvedAvatarUrl,
+                    bio,
+                    location,
+                    website,
+                    phone,
+                    date_of_birth: resolvedDob,
+                })
+                .eq("id", user.id)
+                .select()
+                .single();
+
+            if (updateError) {
+                return res.status(400).json({
+                    success: false,
+                    message: updateError.message,
+                });
+            }
+
+            return res.status(200).json({
+                success: true,
+                message: "Profile updated successfully",
+                data: updated,
             });
         }
 
@@ -427,11 +457,12 @@ export const createProfile = async (
                     id: user.id,
                     username,
                     full_name: resolvedFullName,
+                    avatar_url: resolvedAvatarUrl,
                     bio,
                     location,
                     website,
                     phone,
-                    date_of_birth: dateOfBirth,
+                    date_of_birth: resolvedDob,
                 },
             ])
             .select()

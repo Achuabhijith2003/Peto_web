@@ -6,3 +6,5 @@ dist
 .DS_Store
 *.log
 peto_user
+*/temp*
+*temp*  
