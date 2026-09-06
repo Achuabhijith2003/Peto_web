@@ -122,18 +122,45 @@ export async function createPostService(
             }
         }
 
-        // If objects/URLs passed, insert new media rows
+        // If objects/URLs passed, insert new media rows or link existing
         if (objectList.length > 0) {
-            const mediaToInsert = objectList.map((item: any) => {
+            const mediaToInsert: any[] = [];
+
+            for (const item of objectList) {
                 const url = typeof item === "string" ? item : item?.url || item?.path || item?.src || "";
-                const type = typeof item === "object" && item?.type ? item.type : "image";
-                return {
-                    post_id: post.id,
-                    user_id: userId,
-                    url,
-                    type
-                };
-            }).filter(m => m.url);
+                if (!url) continue;
+
+                const isVideo =
+                    (typeof item === "object" && item?.type === "video") ||
+                    (typeof url === "string" && (
+                        url.includes("/posts-videos/") ||
+                        /\.(mp4|webm|mov|mkv|avi)(\?.*)?$/i.test(url)
+                    ));
+
+                const type = isVideo ? "video" : (typeof item === "object" && item?.type ? item.type : "image");
+
+                // Check if an unlinked media row for this URL already exists
+                const { data: existingMedia } = await supabase
+                    .from("media")
+                    .select("id")
+                    .eq("url", url)
+                    .is("post_id", null)
+                    .maybeSingle();
+
+                if (existingMedia) {
+                    await supabase
+                        .from("media")
+                        .update({ post_id: post.id, type })
+                        .eq("id", existingMedia.id);
+                } else {
+                    mediaToInsert.push({
+                        post_id: post.id,
+                        user_id: userId,
+                        url,
+                        type
+                    });
+                }
+            }
 
             if (mediaToInsert.length > 0) {
                 const { error: insertError } = await supabase
@@ -760,7 +787,7 @@ export async function getReelsFeedService(
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
-    const { data: posts } = await supabase
+    const { data: posts, count, error } = await supabase
         .from("posts")
         .select(`
             *,
@@ -771,21 +798,18 @@ export async function getReelsFeedService(
                 avatar_url,
                 verified
             ),
-            media(*)
-        `)
+            media!inner(*)
+        `, { count: "exact" })
         .eq("visibility", "public")
+        .or("type.eq.video,url.ilike.%.mp4%,url.ilike.%posts-videos%", { foreignTable: "media" })
         .order("created_at", { ascending: false })
-        .range(from, to * 2);
+        .range(from, to);
 
-    const videoPosts = (posts ?? []).filter(post => {
-        if (!post.media || !Array.isArray(post.media)) return false;
-        return post.media.some((m: any) => {
-            if (m.type === "video") return true;
-            const url = typeof m === "string" ? m : m?.url || m?.path || "";
-            return /\.(mp4|webm|mov|mkv|avi)(\?.*)?$/i.test(url);
-        });
-    }).slice(0, limit);
+    if (error) {
+        console.error("Error fetching reels feed:", error);
+    }
 
+    const videoPosts = posts ?? [];
     const postIds = videoPosts.map(post => post.id);
 
     let likedPosts = new Set<string>();
@@ -817,13 +841,15 @@ export async function getReelsFeedService(
         )
     );
 
+    const totalCount = count ?? videoPosts.length;
+
     return {
         posts: feed,
         pagination: {
             page,
             limit,
-            total: videoPosts.length,
-            totalPages: Math.ceil(videoPosts.length / limit)
+            total: totalCount,
+            totalPages: Math.ceil(totalCount / limit)
         }
     };
 }

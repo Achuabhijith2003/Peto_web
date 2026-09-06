@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Loader2, Clapperboard, RefreshCw } from "lucide-react";
 import api from "../utils/api";
 import ReelItem from "../components/social/ReelItem";
@@ -8,28 +8,47 @@ import MobileBottomNav from "../components/social/MobileBottomNav";
 const Reels = () => {
   const [reels, setReels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(1);
   const [activeIndex, setActiveIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const fetchReels = async () => {
+  const fetchReels = async (pageNum = 1) => {
     try {
-      setLoading(true);
-      const res = await api.get("/posts/reels");
+      if (pageNum === 1) setLoading(true);
+      else setLoadingMore(true);
+
+      const res = await api.get(`/posts/reels?page=${pageNum}&limit=10`);
       if (res.data?.success) {
-        setReels(res.data.posts || []);
+        const newPosts = res.data.posts || [];
+        setReels((prev) => {
+          if (pageNum === 1) return newPosts;
+          const existingIds = new Set(prev.map((p) => p.id));
+          const unique = newPosts.filter((p: any) => !existingIds.has(p.id));
+          return [...prev, ...unique];
+        });
+
+        if (res.data.pagination) {
+          setHasMore(pageNum < res.data.pagination.totalPages);
+        } else {
+          setHasMore(newPosts.length >= 10);
+        }
+        setPage(pageNum);
       }
     } catch (err) {
       console.error("Error fetching reels:", err);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
   useEffect(() => {
-    fetchReels();
+    fetchReels(1);
   }, []);
 
-  const handleScroll = () => {
+  const handleScroll = useCallback(() => {
     if (!containerRef.current) return;
     const container = containerRef.current;
     const height = container.clientHeight;
@@ -37,7 +56,17 @@ const Reels = () => {
     if (index !== activeIndex) {
       setActiveIndex(index);
     }
-  };
+
+    // Load more when reaching near the end
+    if (
+      !loading &&
+      !loadingMore &&
+      hasMore &&
+      container.scrollTop + container.clientHeight >= container.scrollHeight - height * 1.5
+    ) {
+      fetchReels(page + 1);
+    }
+  }, [activeIndex, loading, loadingMore, hasMore, page]);
 
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col">
@@ -59,7 +88,7 @@ const Reels = () => {
               Be the first pet parent to upload a fun video clip! Use the Create Post button on the home feed.
             </p>
             <button
-              onClick={fetchReels}
+              onClick={() => fetchReels(1)}
               className="flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-2.5 text-xs font-bold text-white shadow-lg hover:bg-amber-600 transition"
             >
               <RefreshCw size={14} /> Refresh
@@ -76,6 +105,11 @@ const Reels = () => {
                 <ReelItem post={post} isActive={idx === activeIndex} />
               </div>
             ))}
+            {loadingMore && (
+              <div className="h-24 flex items-center justify-center text-amber-500">
+                <Loader2 size={24} className="animate-spin" />
+              </div>
+            )}
           </div>
         )}
       </main>

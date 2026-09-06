@@ -10,7 +10,12 @@ import {
   CheckCircle2,
   Disc,
   Send,
-  X
+  X,
+  VideoOff,
+  RefreshCw,
+  Loader2,
+  Maximize2,
+  Minimize2
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import api from "../../utils/api";
@@ -28,6 +33,11 @@ const ReelItem = ({ post, isActive }: ReelItemProps) => {
 
   const [playing, setPlaying] = useState(true);
   const [muted, setMuted] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+  const [isLandscape, setIsLandscape] = useState(false);
+  const [fitMode, setFitMode] = useState<"contain" | "cover">("contain");
+
   const [isLiked, setIsLiked] = useState(post.viewer?.liked || false);
   const [likesCount, setLikesCount] = useState<number>(post.stats?.likes || 0);
   const [isBookmarked, setIsBookmarked] = useState(post.viewer?.bookmarked || false);
@@ -51,17 +61,21 @@ const ReelItem = ({ post, isActive }: ReelItemProps) => {
     ? post.media.find((m: any) => {
         if (m.type === "video") return true;
         const url = typeof m === "string" ? m : m.url || m.path || "";
-        return /\.(mp4|webm|mov|mkv|avi)(\?.*)?$/i.test(url);
+        return /\.(mp4|webm|mov|mkv|avi)(\?.*)?$/i.test(url) || url.includes("/posts-videos/");
       })
     : null;
 
-  const rawVideoUrl = typeof videoMedia === "string" ? videoMedia : videoMedia?.url || videoMedia?.path || post.video_url || "";
+  const rawVideoUrl =
+    typeof videoMedia === "string"
+      ? videoMedia
+      : videoMedia?.url || videoMedia?.path || post.video_url || "";
   const videoUrl = rawVideoUrl
     .replace("/posts-videos/posts-videos/", "/posts-videos/")
     .replace("/posts-images/posts-images/", "/posts-images/");
 
   useEffect(() => {
     if (isActive && videoRef.current && videoUrl) {
+      setHasError(false);
       try {
         videoRef.current.currentTime = 0;
         const playPromise = videoRef.current.play();
@@ -78,6 +92,24 @@ const ReelItem = ({ post, isActive }: ReelItemProps) => {
       setPlaying(false);
     }
   }, [isActive, videoUrl]);
+
+  const handleLoadedMetadata = (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
+    const video = e.currentTarget;
+    setLoading(false);
+    setHasError(false);
+    const wide = video.videoWidth >= video.videoHeight;
+    setIsLandscape(wide);
+    setFitMode(wide ? "contain" : "cover");
+  };
+
+  const handleRetry = () => {
+    setHasError(false);
+    setLoading(true);
+    if (videoRef.current) {
+      videoRef.current.load();
+      videoRef.current.play().catch(() => {});
+    }
+  };
 
   const togglePlay = () => {
     if (!videoRef.current) return;
@@ -175,20 +207,87 @@ const ReelItem = ({ post, isActive }: ReelItemProps) => {
 
   return (
     <div className="relative h-full w-full bg-slate-950 flex items-center justify-center snap-start overflow-hidden">
-      {/* Video Element */}
-      <video
-        ref={videoRef}
-        loop
-        playsInline
-        muted={muted}
-        onClick={togglePlay}
-        className="h-full w-full object-cover max-w-[480px] cursor-pointer"
-      >
-        {videoUrl && <source src={videoUrl} type="video/mp4" />}
-      </video>
+      {/* Aspect Ratio Toggle for Landscape Video */}
+      {isLandscape && !hasError && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setFitMode(fitMode === "contain" ? "cover" : "contain");
+          }}
+          className="absolute top-6 left-6 z-30 flex items-center gap-1.5 rounded-full bg-slate-900/80 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-md hover:bg-slate-900 transition border border-white/10 shadow-sm"
+          title={fitMode === "contain" ? "Zoom to fill screen" : "Show original uncropped size"}
+        >
+          {fitMode === "contain" ? (
+            <>
+              <Maximize2 size={13} className="text-amber-400" />
+              <span>Original Size</span>
+            </>
+          ) : (
+            <>
+              <Minimize2 size={13} className="text-amber-400" />
+              <span>Filled</span>
+            </>
+          )}
+        </button>
+      )}
+
+      {/* Video Element: uses direct src for reliable React reloads & object-contain for landscape */}
+      {videoUrl ? (
+        <video
+          ref={videoRef}
+          src={videoUrl}
+          loop
+          playsInline
+          muted={muted}
+          onClick={togglePlay}
+          onLoadedMetadata={handleLoadedMetadata}
+          onWaiting={() => setLoading(true)}
+          onPlaying={() => {
+            setLoading(false);
+            setPlaying(true);
+          }}
+          onError={() => {
+            setLoading(false);
+            setHasError(true);
+          }}
+          className={`w-full cursor-pointer transition-all duration-200 ${
+            fitMode === "contain"
+              ? "h-auto max-h-full max-w-[480px] object-contain my-auto"
+              : "h-full w-full max-w-[480px] object-cover"
+          }`}
+        />
+      ) : (
+        <div className="flex flex-col items-center justify-center gap-2 text-slate-400">
+          <VideoOff size={36} />
+          <span className="text-xs">No video URL found</span>
+        </div>
+      )}
+
+      {/* Loading Indicator */}
+      {loading && !hasError && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+          <Loader2 size={36} className="animate-spin text-amber-500" />
+        </div>
+      )}
+
+      {/* Error / Unavailable fallback */}
+      {hasError && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/90 text-white z-20 gap-3 p-6 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-800 text-slate-400">
+            <VideoOff size={32} />
+          </div>
+          <p className="font-headline font-bold text-sm text-slate-200">Video temporarily unavailable</p>
+          <button
+            onClick={handleRetry}
+            className="flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-white hover:bg-amber-600 transition"
+          >
+            <RefreshCw size={14} /> Retry
+          </button>
+        </div>
+      )}
 
       {/* Play / Pause Indicator overlay */}
-      {!playing && (
+      {!playing && !loading && !hasError && (
         <div
           onClick={togglePlay}
           className="absolute inset-0 flex items-center justify-center bg-black/20 cursor-pointer pointer-events-auto"
@@ -325,22 +424,34 @@ const ReelItem = ({ post, isActive }: ReelItemProps) => {
               comments.map((c: any) => (
                 <div key={c.id} className="flex gap-3 text-xs">
                   <img
-                    src={c.profiles?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.profiles?.username || "user")}`}
+                    src={
+                      c.profiles?.avatar_url ||
+                      `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                        c.profiles?.username || "user"
+                      )}`
+                    }
                     alt="User"
                     className="h-8 w-8 rounded-full object-cover border border-slate-200"
                   />
                   <div className="flex-1 rounded-2xl bg-slate-50 p-2.5">
-                    <p className="font-bold text-slate-900">{c.profiles?.full_name || c.profiles?.username}</p>
+                    <p className="font-bold text-slate-900">
+                      {c.profiles?.full_name || c.profiles?.username}
+                    </p>
                     <p className="text-slate-700 mt-0.5">{c.comment || c.text}</p>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-center py-6 text-xs text-slate-400">No comments yet. Be the first!</p>
+              <p className="text-center py-6 text-xs text-slate-400">
+                No comments yet. Be the first!
+              </p>
             )}
           </div>
 
-          <form onSubmit={handleAddComment} className="flex gap-2 pt-2 border-t border-slate-100">
+          <form
+            onSubmit={handleAddComment}
+            className="flex gap-2 pt-2 border-t border-slate-100"
+          >
             <input
               type="text"
               placeholder="Add a comment..."

@@ -270,9 +270,8 @@ export const search = async (
     res: Response
 ) => {
 
-    console.log("Search function in calling....");
-    const user = (req as any).user!.id;
-        console.log("UserId: ",user);
+    const user = (req as any).user?.id;
+    console.log("UserId: ", user);
         
 
     try {

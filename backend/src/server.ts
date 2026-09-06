@@ -191,7 +191,7 @@ app.use(
 // Start Server 
 // ----------------------
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   ensurePublicBuckets();
   console.log("");
   console.log("====================================");
@@ -201,3 +201,7 @@ app.listen(PORT, () => {
   console.log(`❤️ Health      : http://localhost:${PORT}/health`);
   console.log("====================================");
 });
+
+// Configure 5-minute timeout for large media/video uploads
+server.setTimeout(300000);
+server.keepAliveTimeout = 120000;

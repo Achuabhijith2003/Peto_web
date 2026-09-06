@@ -97,16 +97,15 @@ export async function getUserProfile(
 }
 
 export async function searchUsers(
-    currentUserId: string,
+    currentUserId: string | undefined,
     query: string,
     page: number,
     limit: number
 ) {
-
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
-    const { data: users, error } = await supabase
+    let q = supabase
         .from("profiles")
         .select(`
             id,
@@ -116,16 +115,19 @@ export async function searchUsers(
             verified,
             bio
         `)
-        .or(`username.ilike.%${query}%,full_name.ilike.%${query}%`)
-        .neq("id", currentUserId)
-        .range(from, to);
+        .or(`username.ilike.%${query}%,full_name.ilike.%${query}%`);
+
+    if (currentUserId) {
+        q = q.neq("id", currentUserId);
+    }
+
+    const { data: users, error } = await q.range(from, to);
 
     if (error) throw error;
 
     const results = [];
 
     for (const user of users ?? []) {
-
         const { count: followers } = await supabase
             .from("follows")
             .select("*", {
@@ -134,23 +136,22 @@ export async function searchUsers(
             })
             .eq("following_id", user.id);
 
-        const { data: follow } = await supabase
-            .from("follows")
-            .select("id")
-            .eq("follower_id", currentUserId)
-            .eq("following_id", user.id)
-            .maybeSingle();
+        let isFollowing = false;
+        if (currentUserId) {
+            const { data: follow } = await supabase
+                .from("follows")
+                .select("id")
+                .eq("follower_id", currentUserId)
+                .eq("following_id", user.id)
+                .maybeSingle();
+            isFollowing = !!follow;
+        }
 
         results.push({
-
             ...user,
-
             followersCount: followers ?? 0,
-
-            isFollowing: !!follow
-
+            isFollowing
         });
-
     }
 
     return results;

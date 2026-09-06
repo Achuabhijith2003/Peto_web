@@ -19,8 +19,8 @@ export async function compressVideo(
             .videoCodec("libx264")
             .audioCodec("aac")
             .outputOptions([
-                "-preset medium",
-                "-crf 23",
+                "-preset veryfast",
+                "-crf 25",
                 "-vf scale='min(1080,iw)':-2",
                 "-b:a 128k",
                 "-movflags +faststart",

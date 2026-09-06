@@ -34,9 +34,18 @@ const CreatePost = ({ onPostCreated, communityId, communityName }: CreatePostPro
     videoInputRef.current?.click();
   };
 
+  const MAX_MEDIA = 5;
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, forcedType?: "image" | "video") => {
     if (!e.target.files || e.target.files.length === 0) return;
-    const selectedFiles = Array.from(e.target.files);
+    const remainingSlots = MAX_MEDIA - mediaFiles.length;
+    if (remainingSlots <= 0) {
+      alert("You can upload a maximum of 5 media items per post.");
+      e.target.value = "";
+      return;
+    }
+
+    const selectedFiles = Array.from(e.target.files).slice(0, remainingSlots);
 
     const newMedia = selectedFiles.map((file) => {
       const type = forcedType || (file.type.startsWith("video/") ? "video" : "image");
@@ -48,6 +57,7 @@ const CreatePost = ({ onPostCreated, communityId, communityName }: CreatePostPro
     });
 
     setMediaFiles((prev) => [...prev, ...newMedia]);
+    e.target.value = "";
   };
 
   const removeMedia = (index: number) => {
@@ -204,12 +214,13 @@ const CreatePost = ({ onPostCreated, communityId, communityName }: CreatePostPro
         />
 
         <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
             <button 
               type="button"
               onClick={handlePhotoClick}
-              disabled={uploadingMedia}
-              className="flex items-center gap-2 rounded-xl bg-amber-50 px-3.5 py-2 text-xs font-bold text-amber-700 hover:bg-amber-100 transition border border-amber-200/50"
+              disabled={uploadingMedia || mediaFiles.length >= MAX_MEDIA}
+              className="flex items-center gap-2 rounded-xl bg-amber-50 px-3.5 py-2 text-xs font-bold text-amber-700 hover:bg-amber-100 transition border border-amber-200/50 disabled:opacity-50 disabled:cursor-not-allowed"
+              title={mediaFiles.length >= MAX_MEDIA ? "Maximum 5 media items reached" : "Add photo"}
             >
               <Image size={16} className="text-amber-600" />
               <span>Photo</span>
@@ -218,12 +229,19 @@ const CreatePost = ({ onPostCreated, communityId, communityName }: CreatePostPro
             <button 
               type="button"
               onClick={handleVideoClick}
-              disabled={uploadingMedia}
-              className="flex items-center gap-2 rounded-xl bg-rose-50 px-3.5 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100 transition border border-rose-200/50"
+              disabled={uploadingMedia || mediaFiles.length >= MAX_MEDIA}
+              className="flex items-center gap-2 rounded-xl bg-rose-50 px-3.5 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100 transition border border-rose-200/50 disabled:opacity-50 disabled:cursor-not-allowed"
+              title={mediaFiles.length >= MAX_MEDIA ? "Maximum 5 media items reached" : "Add video"}
             >
               <Video size={16} className="text-rose-600" />
               <span>Video</span>
             </button>
+
+            {mediaFiles.length > 0 && (
+              <span className="text-xs font-medium text-slate-400 ml-1">
+                {mediaFiles.length}/{MAX_MEDIA} items
+              </span>
+            )}
           </div>
 
           <button
