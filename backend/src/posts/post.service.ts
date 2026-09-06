@@ -619,7 +619,7 @@ export async function getUserPostsService(
 export async function getGlobalFeedService(
     currentUserId?: string,
     page: number = 1,
-    limit: number = 10
+    limit: number = 7
 ) {
     const from = (page - 1) * limit;
     const to = from + limit - 1;
