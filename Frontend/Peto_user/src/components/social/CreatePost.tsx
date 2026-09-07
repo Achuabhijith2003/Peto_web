@@ -89,7 +89,7 @@ const CreatePost = ({ onPostCreated, communityId, communityName }: CreatePostPro
           formData.append("media", item.file);
 
           const uploadRes = await api.post("/media/upload", formData, {
-            headers: { "Content-Type": "multipart/form-data" },
+            timeout: 300000,
           });
 
           if (uploadRes.data?.success) {

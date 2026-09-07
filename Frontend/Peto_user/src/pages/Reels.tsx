@@ -46,6 +46,12 @@ const Reels = () => {
 
   useEffect(() => {
     fetchReels(1);
+    return () => {
+      if (containerRef.current) {
+        const videos = containerRef.current.querySelectorAll("video");
+        videos.forEach((v) => v.pause());
+      }
+    };
   }, []);
 
   const handleScroll = useCallback(() => {

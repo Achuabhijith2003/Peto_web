@@ -1,6 +1,23 @@
 import multer from "multer";
+import path from "path";
+import fs from "fs";
+import crypto from "crypto";
 
-const storage = multer.memoryStorage();
+const tempDir = path.join(process.cwd(), "temp");
+if (!fs.existsSync(tempDir)) {
+  fs.mkdirSync(tempDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, tempDir);
+  },
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname || "") || (file.mimetype.startsWith("video/") ? ".mp4" : ".jpg");
+    const uniqueName = `${crypto.randomUUID()}${ext}`;
+    cb(null, uniqueName);
+  },
+});
 
 const imageFilter: multer.Options["fileFilter"] = (req, file, cb) => {
   if (file.mimetype.startsWith("image/") || file.mimetype === "application/octet-stream") {
@@ -49,4 +66,4 @@ export const upload = multer({
     fileSize: 200 * 1024 * 1024, // 200MB
   },
   fileFilter: mediaFilter,
-});
+});

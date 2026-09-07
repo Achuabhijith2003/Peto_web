@@ -123,13 +123,16 @@ export async function processVideo(
 
     await fs.mkdir(tempDir, { recursive: true });
 
-    const inputPath = path.join(tempDir, `${id}-input.mp4`);
+    // If file was streamed to disk via multer diskStorage, use file.path directly
+    const inputPath = file.path ? file.path : path.join(tempDir, `${id}-input.mp4`);
     const outputPath = path.join(tempDir, `${id}.mp4`);
     const thumbnailPath = path.join(tempDir, `${id}.jpg`);
 
     try {
-        // Save uploaded raw file
-        await fs.writeFile(inputPath, file.buffer);
+        // If file was in memory (no disk path), save buffer to disk
+        if (!file.path && file.buffer) {
+            await fs.writeFile(inputPath, file.buffer);
+        }
 
         // Read initial metadata from input
         let metadata: { width?: number; height?: number; duration: number; hasAudio: boolean } = {
@@ -209,5 +212,8 @@ export async function processVideo(
         await deleteIfExists(inputPath);
         await deleteIfExists(outputPath);
         await deleteIfExists(thumbnailPath);
+        if (file.path && file.path !== inputPath) {
+            await deleteIfExists(file.path);
+        }
     }
 }

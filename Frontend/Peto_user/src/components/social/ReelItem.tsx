@@ -74,11 +74,12 @@ const ReelItem = ({ post, isActive }: ReelItemProps) => {
     .replace("/posts-images/posts-images/", "/posts-images/");
 
   useEffect(() => {
-    if (isActive && videoRef.current && videoUrl) {
+    const video = videoRef.current;
+    if (isActive && video && videoUrl) {
       setHasError(false);
       try {
-        videoRef.current.currentTime = 0;
-        const playPromise = videoRef.current.play();
+        video.currentTime = 0;
+        const playPromise = video.play();
         if (playPromise !== undefined) {
           playPromise
             .then(() => setPlaying(true))
@@ -87,10 +88,29 @@ const ReelItem = ({ post, isActive }: ReelItemProps) => {
       } catch {
         setPlaying(false);
       }
-    } else if (videoRef.current) {
-      videoRef.current.pause();
+    } else if (video) {
+      video.pause();
       setPlaying(false);
     }
+
+    const handleVisibilityChange = () => {
+      if (document.hidden && videoRef.current) {
+        videoRef.current.pause();
+        setPlaying(false);
+      } else if (!document.hidden && isActive && videoRef.current) {
+        videoRef.current.play().catch(() => {});
+        setPlaying(true);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      if (video) {
+        video.pause();
+      }
+    };
   }, [isActive, videoUrl]);
 
   const handleLoadedMetadata = (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {

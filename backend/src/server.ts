@@ -173,16 +173,31 @@ app.use((req, res) => {
 
 app.use(
   (
-    err: Error,
+    err: any,
     req: express.Request,
     res: express.Response,
     next: express.NextFunction
   ) => {
+    if (err?.code === "LIMIT_FILE_SIZE") {
+      return res.status(413).json({
+        success: false,
+        message: "File is too large. Maximum size is 30MB for images and 200MB for videos.",
+      });
+    }
+
+    if (err?.message === "Request aborted" || err?.code === "ECONNRESET") {
+      console.warn("Upload connection was interrupted/aborted by client:", err.message);
+      return res.status(499).json({
+        success: false,
+        message: "Upload connection was interrupted.",
+      });
+    }
+
     console.error(err);
 
     res.status(500).json({
       success: false,
-      message: "Internal Server Error",
+      message: err?.message || "Internal Server Error",
     });
   }
 );
@@ -205,3 +220,5 @@ const server = app.listen(PORT, () => {
 // Configure 5-minute timeout for large media/video uploads
 server.setTimeout(300000);
 server.keepAliveTimeout = 120000;
+server.headersTimeout = 125000; // Strictly greater than keepAliveTimeout
+server.requestTimeout = 300000; // 5 minutes request timeout
