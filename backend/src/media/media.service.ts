@@ -9,18 +9,21 @@ export async function processMedia(
     file: Express.Multer.File
 ) {
     const ext = path.extname(file.originalname || "").toLowerCase();
-    const isVideo = file.mimetype.startsWith("video/") || [".mp4", ".mov", ".avi", ".mkv", ".webm"].includes(ext);
-    const isImage = file.mimetype.startsWith("image/") || [".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp"].includes(ext);
+    const videoExtensions = [".mp4", ".mov", ".avi", ".mkv", ".webm", ".3gp", ".m4v", ".ts", ".flv"];
+    const imageExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp", ".heic", ".heif"];
 
-    if (isImage) {
-        return await processImage(
+    const isVideo = file.mimetype.startsWith("video/") || videoExtensions.includes(ext);
+    const isImage = file.mimetype.startsWith("image/") || imageExtensions.includes(ext);
+
+    if (isVideo) {
+        return await processVideo(
             userId,
             file
         );
     }
 
-    if (isVideo) {
-        return await processVideo(
+    if (isImage) {
+        return await processImage(
             userId,
             file
         );
