@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
-import { UserPlus, UserCheck, Loader2, Edit3, MapPin, Link as LinkIcon } from "lucide-react";
+import { UserPlus, UserCheck, Loader2, Edit3, MapPin, Link as LinkIcon, CheckCircle2 } from "lucide-react";
 import api from "../utils/api";
 import { useAuth } from "../context/AuthContext";
 
@@ -11,12 +11,14 @@ import SocialLayout from "../components/social/SocialLayout";
 import MobileBottomNav from "../components/social/MobileBottomNav";
 import FloatingChatButton from "../components/social/FloatingChatButton";
 import PostCard from "../components/social/PostCard";
+import SponsoredPostCard from "../components/social/SponsoredPostCard";
 import FollowListModal, { type FollowUserItem } from "../components/social/FollowListModal";
 
 const ProfileCenter = ({ userId }: { userId?: string }) => {
   const { user: currentUser, openAuthModal } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [posts, setPosts] = useState<any[]>([]);
+  const [ads, setAds] = useState<any[]>([]);
   const [followersList, setFollowersList] = useState<FollowUserItem[]>([]);
   const [followingList, setFollowingList] = useState<FollowUserItem[]>([]);
   const [isFollowing, setIsFollowing] = useState<boolean>(false);
@@ -26,6 +28,16 @@ const ProfileCenter = ({ userId }: { userId?: string }) => {
   // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<"Followers" | "Following">("Followers");
+
+  useEffect(() => {
+    api.get("/ads/feed")
+      .then((res) => {
+        if (res.data?.ads && Array.isArray(res.data.ads)) {
+          setAds(res.data.ads);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const fetchId = userId || currentUser?.id;
   const isOwnProfile = !userId || userId === currentUser?.id;
@@ -208,9 +220,19 @@ const ProfileCenter = ({ userId }: { userId?: string }) => {
           </div>
 
           <div className="space-y-1">
-            <h2 className="text-xl font-bold tracking-tight text-slate-900">
-              {profile.full_name || profile.username}
-            </h2>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <h2 className="text-xl font-bold tracking-tight text-slate-900">
+                {profile.full_name || profile.username}
+              </h2>
+              {(profile.verified || profile.is_verified) && (
+                <span title="Verified Account" className="inline-flex items-center">
+                  <CheckCircle2
+                    size={19}
+                    className="text-amber-500 fill-amber-100 shrink-0"
+                  />
+                </span>
+              )}
+            </div>
             <p className="text-slate-500 text-xs font-mono">@{profile.username}</p>
             {profile.bio && <p className="pt-1.5 text-slate-600 leading-relaxed text-xs sm:text-sm">{profile.bio}</p>}
 
@@ -285,10 +307,20 @@ const ProfileCenter = ({ userId }: { userId?: string }) => {
           Posts ({posts.length})
         </h3>
         {posts.length > 0 ? (
-          posts.map((post) => <PostCard key={post.id} post={post} />)
+          posts.map((post, idx) => (
+            <div key={post.id} className="space-y-3">
+              <PostCard post={post} />
+              {idx === 1 && ads.length > 0 && (
+                <SponsoredPostCard ad={ads[0]} />
+              )}
+            </div>
+          ))
         ) : (
-          <div className="text-slate-400 text-center py-8 bg-white rounded-xl border border-slate-200/80 shadow-card text-xs">
-            No posts shared yet.
+          <div className="space-y-3">
+            <div className="text-slate-400 text-center py-8 bg-white rounded-xl border border-slate-200/80 shadow-card text-xs">
+              No posts shared yet.
+            </div>
+            {ads.length > 0 && <SponsoredPostCard ad={ads[0]} />}
           </div>
         )}
       </div>

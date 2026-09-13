@@ -722,5 +722,253 @@ export interface MaintenanceModeState {
   allowed_ips: string[];
 }
 
+// ============================================================
+// COMPLIANCE TYPES (PHASE 7)
+// ============================================================
 
+export type CompliancePolicyType =
+  | "TERMS_OF_SERVICE"
+  | "PRIVACY_POLICY"
+  | "COMMUNITY_GUIDELINES"
+  | "CONTENT_POLICY"
+  | "ADVERTISING_POLICY"
+  | "COOKIE_POLICY";
 
+export type CompliancePolicyStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
+
+export interface CompliancePolicyItem {
+  id: string;
+  policy_type: CompliancePolicyType;
+  title: string;
+  version: string;
+  status: CompliancePolicyStatus;
+  content: string;
+  summary_of_changes?: string | null;
+  published_at?: string | null;
+  created_by?: string | null;
+  created_at: string;
+  updated_at: string;
+  creator?: {
+    id: string;
+    username?: string;
+    full_name?: string;
+  } | null;
+}
+
+export type DataRequestType =
+  | "DATA_ACCESS"
+  | "DATA_EXPORT"
+  | "ACCOUNT_DELETION"
+  | "DATA_CORRECTION"
+  | "PRIVACY_REQUEST";
+
+export type DataRequestStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "REJECTED";
+
+export interface ComplianceDataRequestItem {
+  id: string;
+  user_id?: string | null;
+  request_type: DataRequestType;
+  status: DataRequestStatus;
+  details?: string | null;
+  verification_status?: string | null;
+  resolution_notes?: string | null;
+  processed_by?: string | null;
+  created_at: string;
+  updated_at: string;
+  completed_at?: string | null;
+  user?: {
+    id: string;
+    username?: string;
+    full_name?: string;
+    avatar_url?: string;
+  } | null;
+  processor?: {
+    id: string;
+    username?: string;
+    full_name?: string;
+  } | null;
+}
+
+export type RetentionCategory =
+  | "DELETED_USERS"
+  | "DELETED_POSTS"
+  | "DELETED_MEDIA"
+  | "REPORTS"
+  | "MODERATION_RECORDS"
+  | "AUDIT_LOGS";
+
+export interface ComplianceRetentionPolicyItem {
+  id?: string;
+  category: RetentionCategory;
+  name: string;
+  retention_days: number;
+  description: string;
+  legal_basis: string;
+  auto_purge_enabled: boolean;
+  updated_by?: string | null;
+  updated_at?: string;
+  updater?: {
+    id: string;
+    username?: string;
+    full_name?: string;
+  } | null;
+}
+
+// ============================================================
+// PHASE 8: ADVERTISING PLATFORM TYPES
+// ============================================================
+
+export type AdvertiserStatus = "ACTIVE" | "SUSPENDED" | "PENDING_VERIFICATION";
+
+export interface AdvertiserItem {
+  id: string;
+  user_id?: string | null;
+  company_name: string;
+  contact_name: string;
+  contact_email: string;
+  website_url?: string | null;
+  industry?: string;
+  status: AdvertiserStatus;
+  total_spend: number;
+  balance: number;
+  campaign_count?: number;
+  notes?: string | null;
+  created_at: string;
+  updated_at: string;
+  ad_campaigns?: AdCampaignItem[];
+}
+
+export type CampaignObjective =
+  | "AWARENESS"
+  | "TRAFFIC"
+  | "ENGAGEMENT"
+  | "CONVERSIONS"
+  | "APP_PROMOTION";
+
+export type CampaignStatus =
+  | "DRAFT"
+  | "PENDING_REVIEW"
+  | "ACTIVE"
+  | "PAUSED"
+  | "COMPLETED"
+  | "REJECTED"
+  | "CHANGES_REQUESTED";
+
+export type CreativeFormat = "IMAGE" | "VIDEO" | "CAROUSEL" | "SPONSORED_POST";
+
+export type CreativeStatus =
+  | "DRAFT"
+  | "PENDING_REVIEW"
+  | "APPROVED"
+  | "REJECTED"
+  | "CHANGES_REQUESTED";
+
+export interface AdCreativeItem {
+  id: string;
+  campaign_id: string;
+  name: string;
+  format: CreativeFormat;
+  headline: string;
+  body_text?: string | null;
+  call_to_action: string;
+  destination_url: string;
+  media_urls: Array<{
+    type?: string;
+    url: string;
+    thumbnail?: string;
+    title?: string;
+  }>;
+  status: CreativeStatus;
+  rejection_reason?: string | null;
+  admin_feedback?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AdTargetingItem {
+  id?: string;
+  campaign_id: string;
+  countries: string[];
+  regions?: string[];
+  languages: string[];
+  pet_interests: string[];
+  devices: string[];
+  placements: string[];
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface AdCampaignItem {
+  id: string;
+  advertiser_id: string;
+  name: string;
+  objective: CampaignObjective;
+  budget_type: "DAILY" | "LIFETIME";
+  total_budget: number;
+  daily_budget: number;
+  spent: number;
+  start_date: string;
+  end_date?: string | null;
+  status: CampaignStatus;
+  rejection_reason?: string | null;
+  admin_feedback?: string | null;
+  approved_by?: string | null;
+  approved_at?: string | null;
+  created_at: string;
+  updated_at: string;
+  advertiser?: AdvertiserItem;
+  ad_targeting?: AdTargetingItem | null;
+  ad_creatives?: AdCreativeItem[];
+}
+
+export interface AdDailyMetric {
+  date: string;
+  impressions: number;
+  clicks: number;
+  views: number;
+  conversions: number;
+  spend: number;
+}
+
+export interface AdAnalyticsSummary {
+  totals: {
+    impressions: number;
+    reach: number;
+    clicks: number;
+    views: number;
+    conversions: number;
+    spend: number;
+    avgCtr: number;
+    avgCpc: number;
+    avgCpm: number;
+  };
+  dailyTrends: AdDailyMetric[];
+}
+
+// Phase 9: Admin Notifications
+export type AdminNotificationCategory =
+  | "HIGH_PRIORITY_REPORT"
+  | "PENDING_MODERATION"
+  | "PENDING_ADVERTISEMENT"
+  | "SYSTEM_FAILURE"
+  | "STORAGE_WARNING"
+  | "API_ERROR_SPIKE"
+  | "SECURITY_EVENT"
+  | "COMPLIANCE_REQUEST";
+
+export type AdminNotificationPriority = "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
+
+export interface AdminNotificationItem {
+  id: string;
+  admin_id: string | null;
+  category: AdminNotificationCategory;
+  priority: AdminNotificationPriority;
+  title: string;
+  message: string;
+  link?: string | null;
+  metadata?: Record<string, any>;
+  is_read: boolean;
+  read_at?: string | null;
+  dedup_key?: string | null;
+  created_at: string;
+}

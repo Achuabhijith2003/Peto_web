@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import api from "../../utils/api";
 import CreatePost from "./CreatePost";
 import PostCard from "./PostCard";
+import SponsoredPostCard from "./SponsoredPostCard";
 import OnlineFriends from "./OnlineFriends";
 import SuggestedFriends from "./SuggestedFriends";
 import { Loader2, CheckCircle2, RefreshCw } from "lucide-react";
@@ -27,6 +28,7 @@ const PostSkeleton = () => (
 
 const Feed = () => {
     const [posts, setPosts] = useState<any[]>([]);
+    const [ads, setAds] = useState<any[]>([]);
     const [page, setPage] = useState<number>(1);
     const [loading, setLoading] = useState<boolean>(true);
     const [loadingMore, setLoadingMore] = useState<boolean>(false);
@@ -34,6 +36,16 @@ const Feed = () => {
     const [refreshing, setRefreshing] = useState<boolean>(false);
 
     const observerTarget = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+        api.get("/ads/feed")
+            .then((res) => {
+                if (res.data?.ads && Array.isArray(res.data.ads)) {
+                    setAds(res.data.ads);
+                }
+            })
+            .catch(() => {});
+    }, []);
 
     const fetchFeedPosts = useCallback(async (pageNum: number, isRefresh: boolean = false) => {
         try {
@@ -131,18 +143,28 @@ const Feed = () => {
                 </div>
             ) : posts.length > 0 ? (
                 <div className="space-y-6">
-                    {posts.map((post, index) => (
-                        <div key={post.id} className="space-y-6">
-                            <PostCard post={post} />
+                    {posts.map((post, index) => {
+                        const shouldShowAd = index > 0 && index % 4 === 3 && ads.length > 0;
+                        const adToShow = shouldShowAd ? ads[Math.floor(index / 4) % ads.length] : null;
 
-                            {/* Insert Suggested Friends on mobile after post 2 or at the end if fewer posts */}
-                            {(index === 1 || (posts.length < 2 && index === posts.length - 1)) && (
-                                <div className="lg:hidden">
-                                    <SuggestedFriends />
-                                </div>
-                            )}
-                        </div>
-                    ))}
+                        return (
+                            <div key={post.id} className="space-y-6">
+                                <PostCard post={post} />
+
+                                {/* Sponsored Ad Placement */}
+                                {adToShow && (
+                                    <SponsoredPostCard ad={adToShow} />
+                                )}
+
+                                {/* Insert Suggested Friends on mobile after post 2 or at the end if fewer posts */}
+                                {(index === 1 || (posts.length < 2 && index === posts.length - 1)) && (
+                                    <div className="lg:hidden">
+                                        <SuggestedFriends />
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
 
                     {/* Infinite Scroll Trigger Sentinel */}
                     <div ref={observerTarget} className="h-4 w-full" />

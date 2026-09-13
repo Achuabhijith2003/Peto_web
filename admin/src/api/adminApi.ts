@@ -382,6 +382,314 @@ export async function updateMaintenanceMode(data: {
   return res.data.data;
 }
 
+// ============================================================
+// COMPLIANCE & LEGAL APIS (PHASE 7)
+// ============================================================
 
+export async function fetchCompliancePolicies(
+  policyType?: string,
+  status?: string
+): Promise<import("../types/admin").CompliancePolicyItem[]> {
+  const params: Record<string, any> = {};
+  if (policyType && policyType !== "ALL") params.policyType = policyType;
+  if (status && status !== "ALL") params.status = status;
 
+  const res = await adminApi.get("/admin/compliance/policies", { params });
+  return res.data.data;
+}
 
+export async function fetchPolicyDetail(
+  id: string
+): Promise<import("../types/admin").CompliancePolicyItem> {
+  const res = await adminApi.get(`/admin/compliance/policies/${id}`);
+  return res.data.data;
+}
+
+export async function createPolicyDraft(data: {
+  policyType: string;
+  title: string;
+  version: string;
+  content: string;
+  summaryOfChanges?: string;
+}): Promise<import("../types/admin").CompliancePolicyItem> {
+  const res = await adminApi.post("/admin/compliance/policies", data);
+  return res.data.data;
+}
+
+export async function publishPolicy(
+  id: string
+): Promise<import("../types/admin").CompliancePolicyItem> {
+  const res = await adminApi.post(`/admin/compliance/policies/${id}/publish`);
+  return res.data.data;
+}
+
+export async function fetchDataRequests(params?: {
+  status?: string;
+  requestType?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}): Promise<{
+  requests: import("../types/admin").ComplianceDataRequestItem[];
+  pagination: import("../types/admin").PaginationInfo;
+}> {
+  const res = await adminApi.get("/admin/compliance/data-requests", { params });
+  return {
+    requests: res.data.data,
+    pagination: res.data.pagination,
+  };
+}
+
+export async function fetchDataRequestDetail(
+  id: string
+): Promise<import("../types/admin").ComplianceDataRequestItem> {
+  const res = await adminApi.get(`/admin/compliance/data-requests/${id}`);
+  return res.data.data;
+}
+
+export async function createDataRequest(data: {
+  userId?: string;
+  requestType: string;
+  details?: string;
+  verificationStatus?: string;
+}): Promise<import("../types/admin").ComplianceDataRequestItem> {
+  const res = await adminApi.post("/admin/compliance/data-requests", data);
+  return res.data.data;
+}
+
+export async function updateDataRequestStatus(
+  id: string,
+  data: {
+    status: string;
+    resolutionNotes?: string;
+  }
+): Promise<import("../types/admin").ComplianceDataRequestItem> {
+  const res = await adminApi.patch(`/admin/compliance/data-requests/${id}/status`, data);
+  return res.data.data;
+}
+
+export async function fetchRetentionPolicies(): Promise<
+  import("../types/admin").ComplianceRetentionPolicyItem[]
+> {
+  const res = await adminApi.get("/admin/compliance/retention");
+  return res.data.data;
+}
+
+export async function updateRetentionPolicy(
+  category: string,
+  data: {
+    retentionDays?: number;
+    autoPurgeEnabled?: boolean;
+    description?: string;
+    legalBasis?: string;
+  }
+): Promise<import("../types/admin").ComplianceRetentionPolicyItem> {
+  const res = await adminApi.patch(`/admin/compliance/retention/${category}`, data);
+  return res.data.data;
+}
+
+export async function fetchComplianceAuditLogs(params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+}): Promise<{
+  logs: import("../types/admin").AuditLogItem[];
+  pagination: import("../types/admin").PaginationInfo;
+}> {
+  const res = await adminApi.get("/admin/compliance/audit-logs", { params });
+  return {
+    logs: res.data.data,
+    pagination: res.data.pagination,
+  };
+}
+
+// ============================================================
+// PHASE 8: ADVERTISING PLATFORM API
+// ============================================================
+
+export async function fetchAdvertisers(params?: {
+  status?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}): Promise<{
+  advertisers: import("../types/admin").AdvertiserItem[];
+  pagination: import("../types/admin").PaginationInfo;
+}> {
+  const res = await adminApi.get("/admin/ads/advertisers", { params });
+  return {
+    advertisers: res.data.advertisers || [],
+    pagination: res.data.pagination,
+  };
+}
+
+export async function fetchAdvertiserDetail(
+  id: string
+): Promise<import("../types/admin").AdvertiserItem> {
+  const res = await adminApi.get(`/admin/ads/advertisers/${id}`);
+  return res.data;
+}
+
+export async function createAdvertiser(data: {
+  companyName: string;
+  contactName: string;
+  contactEmail: string;
+  websiteUrl?: string;
+  industry?: string;
+  notes?: string;
+  initialBalance?: number;
+}): Promise<import("../types/admin").AdvertiserItem> {
+  const res = await adminApi.post("/admin/ads/advertisers", data);
+  return res.data;
+}
+
+export async function updateAdvertiserStatus(
+  id: string,
+  status: import("../types/admin").AdvertiserStatus
+): Promise<import("../types/admin").AdvertiserItem> {
+  const res = await adminApi.patch(`/admin/ads/advertisers/${id}/status`, { status });
+  return res.data;
+}
+
+export async function fetchCampaigns(params?: {
+  status?: string;
+  objective?: string;
+  advertiserId?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}): Promise<{
+  campaigns: import("../types/admin").AdCampaignItem[];
+  pagination: import("../types/admin").PaginationInfo;
+}> {
+  const res = await adminApi.get("/admin/ads/campaigns", { params });
+  return {
+    campaigns: res.data.campaigns || [],
+    pagination: res.data.pagination,
+  };
+}
+
+export async function fetchCampaignDetail(
+  id: string
+): Promise<import("../types/admin").AdCampaignItem> {
+  const res = await adminApi.get(`/admin/ads/campaigns/${id}`);
+  return res.data;
+}
+
+export async function createCampaign(data: {
+  advertiserId: string;
+  name: string;
+  objective: import("../types/admin").CampaignObjective;
+  budgetType?: "DAILY" | "LIFETIME";
+  totalBudget: number;
+  dailyBudget?: number;
+  startDate?: string;
+  endDate?: string;
+  targeting?: any;
+  creative?: any;
+}): Promise<import("../types/admin").AdCampaignItem> {
+  const res = await adminApi.post("/admin/ads/campaigns", data);
+  return res.data;
+}
+
+export async function updateCampaignStatus(
+  id: string,
+  status: import("../types/admin").CampaignStatus
+): Promise<import("../types/admin").AdCampaignItem> {
+  const res = await adminApi.patch(`/admin/ads/campaigns/${id}/status`, { status });
+  return res.data;
+}
+
+export async function fetchPendingReviewQueue(params?: {
+  search?: string;
+  page?: number;
+  limit?: number;
+}): Promise<{
+  queue: import("../types/admin").AdCampaignItem[];
+  pagination: import("../types/admin").PaginationInfo;
+}> {
+  const res = await adminApi.get("/admin/ads/review-queue", { params });
+  return {
+    queue: res.data.queue || [],
+    pagination: res.data.pagination,
+  };
+}
+
+export async function reviewCampaignAction(
+  id: string,
+  data: {
+    action: "APPROVE" | "REJECT" | "REQUEST_CHANGES";
+    reason?: string;
+    feedback?: string;
+  }
+): Promise<{ message: string; campaign: import("../types/admin").AdCampaignItem }> {
+  const res = await adminApi.post(`/admin/ads/campaigns/${id}/review`, data);
+  return res.data;
+}
+
+export async function reviewCreativeAction(
+  id: string,
+  data: {
+    action: "APPROVE" | "REJECT" | "REQUEST_CHANGES";
+    reason?: string;
+    feedback?: string;
+  }
+): Promise<{ message: string; creative: import("../types/admin").AdCreativeItem }> {
+  const res = await adminApi.post(`/admin/ads/creatives/${id}/review`, data);
+  return res.data;
+}
+
+export async function fetchAdsAnalyticsSummary(params?: {
+  timeframe?: "7d" | "30d" | "90d" | "all";
+  campaignId?: string;
+}): Promise<import("../types/admin").AdAnalyticsSummary> {
+  const res = await adminApi.get("/admin/ads/analytics", { params });
+  return res.data;
+}
+
+// Phase 9: Admin Notification Center API
+export async function fetchAdminNotifications(params?: {
+  page?: number;
+  limit?: number;
+  status?: "all" | "unread" | "read";
+  category?: string;
+  priority?: string;
+  search?: string;
+}): Promise<{
+  notifications: import("../types/admin").AdminNotificationItem[];
+  unread_count: number;
+  critical_count: number;
+  pagination: import("../types/admin").PaginationInfo;
+}> {
+  const res = await adminApi.get("/admin/notifications", { params });
+  const pag = res.data.pagination || {};
+  return {
+    notifications: res.data.data,
+    unread_count: res.data.unread_count,
+    critical_count: res.data.critical_count,
+    pagination: {
+      page: pag.page || 1,
+      limit: pag.limit || 20,
+      totalCount: pag.totalCount ?? pag.total ?? 0,
+      totalPages: pag.totalPages || 1,
+    },
+  };
+}
+
+export async function markAdminNotificationRead(
+  id: string,
+  isRead: boolean = true
+): Promise<import("../types/admin").AdminNotificationItem> {
+  const res = await adminApi.patch(`/admin/notifications/${id}/read`, {
+    is_read: isRead,
+  });
+  return res.data.data;
+}
+
+export async function markAllAdminNotificationsRead(): Promise<{
+  success: boolean;
+  message: string;
+}> {
+  const res = await adminApi.post("/admin/notifications/mark-all-read");
+  return res.data;
+}

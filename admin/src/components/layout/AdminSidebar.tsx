@@ -11,6 +11,7 @@ import {
   Megaphone,
   Scale,
   Server,
+  Bell,
 } from "lucide-react";
 
 interface NavItem {
@@ -28,6 +29,11 @@ export const AdminSidebar: React.FC = () => {
       title: "Dashboard",
       path: "/dashboard",
       icon: <LayoutDashboard className="w-4 h-4 text-indigo-400" />,
+    },
+    {
+      title: "Notifications",
+      path: "/notifications",
+      icon: <Bell className="w-4 h-4 text-amber-400" />,
     },
     {
       title: "Moderation",
@@ -64,22 +70,19 @@ export const AdminSidebar: React.FC = () => {
       path: "/system",
       icon: <Server className="w-4 h-4 text-cyan-400" />,
     },
-  ];
-
-  const roadmapNavItems: NavItem[] = [
-    {
-      title: "Ads & Campaigns",
-      path: "/placeholder/ads",
-      icon: <Megaphone className="w-4 h-4" />,
-      badge: "Roadmap",
-    },
     {
       title: "Compliance & Legal",
-      path: "/placeholder/compliance",
-      icon: <Scale className="w-4 h-4" />,
-      badge: "Roadmap",
+      path: "/compliance",
+      icon: <Scale className="w-4 h-4 text-purple-400" />,
+    },
+    {
+      title: "Ads & Campaigns",
+      path: "/ads",
+      icon: <Megaphone className="w-4 h-4 text-pink-400" />,
     },
   ];
+
+  const roadmapNavItems: NavItem[] = [];
 
   const isItemActive = (itemPath: string) => {
     if (itemPath === "/dashboard") {

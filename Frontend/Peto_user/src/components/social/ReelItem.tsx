@@ -15,11 +15,13 @@ import {
   RefreshCw,
   Loader2,
   Maximize2,
-  Minimize2
+  Minimize2,
+  Flag,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import api from "../../utils/api";
 import { useAuth } from "../../context/AuthContext";
+import { ReportModal } from "../common/ReportModal";
 
 interface ReelItemProps {
   post: any;
@@ -47,6 +49,7 @@ const ReelItem = ({ post, isActive }: ReelItemProps) => {
   const [loadingComments, setLoadingComments] = useState(false);
   const [submittingComment, setSubmittingComment] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   const author = post.author || post.profiles || {};
   const authorName = author.full_name || author.username || "Pet Lover";
@@ -380,6 +383,24 @@ const ReelItem = ({ post, isActive }: ReelItemProps) => {
           <span className="text-[10px] font-medium drop-shadow-sm">{copied ? "Copied!" : "Share"}</span>
         </button>
 
+        {/* Report Reel */}
+        <button
+          onClick={() => {
+            if (!user) {
+              openAuthModal("report content");
+              return;
+            }
+            setShowReportModal(true);
+          }}
+          className="group flex flex-col items-center gap-1 focus:outline-none"
+          title="Report Reel"
+        >
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-900/60 backdrop-blur-md hover:bg-rose-900/60 transition">
+            <Flag size={20} className="text-white group-hover:text-rose-400 transition" />
+          </div>
+          <span className="text-[10px] font-medium drop-shadow-sm">Report</span>
+        </button>
+
         {/* Vinyl Disc Icon */}
         <div className="mt-2 animate-spin duration-[4000ms]">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900/80 border-2 border-slate-700 text-amber-400">
@@ -489,6 +510,15 @@ const ReelItem = ({ post, isActive }: ReelItemProps) => {
           </form>
         </div>
       )}
+
+      {/* Report Modal */}
+      <ReportModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        targetType="reel"
+        targetId={post.id}
+        targetTitle={post.text || post.content || "Reel"}
+      />
     </div>
   );
 };

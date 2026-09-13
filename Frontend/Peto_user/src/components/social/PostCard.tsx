@@ -12,9 +12,13 @@ import {
   MessageCircle,
   Lock,
   Users,
+  Flag,
+  Bookmark,
+  Link as LinkIcon,
 } from "lucide-react";
 import api from "../../utils/api";
 import { useAuth } from "../../context/AuthContext";
+import { ReportModal } from "../common/ReportModal";
 
 import ImageGrid from "./ImageGrid";
 import PostActions from "./PostActions";
@@ -48,6 +52,7 @@ const PostCard = ({ post }: PostCardProps) => {
   const [isDeleted, setIsDeleted] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Comments State
@@ -317,41 +322,81 @@ const PostCard = ({ post }: PostCardProps) => {
           </div>
         </div>
 
-        {/* Menu Toggle for Post Owner */}
-        {isOwner && (
-          <div className="relative" ref={menuRef}>
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-600 active:scale-95"
-              aria-label="Post Options"
-            >
-              <MoreHorizontal size={20} />
-            </button>
+        {/* Menu Toggle for All Users */}
+        <div className="relative" ref={menuRef}>
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition-all hover:bg-slate-100 hover:text-slate-600 active:scale-95"
+            aria-label="Post Options"
+          >
+            <MoreHorizontal size={20} />
+          </button>
 
-            {menuOpen && (
-              <div className="absolute right-0 mt-2 z-30 w-40 overflow-hidden rounded-2xl border border-slate-100 bg-white/95 p-1.5 shadow-xl backdrop-blur-md transition-all animate-in fade-in zoom-in-95 duration-150">
-                <button
-                  onClick={() => {
-                    setIsEditing(true);
-                    setMenuOpen(false);
-                  }}
-                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-amber-50 hover:text-amber-700 text-left"
-                >
-                  <Pencil size={15} className="text-amber-500" />
-                  Edit Post
-                </button>
-                <button
-                  onClick={handleDeletePost}
-                  disabled={deleting}
-                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-rose-600 transition hover:bg-rose-50 text-left disabled:opacity-50"
-                >
-                  <Trash2 size={15} className="text-rose-500" />
-                  {deleting ? "Deleting..." : "Delete Post"}
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+          {menuOpen && (
+            <div className="absolute right-0 mt-2 z-30 w-44 overflow-hidden rounded-2xl border border-slate-100 bg-white/95 p-1.5 shadow-xl backdrop-blur-md transition-all animate-in fade-in zoom-in-95 duration-150">
+              {isOwner ? (
+                <>
+                  <button
+                    onClick={() => {
+                      setIsEditing(true);
+                      setMenuOpen(false);
+                    }}
+                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-amber-50 hover:text-amber-700 text-left"
+                  >
+                    <Pencil size={15} className="text-amber-500" />
+                    Edit Post
+                  </button>
+                  <button
+                    onClick={handleDeletePost}
+                    disabled={deleting}
+                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-rose-600 transition hover:bg-rose-50 text-left disabled:opacity-50"
+                  >
+                    <Trash2 size={15} className="text-rose-500" />
+                    {deleting ? "Deleting..." : "Delete Post"}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => {
+                      handleBookmark();
+                      setMenuOpen(false);
+                    }}
+                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-amber-50 hover:text-amber-700 text-left"
+                  >
+                    <Bookmark size={15} className={isBookmarked ? "fill-amber-500 text-amber-500" : "text-slate-500"} />
+                    {isBookmarked ? "Saved in Bookmarks" : "Save Post"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(window.location.origin + `/posts/${post.id}`);
+                      setMenuOpen(false);
+                      alert("Post link copied to clipboard!");
+                    }}
+                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 text-left"
+                  >
+                    <LinkIcon size={15} className="text-slate-500" />
+                    Copy Link
+                  </button>
+                  <button
+                    onClick={() => {
+                      setMenuOpen(false);
+                      if (!user) {
+                        openAuthModal("report content");
+                        return;
+                      }
+                      setShowReportModal(true);
+                    }}
+                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-semibold text-rose-600 transition hover:bg-rose-50 text-left border-t border-slate-100 mt-1 pt-1.5"
+                  >
+                    <Flag size={15} className="text-rose-500" />
+                    Report Post
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Post Text / Editing Form */}
@@ -501,6 +546,15 @@ const PostCard = ({ post }: PostCardProps) => {
           </div>
         )}
       </div>
+
+      {/* Report Modal */}
+      <ReportModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        targetType="post"
+        targetId={post.id}
+        targetTitle={post.text || post.content || "Post"}
+      />
     </article>
   );
 };

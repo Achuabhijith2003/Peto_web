@@ -47,6 +47,39 @@ import {
   getMaintenanceMode,
   updateMaintenanceMode,
 } from "./controllers/adminSystem.controller";
+import {
+  getPolicies,
+  getPolicyDetail,
+  createPolicyDraft,
+  publishPolicy,
+  getDataRequests,
+  getDataRequestDetail,
+  createDataRequest,
+  updateDataRequestStatus,
+  getRetentionPolicies,
+  updateRetentionPolicy,
+  getComplianceAuditLogs,
+} from "./controllers/adminCompliance.controller";
+import {
+  getAdvertisersHandler,
+  getAdvertiserDetailHandler,
+  createAdvertiserHandler,
+  updateAdvertiserStatusHandler,
+  getCampaignsHandler,
+  getCampaignDetailHandler,
+  createCampaignHandler,
+  updateCampaignStatusHandler,
+  getPendingReviewQueueHandler,
+  reviewCampaignActionHandler,
+  reviewCreativeActionHandler,
+  getAdsAnalyticsSummaryHandler,
+} from "./controllers/adminAds.controller";
+import {
+  getAdminNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
+  createNotificationHandler,
+} from "./controllers/adminNotifications.controller";
 
 const router = Router();
 
@@ -115,5 +148,44 @@ router.patch("/system/flags/:id", requirePermission("feature_flags.manage"), upd
 router.delete("/system/flags/:id", requirePermission("feature_flags.manage"), deleteFeatureFlag);
 router.get("/system/maintenance", requirePermission("system.view"), getMaintenanceMode);
 router.post("/system/maintenance", requirePermission("system.manage"), updateMaintenanceMode);
+
+// Compliance & Legal Management (Phase 7)
+router.get("/compliance/policies", requirePermission("compliance.view"), getPolicies);
+router.post("/compliance/policies", requirePermission("compliance.manage"), createPolicyDraft);
+router.get("/compliance/policies/:id", requirePermission("compliance.view"), getPolicyDetail);
+router.post("/compliance/policies/:id/publish", requirePermission("compliance.manage"), publishPolicy);
+
+router.get("/compliance/data-requests", requirePermission("compliance.view"), getDataRequests);
+router.post("/compliance/data-requests", requirePermission("compliance.manage"), createDataRequest);
+router.get("/compliance/data-requests/:id", requirePermission("compliance.view"), getDataRequestDetail);
+router.patch("/compliance/data-requests/:id/status", requirePermission("compliance.manage"), updateDataRequestStatus);
+
+router.get("/compliance/retention", requirePermission("compliance.view"), getRetentionPolicies);
+router.patch("/compliance/retention/:category", requirePermission("compliance.manage"), updateRetentionPolicy);
+
+router.get("/compliance/audit-logs", requirePermission("compliance.view"), getComplianceAuditLogs);
+
+// Advertising Platform (Phase 8)
+router.get("/ads/advertisers", requirePermission("ads.view"), getAdvertisersHandler);
+router.post("/ads/advertisers", requirePermission("ads.manage"), createAdvertiserHandler);
+router.get("/ads/advertisers/:id", requirePermission("ads.view"), getAdvertiserDetailHandler);
+router.patch("/ads/advertisers/:id/status", requirePermission("ads.manage"), updateAdvertiserStatusHandler);
+
+router.get("/ads/campaigns", requirePermission("ads.view"), getCampaignsHandler);
+router.post("/ads/campaigns", requirePermission("ads.manage"), createCampaignHandler);
+router.get("/ads/campaigns/:id", requirePermission("ads.view"), getCampaignDetailHandler);
+router.patch("/ads/campaigns/:id/status", requirePermission("ads.manage"), updateCampaignStatusHandler);
+
+router.get("/ads/review-queue", requirePermission("ads.view"), getPendingReviewQueueHandler);
+router.post("/ads/campaigns/:id/review", requirePermission("ads.manage"), reviewCampaignActionHandler);
+router.post("/ads/creatives/:id/review", requirePermission("ads.manage"), reviewCreativeActionHandler);
+
+router.get("/ads/analytics", requirePermission("ads.view"), getAdsAnalyticsSummaryHandler);
+
+// Admin Notifications & Operational Alerts (Phase 9)
+router.get("/notifications", getAdminNotifications);
+router.patch("/notifications/:id/read", markNotificationRead);
+router.post("/notifications/mark-all-read", markAllNotificationsRead);
+router.post("/notifications", createNotificationHandler);
 
 export default router;

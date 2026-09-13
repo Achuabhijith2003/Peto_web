@@ -23,6 +23,8 @@ import presenceRoutes from "./presence/presence.routes";
 import notificationRoutes from "./notifications/notification.routes";
 import communityRoutes from "./communities/community.routes";
 import adminRoutes from "./admin/admin.routes";
+import reportRoutes from "./reports/report.routes";
+import publicAdsRoutes from "./ads/ads.public.routes";
 import { ensurePublicBuckets } from "./media/storage.service";
 import { telemetryMiddleware } from "./middleware/telemetry.middleware";
 import { maintenanceMiddleware } from "./middleware/maintenance.middleware";
@@ -131,12 +133,12 @@ app.use("/api", commentRoutes);
 app.use("/api", bookmarkRoutes);
 app.use("/api/my", bookmarkRoutes);
 app.use(
-
     "/api/notifications",
-
     notificationRoutes
-
 );
+
+app.use("/api/reports", reportRoutes);
+app.use("/api/ads", publicAdsRoutes);
 
 app.use(morgan("dev"));
 

@@ -13,6 +13,9 @@ import { AdminModerationQueue } from "../pages/AdminModerationQueue";
 import { AdminReportDetail } from "../pages/AdminReportDetail";
 import { AdminAnalytics } from "../pages/AdminAnalytics";
 import { AdminSystem } from "../pages/AdminSystem";
+import { AdminCompliance } from "../pages/AdminCompliance";
+import { AdminAds } from "../pages/AdminAds";
+import { AdminNotifications } from "../pages/AdminNotifications";
 import { AdminPlaceholder } from "../pages/AdminPlaceholder";
 import { AdminUnauthorized } from "../pages/AdminUnauthorized";
 import { AdminNotFound } from "../pages/AdminNotFound";
@@ -28,6 +31,9 @@ export const AppRoutes: React.FC = () => {
         <Route element={<AdminLayout />}>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<AdminDashboard />} />
+
+          {/* Phase 9: Admin Notification Center */}
+          <Route path="/notifications" element={<AdminNotifications />} />
 
           {/* Phase 3: Content Moderation & Reports */}
           <Route
@@ -85,6 +91,22 @@ export const AppRoutes: React.FC = () => {
             element={<ProtectedAdminRoute requiredPermission="system.view" />}
           >
             <Route index element={<AdminSystem />} />
+          </Route>
+
+          {/* Phase 7: Compliance & Legal Management */}
+          <Route
+            path="/compliance"
+            element={<ProtectedAdminRoute requiredPermission="compliance.view" />}
+          >
+            <Route index element={<AdminCompliance />} />
+          </Route>
+
+          {/* Phase 8: Advertising Platform */}
+          <Route
+            path="/ads"
+            element={<ProtectedAdminRoute requiredPermission="ads.view" />}
+          >
+            <Route index element={<AdminAds />} />
           </Route>
 
           {/* Future Roadmap Section Placeholders */}
