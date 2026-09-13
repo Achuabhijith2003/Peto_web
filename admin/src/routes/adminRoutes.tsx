@@ -11,6 +11,8 @@ import { AdminUsers } from "../pages/AdminUsers";
 import { AdminUserDetail } from "../pages/AdminUserDetail";
 import { AdminModerationQueue } from "../pages/AdminModerationQueue";
 import { AdminReportDetail } from "../pages/AdminReportDetail";
+import { AdminAnalytics } from "../pages/AdminAnalytics";
+import { AdminSystem } from "../pages/AdminSystem";
 import { AdminPlaceholder } from "../pages/AdminPlaceholder";
 import { AdminUnauthorized } from "../pages/AdminUnauthorized";
 import { AdminNotFound } from "../pages/AdminNotFound";
@@ -67,6 +69,22 @@ export const AppRoutes: React.FC = () => {
             element={<ProtectedAdminRoute requiredPermission="audit_logs.view" />}
           >
             <Route index element={<AdminAuditLogs />} />
+          </Route>
+
+          {/* Phase 5: Analytics & Intelligence */}
+          <Route
+            path="/analytics"
+            element={<ProtectedAdminRoute requiredPermission="analytics.view" />}
+          >
+            <Route index element={<AdminAnalytics />} />
+          </Route>
+
+          {/* Phase 6: System Management & Infrastructure */}
+          <Route
+            path="/system"
+            element={<ProtectedAdminRoute requiredPermission="system.view" />}
+          >
+            <Route index element={<AdminSystem />} />
           </Route>
 
           {/* Future Roadmap Section Placeholders */}

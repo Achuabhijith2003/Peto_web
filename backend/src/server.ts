@@ -24,6 +24,8 @@ import notificationRoutes from "./notifications/notification.routes";
 import communityRoutes from "./communities/community.routes";
 import adminRoutes from "./admin/admin.routes";
 import { ensurePublicBuckets } from "./media/storage.service";
+import { telemetryMiddleware } from "./middleware/telemetry.middleware";
+import { maintenanceMiddleware } from "./middleware/maintenance.middleware";
 
 
 
@@ -94,6 +96,12 @@ app.use(
     limit: "10mb",
   })
 );
+
+// High-Precision Telemetry & Live Request Monitoring
+app.use(telemetryMiddleware);
+
+// Controlled Maintenance Mode (Circuit-breaker for client traffic)
+app.use(maintenanceMiddleware);
 
 // ----------------------
 // Routes

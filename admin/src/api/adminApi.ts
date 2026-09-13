@@ -227,4 +227,161 @@ export async function fetchDashboardOverview(params: {
   return res.data.data;
 }
 
+// ==============================================================
+// PHASE 5: ANALYTICS & INTELLIGENCE API METHODS
+// ==============================================================
+
+export interface AnalyticsQueryFilter {
+  range?: import("../types/admin").AnalyticsRange;
+  startDate?: string;
+  endDate?: string;
+}
+
+export async function fetchAnalyticsOverview(
+  params: AnalyticsQueryFilter = {}
+): Promise<import("../types/admin").AnalyticsOverviewData> {
+  const res = await adminApi.get("/admin/analytics/overview", { params });
+  return res.data.data;
+}
+
+export async function fetchUserAnalytics(
+  params: AnalyticsQueryFilter = {}
+): Promise<import("../types/admin").UserAnalyticsData> {
+  const res = await adminApi.get("/admin/analytics/users", { params });
+  return res.data.data;
+}
+
+export async function fetchEngagementAnalytics(
+  params: AnalyticsQueryFilter = {}
+): Promise<import("../types/admin").EngagementAnalyticsData> {
+  const res = await adminApi.get("/admin/analytics/engagement", { params });
+  return res.data.data;
+}
+
+export async function fetchContentAnalytics(
+  params: AnalyticsQueryFilter = {}
+): Promise<import("../types/admin").ContentAnalyticsData> {
+  const res = await adminApi.get("/admin/analytics/content", { params });
+  return res.data.data;
+}
+
+export async function fetchReelsAnalytics(
+  params: AnalyticsQueryFilter = {}
+): Promise<import("../types/admin").ReelsAnalyticsData> {
+  const res = await adminApi.get("/admin/analytics/reels", { params });
+  return res.data.data;
+}
+
+export async function fetchCommunitiesAnalytics(
+  params: AnalyticsQueryFilter = {}
+): Promise<import("../types/admin").CommunitiesAnalyticsData> {
+  const res = await adminApi.get("/admin/analytics/communities", { params });
+  return res.data.data;
+}
+
+export async function fetchRetentionAnalytics(
+  params: AnalyticsQueryFilter = {}
+): Promise<import("../types/admin").RetentionAnalyticsData> {
+  const res = await adminApi.get("/admin/analytics/retention", { params });
+  return res.data.data;
+}
+
+export async function fetchRevenueAnalytics(
+  params: AnalyticsQueryFilter = {}
+): Promise<import("../types/admin").RevenueAnalyticsData> {
+  const res = await adminApi.get("/admin/analytics/revenue", { params });
+  return res.data.data;
+}
+
+/**
+ * Triggers a browser download of an RFC 4180 CSV export for any analytics section
+ */
+export async function downloadAnalyticsCsv(
+  section: string,
+  params: AnalyticsQueryFilter = {}
+): Promise<void> {
+  const res = await adminApi.get("/admin/analytics/export", {
+    params: { ...params, section, format: "csv" },
+    responseType: "blob",
+  });
+
+  const blob = new Blob([res.data], { type: "text/csv;charset=utf-8;" });
+  const downloadUrl = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = downloadUrl;
+  const dateStr = new Date().toISOString().split("T")[0];
+  link.setAttribute("download", `peto-${section}-analytics-${dateStr}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(downloadUrl);
+}
+
+// ==============================================================
+// PHASE 6: SYSTEM MANAGEMENT, TELEMETRY & FEATURE FLAGS API
+// ==============================================================
+
+export async function fetchSystemHealth(): Promise<import("../types/admin").SystemHealthReport> {
+  const res = await adminApi.get("/admin/system/health");
+  return res.data.data;
+}
+
+export async function fetchApiMetrics(): Promise<import("../types/admin").ApiTelemetryMetrics> {
+  const res = await adminApi.get("/admin/system/api-metrics");
+  return res.data.data;
+}
+
+export async function fetchStorageMetrics(): Promise<import("../types/admin").StorageAnalyticsData> {
+  const res = await adminApi.get("/admin/system/storage");
+  return res.data.data;
+}
+
+export async function fetchFeatureFlags(): Promise<import("../types/admin").FeatureFlagItem[]> {
+  const res = await adminApi.get("/admin/system/flags");
+  return res.data.data;
+}
+
+export async function createFeatureFlag(data: {
+  key: string;
+  name: string;
+  description?: string;
+  isEnabled?: boolean;
+}): Promise<import("../types/admin").FeatureFlagItem> {
+  const res = await adminApi.post("/admin/system/flags", data);
+  return res.data.data;
+}
+
+export async function updateFeatureFlag(
+  id: string,
+  data: {
+    name?: string;
+    description?: string;
+    isEnabled?: boolean;
+  }
+): Promise<import("../types/admin").FeatureFlagItem> {
+  const res = await adminApi.patch(`/admin/system/flags/${id}`, data);
+  return res.data.data;
+}
+
+export async function deleteFeatureFlag(id: string): Promise<{ success: boolean; id: string }> {
+  const res = await adminApi.delete(`/admin/system/flags/${id}`);
+  return res.data.data;
+}
+
+export async function fetchMaintenanceMode(): Promise<import("../types/admin").MaintenanceModeState> {
+  const res = await adminApi.get("/admin/system/maintenance");
+  return res.data.data;
+}
+
+export async function updateMaintenanceMode(data: {
+  isEnabled: boolean;
+  message?: string;
+  allowedIps?: string[];
+}): Promise<import("../types/admin").MaintenanceModeState> {
+  const res = await adminApi.post("/admin/system/maintenance", data);
+  return res.data.data;
+}
+
+
+
 

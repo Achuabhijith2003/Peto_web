@@ -54,32 +54,30 @@ export const AdminSidebar: React.FC = () => {
       path: "/audit-logs",
       icon: <FileText className="w-4 h-4 text-amber-400" />,
     },
+    {
+      title: "Analytics",
+      path: "/analytics",
+      icon: <BarChart3 className="w-4 h-4 text-violet-400" />,
+    },
+    {
+      title: "System & Health",
+      path: "/system",
+      icon: <Server className="w-4 h-4 text-cyan-400" />,
+    },
   ];
 
   const roadmapNavItems: NavItem[] = [
     {
-      title: "Analytics",
-      path: "/placeholder/analytics",
-      icon: <BarChart3 className="w-4 h-4" />,
-      badge: "Phase 4",
-    },
-    {
       title: "Ads & Campaigns",
       path: "/placeholder/ads",
       icon: <Megaphone className="w-4 h-4" />,
-      badge: "Phase 5",
+      badge: "Roadmap",
     },
     {
       title: "Compliance & Legal",
       path: "/placeholder/compliance",
       icon: <Scale className="w-4 h-4" />,
-      badge: "Phase 6",
-    },
-    {
-      title: "System & Health",
-      path: "/placeholder/system",
-      icon: <Server className="w-4 h-4" />,
-      badge: "Phase 7",
+      badge: "Roadmap",
     },
   ];
 

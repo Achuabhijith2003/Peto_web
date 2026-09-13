@@ -371,4 +371,356 @@ export interface DashboardOverviewData {
   cacheAgeSeconds?: number;
 }
 
+// ==============================================================
+// PHASE 5: ANALYTICS & INTELLIGENCE TYPES
+// ==============================================================
+
+export type AnalyticsRange = "24h" | "7d" | "30d" | "90d" | "1y" | "all";
+
+export interface AnalyticsOverviewData {
+  summary: {
+    totalUsers: number;
+    activeUsersPeriod: number;
+    newUsersPeriod: number;
+    totalPosts: number;
+    totalReels: number;
+    totalComments: number;
+    totalCommunities: number;
+    estimatedStorageMB: number;
+    periodLikes: number;
+    periodComments: number;
+    periodBookmarks: number;
+  };
+  growthTrend: Array<{
+    date: string;
+    newUsers: number;
+    newPosts: number;
+    newReels: number;
+    interactions: number;
+  }>;
+  activitySummary: {
+    periodLikes: number;
+    periodComments: number;
+    periodBookmarks: number;
+  };
+}
+
+export interface UserAnalyticsData {
+  metrics: {
+    totalUsers: number;
+    newUsersPeriod: number;
+    dau: number;
+    wau: number;
+    mau: number;
+    activeUsers: number;
+    deletedAccounts: number;
+    suspendedAccounts: number;
+    bannedAccounts: number;
+  };
+  trends: Array<{
+    date: string;
+    newUsers: number;
+    activeUsers: number;
+  }>;
+  platformDistribution: Array<{
+    platform: string;
+    count: number;
+    percentage: number;
+  }>;
+  geographicDistribution: Array<{
+    country: string;
+    count: number;
+    percentage: number;
+  }>;
+}
+
+export interface EngagementAnalyticsData {
+  totals: {
+    likes: number;
+    comments: number;
+    follows: number;
+    bookmarks: number;
+    postViews: number;
+    reelViews: number;
+    reelWatchTimeSeconds: number;
+    avgWatchTimePerReelSeconds: number;
+  };
+  trends: Array<{
+    date: string;
+    likes: number;
+    comments: number;
+    follows: number;
+    bookmarks: number;
+    interactions: number;
+  }>;
+  breakdown: Array<{
+    type: string;
+    count: number;
+    percentage: number;
+  }>;
+}
+
+export interface TopCreator {
+  authorId: string;
+  author: {
+    username?: string;
+    full_name?: string;
+    avatar_url?: string | null;
+    is_verified?: boolean;
+  };
+  postCount: number;
+  totalLikes: number;
+}
+
+export interface ContentAnalyticsData {
+  metrics: {
+    totalPosts: number;
+    totalReels: number;
+    postsPerDay: number;
+    reelsPerDay: number;
+    mediaCount: number;
+    imageCount: number;
+    videoCount: number;
+  };
+  mediaDistribution: {
+    images: number;
+    videos: number;
+    ratio: string;
+  };
+  topCreators: TopCreator[];
+  trends: Array<{
+    date: string;
+    posts: number;
+    reels: number;
+  }>;
+}
+
+export interface TopReelItem {
+  id: string;
+  caption: string;
+  views: number;
+  likes: number;
+  comments: number;
+  author?: {
+    username?: string;
+    full_name?: string;
+  };
+}
+
+export interface ReelsAnalyticsData {
+  metrics: {
+    totalReels: number;
+    totalViews: number;
+    totalWatchTimeSeconds: number;
+    avgWatchTimeSeconds: number;
+    completionRatePct: number;
+  };
+  trends: Array<{
+    date: string;
+    views: number;
+    reelsCreated: number;
+  }>;
+  topReels: TopReelItem[];
+}
+
+export interface TopCommunityItem {
+  id: string;
+  name: string;
+  memberCount: number;
+  postCount: number;
+}
+
+export interface CommunitiesAnalyticsData {
+  metrics: {
+    totalCommunities: number;
+    totalMemberships: number;
+    activeCommunitiesCount: number;
+    avgMembersPerCommunity: number;
+  };
+  topCommunities: TopCommunityItem[];
+  trends: Array<{
+    date: string;
+    newCommunities: number;
+    newMembers: number;
+  }>;
+}
+
+export interface RetentionCohort {
+  cohortWeek: string;
+  cohortSize: number;
+  d1Pct: number;
+  d7Pct: number;
+  d14Pct: number;
+  d30Pct: number;
+}
+
+export interface RetentionAnalyticsData {
+  cohorts: RetentionCohort[];
+  averages: {
+    d1: number;
+    d7: number;
+    d14: number;
+    d30: number;
+  };
+}
+
+export interface RevenueAnalyticsData {
+  readiness: {
+    adsEngineReady: boolean;
+    stripeReady: boolean;
+    paywallReady: boolean;
+  };
+  estimates: {
+    totalAudience: number;
+    estimatedMonetizableDAU: number;
+    estimatedRPM: number;
+    estimatedMonthlyRevenueUSD: number;
+    estimatedARPU: number;
+  };
+  projections: Array<{
+    month: string;
+    projectedDAU: number;
+    projectedRevenueUSD: number;
+  }>;
+}
+
+// ==============================================================
+// PHASE 6: SYSTEM MANAGEMENT, TELEMETRY & FEATURE FLAGS
+// ==============================================================
+
+export interface ServiceHealthItem {
+  id: string;
+  name: string;
+  category: "core" | "infrastructure" | "processing" | "communication";
+  status: "HEALTHY" | "DEGRADED" | "DOWN";
+  latencyMs: number;
+  details: string;
+  lastChecked: string;
+}
+
+export interface SystemHealthReport {
+  overallStatus: "HEALTHY" | "DEGRADED" | "DOWN";
+  services: ServiceHealthItem[];
+  uptimeSeconds: number;
+  uptimeFormatted: string;
+  systemMemory: {
+    rssMB: number;
+    heapUsedMB: number;
+    heapTotalMB: number;
+    externalMB: number;
+  };
+  nodeVersion: string;
+  platform: string;
+  generatedAt: string;
+}
+
+export interface EndpointMetric {
+  path: string;
+  method: string;
+  count: number;
+  errorCount: number;
+  totalLatencyMs: number;
+  avgLatencyMs: number;
+  maxLatencyMs: number;
+  lastStatus: number;
+}
+
+export interface RequestLogEntry {
+  id: string;
+  method: string;
+  path: string;
+  status: number;
+  latencyMs: number;
+  timestamp: string;
+  userAgent?: string;
+  ip?: string;
+}
+
+export interface ApiTelemetryMetrics {
+  summary: {
+    totalRequests: number;
+    errorRatePct: number;
+    status2xx: number;
+    status3xx: number;
+    status4xx: number;
+    status5xx: number;
+    avgLatencyMs: number;
+    p95LatencyMs: number;
+    uptimeSeconds: number;
+    uptimeFormatted: string;
+  };
+  slowEndpoints: EndpointMetric[];
+  recentRequests: RequestLogEntry[];
+}
+
+export interface StorageAnalyticsData {
+  totalStorageBytes: number;
+  totalStorageFormatted: string;
+  images: {
+    count: number;
+    bytes: number;
+    formatted: string;
+    percentage: number;
+  };
+  videos: {
+    count: number;
+    bytes: number;
+    formatted: string;
+    percentage: number;
+  };
+  thumbnails: {
+    count: number;
+    bytes: number;
+    formatted: string;
+    percentage: number;
+  };
+  failedUploads: {
+    count: number;
+    items: Array<{
+      id: string;
+      type: string;
+      createdAt: string;
+      reason: string;
+    }>;
+  };
+  buckets: Array<{
+    name: string;
+    isPublic: boolean;
+    fileSizeLimitMB: number | null;
+    createdAt?: string;
+  }>;
+}
+
+export interface FeatureFlagItem {
+  id: string;
+  key: string;
+  name: string;
+  description: string;
+  is_enabled: boolean;
+  created_by?: string | null;
+  updated_by?: string | null;
+  created_at: string;
+  updated_at: string;
+  creator?: {
+    user?: {
+      username?: string;
+      full_name?: string;
+    };
+  } | null;
+  updater?: {
+    user?: {
+      username?: string;
+      full_name?: string;
+    };
+  } | null;
+}
+
+export interface MaintenanceModeState {
+  is_enabled: boolean;
+  message: string;
+  enabled_at: string | null;
+  allowed_ips: string[];
+}
+
+
 
