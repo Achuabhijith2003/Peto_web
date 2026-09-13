@@ -158,3 +158,73 @@ export async function searchPetoUsers(query: string): Promise<any[]> {
   const res = await adminApi.get("/users/search", { params: { q: query, limit: 10 } });
   return res.data.data || res.data || [];
 }
+
+// Phase 3 Content Moderation & Reports APIs
+export async function fetchReportsQueue(filters: import("../types/admin").ReportFilters = {}): Promise<{
+  reports: import("../types/admin").PetoReportItem[];
+  metrics: import("../types/admin").ModerationMetrics;
+  pagination: PaginationInfo;
+}> {
+  const res = await adminApi.get("/admin/reports", { params: filters });
+  return {
+    reports: res.data.data,
+    metrics: res.data.metrics,
+    pagination: res.data.pagination,
+  };
+}
+
+export async function fetchReportDetail(reportId: string): Promise<import("../types/admin").PetoReportDetail> {
+  const res = await adminApi.get(`/admin/reports/${reportId}`);
+  return res.data.data;
+}
+
+export async function updateReportApi(
+  reportId: string,
+  data: {
+    status?: "PENDING" | "UNDER_REVIEW" | "RESOLVED" | "REJECTED" | "ESCALATED";
+    priority?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+    assignedTo?: string | null;
+    resolution?: string;
+  }
+): Promise<any> {
+  const res = await adminApi.patch(`/admin/reports/${reportId}`, data);
+  return res.data.data;
+}
+
+export async function executeModerationActionApi(
+  reportId: string,
+  data: {
+    action: import("../types/admin").ModerationActionType;
+    reason: string;
+    durationDays?: number;
+    overrideResolved?: boolean;
+  }
+): Promise<any> {
+  const res = await adminApi.post(`/admin/reports/${reportId}/action`, data);
+  return res.data;
+}
+
+export async function createReportApi(data: {
+  reporterId?: string;
+  targetType: string;
+  targetId: string;
+  reason: string;
+  description?: string;
+  priority?: string;
+}): Promise<any> {
+  const res = await adminApi.post("/admin/reports", data);
+  return res.data;
+}
+
+// Phase 4 Dashboard API
+export async function fetchDashboardOverview(params: {
+  range?: import("../types/admin").DashboardDateRange;
+  startDate?: string;
+  endDate?: string;
+  refresh?: boolean;
+} = {}): Promise<import("../types/admin").DashboardOverviewData> {
+  const res = await adminApi.get("/admin/dashboard", { params });
+  return res.data.data;
+}
+
+

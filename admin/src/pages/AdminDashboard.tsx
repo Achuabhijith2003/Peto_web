@@ -1,332 +1,418 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { useAdminAuth } from "../context/AdminAuthContext";
-import { StatusBadge } from "../components/ui/StatusBadge";
+import { fetchDashboardOverview } from "../api/adminApi";
 import {
-  ShieldCheck,
-  KeyRound,
-  FileText,
+  DashboardOverviewData,
+  DashboardDateRange,
+} from "../types/admin";
+import { DashboardCharts } from "../components/dashboard/DashboardCharts";
+import { OperationalWidgets } from "../components/dashboard/OperationalWidgets";
+import {
   Users,
-  Shield,
-  ArrowUpRight,
-  Activity,
-  CheckCircle2,
-  Lock,
   Layers,
+  Activity,
+  ShieldAlert,
+  HardDrive,
+  Server,
+  RefreshCw,
+  TrendingUp,
+  Calendar,
+  AlertTriangle,
+  ArrowUpRight,
+  X,
+  MessageSquare,
 } from "lucide-react";
-import { fetchAdmins, fetchRoles, fetchPermissions } from "../api/adminApi";
 
 export const AdminDashboard: React.FC = () => {
-  const { admin } = useAdminAuth();
-  const [stats, setStats] = useState({
-    adminCount: 0,
-    roleCount: 0,
-    permissionCount: 0,
-  });
-  const [loadingStats, setLoadingStats] = useState(true);
+  const [data, setData] = useState<DashboardOverviewData | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Date Filter State
+  const [selectedRange, setSelectedRange] = useState<DashboardDateRange>("30d");
+  const [customStart, setCustomStart] = useState<string>("");
+  const [customEnd, setCustomEnd] = useState<string>("");
+  const [showCustomModal, setShowCustomModal] = useState<boolean>(false);
+
+  const loadDashboard = async (forceRefresh: boolean = false) => {
+    try {
+      if (forceRefresh) setRefreshing(true);
+      else setLoading(true);
+      setError(null);
+
+      const overview = await fetchDashboardOverview({
+        range: selectedRange,
+        startDate: selectedRange === "custom" && customStart ? customStart : undefined,
+        endDate: selectedRange === "custom" && customEnd ? customEnd : undefined,
+        refresh: forceRefresh,
+      });
+
+      setData(overview);
+    } catch (err: any) {
+      console.error("[Dashboard] Load error:", err);
+      setError(err.response?.data?.message || err.message || "Failed to retrieve dashboard analytics.");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    async function loadQuickStats() {
-      try {
-        const [adminsRes, roles, perms] = await Promise.all([
-          fetchAdmins(1, 1).catch(() => ({ pagination: { totalCount: 0 } })),
-          fetchRoles().catch(() => []),
-          fetchPermissions().catch(() => []),
-        ]);
+    loadDashboard(false);
+  }, [selectedRange]);
 
-        setStats({
-          adminCount: adminsRes.pagination?.totalCount || 0,
-          roleCount: roles.length || 7,
-          permissionCount: perms.length || 28,
-        });
-      } catch (err) {
-        console.error("Error loading dashboard stats:", err);
-      } finally {
-        setLoadingStats(false);
-      }
-    }
+  const handleApplyCustomDate = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customStart || !customEnd) return;
+    setSelectedRange("custom");
+    setShowCustomModal(false);
+    loadDashboard(true);
+  };
 
-    loadQuickStats();
-  }, []);
+  const rangePills: { label: string; value: DashboardDateRange }[] = [
+    { label: "Today", value: "today" },
+    { label: "7D", value: "7d" },
+    { label: "30D", value: "30d" },
+    { label: "3M", value: "3m" },
+    { label: "6M", value: "6m" },
+    { label: "1Y", value: "1y" },
+  ];
 
   return (
     <div className="space-y-8">
-      {/* Welcome Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-950/80 via-slate-900 to-purple-950/80 border border-slate-800 p-8 shadow-xl">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="flex items-center space-x-3">
-              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
-                Phase 1: Foundation Active
-              </span>
-              <span className="text-xs text-slate-400 font-mono">
-                Session ID: {admin?.id.substring(0, 8)}...
-              </span>
-            </div>
-            <h1 className="text-3xl font-extrabold text-white tracking-tight">
-              Welcome back, {admin?.fullName}
-            </h1>
-            <p className="text-sm text-slate-300 max-w-2xl">
-              You are signed in as <strong className="text-white">@{admin?.username}</strong> with administrative role{" "}
-              <span className="inline-block align-middle ml-1">
-                <StatusBadge type="role" value={admin?.role.name || "Admin"} />
-              </span>.
-              All administrative operations in this control center are authorized server-side and recorded to immutable audit logs.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            <Link
-              to="/admins"
-              className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs shadow-lg shadow-indigo-600/20 flex items-center space-x-2 transition-all"
-            >
-              <Users className="w-4 h-4" />
-              <span>Manage Admins</span>
-            </Link>
-            <Link
-              to="/audit-logs"
-              className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-medium text-xs flex items-center space-x-2 transition-all"
-            >
-              <FileText className="w-4 h-4" />
-              <span>Audit Logs</span>
-            </Link>
-          </div>
-        </div>
-
-        {/* Decorative background flare */}
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
-      </div>
-
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-400">Total Administrators</span>
-            <div className="w-9 h-9 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-              <Users className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-black text-white">
-            {loadingStats ? "..." : stats.adminCount}
-          </div>
-          <div className="text-xs text-slate-400 flex items-center">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 mr-1.5" />
-            <span>Assigned across platform roles</span>
-          </div>
-        </div>
-
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-400">Configured Roles</span>
-            <div className="w-9 h-9 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-400">
-              <ShieldCheck className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-black text-white">
-            {loadingStats ? "..." : stats.roleCount}
-          </div>
-          <div className="text-xs text-slate-400 flex items-center">
-            <Lock className="w-3.5 h-3.5 text-purple-400 mr-1.5" />
-            <span>Strict RBAC Hierarchy</span>
-          </div>
-        </div>
-
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-400">Catalogued Permissions</span>
-            <div className="w-9 h-9 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
-              <KeyRound className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-black text-white">
-            {loadingStats ? "..." : stats.permissionCount}
-          </div>
-          <div className="text-xs text-slate-400 flex items-center">
-            <Activity className="w-3.5 h-3.5 text-cyan-400 mr-1.5" />
-            <span>Granular module security</span>
-          </div>
-        </div>
-
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-400">Audit Trail Engine</span>
-            <div className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-              <FileText className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-black text-emerald-400 flex items-center">
-            <span>ACTIVE</span>
-          </div>
-          <div className="text-xs text-slate-400 flex items-center">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
-            <span>Recording all admin actions</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Launchpad & Incremental Phase Tracker */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left: Quick Actions */}
-        <div className="lg:col-span-2 space-y-4">
-          <h2 className="text-base font-bold text-white flex items-center">
-            <Shield className="w-4 h-4 text-indigo-400 mr-2" />
-            Operational Modules (Phases 1 & 2)
-          </h2>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Link
-              to="/users"
-              className="group bg-slate-900 hover:bg-slate-800/80 border border-slate-800 hover:border-cyan-500/50 rounded-2xl p-6 transition-all shadow-sm flex flex-col justify-between"
-            >
-              <div className="space-y-3">
-                <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 group-hover:scale-105 transition-transform">
-                  <Users className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-white group-hover:text-cyan-300 transition-colors flex items-center">
-                    User Management
-                    <ArrowUpRight className="w-3.5 h-3.5 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-1">
-                    Directory search, server-side pagination, user engagement metrics, account suspension, bans, and verified badges.
-                  </p>
-                </div>
-              </div>
-              <div className="mt-4 pt-4 border-t border-slate-800/60 flex items-center justify-between text-[11px] text-slate-500">
-                <span>Guard: users.view</span>
-                <span className="text-cyan-400 font-medium">Active (P2) →</span>
-              </div>
-            </Link>
-
-            <Link
-              to="/admins"
-              className="group bg-slate-900 hover:bg-slate-800/80 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-6 transition-all shadow-sm flex flex-col justify-between"
-            >
-              <div className="space-y-3">
-                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 group-hover:scale-105 transition-transform">
-                  <Shield className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-white group-hover:text-indigo-300 transition-colors flex items-center">
-                    Administrator Management
-                    <ArrowUpRight className="w-3.5 h-3.5 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-1">
-                    Assign administrative roles to registered Peto users, toggle activation status, or revoke privileges.
-                  </p>
-                </div>
-              </div>
-              <div className="mt-4 pt-4 border-t border-slate-800/60 flex items-center justify-between text-[11px] text-slate-500">
-                <span>Guard: admins.view</span>
-                <span className="text-indigo-400 font-medium">Ready →</span>
-              </div>
-            </Link>
-
-            <Link
-              to="/roles"
-              className="group bg-slate-900 hover:bg-slate-800/80 border border-slate-800 hover:border-purple-500/50 rounded-2xl p-6 transition-all shadow-sm flex flex-col justify-between"
-            >
-              <div className="space-y-3">
-                <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 group-hover:scale-105 transition-transform">
-                  <KeyRound className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-white group-hover:text-purple-300 transition-colors flex items-center">
-                    Roles & Permissions Catalog
-                    <ArrowUpRight className="w-3.5 h-3.5 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-1">
-                    Review definitions for Super Admin, Moderator, Analyst, Ads, Compliance, and granular permission matrices.
-                  </p>
-                </div>
-              </div>
-              <div className="mt-4 pt-4 border-t border-slate-800/60 flex items-center justify-between text-[11px] text-slate-500">
-                <span>Guard: roles.view</span>
-                <span className="text-purple-400 font-medium">Ready →</span>
-              </div>
-            </Link>
-
-            <Link
-              to="/audit-logs"
-              className="group bg-slate-900 hover:bg-slate-800/80 border border-slate-800 hover:border-emerald-500/50 rounded-2xl p-6 transition-all shadow-sm flex flex-col justify-between"
-            >
-              <div className="space-y-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 group-hover:scale-105 transition-transform">
-                  <FileText className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-white group-hover:text-emerald-300 transition-colors flex items-center">
-                    Immutable Audit Trail Explorer
-                    <ArrowUpRight className="w-3.5 h-3.5 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-1">
-                    Query, search, and inspect the high-integrity audit trail recording all administrative logins, privilege updates, and system events.
-                  </p>
-                </div>
-              </div>
-              <div className="mt-4 pt-4 border-t border-slate-800/60 flex items-center justify-between text-[11px] text-slate-500">
-                <span>Guard: audit_logs.view</span>
-                <span className="text-emerald-400 font-medium">Ready →</span>
-              </div>
-            </Link>
-          </div>
-        </div>
-
-        {/* Right: Incremental Rollout Roadmap */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-sm space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-white flex items-center">
-              <Layers className="w-4 h-4 text-indigo-400 mr-2" />
-              10-Phase Roadmap
-            </h2>
-            <span className="text-[11px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-mono">
-              Phase 2 of 10
+      {/* Top Welcome & Control Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+        <div>
+          <div className="flex items-center space-x-2.5">
+            <h1 className="text-2xl font-black tracking-tight text-white">Operations Command Center</h1>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase font-mono bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
+              Live
             </span>
           </div>
+          <p className="text-xs text-slate-400 mt-1">
+            Real-time platform overview, user velocities, content generation, and system health.
+          </p>
+        </div>
 
-          <div className="space-y-2.5 text-xs">
-            <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-slate-300">
-              <div className="flex items-center space-x-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>Phase 1: Foundation & RBAC</span>
-              </div>
-              <span className="font-mono text-[10px] text-emerald-400 uppercase font-bold">Done</span>
-            </div>
+        {/* Date Filter Bar & Refresh */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Range Pills */}
+          <div className="flex items-center p-1 rounded-xl bg-slate-900 border border-slate-800">
+            {rangePills.map((pill) => {
+              const active = selectedRange === pill.value;
+              return (
+                <button
+                  key={pill.value}
+                  onClick={() => setSelectedRange(pill.value)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    active
+                      ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/30"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  {pill.label}
+                </button>
+              );
+            })}
 
-            <div className="flex items-center justify-between p-2.5 rounded-xl bg-cyan-600/15 border border-cyan-500/30 text-cyan-200">
-              <div className="flex items-center space-x-2">
-                <CheckCircle2 className="w-4 h-4 text-cyan-400" />
-                <span className="font-semibold">Phase 2: User Management</span>
-              </div>
-              <span className="font-mono text-[10px] text-cyan-400 uppercase font-bold">Current</span>
-            </div>
-
-            {[
-              { phase: 3, name: "Moderation & Reports" },
-              { phase: 4, name: "Admin Dashboard Metrics" },
-              { phase: 5, name: "Platform Analytics" },
-              { phase: 6, name: "System Management" },
-              { phase: 7, name: "Compliance & Privacy" },
-              { phase: 8, name: "Ads & Placements" },
-              { phase: 9, name: "Admin Notifications" },
-              { phase: 10, name: "Security Polish & Hardening" },
-            ].map((p) => (
-              <div
-                key={p.phase}
-                className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950/40 border border-slate-800/80 text-slate-400"
-              >
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 rounded-full border border-slate-700 flex items-center justify-center text-[9px] font-mono text-slate-500">
-                    {p.phase}
-                  </div>
-                  <span>{p.name}</span>
-                </div>
-                <span className="text-[10px] text-slate-600 font-mono">Upcoming</span>
-              </div>
-            ))}
+            {/* Custom Date Button */}
+            <button
+              onClick={() => setShowCustomModal(true)}
+              className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                selectedRange === "custom"
+                  ? "bg-indigo-600 text-white shadow-sm"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <Calendar className="w-3.5 h-3.5 mr-1" />
+              <span>{selectedRange === "custom" ? "Custom Range" : "Custom"}</span>
+            </button>
           </div>
+
+          {/* Refresh Button */}
+          <button
+            onClick={() => loadDashboard(true)}
+            disabled={loading || refreshing}
+            title="Bypass server cache and fetch fresh aggregates"
+            className="flex items-center px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${refreshing || loading ? "animate-spin text-indigo-400" : ""}`} />
+            <span>Refresh</span>
+          </button>
         </div>
       </div>
+
+      {/* Error Alert */}
+      {error && (
+        <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400" />
+            <span>{error}</span>
+          </div>
+          <button onClick={() => setError(null)} className="text-rose-400 hover:text-white">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Loading Skeleton */}
+      {loading && !data ? (
+        <div className="p-20 text-center text-slate-400 space-y-4">
+          <RefreshCw className="w-10 h-10 animate-spin mx-auto text-indigo-400" />
+          <p className="text-xs font-medium">Aggregating platform metrics and time-series data...</p>
+        </div>
+      ) : data ? (
+        <>
+          {/* Top KPI Metric Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Card 1: Users */}
+            <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl relative overflow-hidden flex flex-col justify-between space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Users</span>
+                <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400">
+                  <Users className="w-4 h-4" />
+                </div>
+              </div>
+              <div>
+                <div className="text-3xl font-extrabold text-white font-mono">{data.metrics.users.total}</div>
+                <div className="flex items-center space-x-2 mt-1.5">
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                    <ArrowUpRight className="w-3 h-3 mr-0.5" />
+                    +{data.metrics.users.newInPeriod} new
+                  </span>
+                  <span className="text-[11px] text-slate-500">
+                    {data.metrics.users.growthPct >= 0 ? `+${data.metrics.users.growthPct}%` : `${data.metrics.users.growthPct}%`} vs prev
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: Active Users */}
+            <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl relative overflow-hidden flex flex-col justify-between space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Active Users</span>
+                <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400">
+                  <Activity className="w-4 h-4" />
+                </div>
+              </div>
+              <div>
+                <div className="text-3xl font-extrabold text-white font-mono">{data.metrics.users.active}</div>
+                <div className="flex items-center space-x-2 mt-1.5">
+                  <span className="text-[11px] text-slate-400">
+                    <strong className="text-cyan-400 font-mono">
+                      {Math.round((data.metrics.users.active / Math.max(1, data.metrics.users.total)) * 100)}%
+                    </strong>{" "}
+                    of registered community
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3: Content Creation */}
+            <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl relative overflow-hidden flex flex-col justify-between space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Posts & Reels</span>
+                <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400">
+                  <Layers className="w-4 h-4" />
+                </div>
+              </div>
+              <div>
+                <div className="text-3xl font-extrabold text-white font-mono">
+                  {data.metrics.content.totalPosts}
+                </div>
+                <div className="flex items-center space-x-2 mt-1.5">
+                  <span className="text-[11px] text-purple-300">
+                    {data.metrics.content.totalReels} Video Reels • {data.metrics.content.totalComments} Comments
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 4: Moderation Reports */}
+            <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl relative overflow-hidden flex flex-col justify-between space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Reports Queue</span>
+                <div className="p-2 rounded-xl bg-rose-500/10 text-rose-400">
+                  <ShieldAlert className="w-4 h-4" />
+                </div>
+              </div>
+              <div>
+                <div className="text-3xl font-extrabold text-white font-mono">
+                  {data.metrics.moderation.pendingReports}
+                </div>
+                <div className="flex items-center space-x-2 mt-1.5">
+                  <span className="text-[11px] text-slate-400">
+                    {data.metrics.moderation.highPriorityReports > 0 ? (
+                      <strong className="text-rose-400 font-bold">
+                        {data.metrics.moderation.highPriorityReports} High Priority
+                      </strong>
+                    ) : (
+                      "0 Critical"
+                    )}{" "}
+                    • {data.metrics.moderation.resolutionRatePct}% Resolved
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 5: Platform Interactions */}
+            <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl relative overflow-hidden flex flex-col justify-between space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Engagement</span>
+                <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
+                  <TrendingUp className="w-4 h-4" />
+                </div>
+              </div>
+              <div>
+                <div className="text-3xl font-extrabold text-white font-mono">
+                  {data.metrics.engagement.totalInteractions.toLocaleString()}
+                </div>
+                <div className="flex items-center space-x-2 mt-1.5">
+                  <span className="text-[11px] text-slate-400">
+                    {data.metrics.engagement.totalLikes} Likes • {data.metrics.engagement.totalBookmarks} Bookmarks
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 6: Communities */}
+            <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl relative overflow-hidden flex flex-col justify-between space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Communities</span>
+                <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400">
+                  <MessageSquare className="w-4 h-4" />
+                </div>
+              </div>
+              <div>
+                <div className="text-3xl font-extrabold text-white font-mono">
+                  {data.metrics.content.totalCommunities}
+                </div>
+                <div className="flex items-center space-x-2 mt-1.5">
+                  <span className="text-[11px] text-slate-400">Active public & private groups</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 7: Media Storage Usage */}
+            <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl relative overflow-hidden flex flex-col justify-between space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Cloud Storage</span>
+                <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400">
+                  <HardDrive className="w-4 h-4" />
+                </div>
+              </div>
+              <div>
+                <div className="text-3xl font-extrabold text-white font-mono">
+                  {data.metrics.storage.formattedMB} <span className="text-base text-slate-400 font-sans">MB</span>
+                </div>
+                <div className="flex items-center space-x-2 mt-1.5">
+                  <span className="text-[11px] text-slate-400">
+                    {data.metrics.storage.mediaFilesCount} Media Files ({data.metrics.storage.imagesCount} Img / {data.metrics.storage.videosCount} Vid)
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 8: System Infrastructure */}
+            <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl relative overflow-hidden flex flex-col justify-between space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">System Latency</span>
+                <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400">
+                  <Server className="w-4 h-4" />
+                </div>
+              </div>
+              <div>
+                <div className="text-3xl font-extrabold text-emerald-400 font-mono">
+                  {data.widgets.systemHealth.dbLatencyMs} <span className="text-base text-slate-400 font-sans">ms</span>
+                </div>
+                <div className="flex items-center space-x-2 mt-1.5">
+                  <span className="text-[11px] text-slate-400">
+                    Status: <strong className="text-emerald-400">{data.widgets.systemHealth.status}</strong> • Up {data.widgets.systemHealth.uptimeFormatted}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Interactive SVG Charts Section */}
+          <DashboardCharts
+            userGrowth={data.trends.userGrowth}
+            contentCreation={data.trends.contentCreation}
+            engagement={data.trends.engagement}
+            reports={data.trends.reports}
+          />
+
+          {/* Operational Widgets Grid (Reports, System Health, Audit, Users) */}
+          <OperationalWidgets
+            pendingReports={data.widgets.pendingReports}
+            recentAdminActions={data.widgets.recentAdminActions}
+            recentUsers={data.widgets.recentUsers}
+            systemHealth={data.widgets.systemHealth}
+            pendingAdsCount={data.metrics.monetization.pendingAds}
+          />
+        </>
+      ) : null}
+
+      {/* Custom Date Range Picker Modal */}
+      {showCustomModal && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-sm p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="text-sm font-bold text-white flex items-center">
+                <Calendar className="w-4 h-4 mr-2 text-indigo-400" />
+                Custom Analytics Range
+              </h3>
+              <button onClick={() => setShowCustomModal(false)} className="text-slate-400 hover:text-white">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleApplyCustomDate} className="space-y-4 text-xs">
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={customStart}
+                  onChange={(e) => setCustomStart(e.target.value)}
+                  className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+                  End Date
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={customEnd}
+                  onChange={(e) => setCustomEnd(e.target.value)}
+                  className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div className="flex items-center justify-end space-x-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCustomModal(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white transition-colors shadow-lg shadow-indigo-600/25 cursor-pointer"
+                >
+                  Apply Range
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

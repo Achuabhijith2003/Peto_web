@@ -9,6 +9,8 @@ import { AdminRoles } from "../pages/AdminRoles";
 import { AdminAuditLogs } from "../pages/AdminAuditLogs";
 import { AdminUsers } from "../pages/AdminUsers";
 import { AdminUserDetail } from "../pages/AdminUserDetail";
+import { AdminModerationQueue } from "../pages/AdminModerationQueue";
+import { AdminReportDetail } from "../pages/AdminReportDetail";
 import { AdminPlaceholder } from "../pages/AdminPlaceholder";
 import { AdminUnauthorized } from "../pages/AdminUnauthorized";
 import { AdminNotFound } from "../pages/AdminNotFound";
@@ -24,6 +26,17 @@ export const AppRoutes: React.FC = () => {
         <Route element={<AdminLayout />}>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<AdminDashboard />} />
+
+          {/* Phase 3: Content Moderation & Reports */}
+          <Route
+            path="/moderation"
+            element={<ProtectedAdminRoute requiredPermission="reports.view" />}
+          >
+            <Route index element={<AdminModerationQueue />} />
+            <Route path=":id" element={<AdminReportDetail />} />
+          </Route>
+          <Route path="/reports" element={<Navigate to="/moderation" replace />} />
+          <Route path="/reports/:id" element={<Navigate to="/moderation/:id" replace />} />
 
           {/* Phase 2: User Management */}
           <Route

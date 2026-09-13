@@ -30,6 +30,11 @@ export const AdminSidebar: React.FC = () => {
       icon: <LayoutDashboard className="w-4 h-4 text-indigo-400" />,
     },
     {
+      title: "Moderation",
+      path: "/moderation",
+      icon: <ShieldAlert className="w-4 h-4 text-rose-400" />,
+    },
+    {
       title: "Users",
       path: "/users",
       icon: <Users className="w-4 h-4 text-cyan-400" />,
@@ -52,12 +57,6 @@ export const AdminSidebar: React.FC = () => {
   ];
 
   const roadmapNavItems: NavItem[] = [
-    {
-      title: "Moderation",
-      path: "/placeholder/moderation",
-      icon: <ShieldAlert className="w-4 h-4" />,
-      badge: "Phase 3",
-    },
     {
       title: "Analytics",
       path: "/placeholder/analytics",

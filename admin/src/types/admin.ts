@@ -157,3 +157,218 @@ export interface UserFilters {
   startDate?: string;
   endDate?: string;
 }
+
+// Phase 3 Moderation & Reports Types
+export type ReportTargetType = "user" | "post" | "reel" | "comment" | "community";
+export type ReportStatus = "PENDING" | "UNDER_REVIEW" | "RESOLVED" | "REJECTED" | "ESCALATED";
+export type ReportPriority = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+
+export interface PetoReportItem {
+  id: string;
+  reporter_id: string;
+  target_type: ReportTargetType;
+  target_id: string;
+  reason: string;
+  description: string;
+  status: ReportStatus;
+  priority: ReportPriority;
+  assigned_to?: string | null;
+  resolution?: string | null;
+  resolved_by?: string | null;
+  resolved_at?: string | null;
+  created_at: string;
+  updated_at: string;
+  reporter: {
+    id: string;
+    username: string;
+    full_name?: string;
+    avatar_url?: string | null;
+    verified?: boolean;
+  };
+  assignedModerator?: {
+    id: string;
+    username: string;
+    full_name?: string;
+    avatar_url?: string | null;
+  } | null;
+  resolver?: {
+    id: string;
+    username: string;
+    full_name?: string;
+    avatar_url?: string | null;
+  } | null;
+}
+
+export interface ModerationMetrics {
+  pendingCount: number;
+  underReviewCount: number;
+  escalatedCount: number;
+  resolvedCount: number;
+  totalCount: number;
+}
+
+export interface PetoReportDetail {
+  report: PetoReportItem;
+  targetEntity: any;
+  moderationHistory: AuditLogItem[];
+}
+
+export interface ReportFilters {
+  status?: string;
+  targetType?: string;
+  priority?: string;
+  assignedTo?: string;
+  search?: string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+  page?: number;
+  limit?: number;
+}
+
+export type ModerationActionType =
+  | "REMOVE_POST"
+  | "REMOVE_REEL"
+  | "REMOVE_COMMENT"
+  | "RESTRICT_CONTENT"
+  | "WARN_USER"
+  | "SUSPEND_USER"
+  | "BAN_USER"
+  | "RESOLVE_REPORT"
+  | "ESCALATE_REPORT"
+  | "REJECT_REPORT";
+
+// Phase 4 Dashboard Types
+export type DashboardDateRange = "today" | "7d" | "30d" | "3m" | "6m" | "1y" | "custom";
+
+export interface DashboardMetrics {
+  users: {
+    total: number;
+    active: number;
+    newInPeriod: number;
+    growthPct: number;
+  };
+  content: {
+    totalPosts: number;
+    postsInPeriod: number;
+    totalReels: number;
+    totalComments: number;
+    commentsInPeriod: number;
+    totalCommunities: number;
+  };
+  engagement: {
+    totalLikes: number;
+    totalBookmarks: number;
+    totalInteractions: number;
+    interactionRatePct: string | number;
+  };
+  moderation: {
+    pendingReports: number;
+    underReviewReports: number;
+    resolvedReports: number;
+    highPriorityReports: number;
+    resolutionRatePct: number;
+  };
+  storage: {
+    totalBytes: number;
+    formattedMB: string;
+    formattedGB: string;
+    mediaFilesCount: number;
+    imagesCount: number;
+    videosCount: number;
+  };
+  monetization: {
+    revenueUSD: number;
+    activeCampaigns: number;
+    pendingAds: number;
+    status: string;
+  };
+}
+
+export interface UserGrowthPoint {
+  date: string;
+  key: string;
+  newUsers: number;
+  totalUsers: number;
+}
+
+export interface ContentCreationPoint {
+  date: string;
+  key: string;
+  posts: number;
+  reels: number;
+  comments: number;
+  totalContent: number;
+}
+
+export interface EngagementPoint {
+  date: string;
+  key: string;
+  likes: number;
+  comments: number;
+  bookmarks: number;
+  totalInteractions: number;
+}
+
+export interface ReportsTrendPoint {
+  date: string;
+  key: string;
+  reports: number;
+  resolved: number;
+}
+
+export interface DashboardTrends {
+  userGrowth: UserGrowthPoint[];
+  contentCreation: ContentCreationPoint[];
+  engagement: EngagementPoint[];
+  reports: ReportsTrendPoint[];
+}
+
+export interface SystemHealthService {
+  name: string;
+  status: string;
+  latencyMs?: number;
+  sizeMB?: string;
+  active?: boolean;
+}
+
+export interface SystemHealthData {
+  status: "OPTIMAL" | "DEGRADED";
+  dbLatencyMs: number;
+  uptimeSeconds: number;
+  uptimeFormatted: string;
+  memory: {
+    usedMB: number;
+    totalMB: number;
+    pct: number;
+    systemFreeMemPct: number;
+  };
+  platform: {
+    nodeVersion: string;
+    platform: string;
+    arch: string;
+  };
+  services: SystemHealthService[];
+}
+
+export interface DashboardWidgets {
+  pendingReports: PetoReportItem[];
+  recentAdminActions: AuditLogItem[];
+  recentUsers: PetoUserItem[];
+  systemHealth: SystemHealthData;
+}
+
+export interface DashboardOverviewData {
+  meta: {
+    range: string;
+    startDate: string;
+    endDate: string;
+    generatedAt: string;
+  };
+  metrics: DashboardMetrics;
+  trends: DashboardTrends;
+  widgets: DashboardWidgets;
+  cached?: boolean;
+  cacheAgeSeconds?: number;
+}
+
+
