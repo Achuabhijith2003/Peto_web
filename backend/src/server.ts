@@ -22,6 +22,7 @@ import followRoutes from "./followers/follow.routes";
 import presenceRoutes from "./presence/presence.routes";
 import notificationRoutes from "./notifications/notification.routes";
 import communityRoutes from "./communities/community.routes";
+import adminRoutes from "./admin/admin.routes";
 import { ensurePublicBuckets } from "./media/storage.service";
 
 
@@ -58,9 +59,24 @@ app.use(
 // CORS
 // ----------------------
 
+const allowedOrigins = [
+  process.env.CLIENT_URL || "http://localhost:5173",
+  process.env.ADMIN_CLIENT_URL || "http://localhost:5174",
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:5175",
+];
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, curl, etc.)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin) || process.env.NODE_ENV !== "production") {
+        return callback(null, true);
+      }
+      return callback(new Error(`Origin ${origin} not allowed by CORS`));
+    },
     credentials: true,
   })
 );
@@ -94,6 +110,8 @@ app.use("/api/posts", postRoutes);
 app.use("/api/media", mediaRoutes);
 
 app.use("/api/communities", communityRoutes);
+
+app.use("/api/admin", adminRoutes);
 
 app.use(
     "/api/presence",

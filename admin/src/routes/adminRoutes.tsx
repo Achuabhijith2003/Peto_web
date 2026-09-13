@@ -1,0 +1,71 @@
+import React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { AdminLogin } from "../pages/AdminLogin";
+import { AdminLayout } from "../components/layout/AdminLayout";
+import { ProtectedAdminRoute } from "../components/auth/ProtectedAdminRoute";
+import { AdminDashboard } from "../pages/AdminDashboard";
+import { AdminAdmins } from "../pages/AdminAdmins";
+import { AdminRoles } from "../pages/AdminRoles";
+import { AdminAuditLogs } from "../pages/AdminAuditLogs";
+import { AdminUsers } from "../pages/AdminUsers";
+import { AdminUserDetail } from "../pages/AdminUserDetail";
+import { AdminPlaceholder } from "../pages/AdminPlaceholder";
+import { AdminUnauthorized } from "../pages/AdminUnauthorized";
+import { AdminNotFound } from "../pages/AdminNotFound";
+
+export const AppRoutes: React.FC = () => {
+  return (
+    <Routes>
+      {/* Public Admin Auth */}
+      <Route path="/login" element={<AdminLogin />} />
+
+      {/* Protected Admin Routes within Layout */}
+      <Route element={<ProtectedAdminRoute />}>
+        <Route element={<AdminLayout />}>
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/dashboard" element={<AdminDashboard />} />
+
+          {/* Phase 2: User Management */}
+          <Route
+            path="/users"
+            element={<ProtectedAdminRoute requiredPermission="users.view" />}
+          >
+            <Route index element={<AdminUsers />} />
+            <Route path=":id" element={<AdminUserDetail />} />
+          </Route>
+
+          {/* Phase 1 Core Operational Modules */}
+          <Route
+            path="/admins"
+            element={<ProtectedAdminRoute requiredPermission="admins.view" />}
+          >
+            <Route index element={<AdminAdmins />} />
+          </Route>
+
+          <Route
+            path="/roles"
+            element={<ProtectedAdminRoute requiredPermission="roles.view" />}
+          >
+            <Route index element={<AdminRoles />} />
+          </Route>
+
+          <Route
+            path="/audit-logs"
+            element={<ProtectedAdminRoute requiredPermission="audit_logs.view" />}
+          >
+            <Route index element={<AdminAuditLogs />} />
+          </Route>
+
+          {/* Future Roadmap Section Placeholders */}
+          <Route path="/placeholder/:section" element={<AdminPlaceholder />} />
+
+          {/* Access Control Feedback */}
+          <Route path="/unauthorized" element={<AdminUnauthorized />} />
+
+          {/* 404 Catch-all */}
+          <Route path="*" element={<AdminNotFound />} />
+        </Route>
+      </Route>
+    </Routes>
+  );
+};

@@ -23,7 +23,7 @@ const getMediaUrl = (item: string | { url: string; type?: string }) => {
 
 const VideoPlayer = ({
   src,
-  containerClassName = "h-[420px] w-full",
+  containerClassName = "max-h-[520px] w-full",
 }: {
   src: string;
   containerClassName?: string;
@@ -42,7 +42,7 @@ const VideoPlayer = ({
         muted={muted}
         playsInline
         preload="metadata"
-        className="w-full h-full object-cover"
+        className="max-h-[520px] w-full object-contain"
       />
       <button
         onClick={(e) => {
@@ -62,19 +62,19 @@ const VideoPlayer = ({
 const ImageGrid = ({ images }: ImageGridProps) => {
   if (!images || images.length === 0) return null;
 
-  // Single Media: Image and Video take the exact same width and height dimension
+  // Single Media: Adapts dynamically to image and video dimensions up to max-h-[520px]
   if (images.length === 1) {
     const item = images[0];
     const url = getMediaUrl(item);
     if (isVideoUrl(item)) {
-      return <VideoPlayer src={url} containerClassName="h-[420px] w-full" />;
+      return <VideoPlayer src={url} containerClassName="max-h-[520px] w-full" />;
     }
     return (
-      <div className="h-[420px] w-full overflow-hidden rounded-2xl bg-slate-950 flex items-center justify-center">
+      <div className="max-h-[520px] w-full overflow-hidden rounded-2xl bg-slate-950 flex items-center justify-center">
         <img
           src={url}
           alt="Post media"
-          className="h-full w-full object-cover"
+          className="max-h-[520px] w-full object-contain"
         />
       </div>
     );
