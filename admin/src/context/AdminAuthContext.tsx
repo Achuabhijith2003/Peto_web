@@ -47,6 +47,9 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children 
       // If 403 (e.g. user is not admin or suspended), clear invalid admin session
       if (err.response?.status === 403 || err.response?.status === 401) {
         localStorage.removeItem("peto_admin_token");
+        localStorage.removeItem("peto_token");
+        localStorage.removeItem("peto_user_token");
+        sessionStorage.clear();
         setAdmin(null);
       }
     } finally {
@@ -77,6 +80,9 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children 
       setAdmin(session);
     } catch (err: any) {
       localStorage.removeItem("peto_admin_token");
+      localStorage.removeItem("peto_token");
+      localStorage.removeItem("peto_user_token");
+      sessionStorage.clear();
       setAdmin(null);
       const msg =
         err.response?.data?.message ||
@@ -91,9 +97,12 @@ export const AdminAuthProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   const logout = () => {
     localStorage.removeItem("peto_admin_token");
+    localStorage.removeItem("peto_token");
+    localStorage.removeItem("peto_user_token");
+    sessionStorage.clear();
     setAdmin(null);
     setError(null);
-    window.location.href = "/login";
+    window.location.replace("/login");
   };
 
   const hasPermission = (permissionCode: string): boolean => {

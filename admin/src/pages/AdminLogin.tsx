@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAdminAuth } from "../context/AdminAuthContext";
-import { Shield, Lock, Mail, AlertCircle, ArrowRight } from "lucide-react";
+import { getApiBaseUrl } from "../api/adminApi";
+import { Shield, Lock, Mail, AlertCircle, ArrowRight, Settings, Check } from "lucide-react";
 
 export const AdminLogin: React.FC = () => {
   const { login, isAuthenticated, loading } = useAdminAuth();
@@ -12,9 +13,25 @@ export const AdminLogin: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Runtime API Endpoint Configuration helper
+  const [showApiConfig, setShowApiConfig] = useState(false);
+  const [customApiUrl, setCustomApiUrl] = useState(getApiBaseUrl());
+  const [apiSaved, setApiSaved] = useState(false);
+
   if (isAuthenticated && !loading) {
     return <Navigate to="/dashboard" replace />;
   }
+
+  const handleSaveApiUrl = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanUrl = customApiUrl.trim().replace(/\/+$/, "");
+    if (cleanUrl) {
+      localStorage.setItem("peto_api_url", cleanUrl);
+      setApiSaved(true);
+      setErrorMessage(null);
+      setTimeout(() => setApiSaved(false), 3000);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,9 +47,18 @@ export const AdminLogin: React.FC = () => {
       await login(email.trim(), password);
       navigate("/dashboard");
     } catch (err: any) {
-      setErrorMessage(
-        err.message || "Access denied: Failed to authenticate with administrative credentials."
-      );
+      if (err.response?.status === 405 || err.message?.includes("405")) {
+        setErrorMessage(
+          "HTTP 405 (Method Not Allowed): The Admin Panel is calling itself instead of your backend API. Please configure your Backend URL below (e.g. https://your-backend.onrender.com/api) or add VITE_API_URL to Render environment variables."
+        );
+        setShowApiConfig(true);
+      } else {
+        setErrorMessage(
+          err.response?.data?.message ||
+            err.message ||
+            "Access denied: Failed to authenticate with administrative credentials."
+        );
+      }
     } finally {
       setSubmitting(false);
     }
@@ -127,7 +153,54 @@ export const AdminLogin: React.FC = () => {
             </button>
           </form>
 
-          <div className="pt-2 text-center text-[11px] text-[#534434] space-y-1">
+          {/* Collapsible API Endpoint Configuration */}
+          <div className="pt-2 border-t border-[#e2e8f8]">
+            <button
+              type="button"
+              onClick={() => setShowApiConfig(!showApiConfig)}
+              className="w-full flex items-center justify-between text-[11px] text-[#534434] hover:text-[#0058be] transition-colors py-1 cursor-pointer"
+            >
+              <span className="flex items-center space-x-1.5 font-medium">
+                <Settings className="w-3.5 h-3.5" />
+                <span>Backend API Endpoint</span>
+              </span>
+              <span className="font-mono text-[10px] text-[#534434]/70 truncate max-w-[200px]">
+                {getApiBaseUrl()}
+              </span>
+            </button>
+
+            {showApiConfig && (
+              <form onSubmit={handleSaveApiUrl} className="mt-2.5 p-3 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] space-y-2">
+                <div className="text-[11px] text-[#534434] leading-relaxed">
+                  Enter your deployed Peto Backend API URL (e.g. <span className="font-mono text-[10px] text-[#0058be]">https://your-backend.onrender.com/api</span>):
+                </div>
+                <div className="flex space-x-2">
+                  <input
+                    type="url"
+                    value={customApiUrl}
+                    onChange={(e) => setCustomApiUrl(e.target.value)}
+                    placeholder="https://peto-backend.onrender.com/api"
+                    required
+                    className="flex-1 px-3 py-1.5 rounded-lg bg-white border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:border-[#0058be]"
+                  />
+                  <button
+                    type="submit"
+                    className="px-3 py-1.5 rounded-lg bg-[#0058be] hover:bg-[#2170e4] text-white text-xs font-semibold flex items-center space-x-1 cursor-pointer"
+                  >
+                    {apiSaved ? <Check className="w-3.5 h-3.5 text-white" /> : <span>Save</span>}
+                  </button>
+                </div>
+                {apiSaved && (
+                  <div className="text-[11px] text-[#006c49] font-medium flex items-center space-x-1">
+                    <Check className="w-3.5 h-3.5" />
+                    <span>API endpoint saved! You can now sign in.</span>
+                  </div>
+                )}
+              </form>
+            )}
+          </div>
+
+          <div className="text-center text-[11px] text-[#534434] space-y-1">
             <p>Every login attempt and administrative session is strictly audited.</p>
             <p className="font-mono text-[#534434]/70">Unauthorized access is strictly prohibited.</p>
           </div>

@@ -80,8 +80,20 @@ RUN mkdir -p /etc/nginx/templates && \
 # Copy compiled static assets from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
+# Create runtime API URL injection script executed on container startup
+RUN mkdir -p /docker-entrypoint.d && \
+    printf '%s\n' \
+    '#!/bin/sh' \
+    'TARGET_URL="${VITE_API_URL:-${BACKEND_URL:-}}"' \
+    'if [ -n "$TARGET_URL" ]; then' \
+    '  echo "Injecting runtime API URL: $TARGET_URL into index.html"' \
+    '  sed -i "s|__VITE_API_URL_PLACEHOLDER__|$TARGET_URL|g" /usr/share/nginx/html/index.html' \
+    'fi' \
+    > /docker-entrypoint.d/40-inject-api-url.sh && \
+    chmod +x /docker-entrypoint.d/40-inject-api-url.sh
+
 # Expose default HTTP port and Render default port
 EXPOSE 80 10000
 
-# Start Nginx in foreground (entrypoint automatically processes /etc/nginx/templates with envsubst)
+# Start Nginx in foreground (entrypoint automatically processes templates and entrypoint scripts)
 CMD ["nginx", "-g", "daemon off;"]

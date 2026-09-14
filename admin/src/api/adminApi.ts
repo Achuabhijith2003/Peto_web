@@ -8,16 +8,32 @@ import {
   PaginationInfo,
 } from "../types/admin";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
+export const getApiBaseUrl = (): string => {
+  if (typeof window !== "undefined" && (window as any).__PETO_API_URL__) {
+    const val = (window as any).__PETO_API_URL__;
+    if (val && val !== "__VITE_API_URL_PLACEHOLDER__") {
+      return val.replace(/\/+$/, "");
+    }
+  }
+  if (typeof window !== "undefined") {
+    const saved = localStorage.getItem("peto_api_url");
+    if (saved) return saved.replace(/\/+$/, "");
+  }
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL.replace(/\/+$/, "");
+  }
+  return "/api";
+};
 
 export const adminApi = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: getApiBaseUrl(),
   headers: {
     "Content-Type": "application/json",
   },
 });
 
 adminApi.interceptors.request.use((config) => {
+  config.baseURL = getApiBaseUrl();
   const token =
     localStorage.getItem("peto_admin_token") ||
     localStorage.getItem("peto_token");
@@ -32,8 +48,11 @@ adminApi.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem("peto_admin_token");
+      localStorage.removeItem("peto_token");
+      localStorage.removeItem("peto_user_token");
+      sessionStorage.clear();
       if (window.location.pathname !== "/login") {
-        window.location.href = "/login";
+        window.location.replace("/login");
       }
     }
     return Promise.reject(error);
@@ -42,7 +61,8 @@ adminApi.interceptors.response.use(
 
 // Admin Auth & Profile
 export async function adminLogin(email: string, password: string) {
-  const res = await axios.post(`${API_BASE_URL}/auth/login`, {
+  const baseUrl = getApiBaseUrl();
+  const res = await axios.post(`${baseUrl}/auth/login`, {
     email,
     password,
   });
