@@ -172,11 +172,11 @@ export const AdminAdmins: React.FC = () => {
       {/* Header & Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-white tracking-tight flex items-center">
-            <Users className="w-6 h-6 mr-2.5 text-indigo-400" />
+          <h1 className="text-2xl font-bold font-heading text-[#151c27] tracking-tight flex items-center">
+            <Users className="w-6 h-6 mr-2.5 text-[#0058be]" />
             Administrators
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-[#534434] mt-1">
             Manage administrative personnel, assign roles, and audit access permissions.
           </p>
         </div>
@@ -184,7 +184,7 @@ export const AdminAdmins: React.FC = () => {
         {canCreate && (
           <button
             onClick={() => setShowAddModal(true)}
-            className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow-lg shadow-indigo-600/20 flex items-center space-x-2 transition-all self-start cursor-pointer"
+            className="px-4 py-2.5 rounded-xl bg-[#0058be] hover:bg-[#2170e4] text-white font-semibold text-xs shadow-sm flex items-center space-x-2 transition-all self-start cursor-pointer"
           >
             <UserPlus className="w-4 h-4" />
             <span>Assign New Admin</span>
@@ -194,33 +194,33 @@ export const AdminAdmins: React.FC = () => {
 
       {/* Notifications */}
       {actionSuccess && (
-        <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center justify-between animate-in fade-in duration-200">
+        <div className="p-4 rounded-2xl bg-white border border-[#bbf7d0] text-[#006c49] text-xs font-semibold flex items-center justify-between shadow-level-1 animate-in fade-in duration-200">
           <div className="flex items-center space-x-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <CheckCircle2 className="w-4 h-4 text-[#006c49] shrink-0" />
             <span>{actionSuccess}</span>
           </div>
-          <button onClick={() => setActionSuccess(null)} className="text-emerald-400 hover:text-white">
-            <X className="w-3.5 h-3.5" />
+          <button onClick={() => setActionSuccess(null)} className="text-[#006c49] hover:opacity-70 cursor-pointer">
+            <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
       {actionError && (
-        <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center justify-between animate-in fade-in duration-200">
+        <div className="p-4 rounded-2xl bg-white border border-[#ffdad6] text-[#ba1a1a] text-xs font-semibold flex items-center justify-between shadow-level-1 animate-in fade-in duration-200">
           <div className="flex items-center space-x-2">
-            <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+            <AlertTriangle className="w-4 h-4 text-[#ba1a1a] shrink-0" />
             <span>{actionError}</span>
           </div>
-          <button onClick={() => setActionError(null)} className="text-rose-400 hover:text-white">
-            <X className="w-3.5 h-3.5" />
+          <button onClick={() => setActionError(null)} className="text-[#ba1a1a] hover:opacity-70 cursor-pointer">
+            <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
       {/* Search Bar */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-sm">
+      <div className="bg-white border border-[#e2e8f8] rounded-2xl p-4 shadow-level-1">
         <div className="relative max-w-md">
-          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#534434]/60">
             <Search className="w-4 h-4" />
           </div>
           <input
@@ -228,22 +228,22 @@ export const AdminAdmins: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by admin name or username..."
-            className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all"
+            className="w-full pl-10 pr-4 py-2 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] placeholder-[#534434]/60 focus:outline-none focus:bg-white focus:border-[#0058be] transition-all"
           />
         </div>
       </div>
 
       {/* Admins Table */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-white border border-[#e2e8f8] rounded-2xl shadow-level-1 overflow-hidden">
         {loading ? (
           <div className="p-12">
             <LoadingSpinner message="Loading administrators roster..." />
           </div>
         ) : admins.length === 0 ? (
-          <div className="p-12 text-center text-slate-400 space-y-2">
-            <Users className="w-8 h-8 mx-auto text-slate-600" />
-            <p className="text-sm font-semibold text-slate-300">No administrators found</p>
-            <p className="text-xs text-slate-500">
+          <div className="p-12 text-center text-[#534434] space-y-2">
+            <Users className="w-8 h-8 mx-auto text-[#534434]/60" />
+            <p className="text-sm font-bold font-heading text-[#151c27]">No administrators found</p>
+            <p className="text-xs text-[#534434]">
               {searchQuery ? "Try refining your search query." : "Ensure migration 11 has been executed."}
             </p>
           </div>
@@ -251,7 +251,7 @@ export const AdminAdmins: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="border-b border-slate-800 bg-slate-950/40 text-slate-400 font-semibold uppercase tracking-wider">
+                <tr className="border-b border-[#e2e8f8] bg-[#f0f3ff] text-[#534434] font-bold font-heading uppercase tracking-wider text-[11px]">
                   <th className="px-6 py-3.5">Administrator</th>
                   <th className="px-6 py-3.5">Role</th>
                   <th className="px-6 py-3.5">Status</th>
@@ -260,14 +260,14 @@ export const AdminAdmins: React.FC = () => {
                   {canUpdate && <th className="px-6 py-3.5 text-right">Actions</th>}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60">
+              <tbody className="divide-y divide-[#e2e8f8]">
                 {admins.map((item) => {
                   const isCurrent = item.id === currentAdmin?.id;
                   return (
-                    <tr key={item.id} className="hover:bg-slate-800/30 transition-colors">
+                    <tr key={item.id} className="hover:bg-[#f9f9ff] transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center space-x-3">
-                          <div className="w-9 h-9 rounded-full bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-300 font-bold text-xs shrink-0">
+                          <div className="w-9 h-9 rounded-full bg-[#f0f3ff] border border-[#dae2f3] flex items-center justify-center text-[#0058be] font-bold text-xs shrink-0">
                             {item.profile?.avatar_url ? (
                               <img
                                 src={item.profile.avatar_url}
@@ -279,15 +279,15 @@ export const AdminAdmins: React.FC = () => {
                             )}
                           </div>
                           <div>
-                            <div className="font-semibold text-slate-100 flex items-center">
+                            <div className="font-bold text-[#151c27] flex items-center">
                               {item.profile?.full_name || "Admin User"}
                               {isCurrent && (
-                                <span className="ml-2 text-[10px] px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 font-mono">
+                                <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-[#f0f3ff] text-[#0058be] border border-[#dae2f3] font-mono font-semibold">
                                   You
                                 </span>
                               )}
                             </div>
-                            <div className="text-slate-400 text-[11px] font-mono">
+                            <div className="text-[#534434] text-[11px] font-mono">
                               @{item.profile?.username || "unknown"}
                             </div>
                           </div>
@@ -302,11 +302,11 @@ export const AdminAdmins: React.FC = () => {
                         <StatusBadge type="status" value={item.is_active ? "active" : "suspended"} />
                       </td>
 
-                      <td className="px-6 py-4 text-slate-400 font-mono text-[11px]">
+                      <td className="px-6 py-4 text-[#534434] font-mono text-[11px]">
                         {item.last_login_at ? new Date(item.last_login_at).toLocaleString() : "Never"}
                       </td>
 
-                      <td className="px-6 py-4 text-slate-400 text-[11px]">
+                      <td className="px-6 py-4 text-[#534434] text-[11px]">
                         {new Date(item.created_at).toLocaleDateString()}
                       </td>
 
@@ -319,9 +319,9 @@ export const AdminAdmins: React.FC = () => {
                                 setEditRoleId(item.role_id);
                               }}
                               title="Change Role"
-                              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors cursor-pointer"
+                              className="p-1.5 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#534434] border border-[#dae2f3] transition-colors cursor-pointer"
                             >
-                              <KeyRound className="w-3.5 h-3.5" />
+                              <KeyRound className="w-3.5 h-3.5 text-[#0058be]" />
                             </button>
 
                             {!isCurrent && (
@@ -329,10 +329,10 @@ export const AdminAdmins: React.FC = () => {
                                 <button
                                   onClick={() => handleToggleStatus(item)}
                                   title={item.is_active ? "Suspend Administrator" : "Activate Administrator"}
-                                  className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
+                                  className={`p-1.5 rounded-xl border transition-colors cursor-pointer ${
                                     item.is_active
-                                      ? "bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20"
-                                      : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20"
+                                      ? "bg-[#ffe082]/30 border-[#ffe082]/60 text-[#855300] hover:bg-[#ffe082]/50"
+                                      : "bg-[#bbf7d0]/40 border-[#006c49]/30 text-[#006c49] hover:bg-[#bbf7d0]/70"
                                   }`}
                                 >
                                   {item.is_active ? (
@@ -345,7 +345,7 @@ export const AdminAdmins: React.FC = () => {
                                 <button
                                   onClick={() => handleRevokeAdmin(item)}
                                   title="Revoke Admin Access"
-                                  className="p-1.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 hover:bg-rose-500/20 transition-colors cursor-pointer"
+                                  className="p-1.5 rounded-xl bg-[#ffdad6]/40 border border-[#ffdad6] text-[#ba1a1a] hover:bg-[#ffdad6]/70 transition-colors cursor-pointer"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
                                 </button>
@@ -365,11 +365,11 @@ export const AdminAdmins: React.FC = () => {
 
       {/* Assign New Admin Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h2 className="text-base font-bold text-white flex items-center">
-                <UserPlus className="w-5 h-5 mr-2 text-indigo-400" />
+        <div className="fixed inset-0 bg-[#151c27]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-[#e2e8f8] rounded-2xl w-full max-w-lg p-6 shadow-level-3 space-y-5 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-[#e2e8f8] pb-3">
+              <h2 className="text-base font-bold font-heading text-[#151c27] flex items-center">
+                <UserPlus className="w-5 h-5 mr-2 text-[#0058be]" />
                 Assign Administrative Role
               </h2>
               <button
@@ -377,7 +377,7 @@ export const AdminAdmins: React.FC = () => {
                   setShowAddModal(false);
                   setSelectedUser(null);
                 }}
-                className="text-slate-400 hover:text-white"
+                className="text-[#534434] hover:text-[#151c27] cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -386,11 +386,11 @@ export const AdminAdmins: React.FC = () => {
             <form onSubmit={handleCreateAdmin} className="space-y-4 text-xs">
               {/* Step 1: Search Peto User */}
               <div className="space-y-1.5">
-                <label className="block font-semibold uppercase tracking-wider text-slate-400">
+                <label className="block font-semibold font-heading uppercase tracking-wider text-[#534434]">
                   1. Find Peto User
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#534434]/60">
                     <Search className="w-3.5 h-3.5" />
                   </div>
                   <input
@@ -398,13 +398,13 @@ export const AdminAdmins: React.FC = () => {
                     value={userSearchTerm}
                     onChange={(e) => setUserSearchTerm(e.target.value)}
                     placeholder="Search by username (e.g. miaqwr)..."
-                    className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-full pl-9 pr-4 py-2 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] placeholder-[#534434]/60 focus:outline-none focus:bg-white focus:border-[#0058be]"
                   />
                 </div>
 
                 {/* Search Results Dropdown */}
                 {userSearchResults.length > 0 && (
-                  <div className="max-h-36 overflow-y-auto rounded-xl bg-slate-950 border border-slate-800 divide-y divide-slate-800/60 mt-1">
+                  <div className="max-h-36 overflow-y-auto rounded-xl bg-white border border-[#e2e8f8] divide-y divide-[#e2e8f8] shadow-level-2 mt-1">
                     {userSearchResults.map((u) => (
                       <button
                         type="button"
@@ -413,25 +413,25 @@ export const AdminAdmins: React.FC = () => {
                           setSelectedUser(u);
                           setUserSearchResults([]);
                         }}
-                        className="w-full px-3 py-2 text-left hover:bg-slate-800/50 flex items-center justify-between text-xs"
+                        className="w-full px-3.5 py-2 text-left hover:bg-[#f9f9ff] flex items-center justify-between text-xs cursor-pointer"
                       >
                         <div>
-                          <span className="font-semibold text-slate-200">{u.full_name || u.username}</span>
-                          <span className="ml-2 font-mono text-slate-500">@{u.username}</span>
+                          <span className="font-bold text-[#151c27]">{u.full_name || u.username}</span>
+                          <span className="ml-2 font-mono text-[#534434]">@{u.username}</span>
                         </div>
-                        <span className="text-[10px] text-indigo-400 font-semibold">Select</span>
+                        <span className="text-[10px] text-[#0058be] font-bold">Select</span>
                       </button>
                     ))}
                   </div>
                 )}
 
                 {selectedUser && (
-                  <div className="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-between">
+                  <div className="p-3.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] flex items-center justify-between">
                     <div>
-                      <p className="font-bold text-indigo-200">{selectedUser.full_name || selectedUser.username}</p>
-                      <p className="font-mono text-slate-400 text-[11px]">@{selectedUser.username}</p>
+                      <p className="font-bold text-[#151c27]">{selectedUser.full_name || selectedUser.username}</p>
+                      <p className="font-mono text-[#534434] text-[11px]">@{selectedUser.username}</p>
                     </div>
-                    <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded">
+                    <span className="text-[10px] font-bold text-[#006c49] bg-[#bbf7d0]/40 border border-[#006c49]/30 px-2 py-0.5 rounded-full">
                       User Selected
                     </span>
                   </div>
@@ -440,13 +440,13 @@ export const AdminAdmins: React.FC = () => {
 
               {/* Step 2: Select Role */}
               <div className="space-y-1.5">
-                <label className="block font-semibold uppercase tracking-wider text-slate-400">
+                <label className="block font-semibold font-heading uppercase tracking-wider text-[#534434]">
                   2. Select Administrative Role
                 </label>
                 <select
                   value={selectedRoleId}
                   onChange={(e) => setSelectedRoleId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
                 >
                   {roles.map((r) => (
                     <option key={r.id} value={r.id}>
@@ -456,18 +456,18 @@ export const AdminAdmins: React.FC = () => {
                 </select>
               </div>
 
-              <div className="pt-3 border-t border-slate-800 flex items-center justify-end space-x-3">
+              <div className="pt-3 border-t border-[#e2e8f8] flex items-center justify-end space-x-3">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium"
+                  className="px-4 py-2 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#534434] font-semibold border border-[#dae2f3] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submittingAdd || !selectedUser}
-                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold shadow-lg shadow-indigo-600/25 disabled:opacity-50"
+                  className="px-4 py-2 rounded-xl bg-[#0058be] hover:bg-[#2170e4] text-white font-semibold shadow-sm disabled:opacity-50 cursor-pointer"
                 >
                   {submittingAdd ? "Assigning..." : "Assign Role"}
                 </button>
@@ -479,32 +479,32 @@ export const AdminAdmins: React.FC = () => {
 
       {/* Edit Role Modal */}
       {editingAdmin && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h2 className="text-base font-bold text-white flex items-center">
-                <KeyRound className="w-5 h-5 mr-2 text-indigo-400" />
+        <div className="fixed inset-0 bg-[#151c27]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-[#e2e8f8] rounded-2xl w-full max-w-md p-6 shadow-level-3 space-y-5 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-[#e2e8f8] pb-3">
+              <h2 className="text-base font-bold font-heading text-[#151c27] flex items-center">
+                <KeyRound className="w-5 h-5 mr-2 text-[#0058be]" />
                 Change Administrative Role
               </h2>
-              <button onClick={() => setEditingAdmin(null)} className="text-slate-400 hover:text-white">
+              <button onClick={() => setEditingAdmin(null)} className="text-[#534434] hover:text-[#151c27] cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleUpdateRole} className="space-y-4 text-xs">
-              <p className="text-slate-300">
+              <p className="text-[#534434]">
                 Updating role for{" "}
-                <strong className="text-white">@{editingAdmin.profile?.username}</strong> ({editingAdmin.profile?.full_name}):
+                <strong className="text-[#151c27]">@{editingAdmin.profile?.username}</strong> ({editingAdmin.profile?.full_name}):
               </p>
 
               <div>
-                <label className="block font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+                <label className="block font-semibold font-heading uppercase tracking-wider text-[#534434] mb-1.5">
                   Select New Role
                 </label>
                 <select
                   value={editRoleId}
                   onChange={(e) => setEditRoleId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
                 >
                   {roles.map((r) => (
                     <option key={r.id} value={r.id}>
@@ -514,18 +514,18 @@ export const AdminAdmins: React.FC = () => {
                 </select>
               </div>
 
-              <div className="pt-3 border-t border-slate-800 flex items-center justify-end space-x-3">
+              <div className="pt-3 border-t border-[#e2e8f8] flex items-center justify-end space-x-3">
                 <button
                   type="button"
                   onClick={() => setEditingAdmin(null)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium"
+                  className="px-4 py-2 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#534434] font-semibold border border-[#dae2f3] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submittingEdit}
-                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold shadow-lg shadow-indigo-600/25 disabled:opacity-50"
+                  className="px-4 py-2 rounded-xl bg-[#0058be] hover:bg-[#2170e4] text-white font-semibold shadow-sm disabled:opacity-50 cursor-pointer"
                 >
                   {submittingEdit ? "Updating..." : "Confirm Role Change"}
                 </button>

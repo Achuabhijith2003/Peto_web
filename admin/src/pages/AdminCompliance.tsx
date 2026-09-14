@@ -138,10 +138,7 @@ export const AdminCompliance: React.FC = () => {
     }, 4000);
   };
 
-  // ----------------------------------------------------
   // DATA LOADERS
-  // ----------------------------------------------------
-
   const loadPolicies = useCallback(async () => {
     try {
       const data = await fetchCompliancePolicies(selectedPolicyType, selectedPolicyStatus);
@@ -197,10 +194,7 @@ export const AdminCompliance: React.FC = () => {
     refreshCurrentTab();
   }, [refreshCurrentTab]);
 
-  // ----------------------------------------------------
   // POLICY ACTIONS
-  // ----------------------------------------------------
-
   const handleCreateDraft = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!draftForm.title.trim() || !draftForm.version.trim() || !draftForm.content.trim()) {
@@ -244,10 +238,7 @@ export const AdminCompliance: React.FC = () => {
     }
   };
 
-  // ----------------------------------------------------
   // DATA REQUEST ACTIONS
-  // ----------------------------------------------------
-
   const handleUpdateProcessStatus = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedRequest) return;
@@ -288,10 +279,7 @@ export const AdminCompliance: React.FC = () => {
     }
   };
 
-  // ----------------------------------------------------
   // RETENTION ACTIONS
-  // ----------------------------------------------------
-
   const handleSaveRetention = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingRetention) return;
@@ -314,16 +302,13 @@ export const AdminCompliance: React.FC = () => {
     }
   };
 
-  // ----------------------------------------------------
   // STATUS BADGES
-  // ----------------------------------------------------
-
   const renderStatusBadge = (status: CompliancePolicyStatus | DataRequestStatus) => {
     switch (status) {
       case "PUBLISHED":
       case "COMPLETED":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#bbf7d0]/40 text-[#006c49] border border-[#006c49]/30">
             <CheckCircle2 size={12} />
             {status}
           </span>
@@ -331,35 +316,35 @@ export const AdminCompliance: React.FC = () => {
       case "DRAFT":
       case "PENDING":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#ffe082]/40 text-[#855300] border border-[#855300]/30">
             <Clock size={12} />
             {status}
           </span>
         );
       case "PROCESSING":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#f0f3ff] text-[#0058be] border border-[#dae2f3]">
             <RefreshCw size={12} className="animate-spin" />
             {status}
           </span>
         );
       case "ARCHIVED":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-500/10 text-slate-400 border border-slate-500/20">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#f0f3ff] text-[#534434] border border-[#dae2f3]">
             <Archive size={12} />
             {status}
           </span>
         );
       case "REJECTED":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#ffdad6]/40 text-[#ba1a1a] border border-[#ffdad6]">
             <AlertTriangle size={12} />
             {status}
           </span>
         );
       default:
         return (
-          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300">
+          <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#f0f3ff] text-[#534434] border border-[#dae2f3]">
             {status}
           </span>
         );
@@ -369,21 +354,21 @@ export const AdminCompliance: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900/60 p-6 rounded-2xl border border-slate-800/80 backdrop-blur-xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-[#e2e8f8] shadow-level-1">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
+            <div className="p-2.5 rounded-2xl bg-[#0058be] text-white shadow-sm">
               <Scale className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
+              <h1 className="text-2xl font-bold font-heading text-[#151c27] tracking-tight flex items-center gap-3">
                 Compliance & Legal Management
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#bbf7d0]/40 text-[#006c49] border border-[#006c49]/30">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#006c49] animate-pulse" />
                   Operational
                 </span>
               </h1>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-[#534434]">
                 Administrative governance for policy versioning, GDPR/CCPA privacy requests, data retention, and audit trails.
               </p>
             </div>
@@ -395,10 +380,10 @@ export const AdminCompliance: React.FC = () => {
           <button
             onClick={refreshCurrentTab}
             disabled={loading}
-            className="px-3 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-medium border border-slate-700/60 transition flex items-center gap-1.5 disabled:opacity-50"
+            className="px-3.5 py-2 rounded-xl bg-white hover:bg-[#f9f9ff] text-[#534434] text-xs font-semibold border border-[#e2e8f8] shadow-sm transition flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
             title="Refresh current tab"
           >
-            <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+            <RefreshCw size={14} className={loading ? "animate-spin text-[#0058be]" : ""} />
             <span>Refresh</span>
           </button>
 
@@ -414,7 +399,7 @@ export const AdminCompliance: React.FC = () => {
                 });
                 setIsDraftModalOpen(true);
               }}
-              className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-semibold shadow-lg shadow-purple-500/20 transition flex items-center gap-1.5"
+              className="px-4 py-2 rounded-xl bg-[#0058be] hover:bg-[#2170e4] text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer"
             >
               <Plus size={14} />
               <span>Create Policy Draft</span>
@@ -424,7 +409,7 @@ export const AdminCompliance: React.FC = () => {
           {canManage && activeTab === "requests" && (
             <button
               onClick={() => setIsNewRequestModalOpen(true)}
-              className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white text-xs font-semibold shadow-lg shadow-indigo-500/20 transition flex items-center gap-1.5"
+              className="px-4 py-2 rounded-xl bg-[#0058be] hover:bg-[#2170e4] text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer"
             >
               <Plus size={14} />
               <span>Log Data Request</span>
@@ -436,10 +421,10 @@ export const AdminCompliance: React.FC = () => {
       {/* Notification Banner */}
       {bannerMessage && (
         <div
-          className={`p-3.5 rounded-xl text-xs font-medium flex items-center gap-2 border transition ${
+          className={`p-4 rounded-2xl text-xs font-semibold flex items-center gap-2 border transition shadow-level-1 ${
             bannerMessage.type === "success"
-              ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/30"
-              : "bg-rose-500/10 text-rose-300 border-rose-500/30"
+              ? "bg-white border-[#bbf7d0] text-[#006c49]"
+              : "bg-white border-[#ffdad6] text-[#ba1a1a]"
           }`}
         >
           {bannerMessage.type === "success" ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
@@ -448,58 +433,58 @@ export const AdminCompliance: React.FC = () => {
       )}
 
       {/* Navigation Tabs */}
-      <div className="flex border-b border-slate-800 gap-2">
+      <div className="flex border-b border-[#e2e8f8] gap-2">
         <button
           onClick={() => setActiveTab("policies")}
-          className={`px-4 py-3 text-xs font-semibold flex items-center gap-2 border-b-2 transition ${
+          className={`px-4 py-3 text-xs font-semibold font-heading flex items-center gap-2 border-b-2 transition cursor-pointer ${
             activeTab === "policies"
-              ? "border-purple-500 text-purple-400 bg-purple-500/5"
-              : "border-transparent text-slate-400 hover:text-slate-200"
+              ? "border-[#0058be] text-[#0058be] bg-[#f0f3ff]"
+              : "border-transparent text-[#534434] hover:text-[#151c27]"
           }`}
         >
           <Scale size={15} />
           <span>Policies & Guidelines</span>
-          <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-800 text-slate-300">
+          <span className="px-2 py-0.5 rounded-full text-[10px] bg-[#f0f3ff] text-[#534434] border border-[#dae2f3]">
             {policies.length}
           </span>
         </button>
 
         <button
           onClick={() => setActiveTab("requests")}
-          className={`px-4 py-3 text-xs font-semibold flex items-center gap-2 border-b-2 transition ${
+          className={`px-4 py-3 text-xs font-semibold font-heading flex items-center gap-2 border-b-2 transition cursor-pointer ${
             activeTab === "requests"
-              ? "border-purple-500 text-purple-400 bg-purple-500/5"
-              : "border-transparent text-slate-400 hover:text-slate-200"
+              ? "border-[#0058be] text-[#0058be] bg-[#f0f3ff]"
+              : "border-transparent text-[#534434] hover:text-[#151c27]"
           }`}
         >
           <UserCheck size={15} />
           <span>Data Privacy Requests</span>
-          <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-indigo-500/20 text-indigo-300 font-mono">
+          <span className="px-2 py-0.5 rounded-full text-[10px] bg-[#f0f3ff] text-[#0058be] font-mono border border-[#dae2f3]">
             {requestsTotal}
           </span>
         </button>
 
         <button
           onClick={() => setActiveTab("retention")}
-          className={`px-4 py-3 text-xs font-semibold flex items-center gap-2 border-b-2 transition ${
+          className={`px-4 py-3 text-xs font-semibold font-heading flex items-center gap-2 border-b-2 transition cursor-pointer ${
             activeTab === "retention"
-              ? "border-purple-500 text-purple-400 bg-purple-500/5"
-              : "border-transparent text-slate-400 hover:text-slate-200"
+              ? "border-[#0058be] text-[#0058be] bg-[#f0f3ff]"
+              : "border-transparent text-[#534434] hover:text-[#151c27]"
           }`}
         >
           <Clock size={15} />
           <span>Data Retention Schedule</span>
-          <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-800 text-slate-300">
+          <span className="px-2 py-0.5 rounded-full text-[10px] bg-[#f0f3ff] text-[#534434] border border-[#dae2f3]">
             {retentionPolicies.length || 6}
           </span>
         </button>
 
         <button
           onClick={() => setActiveTab("audit")}
-          className={`px-4 py-3 text-xs font-semibold flex items-center gap-2 border-b-2 transition ${
+          className={`px-4 py-3 text-xs font-semibold font-heading flex items-center gap-2 border-b-2 transition cursor-pointer ${
             activeTab === "audit"
-              ? "border-purple-500 text-purple-400 bg-purple-500/5"
-              : "border-transparent text-slate-400 hover:text-slate-200"
+              ? "border-[#0058be] text-[#0058be] bg-[#f0f3ff]"
+              : "border-transparent text-[#534434] hover:text-[#151c27]"
           }`}
         >
           <FileText size={15} />
@@ -507,20 +492,18 @@ export const AdminCompliance: React.FC = () => {
         </button>
       </div>
 
-      {/* ============================================================
-          TAB 1: POLICIES & GUIDELINES
-          ============================================================ */}
+      {/* TAB 1: POLICIES & GUIDELINES */}
       {activeTab === "policies" && (
         <div className="space-y-4">
           {/* Filter Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900/40 p-3.5 rounded-xl border border-slate-800">
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#e2e8f8] shadow-level-1">
             <div className="flex items-center gap-2">
-              <Filter size={14} className="text-slate-400" />
-              <span className="text-xs text-slate-400 font-medium">Policy Type:</span>
+              <Filter size={14} className="text-[#534434]" />
+              <span className="text-xs text-[#534434] font-semibold font-heading">Policy Type:</span>
               <select
                 value={selectedPolicyType}
                 onChange={(e) => setSelectedPolicyType(e.target.value)}
-                className="bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-purple-500"
+                className="bg-[#f0f3ff] border border-[#dae2f3] rounded-xl px-3 py-1.5 text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
               >
                 <option value="ALL">All Policies</option>
                 {Object.entries(POLICY_TYPE_LABELS).map(([k, v]) => (
@@ -530,11 +513,11 @@ export const AdminCompliance: React.FC = () => {
                 ))}
               </select>
 
-              <span className="text-xs text-slate-400 font-medium ml-2">Status:</span>
+              <span className="text-xs text-[#534434] font-semibold font-heading ml-2">Status:</span>
               <select
                 value={selectedPolicyStatus}
                 onChange={(e) => setSelectedPolicyStatus(e.target.value)}
-                className="bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-purple-500"
+                className="bg-[#f0f3ff] border border-[#dae2f3] rounded-xl px-3 py-1.5 text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
               >
                 <option value="ALL">All Statuses</option>
                 <option value="PUBLISHED">Published</option>
@@ -543,8 +526,8 @@ export const AdminCompliance: React.FC = () => {
               </select>
             </div>
 
-            <div className="text-xs text-slate-400">
-              Showing <span className="font-semibold text-white">{policies.length}</span> documents
+            <div className="text-xs text-[#534434]">
+              Showing <span className="font-bold text-[#151c27]">{policies.length}</span> documents
             </div>
           </div>
 
@@ -553,23 +536,23 @@ export const AdminCompliance: React.FC = () => {
             {policies.map((p) => (
               <div
                 key={p.id}
-                className="bg-slate-900/50 hover:bg-slate-900/80 border border-slate-800 hover:border-slate-700 rounded-2xl p-5 transition flex flex-col justify-between space-y-4"
+                className="bg-white hover:shadow-level-2 border border-[#e2e8f8] rounded-2xl p-5 transition flex flex-col justify-between space-y-4 shadow-level-1"
               >
                 <div>
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <div>
-                      <span className="text-[10px] font-mono uppercase tracking-wider text-purple-400 font-semibold">
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-[#0058be] font-bold">
                         {POLICY_TYPE_LABELS[p.policy_type] || p.policy_type}
                       </span>
-                      <h3 className="text-base font-bold text-white tracking-tight mt-0.5">
+                      <h3 className="text-base font-bold font-heading text-[#151c27] tracking-tight mt-0.5">
                         {p.title}
                       </h3>
                     </div>
                     {renderStatusBadge(p.status)}
                   </div>
 
-                  <div className="flex items-center gap-2 text-xs text-slate-400 my-2">
-                    <span className="px-2 py-0.5 rounded bg-slate-800 font-mono text-[11px] text-slate-200 font-semibold border border-slate-700">
+                  <div className="flex items-center gap-2 text-xs text-[#534434] my-2">
+                    <span className="px-2 py-0.5 rounded-full bg-[#f0f3ff] font-mono text-[11px] text-[#0058be] font-semibold border border-[#dae2f3]">
                       v{p.version}
                     </span>
                     <span>•</span>
@@ -581,16 +564,16 @@ export const AdminCompliance: React.FC = () => {
                   </div>
 
                   {p.summary_of_changes && (
-                    <p className="text-xs text-slate-300 bg-slate-800/40 p-2.5 rounded-xl border border-slate-800/60 line-clamp-2">
-                      <span className="font-semibold text-slate-400">Notes:</span> {p.summary_of_changes}
+                    <p className="text-xs text-[#151c27] bg-[#f9f9ff] p-3 rounded-xl border border-[#e2e8f8] line-clamp-2">
+                      <span className="font-semibold text-[#534434]">Notes:</span> {p.summary_of_changes}
                     </p>
                   )}
                 </div>
 
-                <div className="pt-3 border-t border-slate-800/60 flex items-center justify-between gap-2">
+                <div className="pt-3 border-t border-[#e2e8f8] flex items-center justify-between gap-2">
                   <button
                     onClick={() => setViewingPolicy(p)}
-                    className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium transition flex items-center gap-1"
+                    className="px-3.5 py-1.5 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#151c27] text-xs font-semibold transition flex items-center gap-1 border border-[#dae2f3] cursor-pointer"
                   >
                     <Eye size={13} />
                     <span>View Text</span>
@@ -602,7 +585,7 @@ export const AdminCompliance: React.FC = () => {
                         <button
                           onClick={() => handlePublishPolicy(p)}
                           disabled={actionLoading}
-                          className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition flex items-center gap-1 shadow-sm disabled:opacity-50"
+                          className="px-3.5 py-1.5 rounded-xl bg-[#006c49] hover:bg-[#00553a] text-white text-xs font-semibold transition flex items-center gap-1 shadow-sm disabled:opacity-50 cursor-pointer"
                         >
                           <Send size={12} />
                           <span>Publish</span>
@@ -621,7 +604,7 @@ export const AdminCompliance: React.FC = () => {
                             });
                             setIsDraftModalOpen(true);
                           }}
-                          className="px-3 py-1.5 rounded-lg bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-xs font-semibold border border-purple-500/30 transition flex items-center gap-1"
+                          className="px-3.5 py-1.5 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#0058be] text-xs font-semibold border border-[#dae2f3] transition flex items-center gap-1 cursor-pointer"
                         >
                           <Edit3 size={12} />
                           <span>New Version</span>
@@ -636,55 +619,53 @@ export const AdminCompliance: React.FC = () => {
         </div>
       )}
 
-      {/* ============================================================
-          TAB 2: DATA PRIVACY REQUESTS
-          ============================================================ */}
+      {/* TAB 2: DATA PRIVACY REQUESTS */}
       {activeTab === "requests" && (
         <div className="space-y-4">
           {/* Request Filters & Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="bg-slate-900/50 border border-slate-800 p-4 rounded-xl">
-              <span className="text-xs text-slate-400">Total Privacy Requests</span>
-              <div className="text-2xl font-bold text-white mt-1">{requestsTotal}</div>
+            <div className="bg-white border border-[#e2e8f8] p-4 rounded-2xl shadow-level-1">
+              <span className="text-xs font-semibold font-heading text-[#534434]">Total Privacy Requests</span>
+              <div className="text-2xl font-bold text-[#151c27] font-mono mt-1">{requestsTotal}</div>
             </div>
-            <div className="bg-amber-500/5 border border-amber-500/20 p-4 rounded-xl">
-              <span className="text-xs text-amber-400">Pending Review</span>
-              <div className="text-2xl font-bold text-amber-300 mt-1">
+            <div className="bg-white border border-[#e2e8f8] p-4 rounded-2xl shadow-level-1">
+              <span className="text-xs font-semibold font-heading text-[#855300]">Pending Review</span>
+              <div className="text-2xl font-bold text-[#855300] font-mono mt-1">
                 {dataRequests.filter((r) => r.status === "PENDING").length}
               </div>
             </div>
-            <div className="bg-cyan-500/5 border border-cyan-500/20 p-4 rounded-xl">
-              <span className="text-xs text-cyan-400">In Processing</span>
-              <div className="text-2xl font-bold text-cyan-300 mt-1">
+            <div className="bg-white border border-[#e2e8f8] p-4 rounded-2xl shadow-level-1">
+              <span className="text-xs font-semibold font-heading text-[#0058be]">In Processing</span>
+              <div className="text-2xl font-bold text-[#0058be] font-mono mt-1">
                 {dataRequests.filter((r) => r.status === "PROCESSING").length}
               </div>
             </div>
-            <div className="bg-emerald-500/5 border border-emerald-500/20 p-4 rounded-xl">
-              <span className="text-xs text-emerald-400">Completed & Satisfied</span>
-              <div className="text-2xl font-bold text-emerald-300 mt-1">
+            <div className="bg-white border border-[#e2e8f8] p-4 rounded-2xl shadow-level-1">
+              <span className="text-xs font-semibold font-heading text-[#006c49]">Completed & Satisfied</span>
+              <div className="text-2xl font-bold text-[#006c49] font-mono mt-1">
                 {dataRequests.filter((r) => r.status === "COMPLETED").length}
               </div>
             </div>
           </div>
 
           {/* Controls Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900/40 p-3.5 rounded-xl border border-slate-800">
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#e2e8f8] shadow-level-1">
             <div className="flex flex-wrap items-center gap-2">
               <div className="relative">
-                <Search size={14} className="absolute left-3 top-2.5 text-slate-400" />
+                <Search size={14} className="absolute left-3 top-3 text-[#534434]/60" />
                 <input
                   type="text"
                   placeholder="Search requests..."
                   value={requestSearch}
                   onChange={(e) => setRequestSearch(e.target.value)}
-                  className="bg-slate-800 border border-slate-700 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 w-48"
+                  className="bg-[#f0f3ff] border border-[#dae2f3] rounded-xl pl-9 pr-3 py-2 text-xs text-[#151c27] placeholder-[#534434]/60 focus:outline-none focus:bg-white focus:border-[#0058be] w-52"
                 />
               </div>
 
               <select
                 value={requestStatusFilter}
                 onChange={(e) => setRequestStatusFilter(e.target.value)}
-                className="bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none"
+                className="bg-[#f0f3ff] border border-[#dae2f3] rounded-xl px-3 py-2 text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
               >
                 <option value="ALL">All Statuses</option>
                 <option value="PENDING">Pending</option>
@@ -696,7 +677,7 @@ export const AdminCompliance: React.FC = () => {
               <select
                 value={requestTypeFilter}
                 onChange={(e) => setRequestTypeFilter(e.target.value)}
-                className="bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none"
+                className="bg-[#f0f3ff] border border-[#dae2f3] rounded-xl px-3 py-2 text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
               >
                 <option value="ALL">All Request Types</option>
                 <option value="DATA_ACCESS">Data Access</option>
@@ -709,71 +690,71 @@ export const AdminCompliance: React.FC = () => {
           </div>
 
           {/* Requests Table */}
-          <div className="bg-slate-900/60 rounded-2xl border border-slate-800 overflow-hidden">
+          <div className="bg-white rounded-2xl border border-[#e2e8f8] overflow-hidden shadow-level-1">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-800/60 text-slate-400 font-semibold uppercase tracking-wider border-b border-slate-800 text-[11px]">
+                <thead className="bg-[#f0f3ff] text-[#534434] font-bold font-heading uppercase tracking-wider border-b border-[#e2e8f8] text-[11px]">
                   <tr>
-                    <th className="py-3 px-4">Request Type</th>
-                    <th className="py-3 px-4">User</th>
-                    <th className="py-3 px-4">Verification</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4">Created Date</th>
-                    <th className="py-3 px-4">Resolution Notes</th>
-                    <th className="py-3 px-4 text-right">Actions</th>
+                    <th className="py-3.5 px-4">Request Type</th>
+                    <th className="py-3.5 px-4">User</th>
+                    <th className="py-3.5 px-4">Verification</th>
+                    <th className="py-3.5 px-4">Status</th>
+                    <th className="py-3.5 px-4">Created Date</th>
+                    <th className="py-3.5 px-4">Resolution Notes</th>
+                    <th className="py-3.5 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                <tbody className="divide-y divide-[#e2e8f8] text-[#151c27]">
                   {dataRequests.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="py-12 text-center text-slate-500">
+                      <td colSpan={7} className="py-12 text-center text-[#534434]">
                         No data privacy requests found.
                       </td>
                     </tr>
                   ) : (
                     dataRequests.map((r) => (
-                      <tr key={r.id} className="hover:bg-slate-800/30 transition">
-                        <td className="py-3 px-4">
-                          <div className="font-semibold text-white">
+                      <tr key={r.id} className="hover:bg-[#f9f9ff] transition">
+                        <td className="py-3.5 px-4">
+                          <div className="font-bold text-[#151c27]">
                             {REQUEST_TYPE_LABELS[r.request_type] || r.request_type}
                           </div>
-                          <span className="font-mono text-[10px] text-slate-500">
+                          <span className="font-mono text-[10px] text-[#534434]">
                             #{r.id.slice(0, 8)}
                           </span>
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="py-3.5 px-4">
                           {r.user ? (
                             <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-300 flex items-center justify-center font-bold text-[10px]">
+                              <div className="w-7 h-7 rounded-full bg-[#f0f3ff] text-[#0058be] flex items-center justify-center font-bold text-xs">
                                 {r.user.username ? r.user.username[0].toUpperCase() : "U"}
                               </div>
                               <div>
-                                <div className="font-medium text-slate-200">
+                                <div className="font-semibold text-[#151c27]">
                                   {r.user.full_name || r.user.username}
                                 </div>
-                                <div className="text-[10px] text-slate-500 font-mono">
+                                <div className="text-[10px] text-[#534434] font-mono">
                                   @{r.user.username}
                                 </div>
                               </div>
                             </div>
                           ) : (
-                            <span className="text-slate-500 italic">Unlinked User</span>
+                            <span className="text-[#534434]/70 italic">Unlinked User</span>
                           )}
                         </td>
-                        <td className="py-3 px-4">
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        <td className="py-3.5 px-4">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-[#bbf7d0]/40 text-[#006c49] border border-[#006c49]/30">
                             <CheckCircle2 size={10} />
                             {r.verification_status || "VERIFIED"}
                           </span>
                         </td>
-                        <td className="py-3 px-4">{renderStatusBadge(r.status)}</td>
-                        <td className="py-3 px-4 text-slate-400 font-mono text-[11px]">
+                        <td className="py-3.5 px-4">{renderStatusBadge(r.status)}</td>
+                        <td className="py-3.5 px-4 text-[#534434] font-mono text-[11px]">
                           {new Date(r.created_at).toLocaleString()}
                         </td>
-                        <td className="py-3 px-4 max-w-xs truncate text-slate-400">
+                        <td className="py-3.5 px-4 max-w-xs truncate text-[#534434]">
                           {r.resolution_notes || r.details || "—"}
                         </td>
-                        <td className="py-3 px-4 text-right">
+                        <td className="py-3.5 px-4 text-right">
                           {canManage && (
                             <button
                               onClick={() => {
@@ -782,7 +763,7 @@ export const AdminCompliance: React.FC = () => {
                                 setProcessNotes(r.resolution_notes || "");
                                 setIsProcessModalOpen(true);
                               }}
-                              className="px-2.5 py-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 text-xs font-semibold border border-indigo-500/30 transition"
+                              className="px-3 py-1.5 rounded-xl bg-[#0058be] hover:bg-[#2170e4] text-white text-xs font-semibold transition cursor-pointer shadow-sm"
                             >
                               Process
                             </button>
@@ -798,21 +779,19 @@ export const AdminCompliance: React.FC = () => {
         </div>
       )}
 
-      {/* ============================================================
-          TAB 3: DATA RETENTION SCHEDULE
-          ============================================================ */}
+      {/* TAB 3: DATA RETENTION SCHEDULE */}
       {activeTab === "retention" && (
         <div className="space-y-4">
           {/* Notice Banner */}
-          <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 flex items-start gap-3">
-            <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400 shrink-0">
+          <div className="p-4 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1 flex items-start gap-3">
+            <div className="p-2 rounded-xl bg-[#f0f3ff] text-[#0058be] shrink-0">
               <Info size={18} />
             </div>
             <div className="space-y-1">
-              <h4 className="text-xs font-bold text-white tracking-tight">
+              <h4 className="text-xs font-bold font-heading text-[#151c27] tracking-tight">
                 Configurable Administrative Data Retention
               </h4>
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <p className="text-xs text-[#534434] leading-relaxed">
                 Peto provides administrative retention parameters to coordinate legal preservation requirements (GDPR Art. 17 right to erasure, DSA transparency obligations) with user recovery convenience and operational storage hygiene. Retention intervals are configurable and audited.
               </p>
             </div>
@@ -823,45 +802,45 @@ export const AdminCompliance: React.FC = () => {
             {retentionPolicies.map((rp) => (
               <div
                 key={rp.category}
-                className="bg-slate-900/50 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between space-y-4"
+                className="bg-white border border-[#e2e8f8] rounded-2xl p-5 flex flex-col justify-between space-y-4 shadow-level-1"
               >
                 <div>
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <span className="text-[10px] font-mono uppercase tracking-wider text-cyan-400 font-semibold">
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-[#0058be] font-bold">
                         {rp.category}
                       </span>
-                      <h3 className="text-base font-bold text-white mt-0.5">{rp.name}</h3>
+                      <h3 className="text-base font-bold font-heading text-[#151c27] mt-0.5">{rp.name}</h3>
                     </div>
                     <span
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${
                         rp.auto_purge_enabled
-                          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                          : "bg-slate-800 text-slate-400 border-slate-700"
+                          ? "bg-[#bbf7d0]/40 text-[#006c49] border-[#006c49]/30"
+                          : "bg-[#f0f3ff] text-[#534434] border-[#dae2f3]"
                       }`}
                     >
                       {rp.auto_purge_enabled ? "Auto Purge: ON" : "Manual Purge"}
                     </span>
                   </div>
 
-                  <div className="mt-3 p-3 rounded-xl bg-slate-800/40 border border-slate-800">
+                  <div className="mt-3 p-3.5 rounded-xl bg-[#f9f9ff] border border-[#e2e8f8]">
                     <div className="flex items-baseline gap-1.5">
-                      <span className="text-2xl font-black text-white">{rp.retention_days}</span>
-                      <span className="text-xs text-slate-400 font-medium">Days Retention</span>
+                      <span className="text-2xl font-bold font-mono text-[#151c27]">{rp.retention_days}</span>
+                      <span className="text-xs text-[#534434] font-medium font-heading">Days Retention</span>
                     </div>
-                    <p className="text-xs text-slate-300 mt-2 leading-relaxed">
+                    <p className="text-xs text-[#151c27] mt-2 leading-relaxed">
                       {rp.description}
                     </p>
                   </div>
 
-                  <div className="mt-3 text-[11px] text-slate-400">
-                    <span className="font-semibold text-slate-300">Regulatory Rationale:</span>{" "}
+                  <div className="mt-3 text-[11px] text-[#534434]">
+                    <span className="font-semibold text-[#151c27]">Regulatory Rationale:</span>{" "}
                     {rp.legal_basis}
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-slate-800/60 flex items-center justify-between">
-                  <span className="text-[10px] text-slate-500 font-mono">
+                <div className="pt-3 border-t border-[#e2e8f8] flex items-center justify-between">
+                  <span className="text-[10px] text-[#534434] font-mono">
                     Updated: {rp.updated_at ? new Date(rp.updated_at).toLocaleDateString() : "Default"}
                   </span>
 
@@ -876,7 +855,7 @@ export const AdminCompliance: React.FC = () => {
                           legalBasis: rp.legal_basis,
                         });
                       }}
-                      className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition flex items-center gap-1"
+                      className="px-3.5 py-1.5 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#151c27] text-xs font-semibold border border-[#dae2f3] transition flex items-center gap-1 cursor-pointer"
                     >
                       <Sliders size={13} />
                       <span>Configure</span>
@@ -889,66 +868,64 @@ export const AdminCompliance: React.FC = () => {
         </div>
       )}
 
-      {/* ============================================================
-          TAB 4: COMPLIANCE AUDIT TRAIL
-          ============================================================ */}
+      {/* TAB 4: COMPLIANCE AUDIT TRAIL */}
       {activeTab === "audit" && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between bg-slate-900/40 p-3.5 rounded-xl border border-slate-800">
+          <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-[#e2e8f8] shadow-level-1">
             <div className="relative">
-              <Search size={14} className="absolute left-3 top-2.5 text-slate-400" />
+              <Search size={14} className="absolute left-3 top-3 text-[#534434]/60" />
               <input
                 type="text"
                 placeholder="Search audit actions..."
                 value={auditSearch}
                 onChange={(e) => setAuditSearch(e.target.value)}
-                className="bg-slate-800 border border-slate-700 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 w-64"
+                className="bg-[#f0f3ff] border border-[#dae2f3] rounded-xl pl-9 pr-3 py-2 text-xs text-[#151c27] placeholder-[#534434]/60 focus:outline-none focus:bg-white focus:border-[#0058be] w-64"
               />
             </div>
-            <div className="text-xs text-slate-400">
+            <div className="text-xs text-[#534434]">
               Showing compliance-specific audit records
             </div>
           </div>
 
-          <div className="bg-slate-900/60 rounded-2xl border border-slate-800 overflow-hidden">
+          <div className="bg-white rounded-2xl border border-[#e2e8f8] overflow-hidden shadow-level-1">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-800/60 text-slate-400 font-semibold uppercase tracking-wider border-b border-slate-800 text-[11px]">
+                <thead className="bg-[#f0f3ff] text-[#534434] font-bold font-heading uppercase tracking-wider border-b border-[#e2e8f8] text-[11px]">
                   <tr>
-                    <th className="py-3 px-4">Action</th>
-                    <th className="py-3 px-4">Resource</th>
-                    <th className="py-3 px-4">Details</th>
-                    <th className="py-3 px-4">Responsible Admin</th>
-                    <th className="py-3 px-4">Timestamp</th>
+                    <th className="py-3.5 px-4">Action</th>
+                    <th className="py-3.5 px-4">Resource</th>
+                    <th className="py-3.5 px-4">Details</th>
+                    <th className="py-3.5 px-4">Responsible Admin</th>
+                    <th className="py-3.5 px-4">Timestamp</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60 text-slate-300">
+                <tbody className="divide-y divide-[#e2e8f8] text-[#151c27]">
                   {auditLogs.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="py-12 text-center text-slate-500">
+                      <td colSpan={5} className="py-12 text-center text-[#534434]">
                         No compliance audit entries recorded yet. Sensitive operations like publishing policies or modifying retention schedules automatically log here.
                       </td>
                     </tr>
                   ) : (
                     auditLogs.map((log) => (
-                      <tr key={log.id} className="hover:bg-slate-800/30 transition">
-                        <td className="py-3 px-4 font-mono font-bold text-purple-300">
+                      <tr key={log.id} className="hover:bg-[#f9f9ff] transition">
+                        <td className="py-3.5 px-4 font-mono font-bold text-[#0058be]">
                           {log.action}
                         </td>
-                        <td className="py-3 px-4">
-                          <span className="px-2 py-0.5 rounded bg-slate-800 text-[11px] font-mono text-slate-300 border border-slate-700">
+                        <td className="py-3.5 px-4">
+                          <span className="px-2 py-0.5 rounded-full bg-[#f0f3ff] text-[11px] font-mono text-[#534434] border border-[#dae2f3]">
                             {log.resource_type || "COMPLIANCE"}
                           </span>
                         </td>
-                        <td className="py-3 px-4 max-w-sm">
-                          <pre className="text-[11px] text-slate-300 truncate bg-slate-950/60 px-2 py-1 rounded border border-slate-800 font-mono">
+                        <td className="py-3.5 px-4 max-w-sm">
+                          <pre className="text-[11px] text-[#151c27] truncate bg-[#f9f9ff] px-2 py-1 rounded-xl border border-[#e2e8f8] font-mono">
                             {JSON.stringify(log.details || {})}
                           </pre>
                         </td>
-                        <td className="py-3 px-4 text-slate-300 font-medium">
+                        <td className="py-3.5 px-4 text-[#151c27] font-semibold">
                           {log.admin_user?.full_name || log.admin_user?.username || log.admin_id || "System Admin"}
                         </td>
-                        <td className="py-3 px-4 text-slate-400 font-mono text-[11px]">
+                        <td className="py-3.5 px-4 text-[#534434] font-mono text-[11px]">
                           {new Date(log.created_at).toLocaleString()}
                         </td>
                       </tr>
@@ -961,40 +938,38 @@ export const AdminCompliance: React.FC = () => {
         </div>
       )}
 
-      {/* ============================================================
-          MODAL: VIEW POLICY TEXT
-          ============================================================ */}
+      {/* MODAL: VIEW POLICY TEXT */}
       {viewingPolicy && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
-            <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#151c27]/40 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-white border border-[#e2e8f8] rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-level-3 overflow-hidden">
+            <div className="p-5 border-b border-[#e2e8f8] flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <h3 className="text-lg font-bold font-heading text-[#151c27] flex items-center gap-2">
                   {viewingPolicy.title}
-                  <span className="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono border border-slate-700">
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#f0f3ff] text-[#0058be] font-mono border border-[#dae2f3]">
                     v{viewingPolicy.version}
                   </span>
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-[#534434] mt-0.5">
                   {POLICY_TYPE_LABELS[viewingPolicy.policy_type]} • Status: {viewingPolicy.status}
                 </p>
               </div>
               <button
                 onClick={() => setViewingPolicy(null)}
-                className="text-slate-400 hover:text-white text-lg p-1"
+                className="text-[#534434] hover:text-[#151c27] text-lg p-1 cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto font-mono text-xs text-slate-300 leading-relaxed whitespace-pre-wrap bg-slate-950/50 select-text">
+            <div className="p-6 overflow-y-auto font-mono text-xs text-[#151c27] leading-relaxed whitespace-pre-wrap bg-[#f9f9ff] select-text">
               {viewingPolicy.content}
             </div>
 
-            <div className="p-4 border-t border-slate-800 flex justify-end">
+            <div className="p-4 border-t border-[#e2e8f8] flex justify-end">
               <button
                 onClick={() => setViewingPolicy(null)}
-                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold"
+                className="px-4 py-2 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#534434] text-xs font-semibold border border-[#dae2f3] cursor-pointer"
               >
                 Close
               </button>
@@ -1003,22 +978,20 @@ export const AdminCompliance: React.FC = () => {
         </div>
       )}
 
-      {/* ============================================================
-          MODAL: CREATE POLICY DRAFT
-          ============================================================ */}
+      {/* MODAL: CREATE POLICY DRAFT */}
       {isDraftModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-            <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#151c27]/40 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-white border border-[#e2e8f8] rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-level-3 overflow-hidden">
+            <div className="p-5 border-b border-[#e2e8f8] flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-bold text-white">Create Policy Revision Draft</h3>
-                <p className="text-xs text-slate-400">
+                <h3 className="text-lg font-bold font-heading text-[#151c27]">Create Policy Revision Draft</h3>
+                <p className="text-xs text-[#534434]">
                   Author a new revision. Drafts remain unpublished until an administrator approves.
                 </p>
               </div>
               <button
                 onClick={() => setIsDraftModalOpen(false)}
-                className="text-slate-400 hover:text-white text-lg p-1"
+                className="text-[#534434] hover:text-[#151c27] text-lg p-1 cursor-pointer"
               >
                 ✕
               </button>
@@ -1027,7 +1000,7 @@ export const AdminCompliance: React.FC = () => {
             <form onSubmit={handleCreateDraft} className="p-6 overflow-y-auto space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-xs font-semibold font-heading text-[#534434] mb-1">
                     Policy Document Type
                   </label>
                   <select
@@ -1040,7 +1013,7 @@ export const AdminCompliance: React.FC = () => {
                         title: POLICY_TYPE_LABELS[t],
                       });
                     }}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                    className="w-full bg-[#f0f3ff] border border-[#dae2f3] rounded-xl px-3 py-2 text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
                   >
                     {Object.entries(POLICY_TYPE_LABELS).map(([k, v]) => (
                       <option key={k} value={k}>
@@ -1051,7 +1024,7 @@ export const AdminCompliance: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
+                  <label className="block text-xs font-semibold font-heading text-[#534434] mb-1">
                     Version Code (Semantic)
                   </label>
                   <input
@@ -1060,13 +1033,13 @@ export const AdminCompliance: React.FC = () => {
                     onChange={(e) => setDraftForm({ ...draftForm, version: e.target.value })}
                     placeholder="e.g. 1.1.0"
                     required
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500 font-mono"
+                    className="w-full bg-[#f0f3ff] border border-[#dae2f3] rounded-xl px-3 py-2 text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be] font-mono"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold font-heading text-[#534434] mb-1">
                   Document Title
                 </label>
                 <input
@@ -1074,12 +1047,12 @@ export const AdminCompliance: React.FC = () => {
                   value={draftForm.title}
                   onChange={(e) => setDraftForm({ ...draftForm, title: e.target.value })}
                   required
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                  className="w-full bg-[#f0f3ff] border border-[#dae2f3] rounded-xl px-3 py-2 text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold font-heading text-[#534434] mb-1">
                   Summary of Changes / Release Notes
                 </label>
                 <input
@@ -1087,12 +1060,12 @@ export const AdminCompliance: React.FC = () => {
                   value={draftForm.summaryOfChanges}
                   onChange={(e) => setDraftForm({ ...draftForm, summaryOfChanges: e.target.value })}
                   placeholder="e.g. Updated Section 3 with regional privacy rights declaration."
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500"
+                  className="w-full bg-[#f0f3ff] border border-[#dae2f3] rounded-xl px-3 py-2 text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold font-heading text-[#534434] mb-1">
                   Policy Text (Markdown Content)
                 </label>
                 <textarea
@@ -1100,22 +1073,22 @@ export const AdminCompliance: React.FC = () => {
                   onChange={(e) => setDraftForm({ ...draftForm, content: e.target.value })}
                   rows={10}
                   required
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 font-mono focus:outline-none focus:border-purple-500"
+                  className="w-full bg-[#f0f3ff] border border-[#dae2f3] rounded-xl p-3 text-xs text-[#151c27] font-mono focus:outline-none focus:bg-white focus:border-[#0058be]"
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-800 flex justify-end gap-2">
+              <div className="pt-3 border-t border-[#e2e8f8] flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsDraftModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold"
+                  className="px-4 py-2 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#534434] text-xs font-semibold border border-[#dae2f3] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold shadow-lg shadow-purple-500/20 disabled:opacity-50"
+                  className="px-4 py-2 rounded-xl bg-[#0058be] hover:bg-[#2170e4] text-white text-xs font-semibold shadow-sm disabled:opacity-50 cursor-pointer"
                 >
                   {actionLoading ? "Saving..." : "Save Draft"}
                 </button>
@@ -1125,22 +1098,20 @@ export const AdminCompliance: React.FC = () => {
         </div>
       )}
 
-      {/* ============================================================
-          MODAL: PROCESS DATA REQUEST
-          ============================================================ */}
+      {/* MODAL: PROCESS DATA REQUEST */}
       {isProcessModalOpen && selectedRequest && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
-            <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#151c27]/40 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-white border border-[#e2e8f8] rounded-2xl w-full max-w-lg shadow-level-3 overflow-hidden">
+            <div className="p-5 border-b border-[#e2e8f8] flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-bold text-white">Process Privacy Request</h3>
-                <p className="text-xs text-slate-400">
+                <h3 className="text-lg font-bold font-heading text-[#151c27]">Process Privacy Request</h3>
+                <p className="text-xs text-[#534434]">
                   Request #{selectedRequest.id.slice(0, 8)} • {REQUEST_TYPE_LABELS[selectedRequest.request_type]}
                 </p>
               </div>
               <button
                 onClick={() => setIsProcessModalOpen(false)}
-                className="text-slate-400 hover:text-white text-lg p-1"
+                className="text-[#534434] hover:text-[#151c27] text-lg p-1 cursor-pointer"
               >
                 ✕
               </button>
@@ -1148,32 +1119,32 @@ export const AdminCompliance: React.FC = () => {
 
             <form onSubmit={handleUpdateProcessStatus} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold font-heading text-[#534434] mb-1">
                   Target User Details
                 </label>
-                <div className="p-3 bg-slate-800/60 rounded-xl border border-slate-800 text-xs space-y-1">
-                  <div className="text-white font-semibold">
+                <div className="p-3 bg-[#f9f9ff] rounded-xl border border-[#e2e8f8] text-xs space-y-1">
+                  <div className="text-[#151c27] font-bold">
                     {selectedRequest.user?.full_name || selectedRequest.user?.username || "Peto User"}
                   </div>
-                  <div className="text-slate-400 font-mono text-[11px]">
+                  <div className="text-[#534434] font-mono text-[11px]">
                     User ID: {selectedRequest.user_id || "Unspecified"}
                   </div>
                   {selectedRequest.details && (
-                    <div className="text-slate-300 pt-1 border-t border-slate-700/60 mt-2">
-                      <span className="font-semibold text-slate-400">User Details:</span> {selectedRequest.details}
+                    <div className="text-[#151c27] pt-1 border-t border-[#e2e8f8] mt-2">
+                      <span className="font-semibold text-[#534434]">User Details:</span> {selectedRequest.details}
                     </div>
                   )}
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold font-heading text-[#534434] mb-1">
                   Transition Status
                 </label>
                 <select
                   value={processStatus}
                   onChange={(e) => setProcessStatus(e.target.value as DataRequestStatus)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-[#f0f3ff] border border-[#dae2f3] rounded-xl px-3 py-2 text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
                 >
                   <option value="PENDING">PENDING (Awaiting Review)</option>
                   <option value="PROCESSING">PROCESSING (In Progress)</option>
@@ -1183,7 +1154,7 @@ export const AdminCompliance: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold font-heading text-[#534434] mb-1">
                   Resolution Notes & Audit Remarks
                 </label>
                 <textarea
@@ -1191,22 +1162,22 @@ export const AdminCompliance: React.FC = () => {
                   onChange={(e) => setProcessNotes(e.target.value)}
                   rows={3}
                   placeholder="e.g. Identity verified via security check. Export package dispatched to user email."
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-[#f0f3ff] border border-[#dae2f3] rounded-xl p-3 text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-800 flex justify-end gap-2">
+              <div className="pt-3 border-t border-[#e2e8f8] flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsProcessModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold"
+                  className="px-4 py-2 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#534434] text-xs font-semibold border border-[#dae2f3] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-500/20 disabled:opacity-50"
+                  className="px-4 py-2 rounded-xl bg-[#0058be] hover:bg-[#2170e4] text-white text-xs font-semibold shadow-sm disabled:opacity-50 cursor-pointer"
                 >
                   {actionLoading ? "Updating..." : "Save Status"}
                 </button>
@@ -1216,22 +1187,20 @@ export const AdminCompliance: React.FC = () => {
         </div>
       )}
 
-      {/* ============================================================
-          MODAL: LOG NEW PRIVACY REQUEST
-          ============================================================ */}
+      {/* MODAL: LOG NEW PRIVACY REQUEST */}
       {isNewRequestModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
-            <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#151c27]/40 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-white border border-[#e2e8f8] rounded-2xl w-full max-w-md shadow-level-3 overflow-hidden">
+            <div className="p-5 border-b border-[#e2e8f8] flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-bold text-white">Log User Privacy Request</h3>
-                <p className="text-xs text-slate-400">
+                <h3 className="text-lg font-bold font-heading text-[#151c27]">Log User Privacy Request</h3>
+                <p className="text-xs text-[#534434]">
                   Manually record a privacy or data request received via legal or support channels.
                 </p>
               </div>
               <button
                 onClick={() => setIsNewRequestModalOpen(false)}
-                className="text-slate-400 hover:text-white text-lg p-1"
+                className="text-[#534434] hover:text-[#151c27] text-lg p-1 cursor-pointer"
               >
                 ✕
               </button>
@@ -1239,7 +1208,7 @@ export const AdminCompliance: React.FC = () => {
 
             <form onSubmit={handleCreateDataRequest} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold font-heading text-[#534434] mb-1">
                   User ID (UUID)
                 </label>
                 <input
@@ -1247,12 +1216,12 @@ export const AdminCompliance: React.FC = () => {
                   value={newRequestForm.userId}
                   onChange={(e) => setNewRequestForm({ ...newRequestForm, userId: e.target.value })}
                   placeholder="e.g. 6d4338e7-f804-49c8-9ec4-0547851b3504"
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono"
+                  className="w-full bg-[#f0f3ff] border border-[#dae2f3] rounded-xl px-3 py-2 text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be] font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold font-heading text-[#534434] mb-1">
                   Request Type
                 </label>
                 <select
@@ -1263,7 +1232,7 @@ export const AdminCompliance: React.FC = () => {
                       requestType: e.target.value as DataRequestType,
                     })
                   }
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-[#f0f3ff] border border-[#dae2f3] rounded-xl px-3 py-2 text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
                 >
                   <option value="DATA_ACCESS">Data Access Request</option>
                   <option value="DATA_EXPORT">Data Export Request</option>
@@ -1274,7 +1243,7 @@ export const AdminCompliance: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold font-heading text-[#534434] mb-1">
                   Request Details / User Notes
                 </label>
                 <textarea
@@ -1282,22 +1251,22 @@ export const AdminCompliance: React.FC = () => {
                   onChange={(e) => setNewRequestForm({ ...newRequestForm, details: e.target.value })}
                   rows={3}
                   placeholder="Specify any details, dates, or communication identifiers."
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-[#f0f3ff] border border-[#dae2f3] rounded-xl p-3 text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-800 flex justify-end gap-2">
+              <div className="pt-3 border-t border-[#e2e8f8] flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsNewRequestModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold"
+                  className="px-4 py-2 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#534434] text-xs font-semibold border border-[#dae2f3] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-500/20 disabled:opacity-50"
+                  className="px-4 py-2 rounded-xl bg-[#0058be] hover:bg-[#2170e4] text-white text-xs font-semibold shadow-sm disabled:opacity-50 cursor-pointer"
                 >
                   {actionLoading ? "Logging..." : "Create Request"}
                 </button>
@@ -1307,20 +1276,18 @@ export const AdminCompliance: React.FC = () => {
         </div>
       )}
 
-      {/* ============================================================
-          MODAL: EDIT RETENTION POLICY
-          ============================================================ */}
+      {/* MODAL: EDIT RETENTION POLICY */}
       {editingRetention && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
-            <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#151c27]/40 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-white border border-[#e2e8f8] rounded-2xl w-full max-w-md shadow-level-3 overflow-hidden">
+            <div className="p-5 border-b border-[#e2e8f8] flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-bold text-white">Configure Retention Schedule</h3>
-                <p className="text-xs text-slate-400">{editingRetention.name}</p>
+                <h3 className="text-lg font-bold font-heading text-[#151c27]">Configure Retention Schedule</h3>
+                <p className="text-xs text-[#534434]">{editingRetention.name}</p>
               </div>
               <button
                 onClick={() => setEditingRetention(null)}
-                className="text-slate-400 hover:text-white text-lg p-1"
+                className="text-[#534434] hover:text-[#151c27] text-lg p-1 cursor-pointer"
               >
                 ✕
               </button>
@@ -1328,7 +1295,7 @@ export const AdminCompliance: React.FC = () => {
 
             <form onSubmit={handleSaveRetention} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold font-heading text-[#534434] mb-1">
                   Retention Duration (Days)
                 </label>
                 <input
@@ -1343,14 +1310,14 @@ export const AdminCompliance: React.FC = () => {
                     })
                   }
                   required
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500 font-mono"
+                  className="w-full bg-[#f0f3ff] border border-[#dae2f3] rounded-xl px-3 py-2 text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be] font-mono"
                 />
-                <span className="text-[10px] text-slate-500">
+                <span className="text-[10px] text-[#534434]">
                   Approx. {(retentionForm.retentionDays / 30).toFixed(1)} months
                 </span>
               </div>
 
-              <div className="flex items-center gap-3 p-3 bg-slate-800/40 rounded-xl border border-slate-800">
+              <div className="flex items-center gap-3 p-3 bg-[#f9f9ff] rounded-xl border border-[#e2e8f8]">
                 <input
                   type="checkbox"
                   id="autoPurgeCheckbox"
@@ -1361,18 +1328,18 @@ export const AdminCompliance: React.FC = () => {
                       autoPurgeEnabled: e.target.checked,
                     })
                   }
-                  className="w-4 h-4 rounded text-cyan-500 focus:ring-cyan-500 bg-slate-800 border-slate-700"
+                  className="w-4 h-4 rounded text-[#0058be] focus:ring-[#0058be] border-[#dae2f3]"
                 />
-                <label htmlFor="autoPurgeCheckbox" className="text-xs text-slate-200 cursor-pointer">
-                  <span className="font-semibold block text-white">Enable Automated Purge Worker</span>
-                  <span className="text-[11px] text-slate-400 block">
+                <label htmlFor="autoPurgeCheckbox" className="text-xs text-[#151c27] cursor-pointer">
+                  <span className="font-bold block text-[#151c27]">Enable Automated Purge Worker</span>
+                  <span className="text-[11px] text-[#534434] block">
                     Automatically scrub records older than the retention threshold.
                   </span>
                 </label>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold font-heading text-[#534434] mb-1">
                   Operational Description
                 </label>
                 <textarea
@@ -1384,12 +1351,12 @@ export const AdminCompliance: React.FC = () => {
                     })
                   }
                   rows={2}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-cyan-500"
+                  className="w-full bg-[#f0f3ff] border border-[#dae2f3] rounded-xl p-3 text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-semibold font-heading text-[#534434] mb-1">
                   Regulatory & Legal Rationale
                 </label>
                 <input
@@ -1401,22 +1368,22 @@ export const AdminCompliance: React.FC = () => {
                       legalBasis: e.target.value,
                     })
                   }
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500"
+                  className="w-full bg-[#f0f3ff] border border-[#dae2f3] rounded-xl px-3 py-2 text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-800 flex justify-end gap-2">
+              <div className="pt-3 border-t border-[#e2e8f8] flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setEditingRetention(null)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold"
+                  className="px-4 py-2 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#534434] text-xs font-semibold border border-[#dae2f3] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold shadow-lg shadow-cyan-500/20 disabled:opacity-50"
+                  className="px-4 py-2 rounded-xl bg-[#0058be] hover:bg-[#2170e4] text-white text-xs font-semibold shadow-sm disabled:opacity-50 cursor-pointer"
                 >
                   {actionLoading ? "Saving..." : "Save Schedule"}
                 </button>

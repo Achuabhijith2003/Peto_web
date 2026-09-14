@@ -117,6 +117,11 @@ export async function createAdminService(
     throw new Error("Target administrative role not found.");
   }
 
+  // Prevent non-Super Admin from granting the Super Admin role
+  if (roleData.name === "Super Admin" && currentAdmin.role.name !== "Super Admin") {
+    throw new Error("Forbidden: Only a Super Admin can assign the Super Admin role.");
+  }
+
   // 4. Create admin user
   const { data: newAdmin, error: insertErr } = await supabase
     .from("admin_users")
@@ -189,6 +194,28 @@ export async function updateAdminService(
   // Prevent self-deactivation if caller is modifying themselves
   if (targetAdmin.id === currentAdmin.id && input.isActive === false) {
     throw new Error("Administrators cannot deactivate their own account.");
+  }
+
+  // Prevent self-privilege escalation (cannot modify own role)
+  if (
+    targetAdmin.id === currentAdmin.id &&
+    input.roleId !== undefined &&
+    input.roleId !== targetAdmin.role_id
+  ) {
+    throw new Error("Administrators cannot alter or elevate their own administrative role.");
+  }
+
+  // Restrict granting the Super Admin role strictly to existing Super Admins
+  if (input.roleId !== undefined && input.roleId !== targetAdmin.role_id) {
+    const { data: targetRole } = await supabase
+      .from("admin_roles")
+      .select("id, name")
+      .eq("id", input.roleId)
+      .single();
+
+    if (targetRole?.name === "Super Admin" && currentAdmin.role.name !== "Super Admin") {
+      throw new Error("Forbidden: Only a Super Admin can grant the Super Admin role.");
+    }
   }
 
   const updates: Record<string, any> = {

@@ -12,6 +12,7 @@ import {
   Scale,
   Server,
   Bell,
+  Sparkles,
 } from "lucide-react";
 
 interface NavItem {
@@ -28,61 +29,59 @@ export const AdminSidebar: React.FC = () => {
     {
       title: "Dashboard",
       path: "/dashboard",
-      icon: <LayoutDashboard className="w-4 h-4 text-indigo-400" />,
+      icon: <LayoutDashboard className="w-4 h-4 text-[#0058be]" />,
     },
     {
       title: "Notifications",
       path: "/notifications",
-      icon: <Bell className="w-4 h-4 text-amber-400" />,
+      icon: <Bell className="w-4 h-4 text-[#f59e0b]" />,
     },
     {
       title: "Moderation",
       path: "/moderation",
-      icon: <ShieldAlert className="w-4 h-4 text-rose-400" />,
+      icon: <ShieldAlert className="w-4 h-4 text-[#ba1a1a]" />,
     },
     {
       title: "Users",
       path: "/users",
-      icon: <Users className="w-4 h-4 text-cyan-400" />,
+      icon: <Users className="w-4 h-4 text-[#2170e4]" />,
     },
     {
       title: "Administrators",
       path: "/admins",
-      icon: <ShieldCheck className="w-4 h-4 text-emerald-400" />,
+      icon: <ShieldCheck className="w-4 h-4 text-[#006c49]" />,
     },
     {
       title: "Roles & Permissions",
       path: "/roles",
-      icon: <Shield className="w-4 h-4 text-purple-400" />,
+      icon: <Shield className="w-4 h-4 text-[#7c3aed]" />,
     },
     {
       title: "Audit Logs",
       path: "/audit-logs",
-      icon: <FileText className="w-4 h-4 text-amber-400" />,
+      icon: <FileText className="w-4 h-4 text-[#b45309]" />,
     },
     {
       title: "Analytics",
       path: "/analytics",
-      icon: <BarChart3 className="w-4 h-4 text-violet-400" />,
+      icon: <BarChart3 className="w-4 h-4 text-[#4f46e5]" />,
     },
     {
       title: "System & Health",
       path: "/system",
-      icon: <Server className="w-4 h-4 text-cyan-400" />,
+      icon: <Server className="w-4 h-4 text-[#006c49]" />,
     },
     {
       title: "Compliance & Legal",
       path: "/compliance",
-      icon: <Scale className="w-4 h-4 text-purple-400" />,
+      icon: <Scale className="w-4 h-4 text-[#0058be]" />,
     },
     {
       title: "Ads & Campaigns",
       path: "/ads",
-      icon: <Megaphone className="w-4 h-4 text-pink-400" />,
+      icon: <Megaphone className="w-4 h-4 text-[#ea580c]" />,
     },
   ];
-
-  const roadmapNavItems: NavItem[] = [];
 
   const isItemActive = (itemPath: string) => {
     if (itemPath === "/dashboard") {
@@ -92,17 +91,17 @@ export const AdminSidebar: React.FC = () => {
   };
 
   return (
-    <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0 h-screen sticky top-0 overflow-y-auto">
+    <aside className="w-64 bg-white border-r border-[#e2e8f8] shadow-level-1 flex flex-col shrink-0 h-screen sticky top-0 overflow-y-auto z-20">
       {/* Brand Header */}
-      <div className="h-16 px-6 border-b border-slate-800 flex items-center space-x-3">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-          <Shield className="w-5 h-5 text-white" />
+      <div className="h-16 px-6 border-b border-[#e2e8f8] flex items-center space-x-3 bg-white">
+        <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[#f59e0b] via-[#ffb95f] to-[#2170e4] flex items-center justify-center shadow-md shadow-amber-500/20">
+          <Sparkles className="w-4 h-4 text-white" />
         </div>
         <div>
-          <span className="text-base font-bold tracking-tight text-white flex items-center">
-            PETO <span className="ml-1.5 text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">ADMIN</span>
+          <span className="font-heading text-base font-bold tracking-tight text-[#151c27] flex items-center">
+            PETO <span className="ml-1.5 text-[10px] font-sans font-bold px-1.5 py-0.5 rounded-full bg-[#fff3d6] text-[#855300] border border-[#ffddb8]">ADMIN</span>
           </span>
-          <span className="text-[10px] text-slate-400 block -mt-0.5">Control Center</span>
+          <span className="text-[10px] text-[#534434] font-medium block -mt-0.5">Warm Companionship</span>
         </div>
       </div>
 
@@ -110,8 +109,8 @@ export const AdminSidebar: React.FC = () => {
       <nav className="flex-1 p-3 space-y-6">
         {/* Core Operations */}
         <div className="space-y-1">
-          <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-            Operations
+          <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[#867461]">
+            Platform Operations
           </div>
           {coreNavItems.map((item) => {
             const active = isItemActive(item.path);
@@ -119,47 +118,16 @@ export const AdminSidebar: React.FC = () => {
               <NavLink
                 key={item.path}
                 to={item.path}
-                className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${
+                className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all ${
                   active
-                    ? "text-white bg-indigo-600 shadow-md shadow-indigo-600/25 font-semibold"
-                    : "text-slate-300 hover:text-white hover:bg-slate-800/70"
+                    ? "text-[#0058be] bg-[#e7eefe] font-semibold border border-[#d8e2ff] shadow-sm"
+                    : "text-[#534434] hover:text-[#151c27] hover:bg-[#f0f3ff]"
                 }`}
               >
                 <div className="flex items-center space-x-3">
                   {item.icon}
                   <span>{item.title}</span>
                 </div>
-              </NavLink>
-            );
-          })}
-        </div>
-
-        {/* Roadmap / Upcoming */}
-        <div className="space-y-1">
-          <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-            Roadmap
-          </div>
-          {roadmapNavItems.map((item) => {
-            const active = isItemActive(item.path);
-            return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all ${
-                  active
-                    ? "text-indigo-300 bg-indigo-600/20 font-semibold"
-                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
-                }`}
-              >
-                <div className="flex items-center space-x-3">
-                  {item.icon}
-                  <span>{item.title}</span>
-                </div>
-                {item.badge && (
-                  <span className="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700/60 text-slate-400 text-[10px] font-mono">
-                    {item.badge}
-                  </span>
-                )}
               </NavLink>
             );
           })}
@@ -167,10 +135,12 @@ export const AdminSidebar: React.FC = () => {
       </nav>
 
       {/* Footer Info */}
-      <div className="p-3 border-t border-slate-800 text-[11px] text-slate-400 bg-slate-900/50">
-        <div className="flex items-center justify-between px-2">
-          <span>Security Engine</span>
-          <span className="text-emerald-400 font-mono font-bold text-[10px]">RBAC ACTIVE</span>
+      <div className="p-3 border-t border-[#e2e8f8] text-[11px] text-[#534434] bg-[#f9f9ff]">
+        <div className="flex items-center justify-between px-2 py-1">
+          <span className="font-medium">Security Engine</span>
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#e8f7f0] text-[#006c49] border border-[#a3e5c7]">
+            RBAC ACTIVE
+          </span>
         </div>
       </div>
     </aside>

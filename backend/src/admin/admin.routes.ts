@@ -80,8 +80,12 @@ import {
   markAllNotificationsRead,
   createNotificationHandler,
 } from "./controllers/adminNotifications.controller";
+import { adminRateLimiter } from "./middleware/adminRateLimiter.middleware";
 
 const router = Router();
+
+// Protect admin control panel with rate limiting (120 req/min)
+router.use(adminRateLimiter());
 
 // All admin routes mandate active administrator authentication
 router.use(requireAdminAuth);
@@ -118,7 +122,7 @@ router.patch(
 
 // Content Moderation & Reports (Phase 3)
 router.get("/reports", requirePermission("reports.view"), getReports);
-router.post("/reports", createReport);
+router.post("/reports", requirePermission("reports.manage"), createReport);
 router.get("/reports/:id", requirePermission("reports.view"), getReportDetail);
 router.patch("/reports/:id", requirePermission("reports.manage"), updateReport);
 router.post("/reports/:id/action", requirePermission("reports.manage"), executeAction);
@@ -186,6 +190,6 @@ router.get("/ads/analytics", requirePermission("ads.view"), getAdsAnalyticsSumma
 router.get("/notifications", getAdminNotifications);
 router.patch("/notifications/:id/read", markNotificationRead);
 router.post("/notifications/mark-all-read", markAllNotificationsRead);
-router.post("/notifications", createNotificationHandler);
+router.post("/notifications", requirePermission("system.manage"), createNotificationHandler);
 
 export default router;

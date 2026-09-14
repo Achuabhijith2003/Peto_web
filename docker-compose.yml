@@ -29,6 +29,19 @@ services:
     networks:
       - peto-network
 
+  admin:
+    build:
+      context: ./admin
+      dockerfile: Dockerfile
+    container_name: peto-admin
+    restart: always
+    ports:
+      - "5174:80"
+    depends_on:
+      - backend
+    networks:
+      - peto-network
+
 networks:
   peto-network:
     driver: bridge

@@ -59,31 +59,31 @@ export const AdminAuditLogs: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-white tracking-tight flex items-center">
-            <FileText className="w-6 h-6 mr-2.5 text-emerald-400" />
+          <h1 className="text-2xl font-bold font-heading text-[#151c27] tracking-tight flex items-center">
+            <FileText className="w-6 h-6 mr-2.5 text-[#006c49]" />
             Administrative Audit Trail
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-[#534434] mt-1">
             Immutable log of all administrative actions, role assignments, security events, and configuration modifications.
           </p>
         </div>
 
-        <div className="flex items-center space-x-2 text-xs text-slate-400 self-start">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <div className="flex items-center space-x-2 text-xs font-semibold text-[#006c49] bg-[#bbf7d0]/40 px-3 py-1.5 rounded-full border border-[#006c49]/30 self-start">
+          <span className="w-2 h-2 rounded-full bg-[#006c49] animate-pulse"></span>
           <span>Immutable Ledger Active</span>
         </div>
       </div>
 
       {error && (
-        <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center space-x-2">
-          <AlertCircle className="w-4 h-4 text-rose-400" />
+        <div className="p-4 rounded-2xl bg-white border border-[#ffdad6] text-[#ba1a1a] text-xs font-semibold flex items-center space-x-2 shadow-level-1">
+          <AlertCircle className="w-4 h-4 text-[#ba1a1a]" />
           <span>{error}</span>
         </div>
       )}
 
       {/* Filters */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-sm flex flex-wrap items-center gap-3">
-        <div className="flex items-center space-x-2 text-xs text-slate-400 font-semibold">
+      <div className="bg-white border border-[#e2e8f8] rounded-2xl p-4 shadow-level-1 flex flex-wrap items-center gap-3">
+        <div className="flex items-center space-x-2 text-xs text-[#534434] font-semibold font-heading">
           <Filter className="w-3.5 h-3.5" />
           <span>Filters:</span>
         </div>
@@ -91,7 +91,7 @@ export const AdminAuditLogs: React.FC = () => {
         <select
           value={actionFilter}
           onChange={(e) => setActionFilter(e.target.value)}
-          className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          className="px-3 py-2 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
         >
           <option value="">All Actions</option>
           <option value="ADMIN_LOGIN">ADMIN_LOGIN</option>
@@ -107,7 +107,7 @@ export const AdminAuditLogs: React.FC = () => {
         <select
           value={resourceFilter}
           onChange={(e) => setResourceFilter(e.target.value)}
-          className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          className="px-3 py-2 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
         >
           <option value="">All Resource Types</option>
           <option value="admin_user">admin_user</option>
@@ -126,7 +126,7 @@ export const AdminAuditLogs: React.FC = () => {
               setActionFilter("");
               setResourceFilter("");
             }}
-            className="px-2.5 py-1 rounded-lg text-xs text-rose-400 hover:bg-rose-500/10 transition-colors"
+            className="px-3 py-1.5 rounded-xl text-xs font-semibold text-[#ba1a1a] hover:bg-[#ffdad6]/40 transition-colors cursor-pointer"
           >
             Clear Filters
           </button>
@@ -134,16 +134,16 @@ export const AdminAuditLogs: React.FC = () => {
       </div>
 
       {/* Audit Logs Table */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-white border border-[#e2e8f8] rounded-2xl shadow-level-1 overflow-hidden">
         {loading ? (
           <div className="p-12">
             <LoadingSpinner message="Querying audit ledger..." />
           </div>
         ) : logs.length === 0 ? (
-          <div className="p-12 text-center text-slate-400 space-y-2">
-            <FileText className="w-8 h-8 mx-auto text-slate-600" />
-            <p className="text-sm font-semibold text-slate-300">No audit log entries recorded</p>
-            <p className="text-xs text-slate-500">
+          <div className="p-12 text-center text-[#534434] space-y-2">
+            <FileText className="w-8 h-8 mx-auto text-[#534434]/60" />
+            <p className="text-sm font-bold font-heading text-[#151c27]">No audit log entries recorded</p>
+            <p className="text-xs text-[#534434]">
               Audit log entries will populate automatically as administrators perform sensitive operations.
             </p>
           </div>
@@ -151,7 +151,7 @@ export const AdminAuditLogs: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
-                <tr className="border-b border-slate-800 bg-slate-950/40 text-slate-400 font-semibold uppercase tracking-wider">
+                <tr className="border-b border-[#e2e8f8] bg-[#f0f3ff] text-[#534434] font-bold font-heading uppercase tracking-wider text-[11px]">
                   <th className="px-6 py-3.5">Timestamp</th>
                   <th className="px-6 py-3.5">Admin Actor</th>
                   <th className="px-6 py-3.5">Action</th>
@@ -161,22 +161,22 @@ export const AdminAuditLogs: React.FC = () => {
                   <th className="px-6 py-3.5 text-right">Payload</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 font-mono">
+              <tbody className="divide-y divide-[#e2e8f8] font-mono">
                 {logs.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-800/30 transition-colors">
-                    <td className="px-6 py-4 text-slate-400 text-[11px] whitespace-nowrap">
+                  <tr key={item.id} className="hover:bg-[#f9f9ff] transition-colors">
+                    <td className="px-6 py-4 text-[#534434] text-[11px] whitespace-nowrap">
                       {new Date(item.created_at).toLocaleString()}
                     </td>
 
                     <td className="px-6 py-4 font-sans">
                       {item.admin_user ? (
                         <div className="flex items-center space-x-2">
-                          <span className="font-semibold text-slate-200">
+                          <span className="font-bold text-[#151c27]">
                             @{item.admin_user.username}
                           </span>
                         </div>
                       ) : (
-                        <span className="text-slate-500 font-mono text-[11px]">System Process</span>
+                        <span className="text-[#534434]/70 font-mono text-[11px]">System Process</span>
                       )}
                     </td>
 
@@ -184,22 +184,22 @@ export const AdminAuditLogs: React.FC = () => {
                       <StatusBadge type="action" value={item.action} />
                     </td>
 
-                    <td className="px-6 py-4 text-slate-300 text-[11px]">
+                    <td className="px-6 py-4 text-[#151c27] text-[11px]">
                       {item.resource_type}
                     </td>
 
-                    <td className="px-6 py-4 text-slate-400 text-[11px] truncate max-w-[120px]">
+                    <td className="px-6 py-4 text-[#534434] text-[11px] truncate max-w-[120px]">
                       {item.resource_id || "—"}
                     </td>
 
-                    <td className="px-6 py-4 text-slate-500 text-[11px]">
+                    <td className="px-6 py-4 text-[#534434] text-[11px]">
                       {item.ip_address || "—"}
                     </td>
 
                     <td className="px-6 py-4 text-right font-sans">
                       <button
                         onClick={() => setInspectingLog(item)}
-                        className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-400 hover:text-indigo-300 border border-slate-700 transition-colors cursor-pointer"
+                        className="p-1.5 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#0058be] border border-[#dae2f3] transition-colors cursor-pointer"
                         title="View Details"
                       >
                         <Eye className="w-3.5 h-3.5" />
@@ -214,24 +214,24 @@ export const AdminAuditLogs: React.FC = () => {
 
         {/* Pagination Controls */}
         {pagination.totalPages > 1 && (
-          <div className="p-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+          <div className="p-4 border-t border-[#e2e8f8] flex items-center justify-between text-xs text-[#534434]">
             <div>
-              Showing page <strong className="text-white">{pagination.page}</strong> of{" "}
-              <strong className="text-white">{pagination.totalPages}</strong> (
+              Showing page <strong className="text-[#151c27] font-bold">{pagination.page}</strong> of{" "}
+              <strong className="text-[#151c27] font-bold">{pagination.totalPages}</strong> (
               {pagination.totalCount} total entries)
             </div>
             <div className="flex items-center space-x-2">
               <button
                 disabled={pagination.page <= 1}
                 onClick={() => loadLogs(pagination.page - 1)}
-                className="p-1.5 rounded-lg bg-slate-800 border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-700 text-slate-200 cursor-pointer"
+                className="p-1.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#e2e8f8] text-[#534434] cursor-pointer"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <button
                 disabled={pagination.page >= pagination.totalPages}
                 onClick={() => loadLogs(pagination.page + 1)}
-                className="p-1.5 rounded-lg bg-slate-800 border border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-700 text-slate-200 cursor-pointer"
+                className="p-1.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#e2e8f8] text-[#534434] cursor-pointer"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -242,57 +242,57 @@ export const AdminAuditLogs: React.FC = () => {
 
       {/* Inspect Log Details Modal */}
       {inspectingLog && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="fixed inset-0 bg-[#151c27]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-[#e2e8f8] rounded-2xl w-full max-w-2xl p-6 shadow-level-3 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-[#e2e8f8] pb-3">
               <div className="flex items-center space-x-2">
-                <FileText className="w-4 h-4 text-emerald-400" />
-                <h2 className="text-sm font-bold text-white">
+                <FileText className="w-4 h-4 text-[#006c49]" />
+                <h2 className="text-sm font-bold font-heading text-[#151c27]">
                   Audit Log Details — {inspectingLog.action}
                 </h2>
               </div>
               <button
                 onClick={() => setInspectingLog(null)}
-                className="text-slate-400 hover:text-white"
+                className="text-[#534434] hover:text-[#151c27] cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 text-xs font-mono bg-slate-950 p-4 rounded-xl border border-slate-800/80">
+            <div className="grid grid-cols-2 gap-4 text-xs font-mono bg-[#f9f9ff] p-4 rounded-xl border border-[#e2e8f8]">
               <div>
-                <span className="text-slate-500 block">Record ID:</span>
-                <span className="text-slate-200">{inspectingLog.id}</span>
+                <span className="text-[#534434] block">Record ID:</span>
+                <span className="text-[#151c27] font-semibold">{inspectingLog.id}</span>
               </div>
               <div>
-                <span className="text-slate-500 block">Timestamp:</span>
-                <span className="text-slate-200">{new Date(inspectingLog.created_at).toISOString()}</span>
+                <span className="text-[#534434] block">Timestamp:</span>
+                <span className="text-[#151c27]">{new Date(inspectingLog.created_at).toISOString()}</span>
               </div>
               <div>
-                <span className="text-slate-500 block">Resource Type:</span>
-                <span className="text-slate-200">{inspectingLog.resource_type}</span>
+                <span className="text-[#534434] block">Resource Type:</span>
+                <span className="text-[#151c27] font-semibold">{inspectingLog.resource_type}</span>
               </div>
               <div>
-                <span className="text-slate-500 block">Resource ID:</span>
-                <span className="text-slate-200">{inspectingLog.resource_id || "null"}</span>
+                <span className="text-[#534434] block">Resource ID:</span>
+                <span className="text-[#151c27]">{inspectingLog.resource_id || "null"}</span>
               </div>
               <div>
-                <span className="text-slate-500 block">Client IP:</span>
-                <span className="text-slate-200">{inspectingLog.ip_address || "unknown"}</span>
+                <span className="text-[#534434] block">Client IP:</span>
+                <span className="text-[#151c27]">{inspectingLog.ip_address || "unknown"}</span>
               </div>
               <div>
-                <span className="text-slate-500 block">User-Agent:</span>
-                <span className="text-slate-200 truncate block" title={inspectingLog.user_agent || ""}>
+                <span className="text-[#534434] block">User-Agent:</span>
+                <span className="text-[#151c27] truncate block" title={inspectingLog.user_agent || ""}>
                   {inspectingLog.user_agent || "unknown"}
                 </span>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              <span className="text-xs font-semibold font-heading uppercase tracking-wider text-[#534434]">
                 Action Metadata / Payload:
               </span>
-              <pre className="p-4 rounded-xl bg-slate-950 border border-slate-800 text-xs font-mono text-indigo-300 overflow-x-auto max-h-64">
+              <pre className="p-4 rounded-xl bg-[#f9f9ff] border border-[#e2e8f8] text-xs font-mono text-[#0058be] overflow-x-auto max-h-64">
                 {JSON.stringify(inspectingLog.details, null, 2)}
               </pre>
             </div>
@@ -300,7 +300,7 @@ export const AdminAuditLogs: React.FC = () => {
             <div className="pt-2 flex justify-end">
               <button
                 onClick={() => setInspectingLog(null)}
-                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold"
+                className="px-4 py-2 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#534434] text-xs font-semibold border border-[#dae2f3] cursor-pointer"
               >
                 Close
               </button>

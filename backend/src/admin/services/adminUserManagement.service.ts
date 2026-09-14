@@ -2,6 +2,7 @@ import { Request } from "express";
 import { supabase } from "../../config/supabase";
 import { AdminSessionContext } from "../admin.types";
 import { createAuditLog } from "./adminAudit.service";
+import { sanitizeSearchQuery } from "../utils/adminSanitizer";
 
 export interface UserListFilters {
   page?: number;
@@ -61,8 +62,10 @@ export async function getUsersListService(filters: UserListFilters) {
 
   // Search filter
   if (filters.search && filters.search.trim()) {
-    const q = filters.search.trim();
-    query = query.or(`username.ilike.%${q}%,full_name.ilike.%${q}%`);
+    const q = sanitizeSearchQuery(filters.search);
+    if (q) {
+      query = query.or(`username.ilike.%${q}%,full_name.ilike.%${q}%`);
+    }
   }
 
   // Verification filter

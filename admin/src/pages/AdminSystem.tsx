@@ -211,32 +211,32 @@ export const AdminSystem: React.FC = () => {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6 text-slate-100">
+    <div className="space-y-6">
       {/* Header Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900/60 p-6 rounded-2xl border border-slate-800 backdrop-blur-xl shadow-xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-[#e2e8f8] shadow-level-1">
         <div>
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20">
+            <div className="p-2.5 rounded-2xl bg-[#0058be] text-white shadow-sm">
               <Server className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+              <h1 className="text-2xl font-bold font-heading tracking-tight text-[#151c27] flex items-center gap-2">
                 System Management & Infrastructure
                 {healthData && (
                   <span
-                    className={`text-xs px-2.5 py-0.5 rounded-full font-medium border ${
+                    className={`text-xs px-2.5 py-0.5 rounded-full font-semibold border ${
                       healthData.overallStatus === "HEALTHY"
-                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                        ? "bg-[#bbf7d0]/40 text-[#006c49] border-[#006c49]/30"
                         : healthData.overallStatus === "DEGRADED"
-                        ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                        : "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                        ? "bg-[#ffe082]/40 text-[#855300] border-[#855300]/30"
+                        : "bg-[#ffdad6]/40 text-[#ba1a1a] border-[#ffdad6]"
                     }`}
                   >
                     System {healthData.overallStatus}
                   </span>
                 )}
               </h1>
-              <p className="text-sm text-slate-400">
+              <p className="text-xs text-[#534434] mt-0.5">
                 End-to-end service monitoring, live request telemetry, cloud storage analytics, and feature flags.
               </p>
             </div>
@@ -248,16 +248,16 @@ export const AdminSystem: React.FC = () => {
           <button
             onClick={() => loadData()}
             disabled={isLoading}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-800/80 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold border border-slate-700/60 transition disabled:opacity-50"
+            className="flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-[#f9f9ff] text-[#534434] rounded-xl text-xs font-semibold border border-[#e2e8f8] shadow-sm transition disabled:opacity-50 cursor-pointer"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin text-cyan-400" : ""}`} />
+            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin text-[#0058be]" : ""}`} />
             Run Diagnostics
           </button>
         </div>
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none border-b border-slate-800">
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-[#e2e8f8]">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -265,13 +265,13 @@ export const AdminSystem: React.FC = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold font-heading whitespace-nowrap transition-all cursor-pointer ${
                 isActive
-                  ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 shadow-sm"
-                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
+                  ? "bg-[#f0f3ff] text-[#0058be] border border-[#0058be]/30 shadow-sm"
+                  : "text-[#534434] hover:text-[#151c27] hover:bg-[#f9f9ff]"
               }`}
             >
-              <Icon className={`w-4 h-4 ${isActive ? "text-cyan-400" : "text-slate-500"}`} />
+              <Icon className={`w-4 h-4 ${isActive ? "text-[#0058be]" : "text-[#534434]"}`} />
               {tab.label}
             </button>
           );
@@ -280,7 +280,7 @@ export const AdminSystem: React.FC = () => {
 
       {/* Error state */}
       {error && (
-        <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 text-sm flex items-center gap-3">
+        <div className="p-4 bg-white border border-[#ffdad6] rounded-2xl text-[#ba1a1a] text-xs font-semibold flex items-center gap-3 shadow-level-1">
           <AlertTriangle className="w-5 h-5 flex-shrink-0" />
           <span>{error}</span>
         </div>
@@ -289,8 +289,8 @@ export const AdminSystem: React.FC = () => {
       {/* Loading state indicator */}
       {isLoading ? (
         <div className="py-24 flex flex-col items-center justify-center space-y-4">
-          <div className="w-10 h-10 border-4 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
-          <p className="text-slate-400 text-sm font-medium">Checking infrastructure nodes...</p>
+          <div className="w-10 h-10 border-4 border-[#e2e8f8] border-t-[#0058be] rounded-full animate-spin" />
+          <p className="text-[#534434] text-xs font-medium font-heading">Checking infrastructure nodes...</p>
         </div>
       ) : (
         <div>
@@ -299,40 +299,40 @@ export const AdminSystem: React.FC = () => {
             <div className="space-y-6">
               {/* Top Overview Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-slate-900/60 p-5 rounded-2xl border border-slate-800">
-                  <span className="text-xs text-slate-400 font-medium">Platform Uptime</span>
-                  <p className="text-2xl font-bold text-white mt-1">{healthData.uptimeFormatted}</p>
-                  <p className="text-xs text-emerald-400 mt-1 flex items-center gap-1">
+                <div className="bg-white p-5 rounded-2xl border border-[#e2e8f8] shadow-level-1">
+                  <span className="text-xs text-[#534434] font-semibold font-heading">Platform Uptime</span>
+                  <p className="text-2xl font-bold font-mono text-[#151c27] mt-1">{healthData.uptimeFormatted}</p>
+                  <p className="text-xs text-[#006c49] mt-1 flex items-center gap-1 font-medium">
                     <CheckCircle2 className="w-3.5 h-3.5" /> High availability
                   </p>
                 </div>
-                <div className="bg-slate-900/60 p-5 rounded-2xl border border-slate-800">
-                  <span className="text-xs text-slate-400 font-medium">Memory (RSS / Heap)</span>
-                  <p className="text-2xl font-bold text-white mt-1">
+                <div className="bg-white p-5 rounded-2xl border border-[#e2e8f8] shadow-level-1">
+                  <span className="text-xs text-[#534434] font-semibold font-heading">Memory (RSS / Heap)</span>
+                  <p className="text-2xl font-bold font-mono text-[#151c27] mt-1">
                     {healthData.systemMemory.heapUsedMB} MB
                   </p>
-                  <p className="text-xs text-slate-400 mt-1">
+                  <p className="text-xs text-[#534434] mt-1">
                     RSS: {healthData.systemMemory.rssMB} MB • Heap Total: {healthData.systemMemory.heapTotalMB} MB
                   </p>
                 </div>
-                <div className="bg-slate-900/60 p-5 rounded-2xl border border-slate-800">
-                  <span className="text-xs text-slate-400 font-medium">Environment & Node</span>
-                  <p className="text-2xl font-bold text-white mt-1">{healthData.nodeVersion}</p>
-                  <p className="text-xs text-slate-400 mt-1">{healthData.platform}</p>
+                <div className="bg-white p-5 rounded-2xl border border-[#e2e8f8] shadow-level-1">
+                  <span className="text-xs text-[#534434] font-semibold font-heading">Environment & Node</span>
+                  <p className="text-2xl font-bold font-mono text-[#151c27] mt-1">{healthData.nodeVersion}</p>
+                  <p className="text-xs text-[#534434] mt-1">{healthData.platform}</p>
                 </div>
-                <div className="bg-slate-900/60 p-5 rounded-2xl border border-slate-800">
-                  <span className="text-xs text-slate-400 font-medium">Monitored Services</span>
-                  <p className="text-2xl font-bold text-cyan-400 mt-1">
+                <div className="bg-white p-5 rounded-2xl border border-[#e2e8f8] shadow-level-1">
+                  <span className="text-xs text-[#534434] font-semibold font-heading">Monitored Services</span>
+                  <p className="text-2xl font-bold font-mono text-[#0058be] mt-1">
                     {healthData.services.filter((s) => s.status === "HEALTHY").length} / {healthData.services.length} Healthy
                   </p>
-                  <p className="text-xs text-slate-400 mt-1">Real-time latency validated</p>
+                  <p className="text-xs text-[#534434] mt-1">Real-time latency validated</p>
                 </div>
               </div>
 
               {/* 9 Services Health Grid */}
-              <div className="bg-slate-900/60 p-6 rounded-2xl border border-slate-800 space-y-4">
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <Server className="w-4 h-4 text-cyan-400" />
+              <div className="bg-white p-6 rounded-2xl border border-[#e2e8f8] shadow-level-1 space-y-4">
+                <h3 className="text-base font-bold font-heading text-[#151c27] flex items-center gap-2">
+                  <Server className="w-4 h-4 text-[#0058be]" />
                   Core Subsystems & Infrastructure Grid (9 Components)
                 </h3>
 
@@ -342,38 +342,38 @@ export const AdminSystem: React.FC = () => {
                     return (
                       <div
                         key={svc.id}
-                        className="p-4 bg-slate-800/40 rounded-xl border border-slate-700/50 hover:border-slate-600 transition flex flex-col justify-between"
+                        className="p-4 bg-[#f9f9ff] rounded-2xl border border-[#e2e8f8] hover:shadow-level-2 transition flex flex-col justify-between"
                       >
                         <div>
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2.5">
-                              <div className="p-2 rounded-lg bg-slate-700/40 text-slate-200">
-                                <SvcIcon className="w-4 h-4 text-cyan-400" />
+                              <div className="p-2 rounded-xl bg-white text-[#0058be] border border-[#e2e8f8]">
+                                <SvcIcon className="w-4 h-4" />
                               </div>
                               <div>
-                                <p className="text-sm font-semibold text-white">{svc.name}</p>
-                                <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider">
+                                <p className="text-sm font-bold font-heading text-[#151c27]">{svc.name}</p>
+                                <span className="text-[10px] text-[#534434] uppercase font-mono tracking-wider">
                                   {svc.category}
                                 </span>
                               </div>
                             </div>
                             <span
-                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
                                 svc.status === "HEALTHY"
-                                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                                  ? "bg-[#bbf7d0]/40 text-[#006c49] border-[#006c49]/30"
                                   : svc.status === "DEGRADED"
-                                  ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                                  : "bg-rose-500/10 text-rose-400 border-rose-500/20"
+                                  ? "bg-[#ffe082]/40 text-[#855300] border-[#855300]/30"
+                                  : "bg-[#ffdad6]/40 text-[#ba1a1a] border-[#ffdad6]"
                               }`}
                             >
                               {svc.status}
                             </span>
                           </div>
-                          <p className="text-xs text-slate-300 mt-3 font-mono break-all">{svc.details}</p>
+                          <p className="text-xs text-[#534434] mt-3 font-mono break-all">{svc.details}</p>
                         </div>
-                        <div className="mt-4 pt-3 border-t border-slate-700/40 flex items-center justify-between text-[11px] text-slate-400">
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3 h-3 text-slate-500" /> {svc.latencyMs} ms latency
+                        <div className="mt-4 pt-3 border-t border-[#e2e8f8] flex items-center justify-between text-[11px] text-[#534434]">
+                          <span className="flex items-center gap-1 font-mono">
+                            <Clock className="w-3 h-3 text-[#534434]" /> {svc.latencyMs} ms latency
                           </span>
                           <span>Checked: Just now</span>
                         </div>
@@ -390,41 +390,41 @@ export const AdminSystem: React.FC = () => {
             <div className="space-y-6">
               {/* Telemetry Metrics Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-slate-900/60 p-5 rounded-2xl border border-slate-800">
-                  <span className="text-xs text-slate-400 font-medium">Total API Requests</span>
-                  <p className="text-2xl font-bold text-white mt-1">
+                <div className="bg-white p-5 rounded-2xl border border-[#e2e8f8] shadow-level-1">
+                  <span className="text-xs text-[#534434] font-semibold font-heading">Total API Requests</span>
+                  <p className="text-2xl font-bold font-mono text-[#151c27] mt-1">
                     {telemetryData.summary.totalRequests.toLocaleString()}
                   </p>
-                  <p className="text-xs text-slate-400 mt-1">Monitored Express traffic</p>
+                  <p className="text-xs text-[#534434] mt-1">Monitored Express traffic</p>
                 </div>
-                <div className="bg-slate-900/60 p-5 rounded-2xl border border-slate-800">
-                  <span className="text-xs text-slate-400 font-medium">Live Error Rate</span>
+                <div className="bg-white p-5 rounded-2xl border border-[#e2e8f8] shadow-level-1">
+                  <span className="text-xs text-[#534434] font-semibold font-heading">Live Error Rate</span>
                   <p
-                    className={`text-2xl font-bold mt-1 ${
-                      telemetryData.summary.errorRatePct > 5 ? "text-rose-400" : "text-emerald-400"
+                    className={`text-2xl font-bold font-mono mt-1 ${
+                      telemetryData.summary.errorRatePct > 5 ? "text-[#ba1a1a]" : "text-[#006c49]"
                     }`}
                   >
                     {telemetryData.summary.errorRatePct}%
                   </p>
-                  <p className="text-xs text-slate-400 mt-1">4xx & 5xx HTTP response share</p>
+                  <p className="text-xs text-[#534434] mt-1">4xx & 5xx HTTP response share</p>
                 </div>
-                <div className="bg-slate-900/60 p-5 rounded-2xl border border-slate-800">
-                  <span className="text-xs text-slate-400 font-medium">Average Response Time</span>
-                  <p className="text-2xl font-bold text-cyan-400 mt-1">
+                <div className="bg-white p-5 rounded-2xl border border-[#e2e8f8] shadow-level-1">
+                  <span className="text-xs text-[#534434] font-semibold font-heading">Average Response Time</span>
+                  <p className="text-2xl font-bold font-mono text-[#0058be] mt-1">
                     {telemetryData.summary.avgLatencyMs} ms
                   </p>
-                  <p className="text-xs text-slate-400 mt-1">P95 Latency: {telemetryData.summary.p95LatencyMs} ms</p>
+                  <p className="text-xs text-[#534434] mt-1">P95 Latency: {telemetryData.summary.p95LatencyMs} ms</p>
                 </div>
-                <div className="bg-slate-900/60 p-5 rounded-2xl border border-slate-800">
-                  <span className="text-xs text-slate-400 font-medium">Status Codes Distribution</span>
+                <div className="bg-white p-5 rounded-2xl border border-[#e2e8f8] shadow-level-1">
+                  <span className="text-xs text-[#534434] font-semibold font-heading">Status Codes Distribution</span>
                   <div className="flex items-center gap-2 mt-2">
-                    <span className="text-xs px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-mono">
+                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#bbf7d0]/40 text-[#006c49] font-mono border border-[#006c49]/30">
                       2xx: {telemetryData.summary.status2xx}
                     </span>
-                    <span className="text-xs px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 font-mono">
+                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#ffe082]/40 text-[#855300] font-mono border border-[#855300]/30">
                       4xx: {telemetryData.summary.status4xx}
                     </span>
-                    <span className="text-xs px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 font-mono">
+                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#ffdad6]/40 text-[#ba1a1a] font-mono border border-[#ffdad6]">
                       5xx: {telemetryData.summary.status5xx}
                     </span>
                   </div>
@@ -432,15 +432,15 @@ export const AdminSystem: React.FC = () => {
               </div>
 
               {/* Slow Endpoints Table */}
-              <div className="bg-slate-900/60 p-6 rounded-2xl border border-slate-800">
-                <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-amber-400" />
+              <div className="bg-white p-6 rounded-2xl border border-[#e2e8f8] shadow-level-1">
+                <h3 className="text-base font-bold font-heading text-[#151c27] mb-4 flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-[#855300]" />
                   Top Slow Endpoints (Ranked by Latency)
                 </h3>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase">
+                      <tr className="border-b border-[#e2e8f8] bg-[#f0f3ff] text-[#534434] font-bold font-heading uppercase tracking-wider">
                         <th className="py-3 px-4">Method</th>
                         <th className="py-3 px-4">Endpoint Path</th>
                         <th className="py-3 px-4 text-right">Calls</th>
@@ -449,24 +449,24 @@ export const AdminSystem: React.FC = () => {
                         <th className="py-3 px-4 text-right">Errors</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/60 font-mono">
+                    <tbody className="divide-y divide-[#e2e8f8] font-mono">
                       {telemetryData.slowEndpoints.length === 0 ? (
                         <tr>
-                          <td colSpan={6} className="py-8 text-center text-slate-500 font-sans">
+                          <td colSpan={6} className="py-8 text-center text-[#534434] font-sans">
                             No telemetry recorded yet. Make API requests to populate data.
                           </td>
                         </tr>
                       ) : (
                         telemetryData.slowEndpoints.map((ep) => (
-                          <tr key={`${ep.method}-${ep.path}`} className="hover:bg-slate-800/30">
-                            <td className="py-3 px-4 font-bold text-cyan-400">{ep.method}</td>
-                            <td className="py-3 px-4 text-slate-200 font-medium">{ep.path}</td>
-                            <td className="py-3 px-4 text-right text-slate-300">{ep.count}</td>
-                            <td className="py-3 px-4 text-right font-bold text-amber-400">
+                          <tr key={`${ep.method}-${ep.path}`} className="hover:bg-[#f9f9ff] transition">
+                            <td className="py-3 px-4 font-bold text-[#0058be]">{ep.method}</td>
+                            <td className="py-3 px-4 text-[#151c27] font-medium">{ep.path}</td>
+                            <td className="py-3 px-4 text-right text-[#534434]">{ep.count}</td>
+                            <td className="py-3 px-4 text-right font-bold text-[#855300]">
                               {ep.avgLatencyMs} ms
                             </td>
-                            <td className="py-3 px-4 text-right text-slate-400">{ep.maxLatencyMs} ms</td>
-                            <td className="py-3 px-4 text-right font-semibold text-rose-400">
+                            <td className="py-3 px-4 text-right text-[#534434]">{ep.maxLatencyMs} ms</td>
+                            <td className="py-3 px-4 text-right font-semibold text-[#ba1a1a]">
                               {ep.errorCount}
                             </td>
                           </tr>
@@ -478,15 +478,15 @@ export const AdminSystem: React.FC = () => {
               </div>
 
               {/* Recent Requests Stream */}
-              <div className="bg-slate-900/60 p-6 rounded-2xl border border-slate-800">
-                <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-cyan-400" />
+              <div className="bg-white p-6 rounded-2xl border border-[#e2e8f8] shadow-level-1">
+                <h3 className="text-base font-bold font-heading text-[#151c27] mb-4 flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-[#0058be]" />
                   Live Recent Request Stream (Last 50)
                 </h3>
                 <div className="overflow-x-auto max-h-80 overflow-y-auto">
                   <table className="w-full text-left text-xs font-mono">
-                    <thead className="sticky top-0 bg-slate-900">
-                      <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase">
+                    <thead className="sticky top-0 bg-[#f0f3ff] border-b border-[#e2e8f8] text-[#534434] font-bold font-heading uppercase">
+                      <tr>
                         <th className="py-2.5 px-4">Method</th>
                         <th className="py-2.5 px-4">Status</th>
                         <th className="py-2.5 px-4">URL</th>
@@ -494,26 +494,26 @@ export const AdminSystem: React.FC = () => {
                         <th className="py-2.5 px-4 text-right">Timestamp</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/60">
+                    <tbody className="divide-y divide-[#e2e8f8]">
                       {telemetryData.recentRequests.map((req) => (
-                        <tr key={req.id} className="hover:bg-slate-800/30">
-                          <td className="py-2 px-4 font-bold text-slate-300">{req.method}</td>
+                        <tr key={req.id} className="hover:bg-[#f9f9ff] transition">
+                          <td className="py-2 px-4 font-bold text-[#151c27]">{req.method}</td>
                           <td className="py-2 px-4">
                             <span
-                              className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                                 req.status < 400
-                                  ? "bg-emerald-500/10 text-emerald-400"
+                                  ? "bg-[#bbf7d0]/40 text-[#006c49]"
                                   : req.status < 500
-                                  ? "bg-amber-500/10 text-amber-400"
-                                  : "bg-rose-500/10 text-rose-400"
+                                  ? "bg-[#ffe082]/40 text-[#855300]"
+                                  : "bg-[#ffdad6]/40 text-[#ba1a1a]"
                               }`}
                             >
                               {req.status}
                             </span>
                           </td>
-                          <td className="py-2 px-4 text-slate-300 max-w-sm truncate">{req.path}</td>
-                          <td className="py-2 px-4 text-right text-cyan-400 font-semibold">{req.latencyMs} ms</td>
-                          <td className="py-2 px-4 text-right text-slate-500 text-[11px]">
+                          <td className="py-2 px-4 text-[#151c27] max-w-sm truncate">{req.path}</td>
+                          <td className="py-2 px-4 text-right text-[#0058be] font-semibold">{req.latencyMs} ms</td>
+                          <td className="py-2 px-4 text-right text-[#534434] text-[11px]">
                             {new Date(req.timestamp).toLocaleTimeString()}
                           </td>
                         </tr>
@@ -530,29 +530,29 @@ export const AdminSystem: React.FC = () => {
             <div className="space-y-6">
               {/* Storage Overview Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-slate-900/60 p-5 rounded-2xl border border-slate-800">
-                  <span className="text-xs text-slate-400 font-medium">Total Media Storage</span>
-                  <p className="text-2xl font-bold text-white mt-1">{storageData.totalStorageFormatted}</p>
-                  <p className="text-xs text-slate-400 mt-1">Across all Supabase buckets</p>
+                <div className="bg-white p-5 rounded-2xl border border-[#e2e8f8] shadow-level-1">
+                  <span className="text-xs text-[#534434] font-semibold font-heading">Total Media Storage</span>
+                  <p className="text-2xl font-bold font-mono text-[#151c27] mt-1">{storageData.totalStorageFormatted}</p>
+                  <p className="text-xs text-[#534434] mt-1">Across all Supabase buckets</p>
                 </div>
-                <div className="bg-slate-900/60 p-5 rounded-2xl border border-slate-800">
-                  <span className="text-xs text-slate-400 font-medium">Images Storage</span>
-                  <p className="text-2xl font-bold text-cyan-400 mt-1">{storageData.images.formatted}</p>
-                  <p className="text-xs text-slate-400 mt-1">
+                <div className="bg-white p-5 rounded-2xl border border-[#e2e8f8] shadow-level-1">
+                  <span className="text-xs text-[#534434] font-semibold font-heading">Images Storage</span>
+                  <p className="text-2xl font-bold font-mono text-[#0058be] mt-1">{storageData.images.formatted}</p>
+                  <p className="text-xs text-[#534434] mt-1">
                     {storageData.images.count.toLocaleString()} files ({storageData.images.percentage}%)
                   </p>
                 </div>
-                <div className="bg-slate-900/60 p-5 rounded-2xl border border-slate-800">
-                  <span className="text-xs text-slate-400 font-medium">Videos & Reels</span>
-                  <p className="text-2xl font-bold text-violet-400 mt-1">{storageData.videos.formatted}</p>
-                  <p className="text-xs text-slate-400 mt-1">
+                <div className="bg-white p-5 rounded-2xl border border-[#e2e8f8] shadow-level-1">
+                  <span className="text-xs text-[#534434] font-semibold font-heading">Videos & Reels</span>
+                  <p className="text-2xl font-bold font-mono text-[#855300] mt-1">{storageData.videos.formatted}</p>
+                  <p className="text-xs text-[#534434] mt-1">
                     {storageData.videos.count.toLocaleString()} files ({storageData.videos.percentage}%)
                   </p>
                 </div>
-                <div className="bg-slate-900/60 p-5 rounded-2xl border border-slate-800">
-                  <span className="text-xs text-slate-400 font-medium">Thumbnails Storage</span>
-                  <p className="text-2xl font-bold text-amber-400 mt-1">{storageData.thumbnails.formatted}</p>
-                  <p className="text-xs text-slate-400 mt-1">
+                <div className="bg-white p-5 rounded-2xl border border-[#e2e8f8] shadow-level-1">
+                  <span className="text-xs text-[#534434] font-semibold font-heading">Thumbnails Storage</span>
+                  <p className="text-2xl font-bold font-mono text-[#006c49] mt-1">{storageData.thumbnails.formatted}</p>
+                  <p className="text-xs text-[#534434] mt-1">
                     {storageData.thumbnails.count.toLocaleString()} files ({storageData.thumbnails.percentage}%)
                   </p>
                 </div>
@@ -561,28 +561,28 @@ export const AdminSystem: React.FC = () => {
               {/* Buckets Breakdown & Failed Uploads */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Buckets List */}
-                <div className="bg-slate-900/60 p-6 rounded-2xl border border-slate-800">
-                  <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-                    <HardDrive className="w-4 h-4 text-cyan-400" />
+                <div className="bg-white p-6 rounded-2xl border border-[#e2e8f8] shadow-level-1">
+                  <h3 className="text-base font-bold font-heading text-[#151c27] mb-4 flex items-center gap-2">
+                    <HardDrive className="w-4 h-4 text-[#0058be]" />
                     Storage Buckets Configuration
                   </h3>
                   <div className="space-y-3">
                     {storageData.buckets.map((b) => (
                       <div
                         key={b.name}
-                        className="p-3.5 bg-slate-800/40 rounded-xl border border-slate-700/40 flex items-center justify-between"
+                        className="p-3.5 bg-[#f9f9ff] rounded-xl border border-[#e2e8f8] flex items-center justify-between"
                       >
                         <div>
-                          <p className="text-sm font-semibold text-white font-mono">{b.name}</p>
-                          <p className="text-xs text-slate-400">
+                          <p className="text-sm font-bold text-[#151c27] font-mono">{b.name}</p>
+                          <p className="text-xs text-[#534434]">
                             Max file limit: {b.fileSizeLimitMB ? `${b.fileSizeLimitMB} MB` : "Unlimited"}
                           </p>
                         </div>
                         <span
                           className={`text-xs px-2.5 py-0.5 rounded-full font-semibold border ${
                             b.isPublic
-                              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                              : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                              ? "bg-[#bbf7d0]/40 text-[#006c49] border-[#006c49]/30"
+                              : "bg-[#ffe082]/40 text-[#855300] border-[#855300]/30"
                           }`}
                         >
                           {b.isPublic ? "Public" : "Private"}
@@ -593,20 +593,20 @@ export const AdminSystem: React.FC = () => {
                 </div>
 
                 {/* Failed Uploads Audit */}
-                <div className="bg-slate-900/60 p-6 rounded-2xl border border-slate-800">
+                <div className="bg-white p-6 rounded-2xl border border-[#e2e8f8] shadow-level-1">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-base font-bold text-white flex items-center gap-2">
-                      <AlertTriangle className="w-4 h-4 text-rose-400" />
+                    <h3 className="text-base font-bold font-heading text-[#151c27] flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 text-[#ba1a1a]" />
                       Failed & Incomplete Uploads
                     </h3>
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                    <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[#ffdad6]/40 text-[#ba1a1a] border border-[#ffdad6]">
                       {storageData.failedUploads.count} Failed
                     </span>
                   </div>
 
                   {storageData.failedUploads.items.length === 0 ? (
-                    <div className="py-10 text-center text-slate-500 text-xs">
-                      <CheckCircle2 className="w-8 h-8 text-emerald-400/60 mx-auto mb-2" />
+                    <div className="py-10 text-center text-[#534434] text-xs">
+                      <CheckCircle2 className="w-8 h-8 text-[#006c49] mx-auto mb-2" />
                       No failed or corrupted uploads found in storage pipeline.
                     </div>
                   ) : (
@@ -614,13 +614,13 @@ export const AdminSystem: React.FC = () => {
                       {storageData.failedUploads.items.map((item) => (
                         <div
                           key={item.id}
-                          className="p-3 bg-rose-500/5 rounded-xl border border-rose-500/20 flex items-center justify-between text-xs"
+                          className="p-3 bg-[#ffdad6]/20 rounded-xl border border-[#ffdad6] flex items-center justify-between text-xs"
                         >
                           <div>
-                            <p className="font-mono text-slate-200">ID: {item.id.slice(0, 13)}...</p>
-                            <p className="text-[11px] text-rose-400">{item.reason}</p>
+                            <p className="font-mono font-semibold text-[#151c27]">ID: {item.id.slice(0, 13)}...</p>
+                            <p className="text-[11px] text-[#ba1a1a]">{item.reason}</p>
                           </div>
-                          <span className="text-slate-500 text-[11px]">
+                          <span className="text-[#534434] text-[11px]">
                             {new Date(item.createdAt).toLocaleDateString()}
                           </span>
                         </div>
@@ -640,8 +640,8 @@ export const AdminSystem: React.FC = () => {
                 <div
                   className={`p-6 rounded-2xl border transition-all ${
                     maintenanceMode.is_enabled
-                      ? "bg-rose-950/40 border-rose-500/60 shadow-xl shadow-rose-950/50"
-                      : "bg-slate-900/60 border-slate-800"
+                      ? "bg-[#ffdad6]/20 border-[#ba1a1a]/40 shadow-level-2"
+                      : "bg-white border-[#e2e8f8] shadow-level-1"
                   }`}
                 >
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -649,21 +649,21 @@ export const AdminSystem: React.FC = () => {
                       <div className="flex items-center gap-2">
                         <AlertTriangle
                           className={`w-5 h-5 ${
-                            maintenanceMode.is_enabled ? "text-rose-400 animate-pulse" : "text-amber-400"
+                            maintenanceMode.is_enabled ? "text-[#ba1a1a] animate-pulse" : "text-[#855300]"
                           }`}
                         />
-                        <h3 className="text-base font-bold text-white">Controlled Maintenance Mode</h3>
+                        <h3 className="text-base font-bold font-heading text-[#151c27]">Controlled Maintenance Mode</h3>
                         <span
                           className={`text-xs px-2.5 py-0.5 rounded-full font-bold border ${
                             maintenanceMode.is_enabled
-                              ? "bg-rose-500/20 text-rose-300 border-rose-500/40"
-                              : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                              ? "bg-[#ffdad6] text-[#ba1a1a] border-[#ba1a1a]/30"
+                              : "bg-[#bbf7d0]/40 text-[#006c49] border-[#006c49]/30"
                           }`}
                         >
                           {maintenanceMode.is_enabled ? "MAINTENANCE ACTIVE" : "SYSTEM LIVE"}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-400 mt-1">
+                      <p className="text-xs text-[#534434] mt-1">
                         When enabled, all client user traffic receives HTTP 503 while administrative routes remain operational.
                       </p>
                     </div>
@@ -673,18 +673,18 @@ export const AdminSystem: React.FC = () => {
                         setTargetMaintenanceState(!maintenanceMode.is_enabled);
                         setShowConfirmMaintenanceModal(true);
                       }}
-                      className={`px-5 py-2.5 rounded-xl text-xs font-bold transition shadow-lg ${
+                      className={`px-5 py-2.5 rounded-xl text-xs font-bold transition shadow-sm cursor-pointer ${
                         maintenanceMode.is_enabled
-                          ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/20"
-                          : "bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/20"
+                          ? "bg-[#006c49] hover:bg-[#00553a] text-white"
+                          : "bg-[#ba1a1a] hover:bg-[#93000a] text-white"
                       }`}
                     >
                       {maintenanceMode.is_enabled ? "Deactivate Maintenance" : "Activate Maintenance"}
                     </button>
                   </div>
 
-                  <div className="mt-4 pt-4 border-t border-slate-800">
-                    <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  <div className="mt-4 pt-4 border-t border-[#e2e8f8]">
+                    <label className="block text-xs font-semibold font-heading text-[#534434] mb-1.5">
                       Client-Facing Downtime Message:
                     </label>
                     <div className="flex gap-2">
@@ -693,7 +693,7 @@ export const AdminSystem: React.FC = () => {
                         value={maintenanceMsgInput}
                         onChange={(e) => setMaintenanceMsgInput(e.target.value)}
                         placeholder="e.g. Peto is currently undergoing scheduled maintenance. Please check back shortly."
-                        className="flex-1 bg-slate-800/80 border border-slate-700 text-white px-3.5 py-2 rounded-xl text-xs focus:outline-none focus:border-cyan-500"
+                        className="flex-1 bg-[#f0f3ff] border border-[#dae2f3] text-[#151c27] px-3.5 py-2 rounded-xl text-xs focus:outline-none focus:bg-white focus:border-[#0058be]"
                       />
                       <button
                         onClick={async () => {
@@ -708,7 +708,7 @@ export const AdminSystem: React.FC = () => {
                             alert("Failed to update message: " + err.message);
                           }
                         }}
-                        className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700"
+                        className="px-4 py-2 bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#534434] text-xs font-semibold rounded-xl border border-[#dae2f3] cursor-pointer"
                       >
                         Save Message
                       </button>
@@ -718,20 +718,20 @@ export const AdminSystem: React.FC = () => {
               )}
 
               {/* Feature Flags Management */}
-              <div className="bg-slate-900/60 p-6 rounded-2xl border border-slate-800">
+              <div className="bg-white p-6 rounded-2xl border border-[#e2e8f8] shadow-level-1">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                   <div>
-                    <h3 className="text-base font-bold text-white flex items-center gap-2">
-                      <Flag className="w-4 h-4 text-cyan-400" />
+                    <h3 className="text-base font-bold font-heading text-[#151c27] flex items-center gap-2">
+                      <Flag className="w-4 h-4 text-[#0058be]" />
                       Dynamic Feature Flags Catalog
                     </h3>
-                    <p className="text-xs text-slate-400 mt-0.5">
+                    <p className="text-xs text-[#534434] mt-0.5">
                       Toggle operational features in real time without redeploying code.
                     </p>
                   </div>
                   <button
                     onClick={() => setShowAddFlagModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-cyan-600/20"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#0058be] hover:bg-[#2170e4] text-white rounded-xl text-xs font-semibold shadow-sm cursor-pointer"
                   >
                     <Plus className="w-4 h-4" />
                     New Feature Flag
@@ -742,7 +742,7 @@ export const AdminSystem: React.FC = () => {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase">
+                      <tr className="border-b border-[#e2e8f8] bg-[#f0f3ff] text-[#534434] font-bold font-heading uppercase">
                         <th className="py-3 px-4">Feature Flag / Key</th>
                         <th className="py-3 px-4">Description</th>
                         <th className="py-3 px-4 text-center">Status</th>
@@ -750,33 +750,33 @@ export const AdminSystem: React.FC = () => {
                         <th className="py-3 px-4 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/60">
+                    <tbody className="divide-y divide-[#e2e8f8]">
                       {featureFlags.map((flag) => (
-                        <tr key={flag.id} className="hover:bg-slate-800/30">
+                        <tr key={flag.id} className="hover:bg-[#f9f9ff] transition">
                           <td className="py-3 px-4">
-                            <p className="font-semibold text-white">{flag.name}</p>
-                            <p className="text-[11px] font-mono text-cyan-400 mt-0.5">{flag.key}</p>
+                            <p className="font-bold text-[#151c27]">{flag.name}</p>
+                            <p className="text-[11px] font-mono text-[#0058be] mt-0.5">{flag.key}</p>
                           </td>
-                          <td className="py-3 px-4 text-slate-300 max-w-xs">{flag.description || "—"}</td>
+                          <td className="py-3 px-4 text-[#534434] max-w-xs">{flag.description || "—"}</td>
                           <td className="py-3 px-4 text-center">
                             <button
                               onClick={() => handleToggleFlag(flag)}
-                              className={`px-3 py-1 rounded-full text-[11px] font-bold transition ${
+                              className={`px-3 py-1 rounded-full text-[11px] font-bold transition cursor-pointer ${
                                 flag.is_enabled
-                                  ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30"
-                                  : "bg-slate-800 text-slate-400 border border-slate-700 hover:bg-slate-700"
+                                  ? "bg-[#bbf7d0]/40 text-[#006c49] border border-[#006c49]/30 hover:bg-[#bbf7d0]/70"
+                                  : "bg-[#f0f3ff] text-[#534434] border border-[#dae2f3] hover:bg-[#e2e8f8]"
                               }`}
                             >
                               {flag.is_enabled ? "ENABLED" : "DISABLED"}
                             </button>
                           </td>
-                          <td className="py-3 px-4 text-slate-400 text-[11px]">
+                          <td className="py-3 px-4 text-[#534434] text-[11px]">
                             {new Date(flag.updated_at).toLocaleDateString()}
                           </td>
                           <td className="py-3 px-4 text-right">
                             <button
                               onClick={() => handleDeleteFlag(flag.id, flag.key)}
-                              className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition"
+                              className="p-1.5 text-[#534434] hover:text-[#ba1a1a] hover:bg-[#ffdad6]/40 rounded-xl transition cursor-pointer"
                               title="Delete feature flag"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -795,46 +795,46 @@ export const AdminSystem: React.FC = () => {
 
       {/* MODAL: ADD FEATURE FLAG */}
       {showAddFlagModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <Flag className="w-5 h-5 text-cyan-400" />
+        <div className="fixed inset-0 z-50 bg-[#151c27]/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white border border-[#e2e8f8] rounded-2xl max-w-md w-full p-6 shadow-level-3 space-y-4">
+            <h3 className="text-base font-bold font-heading text-[#151c27] flex items-center gap-2">
+              <Flag className="w-5 h-5 text-[#0058be]" />
               Create New Feature Flag
             </h3>
 
             <form onSubmit={handleCreateFlagSubmit} className="space-y-3 text-xs">
               <div>
-                <label className="block text-slate-300 font-medium mb-1">Flag Key (Unique Identifier)</label>
+                <label className="block text-[#534434] font-semibold font-heading mb-1">Flag Key (Unique Identifier)</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. ai_moderation_enabled"
                   value={newFlagKey}
                   onChange={(e) => setNewFlagKey(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono focus:outline-none focus:border-cyan-500"
+                  className="w-full bg-[#f0f3ff] border border-[#dae2f3] rounded-xl px-3 py-2 text-[#151c27] font-mono focus:outline-none focus:bg-white focus:border-[#0058be]"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-medium mb-1">Display Name</label>
+                <label className="block text-[#534434] font-semibold font-heading mb-1">Display Name</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. AI Content Moderation"
                   value={newFlagName}
                   onChange={(e) => setNewFlagName(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500"
+                  className="w-full bg-[#f0f3ff] border border-[#dae2f3] rounded-xl px-3 py-2 text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-medium mb-1">Description</label>
+                <label className="block text-[#534434] font-semibold font-heading mb-1">Description</label>
                 <textarea
                   rows={2}
                   placeholder="What does this feature flag toggle?"
                   value={newFlagDesc}
                   onChange={(e) => setNewFlagDesc(e.target.value)}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500"
+                  className="w-full bg-[#f0f3ff] border border-[#dae2f3] rounded-xl px-3 py-2 text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
                 />
               </div>
 
@@ -844,9 +844,9 @@ export const AdminSystem: React.FC = () => {
                   id="flagEnabledChk"
                   checked={newFlagEnabled}
                   onChange={(e) => setNewFlagEnabled(e.target.checked)}
-                  className="rounded bg-slate-800 border-slate-700 text-cyan-500 focus:ring-0"
+                  className="rounded text-[#0058be] focus:ring-[#0058be] border-[#dae2f3]"
                 />
-                <label htmlFor="flagEnabledChk" className="text-slate-300 font-medium cursor-pointer">
+                <label htmlFor="flagEnabledChk" className="text-[#151c27] font-medium cursor-pointer">
                   Enable immediately upon creation
                 </label>
               </div>
@@ -855,14 +855,14 @@ export const AdminSystem: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowAddFlagModal(false)}
-                  className="px-4 py-2 rounded-xl text-slate-400 hover:text-white bg-slate-800 font-medium"
+                  className="px-4 py-2 rounded-xl text-[#534434] hover:bg-[#e2e8f8] bg-[#f0f3ff] font-semibold border border-[#dae2f3] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmittingFlag}
-                  className="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold transition disabled:opacity-50"
+                  className="px-4 py-2 rounded-xl bg-[#0058be] hover:bg-[#2170e4] text-white font-bold transition disabled:opacity-50 cursor-pointer shadow-sm"
                 >
                   {isSubmittingFlag ? "Creating..." : "Create Flag"}
                 </button>
@@ -874,25 +874,25 @@ export const AdminSystem: React.FC = () => {
 
       {/* MODAL: CONFIRM MAINTENANCE MODE TOGGLE */}
       {showConfirmMaintenanceModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 bg-[#151c27]/40 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white border border-[#e2e8f8] rounded-2xl max-w-md w-full p-6 shadow-level-3 space-y-4">
             <div className="flex items-center gap-3">
               <div
                 className={`p-3 rounded-xl ${
-                  targetMaintenanceState ? "bg-rose-500/20 text-rose-400" : "bg-emerald-500/20 text-emerald-400"
+                  targetMaintenanceState ? "bg-[#ffdad6]/40 text-[#ba1a1a]" : "bg-[#bbf7d0]/40 text-[#006c49]"
                 }`}
               >
                 <AlertTriangle className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-white">
+                <h3 className="text-base font-bold font-heading text-[#151c27]">
                   {targetMaintenanceState ? "Activate Maintenance Mode?" : "Deactivate Maintenance Mode?"}
                 </h3>
-                <p className="text-xs text-slate-400">Confirmation required for global platform state change.</p>
+                <p className="text-xs text-[#534434]">Confirmation required for global platform state change.</p>
               </div>
             </div>
 
-            <p className="text-xs text-slate-300 leading-relaxed">
+            <p className="text-xs text-[#534434] leading-relaxed">
               {targetMaintenanceState
                 ? "WARNING: Enabling maintenance mode will block all mobile and web user requests with HTTP 503. Only authorized administrators will be allowed to use the application."
                 : "Disabling maintenance mode will restore standard public traffic and re-open all feeds, APIs, and client operations."}
@@ -902,15 +902,15 @@ export const AdminSystem: React.FC = () => {
               <button
                 onClick={() => setShowConfirmMaintenanceModal(false)}
                 disabled={isUpdatingMaintenance}
-                className="px-4 py-2 rounded-xl text-slate-400 hover:text-white bg-slate-800 font-medium text-xs"
+                className="px-4 py-2 rounded-xl text-[#534434] hover:bg-[#e2e8f8] bg-[#f0f3ff] font-semibold text-xs border border-[#dae2f3] cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={executeMaintenanceToggle}
                 disabled={isUpdatingMaintenance}
-                className={`px-4 py-2 rounded-xl text-white font-bold text-xs transition disabled:opacity-50 ${
-                  targetMaintenanceState ? "bg-rose-600 hover:bg-rose-500" : "bg-emerald-600 hover:bg-emerald-500"
+                className={`px-4 py-2 rounded-xl text-white font-bold text-xs transition disabled:opacity-50 cursor-pointer shadow-sm ${
+                  targetMaintenanceState ? "bg-[#ba1a1a] hover:bg-[#93000a]" : "bg-[#006c49] hover:bg-[#00553a]"
                 }`}
               >
                 {isUpdatingMaintenance

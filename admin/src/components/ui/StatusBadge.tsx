@@ -10,12 +10,12 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ type, value }) => {
   if (type === "verification") {
     const isVerified = value === true || String(value).toLowerCase() === "true";
     return isVerified ? (
-      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
-        <CheckCircle2 className="w-3 h-3 mr-1 text-cyan-400" />
+      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#e7eefe] text-[#0058be] border border-[#bed7fc]">
+        <CheckCircle2 className="w-3 h-3 mr-1 text-[#0058be]" />
         Verified
       </span>
     ) : (
-      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] text-slate-400 border border-slate-700/60 bg-slate-800/40">
+      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium text-[#534434] border border-[#dae2f3] bg-[#f0f3ff]">
         Standard
       </span>
     );
@@ -26,8 +26,8 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ type, value }) => {
   if (type === "status") {
     if (strValue === "ACTIVE") {
       return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-          <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-emerald-400 animate-pulse"></span>
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#e8f7f0] text-[#006c49] border border-[#a3e5c7]">
+          <span className="w-1.5 h-1.5 rounded-full mr-1.5 bg-[#006c49] animate-pulse"></span>
           Active
         </span>
       );
@@ -35,8 +35,8 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ type, value }) => {
 
     if (strValue === "SUSPENDED") {
       return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30">
-          <AlertTriangle className="w-3 h-3 mr-1 text-amber-400" />
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#fff3d6] text-[#855300] border border-[#fbd988]">
+          <AlertTriangle className="w-3 h-3 mr-1 text-[#855300]" />
           Suspended
         </span>
       );
@@ -44,8 +44,8 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ type, value }) => {
 
     if (strValue === "BANNED") {
       return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/15 text-rose-400 border border-rose-500/40 font-bold">
-          <ShieldAlert className="w-3 h-3 mr-1 text-rose-400" />
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#ffdad6] text-[#ba1a1a] border border-[#ffb4ab]">
+          <ShieldAlert className="w-3 h-3 mr-1 text-[#ba1a1a]" />
           Banned
         </span>
       );
@@ -53,7 +53,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ type, value }) => {
 
     if (strValue === "DEACTIVATED") {
       return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-400 border border-slate-700">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#f0f3ff] text-[#534434] border border-[#dae2f3]">
           Deactivated
         </span>
       );
@@ -61,56 +61,56 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ type, value }) => {
 
     if (strValue === "DELETED") {
       return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-zinc-900 text-zinc-400 border border-zinc-700">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#f5f5f7] text-[#737373] border border-[#e5e5e5]">
           Deleted
         </span>
       );
     }
 
     return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700">
+      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#f0f3ff] text-[#151c27] border border-[#dae2f3]">
         {String(value)}
       </span>
     );
   }
 
   if (type === "role") {
-    let colorClasses = "bg-slate-800 text-slate-300 border-slate-700";
+    let colorClasses = "bg-[#f0f3ff] text-[#534434] border-[#dae2f3]";
     if (strValue === "SUPER ADMIN") {
-      colorClasses = "bg-purple-500/15 text-purple-300 border-purple-500/30 font-bold";
+      colorClasses = "bg-[#feece0] text-[#855300] border-[#fed1b4] font-bold";
     } else if (strValue === "ADMIN") {
-      colorClasses = "bg-indigo-500/15 text-indigo-300 border-indigo-500/30";
+      colorClasses = "bg-[#e7eefe] text-[#0058be] border-[#bed7fc]";
     } else if (strValue === "MODERATOR") {
-      colorClasses = "bg-amber-500/15 text-amber-300 border-amber-500/30";
+      colorClasses = "bg-[#fff3d6] text-[#855300] border-[#fbd988]";
     } else if (strValue === "SUPPORT") {
-      colorClasses = "bg-cyan-500/15 text-cyan-300 border-cyan-500/30";
+      colorClasses = "bg-[#e0f7fa] text-[#006064] border-[#b2ebf2]";
     } else if (strValue === "ANALYST") {
-      colorClasses = "bg-blue-500/15 text-blue-300 border-blue-500/30";
+      colorClasses = "bg-[#e8eaf6] text-[#283593] border-[#c5cae9]";
     } else if (strValue === "ADS MANAGER") {
-      colorClasses = "bg-emerald-500/15 text-emerald-300 border-emerald-500/30";
+      colorClasses = "bg-[#e8f7f0] text-[#006c49] border-[#a3e5c7]";
     } else if (strValue === "COMPLIANCE MANAGER") {
-      colorClasses = "bg-rose-500/15 text-rose-300 border-rose-500/30";
+      colorClasses = "bg-[#ffdad6] text-[#ba1a1a] border-[#ffb4ab]";
     }
 
     return (
-      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs border ${colorClasses}`}>
+      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs border font-medium ${colorClasses}`}>
         {String(value)}
       </span>
     );
   }
 
   // Action tag
-  let actionColor = "bg-slate-800 text-slate-300 border-slate-700";
-  if (strValue.includes("LOGIN")) actionColor = "bg-blue-500/15 text-blue-400 border-blue-500/30";
+  let actionColor = "bg-[#f0f3ff] text-[#534434] border-[#dae2f3]";
+  if (strValue.includes("LOGIN")) actionColor = "bg-[#e7eefe] text-[#0058be] border-[#bed7fc]";
   if (strValue.includes("CREATE") || strValue.includes("RESTORE") || strValue.includes("VERIFIED"))
-    actionColor = "bg-emerald-500/15 text-emerald-400 border-emerald-500/30";
+    actionColor = "bg-[#e8f7f0] text-[#006c49] border-[#a3e5c7]";
   if (strValue.includes("UPDATE") || strValue.includes("CHANGED") || strValue.includes("SUSPENDED"))
-    actionColor = "bg-amber-500/15 text-amber-400 border-amber-500/30";
+    actionColor = "bg-[#fff3d6] text-[#855300] border-[#fbd988]";
   if (strValue.includes("REMOVE") || strValue.includes("DELETE") || strValue.includes("BANNED") || strValue.includes("UNVERIFIED"))
-    actionColor = "bg-rose-500/15 text-rose-400 border-rose-500/30";
+    actionColor = "bg-[#ffdad6] text-[#ba1a1a] border-[#ffb4ab]";
 
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-mono border ${actionColor}`}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-mono border font-medium ${actionColor}`}>
       {String(value)}
     </span>
   );

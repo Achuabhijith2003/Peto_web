@@ -1,5 +1,6 @@
 import { supabase } from "../../config/supabase";
 import { createAuditLog } from "./adminAudit.service";
+import { sanitizeSearchQuery } from "../utils/adminSanitizer";
 
 export type NotificationCategory =
   | "HIGH_PRIORITY_REPORT"
@@ -230,8 +231,10 @@ export async function getAdminNotificationsService(filter: GetNotificationsFilte
 
     // Text search
     if (filter.search && filter.search.trim()) {
-      const s = filter.search.trim();
-      query = query.or(`title.ilike.%${s}%,message.ilike.%${s}%`);
+      const s = sanitizeSearchQuery(filter.search);
+      if (s) {
+        query = query.or(`title.ilike.%${s}%,message.ilike.%${s}%`);
+      }
     }
 
     // Admin target filter (null indicates broadcast or matching target admin)

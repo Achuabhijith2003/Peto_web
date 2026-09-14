@@ -109,10 +109,7 @@ export const AdminAds: React.FC = () => {
     setTimeout(() => setNotification(null), 4000);
   };
 
-  // ----------------------------------------------------
   // DATA LOADERS
-  // ----------------------------------------------------
-
   const loadQueue = useCallback(async () => {
     setLoading(true);
     try {
@@ -177,7 +174,6 @@ export const AdminAds: React.FC = () => {
     else if (activeTab === "analytics") loadAnalytics();
   }, [activeTab, loadQueue, loadCampaigns, loadAdvertisers, loadAnalytics]);
 
-  // Initial load for metric summary counts
   useEffect(() => {
     loadQueue();
     loadCampaigns();
@@ -185,10 +181,7 @@ export const AdminAds: React.FC = () => {
     loadAnalytics();
   }, []);
 
-  // ----------------------------------------------------
   // ACTION HANDLERS
-  // ----------------------------------------------------
-
   const handleOpenReviewModal = (campaign: AdCampaignItem, creative?: AdCreativeItem) => {
     setSelectedCampaignForReview(campaign);
     setSelectedCreativeForReview(creative || campaign.ad_creatives?.[0] || null);
@@ -346,50 +339,46 @@ export const AdminAds: React.FC = () => {
     }
   };
 
-  // ----------------------------------------------------
-  // STATUS BADGES & HELPERS
-  // ----------------------------------------------------
-
   const renderCampaignStatusBadge = (status: CampaignStatus) => {
     switch (status) {
       case "ACTIVE":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#bbf7d0]/40 text-[#006c49] border border-[#006c49]/30">
             <CheckCircle2 size={12} />
             ACTIVE
           </span>
         );
       case "PENDING_REVIEW":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 animate-pulse">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#ffe082]/40 text-[#855300] border border-[#855300]/30 animate-pulse">
             <Clock size={12} />
             PENDING REVIEW
           </span>
         );
       case "PAUSED":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-500/10 text-slate-400 border border-slate-500/20">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#f0f3ff] text-[#534434] border border-[#dae2f3]">
             <Pause size={12} />
             PAUSED
           </span>
         );
       case "CHANGES_REQUESTED":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#f0f3ff] text-[#0058be] border border-[#dae2f3]">
             <Sliders size={12} />
             CHANGES REQUESTED
           </span>
         );
       case "REJECTED":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#ffdad6]/40 text-[#ba1a1a] border border-[#ffdad6]">
             <XCircle size={12} />
             REJECTED
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-800 text-slate-400 border border-slate-700">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#f0f3ff] text-[#534434] border border-[#dae2f3]">
             {status}
           </span>
         );
@@ -400,21 +389,21 @@ export const AdminAds: React.FC = () => {
     switch (status) {
       case "ACTIVE":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#bbf7d0]/40 text-[#006c49] border border-[#006c49]/30">
             <CheckCircle2 size={12} />
             VERIFIED PARTNER
           </span>
         );
       case "PENDING_VERIFICATION":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#ffe082]/40 text-[#855300] border border-[#855300]/30">
             <Clock size={12} />
             PENDING VERIFICATION
           </span>
         );
       case "SUSPENDED":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#ffdad6]/40 text-[#ba1a1a] border border-[#ffdad6]">
             <XCircle size={12} />
             SUSPENDED
           </span>
@@ -422,7 +411,6 @@ export const AdminAds: React.FC = () => {
     }
   };
 
-  // Metrics Counters
   const totalActiveCampaigns = campaigns.filter((c) => c.status === "ACTIVE").length;
   const totalPendingQueue = reviewQueue.length;
   const totalSpend = analytics?.totals?.spend ?? 4260.5;
@@ -434,32 +422,32 @@ export const AdminAds: React.FC = () => {
       {/* Toast Notification */}
       {notification && (
         <div
-          className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-xl border shadow-xl backdrop-blur-md animate-fade-in ${
+          className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl border shadow-level-3 backdrop-blur-md animate-fade-in ${
             notification.type === "success"
-              ? "bg-emerald-950/80 border-emerald-500/40 text-emerald-200"
-              : "bg-rose-950/80 border-rose-500/40 text-rose-200"
+              ? "bg-white border-[#bbf7d0] text-[#006c49]"
+              : "bg-white border-[#ffdad6] text-[#ba1a1a]"
           }`}
         >
           {notification.type === "success" ? <CheckCircle2 size={18} /> : <AlertTriangle size={18} />}
-          <span className="text-sm font-medium">{notification.message}</span>
+          <span className="text-xs font-semibold">{notification.message}</span>
         </div>
       )}
 
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#e2e8f8] pb-5">
         <div>
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/20">
+            <div className="p-2.5 rounded-2xl bg-[#0058be] text-white shadow-sm">
               <Megaphone className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+              <h1 className="text-2xl font-bold font-heading tracking-tight text-[#151c27] flex items-center gap-2">
                 Advertising & Promotions
-                <span className="text-xs px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-mono">
+                <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#f0f3ff] text-[#0058be] border border-[#dae2f3] font-mono">
                   PHASE 8
                 </span>
               </h1>
-              <p className="text-sm text-slate-400 mt-0.5">
+              <p className="text-xs text-[#534434] mt-0.5">
                 Manage commercial pet partners, creative approvals, targeting rules, and platform ad performance.
               </p>
             </div>
@@ -475,9 +463,9 @@ export const AdminAds: React.FC = () => {
               else loadAnalytics();
             }}
             disabled={loading}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700 transition"
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white hover:bg-[#f9f9ff] text-[#534434] text-xs font-semibold border border-[#e2e8f8] shadow-sm transition"
           >
-            <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+            <RefreshCw size={14} className={loading ? "animate-spin text-[#0058be]" : ""} />
             Refresh
           </button>
 
@@ -485,9 +473,9 @@ export const AdminAds: React.FC = () => {
             <>
               <button
                 onClick={() => setIsNewAdvertiserOpen(true)}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition"
+                className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white hover:bg-[#f9f9ff] text-[#151c27] text-xs font-semibold border border-[#e2e8f8] shadow-sm transition"
               >
-                <Building2 size={14} className="text-indigo-400" />
+                <Building2 size={14} className="text-[#0058be]" />
                 Add Advertiser
               </button>
 
@@ -498,7 +486,7 @@ export const AdminAds: React.FC = () => {
                   }
                   setIsNewCampaignOpen(true);
                 }}
-                className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-semibold shadow-md shadow-indigo-600/30 transition"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0058be] hover:bg-[#2170e4] text-white text-xs font-semibold shadow-sm transition"
               >
                 <Plus size={14} />
                 New Campaign
@@ -510,69 +498,69 @@ export const AdminAds: React.FC = () => {
 
       {/* High-Level Operational Metrics Banner */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3.5">
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 flex flex-col justify-between">
-          <span className="text-xs font-medium text-slate-400">Active Campaigns</span>
+        <div className="p-4 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1 flex flex-col justify-between">
+          <span className="text-xs font-semibold font-heading text-[#534434]">Active Campaigns</span>
           <div className="flex items-baseline justify-between mt-2">
-            <span className="text-2xl font-bold text-white font-mono">{totalActiveCampaigns}</span>
-            <span className="text-[11px] font-semibold text-emerald-400 flex items-center gap-0.5">
+            <span className="text-2xl font-bold text-[#151c27] font-mono">{totalActiveCampaigns}</span>
+            <span className="text-[11px] font-semibold text-[#006c49] flex items-center gap-0.5">
               <Play size={10} /> Live
             </span>
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 flex flex-col justify-between">
-          <span className="text-xs font-medium text-slate-400">Pending Review</span>
+        <div className="p-4 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1 flex flex-col justify-between">
+          <span className="text-xs font-semibold font-heading text-[#534434]">Pending Review</span>
           <div className="flex items-baseline justify-between mt-2">
-            <span className="text-2xl font-bold text-amber-400 font-mono">{totalPendingQueue}</span>
-            <span className="text-[11px] font-semibold text-amber-400/90 flex items-center gap-0.5">
+            <span className="text-2xl font-bold text-[#855300] font-mono">{totalPendingQueue}</span>
+            <span className="text-[11px] font-semibold text-[#855300] flex items-center gap-0.5">
               <Clock size={10} /> Needs Action
             </span>
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 flex flex-col justify-between">
-          <span className="text-xs font-medium text-slate-400">Total Ad Spend</span>
+        <div className="p-4 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1 flex flex-col justify-between">
+          <span className="text-xs font-semibold font-heading text-[#534434]">Total Ad Spend</span>
           <div className="flex items-baseline justify-between mt-2">
-            <span className="text-2xl font-bold text-indigo-400 font-mono">${totalSpend.toLocaleString()}</span>
-            <span className="text-[11px] font-semibold text-slate-400">USD</span>
+            <span className="text-2xl font-bold text-[#0058be] font-mono">${totalSpend.toLocaleString()}</span>
+            <span className="text-[11px] font-semibold text-[#534434]">USD</span>
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 flex flex-col justify-between">
-          <span className="text-xs font-medium text-slate-400">Total Impressions</span>
+        <div className="p-4 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1 flex flex-col justify-between">
+          <span className="text-xs font-semibold font-heading text-[#534434]">Total Impressions</span>
           <div className="flex items-baseline justify-between mt-2">
-            <span className="text-2xl font-bold text-violet-400 font-mono">
+            <span className="text-2xl font-bold text-[#151c27] font-mono">
               {totalImpressions > 1000 ? `${(totalImpressions / 1000).toFixed(1)}k` : totalImpressions}
             </span>
-            <span className="text-[11px] font-semibold text-emerald-400 flex items-center gap-0.5">
+            <span className="text-[11px] font-semibold text-[#006c49] flex items-center gap-0.5">
               <TrendingUp size={10} /> +18%
             </span>
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 flex flex-col justify-between">
-          <span className="text-xs font-medium text-slate-400">Average Platform CTR</span>
+        <div className="p-4 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1 flex flex-col justify-between">
+          <span className="text-xs font-semibold font-heading text-[#534434]">Average Platform CTR</span>
           <div className="flex items-baseline justify-between mt-2">
-            <span className="text-2xl font-bold text-cyan-400 font-mono">{avgCtr.toFixed(2)}%</span>
-            <span className="text-[11px] font-semibold text-cyan-400/80">Benchmark 2.1%</span>
+            <span className="text-2xl font-bold text-[#0058be] font-mono">{avgCtr.toFixed(2)}%</span>
+            <span className="text-[11px] font-semibold text-[#0058be]">Benchmark 2.1%</span>
           </div>
         </div>
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-800">
+      <div className="flex items-center gap-2 border-b border-[#e2e8f8]">
         <button
           onClick={() => setActiveTab("queue")}
-          className={`flex items-center gap-2 px-4 py-3 text-xs font-semibold border-b-2 transition ${
+          className={`flex items-center gap-2 px-4 py-3 text-xs font-semibold font-heading border-b-2 transition ${
             activeTab === "queue"
-              ? "border-amber-500 text-amber-400 bg-amber-500/5"
-              : "border-transparent text-slate-400 hover:text-slate-200"
+              ? "border-[#855300] text-[#855300] bg-[#ffe082]/10"
+              : "border-transparent text-[#534434] hover:text-[#151c27]"
           }`}
         >
           <Clock size={15} />
           Approval Review Queue
           {reviewQueue.length > 0 && (
-            <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-amber-500 text-slate-950 ml-1">
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#ffe082] text-[#855300] ml-1">
               {reviewQueue.length}
             </span>
           )}
@@ -580,10 +568,10 @@ export const AdminAds: React.FC = () => {
 
         <button
           onClick={() => setActiveTab("campaigns")}
-          className={`flex items-center gap-2 px-4 py-3 text-xs font-semibold border-b-2 transition ${
+          className={`flex items-center gap-2 px-4 py-3 text-xs font-semibold font-heading border-b-2 transition ${
             activeTab === "campaigns"
-              ? "border-indigo-500 text-indigo-400 bg-indigo-500/5"
-              : "border-transparent text-slate-400 hover:text-slate-200"
+              ? "border-[#0058be] text-[#0058be] bg-[#f0f3ff]"
+              : "border-transparent text-[#534434] hover:text-[#151c27]"
           }`}
         >
           <Layers size={15} />
@@ -592,10 +580,10 @@ export const AdminAds: React.FC = () => {
 
         <button
           onClick={() => setActiveTab("advertisers")}
-          className={`flex items-center gap-2 px-4 py-3 text-xs font-semibold border-b-2 transition ${
+          className={`flex items-center gap-2 px-4 py-3 text-xs font-semibold font-heading border-b-2 transition ${
             activeTab === "advertisers"
-              ? "border-purple-500 text-purple-400 bg-purple-500/5"
-              : "border-transparent text-slate-400 hover:text-slate-200"
+              ? "border-[#0058be] text-[#0058be] bg-[#f0f3ff]"
+              : "border-transparent text-[#534434] hover:text-[#151c27]"
           }`}
         >
           <Building2 size={15} />
@@ -604,10 +592,10 @@ export const AdminAds: React.FC = () => {
 
         <button
           onClick={() => setActiveTab("analytics")}
-          className={`flex items-center gap-2 px-4 py-3 text-xs font-semibold border-b-2 transition ${
+          className={`flex items-center gap-2 px-4 py-3 text-xs font-semibold font-heading border-b-2 transition ${
             activeTab === "analytics"
-              ? "border-cyan-500 text-cyan-400 bg-cyan-500/5"
-              : "border-transparent text-slate-400 hover:text-slate-200"
+              ? "border-[#006c49] text-[#006c49] bg-[#bbf7d0]/15"
+              : "border-transparent text-[#534434] hover:text-[#151c27]"
           }`}
         >
           <BarChart3 size={15} />
@@ -615,33 +603,31 @@ export const AdminAds: React.FC = () => {
         </button>
       </div>
 
-      {/* ============================================================
-          TAB 1: APPROVAL REVIEW QUEUE
-          ============================================================ */}
+      {/* TAB 1: APPROVAL REVIEW QUEUE */}
       {activeTab === "queue" && (
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#e2e8f8] shadow-level-1">
             <div className="relative flex-1 max-w-md">
-              <Search size={14} className="absolute left-3 top-3 text-slate-500" />
+              <Search size={14} className="absolute left-3 top-3 text-[#534434]/60" />
               <input
                 type="text"
                 placeholder="Search pending ads by campaign or company..."
                 value={queueSearch}
                 onChange={(e) => setQueueSearch(e.target.value)}
-                className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                className="w-full pl-9 pr-3 py-2 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] placeholder-[#534434]/60 focus:outline-none focus:bg-white focus:border-[#0058be]"
               />
             </div>
 
-            <span className="text-xs text-slate-400">
+            <span className="text-xs text-[#534434]">
               {reviewQueue.length} campaign{reviewQueue.length === 1 ? "" : "s"} awaiting compliance & safety review
             </span>
           </div>
 
           {reviewQueue.length === 0 ? (
-            <div className="p-12 text-center rounded-xl bg-slate-900/40 border border-slate-800">
-              <ShieldCheck className="w-12 h-12 text-emerald-400 mx-auto mb-3 opacity-80" />
-              <h3 className="text-base font-semibold text-white">Review Queue is Clear!</h3>
-              <p className="text-xs text-slate-400 max-w-sm mx-auto mt-1">
+            <div className="p-12 text-center rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1">
+              <ShieldCheck className="w-12 h-12 text-[#006c49] mx-auto mb-3 opacity-90" />
+              <h3 className="text-base font-bold font-heading text-[#151c27]">Review Queue is Clear!</h3>
+              <p className="text-xs text-[#534434] max-w-sm mx-auto mt-1">
                 All submitted campaigns and creatives have been reviewed and approved according to Peto Advertising Standards.
               </p>
             </div>
@@ -653,38 +639,38 @@ export const AdminAds: React.FC = () => {
                 return (
                   <div
                     key={camp.id}
-                    className="p-5 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition flex flex-col justify-between space-y-4"
+                    className="p-5 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1 hover:shadow-level-2 transition flex flex-col justify-between space-y-4"
                   >
                     <div>
                       {/* Top Header */}
                       <div className="flex items-start justify-between gap-2">
                         <div>
-                          <span className="text-[11px] font-mono font-semibold text-indigo-400 uppercase tracking-wider">
+                          <span className="text-[11px] font-mono font-semibold text-[#0058be] uppercase tracking-wider">
                             {camp.advertiser?.company_name || "Commercial Partner"}
                           </span>
-                          <h3 className="text-base font-bold text-white mt-0.5">{camp.name}</h3>
+                          <h3 className="text-base font-bold font-heading text-[#151c27] mt-0.5">{camp.name}</h3>
                         </div>
                         {renderCampaignStatusBadge(camp.status)}
                       </div>
 
                       {/* Creative Preview Box */}
                       {primaryCreative && (
-                        <div className="mt-3.5 p-3.5 rounded-xl bg-slate-950 border border-slate-800/80 space-y-3">
-                          <div className="flex items-center justify-between text-xs text-slate-400">
-                            <span className="flex items-center gap-1.5 font-medium text-slate-300">
+                        <div className="mt-3.5 p-3.5 rounded-xl bg-[#f9f9ff] border border-[#e2e8f8] space-y-3">
+                          <div className="flex items-center justify-between text-xs text-[#534434]">
+                            <span className="flex items-center gap-1.5 font-semibold text-[#151c27]">
                               {primaryCreative.format === "VIDEO" ? (
-                                <Video size={13} className="text-purple-400" />
+                                <Video size={13} className="text-[#0058be]" />
                               ) : (
-                                <ImageIcon size={13} className="text-indigo-400" />
+                                <ImageIcon size={13} className="text-[#0058be]" />
                               )}
                               {primaryCreative.format} FORMAT
                             </span>
-                            <span className="font-mono text-[11px] text-slate-500">{primaryCreative.call_to_action}</span>
+                            <span className="font-mono text-[11px] text-[#534434]/80">{primaryCreative.call_to_action}</span>
                           </div>
 
                           {/* Media preview render */}
                           {primaryCreative.media_urls?.[0]?.url && (
-                            <div className="relative rounded-lg overflow-hidden border border-slate-800 aspect-video bg-slate-900 max-h-48 flex items-center justify-center">
+                            <div className="relative rounded-xl overflow-hidden border border-[#e2e8f8] aspect-video bg-black/90 max-h-48 flex items-center justify-center">
                               {primaryCreative.format === "VIDEO" ? (
                                 <video
                                   src={primaryCreative.media_urls[0].url}
@@ -702,20 +688,20 @@ export const AdminAds: React.FC = () => {
                           )}
 
                           <div>
-                            <h4 className="text-sm font-semibold text-white">{primaryCreative.headline}</h4>
-                            <p className="text-xs text-slate-400 mt-1 line-clamp-2">{primaryCreative.body_text}</p>
+                            <h4 className="text-sm font-bold font-heading text-[#151c27]">{primaryCreative.headline}</h4>
+                            <p className="text-xs text-[#534434] mt-1 line-clamp-2">{primaryCreative.body_text}</p>
                           </div>
 
-                          <div className="flex items-center justify-between pt-2 border-t border-slate-800/60 text-xs">
+                          <div className="flex items-center justify-between pt-2 border-t border-[#e2e8f8] text-xs">
                             <a
                               href={primaryCreative.destination_url}
                               target="_blank"
                               rel="noreferrer"
-                              className="text-indigo-400 hover:text-indigo-300 flex items-center gap-1 font-mono text-[11px] truncate max-w-xs"
+                              className="text-[#0058be] hover:underline flex items-center gap-1 font-mono text-[11px] truncate max-w-xs"
                             >
                               <ExternalLink size={11} /> {primaryCreative.destination_url}
                             </a>
-                            <span className="px-2 py-0.5 rounded bg-indigo-600/20 text-indigo-300 font-bold text-[10px]">
+                            <span className="px-2 py-0.5 rounded-full bg-[#f0f3ff] text-[#0058be] font-bold text-[10px]">
                               CTA: {primaryCreative.call_to_action}
                             </span>
                           </div>
@@ -725,37 +711,37 @@ export const AdminAds: React.FC = () => {
                       {/* Targeting & Objective Specs */}
                       <div className="mt-3.5 space-y-2">
                         <div className="flex flex-wrap items-center gap-1.5">
-                          <span className="text-[10px] font-semibold uppercase text-slate-400 mr-1 flex items-center gap-1">
+                          <span className="text-[10px] font-semibold uppercase text-[#534434] mr-1 flex items-center gap-1">
                             <Target size={11} /> Interests:
                           </span>
                           {(targeting?.pet_interests || ["DOGS", "CATS"]).map((interest: string) => (
                             <span
                               key={interest}
-                              className="px-2 py-0.5 rounded bg-slate-800 text-[11px] font-medium text-slate-300 border border-slate-700/60"
+                              className="px-2 py-0.5 rounded-full bg-[#f0f3ff] text-[11px] font-medium text-[#534434] border border-[#dae2f3]"
                             >
                               {interest}
                             </span>
                           ))}
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-1.5 text-xs text-slate-400">
-                          <span className="text-[11px] text-slate-400">
-                            Budget: <strong className="text-white font-mono">${camp.total_budget}</strong> (
+                        <div className="flex flex-wrap items-center gap-1.5 text-xs text-[#534434]">
+                          <span className="text-[11px]">
+                            Budget: <strong className="text-[#151c27] font-mono">${camp.total_budget}</strong> (
                             {camp.budget_type})
                           </span>
                           <span>•</span>
-                          <span className="text-[11px] text-slate-400">
-                            Objective: <strong className="text-indigo-300">{camp.objective}</strong>
+                          <span className="text-[11px]">
+                            Objective: <strong className="text-[#0058be]">{camp.objective}</strong>
                           </span>
                         </div>
                       </div>
                     </div>
 
                     {/* Review Decision Buttons */}
-                    <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+                    <div className="pt-3 border-t border-[#e2e8f8] flex items-center justify-end gap-2">
                       <button
                         onClick={() => handleOpenReviewModal(camp, primaryCreative)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-md shadow-indigo-600/30 transition"
+                        className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#0058be] hover:bg-[#2170e4] text-white text-xs font-semibold shadow-sm transition"
                       >
                         <Eye size={13} />
                         Review & Decide
@@ -769,28 +755,26 @@ export const AdminAds: React.FC = () => {
         </div>
       )}
 
-      {/* ============================================================
-          TAB 2: CAMPAIGNS DIRECTORY
-          ============================================================ */}
+      {/* TAB 2: CAMPAIGNS DIRECTORY */}
       {activeTab === "campaigns" && (
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#e2e8f8] shadow-level-1">
             <div className="flex flex-wrap items-center gap-3 flex-1">
               <div className="relative flex-1 max-w-sm">
-                <Search size={14} className="absolute left-3 top-3 text-slate-500" />
+                <Search size={14} className="absolute left-3 top-3 text-[#534434]/60" />
                 <input
                   type="text"
                   placeholder="Search campaigns by name or advertiser..."
                   value={campaignSearch}
                   onChange={(e) => setCampaignSearch(e.target.value)}
-                  className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                  className="w-full pl-9 pr-3 py-2 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] placeholder-[#534434]/60 focus:outline-none focus:bg-white focus:border-[#0058be]"
                 />
               </div>
 
               <select
                 value={campaignStatusFilter}
                 onChange={(e) => setCampaignStatusFilter(e.target.value)}
-                className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-300 focus:outline-none focus:border-indigo-500"
+                className="px-3 py-2 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
               >
                 <option value="ALL">All Statuses</option>
                 <option value="ACTIVE">Active</option>
@@ -803,7 +787,7 @@ export const AdminAds: React.FC = () => {
               <select
                 value={campaignObjectiveFilter}
                 onChange={(e) => setCampaignObjectiveFilter(e.target.value)}
-                className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-300 focus:outline-none focus:border-indigo-500"
+                className="px-3 py-2 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
               >
                 <option value="ALL">All Objectives</option>
                 <option value="TRAFFIC">Traffic</option>
@@ -814,26 +798,26 @@ export const AdminAds: React.FC = () => {
               </select>
             </div>
 
-            <span className="text-xs text-slate-400 font-mono">{campaigns.length} total campaigns</span>
+            <span className="text-xs text-[#534434] font-mono">{campaigns.length} total campaigns</span>
           </div>
 
-          <div className="rounded-xl border border-slate-800 bg-slate-900/60 overflow-hidden shadow-xl">
+          <div className="rounded-2xl border border-[#e2e8f8] bg-white overflow-hidden shadow-level-1">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-950/80 text-slate-400 uppercase font-semibold border-b border-slate-800 tracking-wider text-[11px]">
+                <thead className="bg-[#f0f3ff] text-[#534434] uppercase font-bold font-heading border-b border-[#e2e8f8] tracking-wider text-[11px]">
                   <tr>
-                    <th className="py-3 px-4">Campaign & Advertiser</th>
-                    <th className="py-3 px-4">Objective</th>
-                    <th className="py-3 px-4">Budget & Spend</th>
-                    <th className="py-3 px-4">Schedule</th>
-                    <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4 text-right">Actions</th>
+                    <th className="py-3.5 px-4">Campaign & Advertiser</th>
+                    <th className="py-3.5 px-4">Objective</th>
+                    <th className="py-3.5 px-4">Budget & Spend</th>
+                    <th className="py-3.5 px-4">Schedule</th>
+                    <th className="py-3.5 px-4">Status</th>
+                    <th className="py-3.5 px-4 text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="divide-y divide-[#e2e8f8]">
                   {campaigns.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-10 text-center text-slate-500">
+                      <td colSpan={6} className="py-10 text-center text-[#534434]">
                         No campaigns found matching criteria.
                       </td>
                     </tr>
@@ -845,36 +829,36 @@ export const AdminAds: React.FC = () => {
                           : 0;
 
                       return (
-                        <tr key={camp.id} className="hover:bg-slate-800/40 transition">
+                        <tr key={camp.id} className="hover:bg-[#f9f9ff] transition">
                           <td className="py-3.5 px-4">
-                            <div className="font-semibold text-white text-sm">{camp.name}</div>
-                            <div className="text-[11px] text-slate-400">
+                            <div className="font-bold text-[#151c27] text-sm">{camp.name}</div>
+                            <div className="text-[11px] text-[#534434]">
                               {camp.advertiser?.company_name || "Unknown Advertiser"}
                             </div>
                           </td>
 
                           <td className="py-3.5 px-4">
-                            <span className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-300 font-semibold font-mono text-[10px] border border-indigo-500/20">
+                            <span className="px-2.5 py-0.5 rounded-full bg-[#f0f3ff] text-[#0058be] font-semibold font-mono text-[10px] border border-[#dae2f3]">
                               {camp.objective}
                             </span>
                           </td>
 
                           <td className="py-3.5 px-4">
                             <div className="flex items-center justify-between text-xs mb-1 font-mono">
-                              <span className="text-white">${camp.spent.toLocaleString()}</span>
-                              <span className="text-slate-400">/ ${camp.total_budget.toLocaleString()}</span>
+                              <span className="text-[#151c27] font-bold">${camp.spent.toLocaleString()}</span>
+                              <span className="text-[#534434]">/ ${camp.total_budget.toLocaleString()}</span>
                             </div>
-                            <div className="w-32 bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                            <div className="w-32 bg-[#e2e8f8] h-1.5 rounded-full overflow-hidden">
                               <div
-                                className="bg-indigo-500 h-full rounded-full transition-all"
+                                className="bg-[#0058be] h-full rounded-full transition-all"
                                 style={{ width: `${pctSpent}%` }}
                               />
                             </div>
                           </td>
 
-                          <td className="py-3.5 px-4 text-slate-300 font-mono text-[11px]">
-                            <div>{new Date(camp.start_date).toLocaleDateString()}</div>
-                            <div className="text-slate-500">
+                          <td className="py-3.5 px-4 text-[#534434] font-mono text-[11px]">
+                            <div className="text-[#151c27] font-medium">{new Date(camp.start_date).toLocaleDateString()}</div>
+                            <div className="text-[#534434]/70">
                               {camp.end_date ? new Date(camp.end_date).toLocaleDateString() : "Ongoing"}
                             </div>
                           </td>
@@ -888,19 +872,19 @@ export const AdminAds: React.FC = () => {
                                   onClick={() => handleToggleCampaignStatus(camp)}
                                   disabled={actionLoading}
                                   title={camp.status === "ACTIVE" ? "Pause Campaign" : "Resume Campaign"}
-                                  className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition"
+                                  className="p-1.5 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#534434] border border-[#dae2f3] transition cursor-pointer"
                                 >
                                   {camp.status === "ACTIVE" ? (
-                                    <Pause size={13} className="text-amber-400" />
+                                    <Pause size={13} className="text-[#855300]" />
                                   ) : (
-                                    <Play size={13} className="text-emerald-400" />
+                                    <Play size={13} className="text-[#006c49]" />
                                   )}
                                 </button>
                               )}
 
                               <button
                                 onClick={() => handleOpenReviewModal(camp)}
-                                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition"
+                                className="p-1.5 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#534434] border border-[#dae2f3] transition cursor-pointer"
                                 title="Inspect Details"
                               >
                                 <Eye size={13} />
@@ -918,28 +902,26 @@ export const AdminAds: React.FC = () => {
         </div>
       )}
 
-      {/* ============================================================
-          TAB 3: ADVERTISER PARTNERS
-          ============================================================ */}
+      {/* TAB 3: ADVERTISER PARTNERS */}
       {activeTab === "advertisers" && (
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#e2e8f8] shadow-level-1">
             <div className="flex items-center gap-3 flex-1">
               <div className="relative flex-1 max-w-sm">
-                <Search size={14} className="absolute left-3 top-3 text-slate-500" />
+                <Search size={14} className="absolute left-3 top-3 text-[#534434]/60" />
                 <input
                   type="text"
                   placeholder="Search advertisers by company or email..."
                   value={advertiserSearch}
                   onChange={(e) => setAdvertiserSearch(e.target.value)}
-                  className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                  className="w-full pl-9 pr-3 py-2 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] placeholder-[#534434]/60 focus:outline-none focus:bg-white focus:border-[#0058be]"
                 />
               </div>
 
               <select
                 value={advertiserStatusFilter}
                 onChange={(e) => setAdvertiserStatusFilter(e.target.value)}
-                className="px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-300 focus:outline-none focus:border-indigo-500"
+                className="px-3 py-2 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
               >
                 <option value="ALL">All Partner Statuses</option>
                 <option value="ACTIVE">Verified Active</option>
@@ -948,40 +930,40 @@ export const AdminAds: React.FC = () => {
               </select>
             </div>
 
-            <span className="text-xs text-slate-400 font-mono">{advertisers.length} commercial partners</span>
+            <span className="text-xs text-[#534434] font-mono">{advertisers.length} commercial partners</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {advertisers.map((adv) => (
               <div
                 key={adv.id}
-                className="p-5 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition flex flex-col justify-between space-y-4"
+                className="p-5 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1 hover:shadow-level-2 transition flex flex-col justify-between space-y-4"
               >
                 <div>
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <h4 className="text-base font-bold text-white">{adv.company_name}</h4>
-                      <p className="text-xs text-slate-400">{adv.contact_name}</p>
+                      <h4 className="text-base font-bold font-heading text-[#151c27]">{adv.company_name}</h4>
+                      <p className="text-xs text-[#534434]">{adv.contact_name}</p>
                     </div>
                     {renderAdvertiserStatusBadge(adv.status)}
                   </div>
 
-                  <div className="mt-3.5 space-y-1.5 text-xs text-slate-400">
+                  <div className="mt-3.5 space-y-1.5 text-xs text-[#534434]">
                     <div className="flex items-center gap-2">
-                      <span className="text-slate-500">Email:</span>
-                      <a href={`mailto:${adv.contact_email}`} className="text-indigo-400 hover:underline">
+                      <span className="text-[#534434]/70">Email:</span>
+                      <a href={`mailto:${adv.contact_email}`} className="text-[#0058be] hover:underline">
                         {adv.contact_email}
                       </a>
                     </div>
 
                     {adv.website_url && (
                       <div className="flex items-center gap-2">
-                        <span className="text-slate-500">Website:</span>
+                        <span className="text-[#534434]/70">Website:</span>
                         <a
                           href={adv.website_url}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-slate-300 hover:underline flex items-center gap-1 font-mono text-[11px]"
+                          className="text-[#151c27] hover:underline flex items-center gap-1 font-mono text-[11px]"
                         >
                           <Globe size={11} /> {adv.website_url}
                         </a>
@@ -989,18 +971,18 @@ export const AdminAds: React.FC = () => {
                     )}
 
                     <div className="flex items-center gap-2">
-                      <span className="text-slate-500">Industry:</span>
-                      <span className="px-1.5 py-0.2 rounded bg-slate-800 text-[10px] font-mono text-slate-300">
+                      <span className="text-[#534434]/70">Industry:</span>
+                      <span className="px-2 py-0.5 rounded-full bg-[#f0f3ff] text-[10px] font-mono text-[#534434] border border-[#dae2f3]">
                         {adv.industry || "PET_CARE"}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between">
+                <div className="pt-3 border-t border-[#e2e8f8] flex items-center justify-between">
                   <div className="text-xs">
-                    <span className="text-slate-500 block text-[10px]">Total Platform Spend</span>
-                    <span className="font-bold text-white font-mono">${adv.total_spend.toLocaleString()}</span>
+                    <span className="text-[#534434]/70 block text-[10px]">Total Platform Spend</span>
+                    <span className="font-bold text-[#151c27] font-mono">${adv.total_spend.toLocaleString()}</span>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -1008,10 +990,10 @@ export const AdminAds: React.FC = () => {
                       <button
                         onClick={() => handleToggleAdvertiserStatus(adv)}
                         disabled={actionLoading}
-                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition ${
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition cursor-pointer ${
                           adv.status === "ACTIVE"
-                            ? "bg-rose-500/10 text-rose-400 border-rose-500/20 hover:bg-rose-500/20"
-                            : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20"
+                            ? "bg-[#ffdad6]/40 text-[#ba1a1a] border-[#ffdad6] hover:bg-[#ffdad6]/70"
+                            : "bg-[#bbf7d0]/40 text-[#006c49] border-[#006c49]/30 hover:bg-[#bbf7d0]/70"
                         }`}
                       >
                         {adv.status === "ACTIVE" ? "Suspend" : "Activate"}
@@ -1025,15 +1007,13 @@ export const AdminAds: React.FC = () => {
         </div>
       )}
 
-      {/* ============================================================
-          TAB 4: PERFORMANCE & TARGETING ANALYTICS
-          ============================================================ */}
+      {/* TAB 4: PERFORMANCE & TARGETING ANALYTICS */}
       {activeTab === "analytics" && (
         <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/50 p-3 rounded-xl border border-slate-800">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#e2e8f8] shadow-level-1">
             <div className="flex items-center gap-2">
-              <BarChart3 className="text-cyan-400 w-4 h-4" />
-              <span className="text-xs font-semibold text-white">Aggregated Platform Ad Performance</span>
+              <BarChart3 className="text-[#0058be] w-4 h-4" />
+              <span className="text-xs font-bold font-heading text-[#151c27]">Aggregated Platform Ad Performance</span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -1041,10 +1021,10 @@ export const AdminAds: React.FC = () => {
                 <button
                   key={tf}
                   onClick={() => setAnalyticsTimeframe(tf)}
-                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
                     analyticsTimeframe === tf
-                      ? "bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/20"
-                      : "bg-slate-800 text-slate-400 hover:text-white"
+                      ? "bg-[#0058be] text-white shadow-sm"
+                      : "bg-[#f0f3ff] text-[#534434] hover:bg-[#e2e8f8]"
                   }`}
                 >
                   Last {tf}
@@ -1055,59 +1035,59 @@ export const AdminAds: React.FC = () => {
 
           {/* Performance KPI Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-              <span className="text-xs text-slate-400">Total Ad Impressions</span>
-              <div className="text-2xl font-bold text-white font-mono mt-1">
+            <div className="p-4 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1">
+              <span className="text-xs font-semibold font-heading text-[#534434]">Total Ad Impressions</span>
+              <div className="text-2xl font-bold text-[#151c27] font-mono mt-1">
                 {(analytics?.totals?.impressions ?? 0).toLocaleString()}
               </div>
-              <span className="text-[11px] text-slate-400 mt-1 block">
+              <span className="text-[11px] text-[#534434]/80 mt-1 block">
                 Reach: {(analytics?.totals?.reach ?? 0).toLocaleString()} unique users
               </span>
             </div>
 
-            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-              <span className="text-xs text-slate-400">Verified Clicks</span>
-              <div className="text-2xl font-bold text-indigo-400 font-mono mt-1">
+            <div className="p-4 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1">
+              <span className="text-xs font-semibold font-heading text-[#534434]">Verified Clicks</span>
+              <div className="text-2xl font-bold text-[#0058be] font-mono mt-1">
                 {(analytics?.totals?.clicks ?? 0).toLocaleString()}
               </div>
-              <span className="text-[11px] text-slate-400 mt-1 block">
+              <span className="text-[11px] text-[#534434]/80 mt-1 block">
                 Avg CPC: ${analytics?.totals?.avgCpc ?? 0}
               </span>
             </div>
 
-            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-              <span className="text-xs text-slate-400">Click-Through Rate (CTR)</span>
-              <div className="text-2xl font-bold text-emerald-400 font-mono mt-1">
+            <div className="p-4 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1">
+              <span className="text-xs font-semibold font-heading text-[#534434]">Click-Through Rate (CTR)</span>
+              <div className="text-2xl font-bold text-[#006c49] font-mono mt-1">
                 {analytics?.totals?.avgCtr ?? 0}%
               </div>
-              <span className="text-[11px] text-emerald-400/80 mt-1 block">
+              <span className="text-[11px] text-[#006c49] mt-1 block font-medium">
                 Formula: (Clicks / Impressions) * 100
               </span>
             </div>
 
-            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800">
-              <span className="text-xs text-slate-400">Total Revenue / Spend</span>
-              <div className="text-2xl font-bold text-cyan-400 font-mono mt-1">
+            <div className="p-4 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1">
+              <span className="text-xs font-semibold font-heading text-[#534434]">Total Revenue / Spend</span>
+              <div className="text-2xl font-bold text-[#855300] font-mono mt-1">
                 ${(analytics?.totals?.spend ?? 0).toLocaleString()}
               </div>
-              <span className="text-[11px] text-slate-400 mt-1 block">
+              <span className="text-[11px] text-[#534434]/80 mt-1 block">
                 Avg CPM: ${analytics?.totals?.avgCpm ?? 0}
               </span>
             </div>
           </div>
 
           {/* Daily Trends Table */}
-          <div className="rounded-xl border border-slate-800 bg-slate-900/60 overflow-hidden">
-            <div className="p-4 border-b border-slate-800 flex items-center justify-between">
-              <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+          <div className="rounded-2xl border border-[#e2e8f8] bg-white overflow-hidden shadow-level-1">
+            <div className="p-4 border-b border-[#e2e8f8] flex items-center justify-between">
+              <h4 className="text-xs font-bold font-heading uppercase tracking-wider text-[#151c27]">
                 Daily Performance Progression
               </h4>
-              <span className="text-xs text-slate-400 font-mono">Actual Metrics Logged</span>
+              <span className="text-xs text-[#534434] font-mono">Actual Metrics Logged</span>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-950/80 text-slate-400 uppercase font-semibold border-b border-slate-800 tracking-wider text-[11px]">
+                <thead className="bg-[#f0f3ff] text-[#534434] uppercase font-bold font-heading border-b border-[#e2e8f8] tracking-wider text-[11px]">
                   <tr>
                     <th className="py-3 px-4">Date</th>
                     <th className="py-3 px-4">Impressions</th>
@@ -1117,19 +1097,19 @@ export const AdminAds: React.FC = () => {
                     <th className="py-3 px-4 text-right">Spend</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60 font-mono">
+                <tbody className="divide-y divide-[#e2e8f8] font-mono">
                   {analytics?.dailyTrends && analytics.dailyTrends.length > 0 ? (
                     analytics.dailyTrends.map((trend) => {
                       const dailyCtr =
                         trend.impressions > 0 ? ((trend.clicks / trend.impressions) * 100).toFixed(2) : "0.00";
                       return (
-                        <tr key={trend.date} className="hover:bg-slate-800/30 transition">
-                          <td className="py-3 px-4 text-slate-300 font-semibold">{trend.date}</td>
-                          <td className="py-3 px-4 text-slate-200">{trend.impressions.toLocaleString()}</td>
-                          <td className="py-3 px-4 text-indigo-400">{trend.clicks.toLocaleString()}</td>
-                          <td className="py-3 px-4 text-emerald-400">{dailyCtr}%</td>
-                          <td className="py-3 px-4 text-slate-300">{trend.conversions}</td>
-                          <td className="py-3 px-4 text-right text-white font-bold">
+                        <tr key={trend.date} className="hover:bg-[#f9f9ff] transition">
+                          <td className="py-3 px-4 text-[#151c27] font-semibold">{trend.date}</td>
+                          <td className="py-3 px-4 text-[#534434]">{trend.impressions.toLocaleString()}</td>
+                          <td className="py-3 px-4 text-[#0058be] font-semibold">{trend.clicks.toLocaleString()}</td>
+                          <td className="py-3 px-4 text-[#006c49] font-semibold">{dailyCtr}%</td>
+                          <td className="py-3 px-4 text-[#534434]">{trend.conversions}</td>
+                          <td className="py-3 px-4 text-right text-[#151c27] font-bold">
                             ${Number(trend.spend).toFixed(2)}
                           </td>
                         </tr>
@@ -1137,7 +1117,7 @@ export const AdminAds: React.FC = () => {
                     })
                   ) : (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-slate-500">
+                      <td colSpan={6} className="py-8 text-center text-[#534434]">
                         No performance telemetry logged for this interval.
                       </td>
                     </tr>
@@ -1149,20 +1129,18 @@ export const AdminAds: React.FC = () => {
         </div>
       )}
 
-      {/* ============================================================
-          MODAL: REVIEW & APPROVAL DECISION
-          ============================================================ */}
+      {/* MODAL: REVIEW & APPROVAL DECISION */}
       {isReviewModalOpen && selectedCampaignForReview && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-2xl rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden">
-            <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#151c27]/40 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-2xl rounded-2xl bg-white border border-[#e2e8f8] shadow-level-3 overflow-hidden">
+            <div className="p-5 border-b border-[#e2e8f8] flex items-center justify-between">
               <div>
-                <h3 className="text-base font-bold text-white">Campaign Compliance Decision</h3>
-                <p className="text-xs text-slate-400 mt-0.5">{selectedCampaignForReview.name}</p>
+                <h3 className="text-base font-bold font-heading text-[#151c27]">Campaign Compliance Decision</h3>
+                <p className="text-xs text-[#534434] mt-0.5">{selectedCampaignForReview.name}</p>
               </div>
               <button
                 onClick={() => setIsReviewModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white"
+                className="p-1.5 rounded-xl text-[#534434] hover:text-[#151c27] cursor-pointer"
               >
                 ✕
               </button>
@@ -1171,18 +1149,18 @@ export const AdminAds: React.FC = () => {
             <div className="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
               {/* Creative Inspection Card */}
               {selectedCreativeForReview && (
-                <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+                <div className="p-4 rounded-xl bg-[#f9f9ff] border border-[#e2e8f8] space-y-3">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-indigo-400">
+                    <span className="font-semibold text-[#0058be]">
                       {selectedCreativeForReview.format} Creative
                     </span>
-                    <span className="font-mono text-slate-500">
+                    <span className="font-mono text-[#534434]">
                       CTA: {selectedCreativeForReview.call_to_action}
                     </span>
                   </div>
 
                   {selectedCreativeForReview.media_urls?.[0]?.url && (
-                    <div className="relative rounded-lg overflow-hidden border border-slate-800 aspect-video max-h-56 bg-slate-900 flex items-center justify-center">
+                    <div className="relative rounded-xl overflow-hidden border border-[#e2e8f8] aspect-video max-h-56 bg-black/90 flex items-center justify-center">
                       <img
                         src={selectedCreativeForReview.media_urls[0].url}
                         alt="Creative Preview"
@@ -1192,54 +1170,54 @@ export const AdminAds: React.FC = () => {
                   )}
 
                   <div>
-                    <h4 className="text-sm font-bold text-white">{selectedCreativeForReview.headline}</h4>
-                    <p className="text-xs text-slate-400 mt-1">{selectedCreativeForReview.body_text}</p>
+                    <h4 className="text-sm font-bold font-heading text-[#151c27]">{selectedCreativeForReview.headline}</h4>
+                    <p className="text-xs text-[#534434] mt-1">{selectedCreativeForReview.body_text}</p>
                   </div>
                 </div>
               )}
 
               {/* Decision Action Selector */}
               <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase text-slate-400 tracking-wider">
+                <label className="text-xs font-semibold font-heading uppercase text-[#534434] tracking-wider">
                   Administrative Action
                 </label>
                 <div className="grid grid-cols-3 gap-2.5">
                   <button
                     type="button"
                     onClick={() => setReviewDecisionAction("APPROVE")}
-                    className={`p-3 rounded-xl text-xs font-bold border transition flex flex-col items-center gap-1.5 ${
+                    className={`p-3 rounded-xl text-xs font-bold border transition flex flex-col items-center gap-1.5 cursor-pointer ${
                       reviewDecisionAction === "APPROVE"
-                        ? "bg-emerald-500/20 text-emerald-300 border-emerald-500 shadow-md shadow-emerald-500/10"
-                        : "bg-slate-950 text-slate-400 border-slate-800 hover:border-slate-700"
+                        ? "bg-[#bbf7d0]/40 text-[#006c49] border-[#006c49]/40 shadow-sm"
+                        : "bg-[#f0f3ff] text-[#534434] border-[#dae2f3] hover:bg-[#e2e8f8]"
                     }`}
                   >
-                    <CheckCircle2 size={18} className="text-emerald-400" />
+                    <CheckCircle2 size={18} className="text-[#006c49]" />
                     Approve Campaign
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setReviewDecisionAction("REQUEST_CHANGES")}
-                    className={`p-3 rounded-xl text-xs font-bold border transition flex flex-col items-center gap-1.5 ${
+                    className={`p-3 rounded-xl text-xs font-bold border transition flex flex-col items-center gap-1.5 cursor-pointer ${
                       reviewDecisionAction === "REQUEST_CHANGES"
-                        ? "bg-blue-500/20 text-blue-300 border-blue-500 shadow-md shadow-blue-500/10"
-                        : "bg-slate-950 text-slate-400 border-slate-800 hover:border-slate-700"
+                        ? "bg-[#f0f3ff] text-[#0058be] border-[#0058be]/40 shadow-sm"
+                        : "bg-[#f0f3ff] text-[#534434] border-[#dae2f3] hover:bg-[#e2e8f8]"
                     }`}
                   >
-                    <Sliders size={18} className="text-blue-400" />
+                    <Sliders size={18} className="text-[#0058be]" />
                     Request Changes
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setReviewDecisionAction("REJECT")}
-                    className={`p-3 rounded-xl text-xs font-bold border transition flex flex-col items-center gap-1.5 ${
+                    className={`p-3 rounded-xl text-xs font-bold border transition flex flex-col items-center gap-1.5 cursor-pointer ${
                       reviewDecisionAction === "REJECT"
-                        ? "bg-rose-500/20 text-rose-300 border-rose-500 shadow-md shadow-rose-500/10"
-                        : "bg-slate-950 text-slate-400 border-slate-800 hover:border-slate-700"
+                        ? "bg-[#ffdad6]/40 text-[#ba1a1a] border-[#ffdad6] shadow-sm"
+                        : "bg-[#f0f3ff] text-[#534434] border-[#dae2f3] hover:bg-[#e2e8f8]"
                     }`}
                   >
-                    <XCircle size={18} className="text-rose-400" />
+                    <XCircle size={18} className="text-[#ba1a1a]" />
                     Reject Campaign
                   </button>
                 </div>
@@ -1248,7 +1226,7 @@ export const AdminAds: React.FC = () => {
               {/* Mandatory Reason/Feedback if not Approve */}
               {(reviewDecisionAction === "REJECT" || reviewDecisionAction === "REQUEST_CHANGES") && (
                 <div className="space-y-1.5 animate-fade-in">
-                  <label className="text-xs font-semibold text-rose-400 flex items-center gap-1">
+                  <label className="text-xs font-semibold text-[#ba1a1a] flex items-center gap-1">
                     <AlertTriangle size={13} />
                     {reviewDecisionAction === "REJECT"
                       ? "Mandatory Rejection Reason"
@@ -1263,17 +1241,17 @@ export const AdminAds: React.FC = () => {
                         ? "Provide explicit standard policy violation reasons (e.g. Unverified veterinary health claims, non-compliant imagery)..."
                         : "Describe the exact modifications the advertiser must make to obtain approval..."
                     }
-                    className="w-full p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-rose-500"
+                    className="w-full p-3 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] placeholder-[#534434]/60 focus:outline-none focus:bg-white focus:border-[#ba1a1a]"
                   />
                 </div>
               )}
             </div>
 
-            <div className="p-4 border-t border-slate-800 flex items-center justify-end gap-2 bg-slate-950/40">
+            <div className="p-4 border-t border-[#e2e8f8] flex items-center justify-end gap-2 bg-[#f9f9ff]">
               <button
                 type="button"
                 onClick={() => setIsReviewModalOpen(false)}
-                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition"
+                className="px-4 py-2 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#534434] text-xs font-semibold border border-[#dae2f3] transition cursor-pointer"
               >
                 Cancel
               </button>
@@ -1281,7 +1259,7 @@ export const AdminAds: React.FC = () => {
                 type="button"
                 onClick={handleExecuteReviewDecision}
                 disabled={actionLoading}
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-bold shadow-md shadow-indigo-600/30 transition disabled:opacity-50"
+                className="px-4 py-2 rounded-xl bg-[#0058be] hover:bg-[#2170e4] text-white text-xs font-bold shadow-sm transition disabled:opacity-50 cursor-pointer"
               >
                 {actionLoading ? "Submitting..." : "Confirm Review Decision"}
               </button>
@@ -1290,17 +1268,15 @@ export const AdminAds: React.FC = () => {
         </div>
       )}
 
-      {/* ============================================================
-          MODAL: NEW ADVERTISER
-          ============================================================ */}
+      {/* MODAL: NEW ADVERTISER */}
       {isNewAdvertiserOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-lg rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden">
-            <div className="p-5 border-b border-slate-800 flex items-center justify-between">
-              <h3 className="text-base font-bold text-white">Register Commercial Partner</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#151c27]/40 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-lg rounded-2xl bg-white border border-[#e2e8f8] shadow-level-3 overflow-hidden">
+            <div className="p-5 border-b border-[#e2e8f8] flex items-center justify-between">
+              <h3 className="text-base font-bold font-heading text-[#151c27]">Register Commercial Partner</h3>
               <button
                 onClick={() => setIsNewAdvertiserOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white"
+                className="p-1.5 rounded-xl text-[#534434] hover:text-[#151c27] cursor-pointer"
               >
                 ✕
               </button>
@@ -1308,61 +1284,61 @@ export const AdminAds: React.FC = () => {
 
             <form onSubmit={handleCreateAdvertiser} className="p-5 space-y-4">
               <div className="space-y-1">
-                <label className="text-xs font-medium text-slate-300">Company Name *</label>
+                <label className="text-xs font-semibold font-heading text-[#534434]">Company Name *</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. PurrPerfect Organic Treats"
                   value={newAdvCompany}
                   onChange={(e) => setNewAdvCompany(e.target.value)}
-                  className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-slate-300">Contact Representative *</label>
+                  <label className="text-xs font-semibold font-heading text-[#534434]">Contact Representative *</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. Jane Foster"
                     value={newAdvContact}
                     onChange={(e) => setNewAdvContact(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-slate-300">Contact Email *</label>
+                  <label className="text-xs font-semibold font-heading text-[#534434]">Contact Email *</label>
                   <input
                     type="email"
                     required
                     placeholder="partner@company.com"
                     value={newAdvEmail}
                     onChange={(e) => setNewAdvEmail(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-slate-300">Website URL</label>
+                  <label className="text-xs font-semibold font-heading text-[#534434]">Website URL</label>
                   <input
                     type="url"
                     placeholder="https://company.pet"
                     value={newAdvWebsite}
                     onChange={(e) => setNewAdvWebsite(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-slate-300">Industry Category</label>
+                  <label className="text-xs font-semibold font-heading text-[#534434]">Industry Category</label>
                   <select
                     value={newAdvIndustry}
                     onChange={(e) => setNewAdvIndustry(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
                   >
                     <option value="PET_FOOD">Pet Food & Nutrition</option>
                     <option value="VET_HEALTH">Veterinary & Health</option>
@@ -1374,28 +1350,28 @@ export const AdminAds: React.FC = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-medium text-slate-300">Initial Account Budget Credit ($)</label>
+                <label className="text-xs font-semibold font-heading text-[#534434]">Initial Account Budget Credit ($)</label>
                 <input
                   type="number"
                   min="0"
                   value={newAdvBalance}
                   onChange={(e) => setNewAdvBalance(e.target.value)}
-                  className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white font-mono focus:outline-none focus:border-indigo-500"
+                  className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] font-mono focus:outline-none focus:bg-white focus:border-[#0058be]"
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+              <div className="pt-3 border-t border-[#e2e8f8] flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsNewAdvertiserOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition"
+                  className="px-4 py-2 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#534434] text-xs font-semibold border border-[#dae2f3] transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition disabled:opacity-50"
+                  className="px-4 py-2 rounded-xl bg-[#0058be] hover:bg-[#2170e4] text-white text-xs font-bold transition disabled:opacity-50 cursor-pointer shadow-sm"
                 >
                   {actionLoading ? "Registering..." : "Save Partner"}
                 </button>
@@ -1405,17 +1381,15 @@ export const AdminAds: React.FC = () => {
         </div>
       )}
 
-      {/* ============================================================
-          MODAL: NEW CAMPAIGN
-          ============================================================ */}
+      {/* MODAL: NEW CAMPAIGN */}
       {isNewCampaignOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-xl rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden">
-            <div className="p-5 border-b border-slate-800 flex items-center justify-between">
-              <h3 className="text-base font-bold text-white">Create Advertising Campaign</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#151c27]/40 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-xl rounded-2xl bg-white border border-[#e2e8f8] shadow-level-3 overflow-hidden">
+            <div className="p-5 border-b border-[#e2e8f8] flex items-center justify-between">
+              <h3 className="text-base font-bold font-heading text-[#151c27]">Create Advertising Campaign</h3>
               <button
                 onClick={() => setIsNewCampaignOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white"
+                className="p-1.5 rounded-xl text-[#534434] hover:text-[#151c27] cursor-pointer"
               >
                 ✕
               </button>
@@ -1423,12 +1397,12 @@ export const AdminAds: React.FC = () => {
 
             <form onSubmit={handleCreateCampaign} className="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
               <div className="space-y-1">
-                <label className="text-xs font-medium text-slate-300">Advertiser Partner *</label>
+                <label className="text-xs font-semibold font-heading text-[#534434]">Advertiser Partner *</label>
                 <select
                   required
                   value={newCampAdvertiserId}
                   onChange={(e) => setNewCampAdvertiserId(e.target.value)}
-                  className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
                 >
                   {advertisers.map((a) => (
                     <option key={a.id} value={a.id}>
@@ -1439,24 +1413,24 @@ export const AdminAds: React.FC = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-medium text-slate-300">Campaign Name *</label>
+                <label className="text-xs font-semibold font-heading text-[#534434]">Campaign Name *</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Winter Coat & Harness Collection 2026"
                   value={newCampName}
                   onChange={(e) => setNewCampName(e.target.value)}
-                  className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-indigo-500"
+                  className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
                 />
               </div>
 
               <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-slate-300">Objective *</label>
+                  <label className="text-xs font-semibold font-heading text-[#534434]">Objective *</label>
                   <select
                     value={newCampObjective}
                     onChange={(e) => setNewCampObjective(e.target.value as any)}
-                    className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
                   >
                     <option value="TRAFFIC">Traffic</option>
                     <option value="CONVERSIONS">Conversions</option>
@@ -1467,41 +1441,41 @@ export const AdminAds: React.FC = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-slate-300">Total Budget ($) *</label>
+                  <label className="text-xs font-semibold font-heading text-[#534434]">Total Budget ($) *</label>
                   <input
                     type="number"
                     required
                     min="10"
                     value={newCampBudget}
                     onChange={(e) => setNewCampBudget(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white font-mono focus:outline-none focus:border-indigo-500"
+                    className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] font-mono focus:outline-none focus:bg-white focus:border-[#0058be]"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-slate-300">Daily Budget ($)</label>
+                  <label className="text-xs font-semibold font-heading text-[#534434]">Daily Budget ($)</label>
                   <input
                     type="number"
                     min="1"
                     value={newCampDailyBudget}
                     onChange={(e) => setNewCampDailyBudget(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white font-mono focus:outline-none focus:border-indigo-500"
+                    className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] font-mono focus:outline-none focus:bg-white focus:border-[#0058be]"
                   />
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-slate-800/80 space-y-3">
-                <span className="text-xs font-semibold uppercase tracking-wider text-indigo-400">
+              <div className="pt-2 border-t border-[#e2e8f8] space-y-3">
+                <span className="text-xs font-bold font-heading uppercase tracking-wider text-[#0058be]">
                   Primary Ad Creative
                 </span>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-slate-300">Format</label>
+                    <label className="text-xs font-semibold font-heading text-[#534434]">Format</label>
                     <select
                       value={newCampFormat}
                       onChange={(e) => setNewCampFormat(e.target.value as any)}
-                      className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-indigo-500"
+                      className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
                     >
                       <option value="IMAGE">Single Image</option>
                       <option value="VIDEO">Video Ad</option>
@@ -1510,11 +1484,11 @@ export const AdminAds: React.FC = () => {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-slate-300">Call to Action (CTA)</label>
+                    <label className="text-xs font-semibold font-heading text-[#534434]">Call to Action (CTA)</label>
                     <select
                       value={newCampCta}
                       onChange={(e) => setNewCampCta(e.target.value)}
-                      className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-indigo-500"
+                      className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
                     >
                       <option value="LEARN_MORE">Learn More</option>
                       <option value="SHOP_NOW">Shop Now</option>
@@ -1526,66 +1500,66 @@ export const AdminAds: React.FC = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-slate-300">Headline *</label>
+                  <label className="text-xs font-semibold font-heading text-[#534434]">Headline *</label>
                   <input
                     type="text"
                     required
                     placeholder="Short catching title"
                     value={newCampHeadline}
                     onChange={(e) => setNewCampHeadline(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-medium text-slate-300">Body Copy / Description</label>
+                  <label className="text-xs font-semibold font-heading text-[#534434]">Body Copy / Description</label>
                   <textarea
                     rows={2}
                     placeholder="Engaging caption or promotion details..."
                     value={newCampBody}
                     onChange={(e) => setNewCampBody(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-slate-300">Destination URL *</label>
+                    <label className="text-xs font-semibold font-heading text-[#534434]">Destination URL *</label>
                     <input
                       type="url"
                       required
                       placeholder="https://..."
                       value={newCampDestination}
                       onChange={(e) => setNewCampDestination(e.target.value)}
-                      className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-indigo-500"
+                      className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-slate-300">Media URL (Image / Video)</label>
+                    <label className="text-xs font-semibold font-heading text-[#534434]">Media URL (Image / Video)</label>
                     <input
                       type="url"
                       placeholder="https://images.unsplash..."
                       value={newCampMediaUrl}
                       onChange={(e) => setNewCampMediaUrl(e.target.value)}
-                      className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-indigo-500"
+                      className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
+              <div className="pt-3 border-t border-[#e2e8f8] flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsNewCampaignOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition"
+                  className="px-4 py-2 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#534434] text-xs font-semibold border border-[#dae2f3] transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-bold shadow-md shadow-indigo-600/30 transition disabled:opacity-50"
+                  className="px-4 py-2 rounded-xl bg-[#0058be] hover:bg-[#2170e4] text-white text-xs font-bold shadow-sm transition disabled:opacity-50 cursor-pointer"
                 >
                   {actionLoading ? "Submitting..." : "Submit for Review"}
                 </button>

@@ -5,7 +5,6 @@ import {
   ArrowLeft,
   Clock,
   CheckCircle2,
-  XCircle,
   TrendingUp,
   AlertTriangle,
   User,
@@ -131,9 +130,9 @@ export const AdminReportDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="p-20 text-center text-slate-400 space-y-4">
-        <RefreshCw className="w-10 h-10 animate-spin mx-auto text-indigo-400" />
-        <p className="text-sm font-medium">Hydrating report and target entity...</p>
+      <div className="p-20 text-center text-[#534434] space-y-4">
+        <RefreshCw className="w-10 h-10 animate-spin mx-auto text-[#0058be]" />
+        <p className="text-sm font-medium font-heading">Hydrating report and target entity...</p>
       </div>
     );
   }
@@ -143,11 +142,11 @@ export const AdminReportDetail: React.FC = () => {
       <div className="space-y-4">
         <Link
           to="/moderation"
-          className="inline-flex items-center text-xs font-semibold text-slate-400 hover:text-white"
+          className="inline-flex items-center text-xs font-semibold text-[#534434] hover:text-[#0058be] transition-colors"
         >
           <ArrowLeft className="w-4 h-4 mr-1.5" /> Back to Moderation Queue
         </Link>
-        <div className="p-6 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-sm flex items-center space-x-3">
+        <div className="p-6 rounded-2xl bg-[#ffdad6]/40 border border-[#ffdad6] text-[#ba1a1a] text-sm flex items-center space-x-3">
           <AlertTriangle className="w-5 h-5 shrink-0" />
           <span>{error}</span>
         </div>
@@ -165,69 +164,69 @@ export const AdminReportDetail: React.FC = () => {
       <div className="flex items-center justify-between">
         <Link
           to="/moderation"
-          className="inline-flex items-center text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+          className="inline-flex items-center text-xs font-semibold text-[#534434] hover:text-[#0058be] transition-colors"
         >
           <ArrowLeft className="w-4 h-4 mr-1.5" /> Back to Moderation Queue
         </Link>
-        <span className="text-xs text-slate-500 font-mono">Report ID: {report.id}</span>
+        <span className="text-xs text-[#534434]/70 font-mono">Report ID: {report.id}</span>
       </div>
 
       {actionSuccess && (
-        <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center justify-between">
+        <div className="p-4 rounded-xl bg-[#bbf7d0]/30 border border-[#bbf7d0] text-[#006c49] text-xs flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
-            <span>{actionSuccess}</span>
+            <CheckCircle2 className="w-4 h-4 shrink-0 text-[#006c49]" />
+            <span className="font-medium">{actionSuccess}</span>
           </div>
-          <button onClick={() => setActionSuccess(null)} className="text-emerald-400 hover:text-white">
+          <button onClick={() => setActionSuccess(null)} className="text-[#006c49] hover:opacity-70">
             <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
       {error && (
-        <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center justify-between">
+        <div className="p-4 rounded-xl bg-[#ffdad6]/40 border border-[#ffdad6] text-[#ba1a1a] text-xs flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400" />
-            <span>{error}</span>
+            <AlertTriangle className="w-4 h-4 shrink-0 text-[#ba1a1a]" />
+            <span className="font-medium">{error}</span>
           </div>
-          <button onClick={() => setError(null)} className="text-rose-400 hover:text-white">
+          <button onClick={() => setError(null)} className="text-[#ba1a1a] hover:opacity-70">
             <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
       {/* Header Banner */}
-      <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center space-x-3">
-            <span className="px-2.5 py-1 rounded-md text-[10px] font-bold font-mono uppercase bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+      <div className="p-6 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-1.5">
+          <div className="flex items-center space-x-2.5">
+            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold font-mono uppercase bg-[#f0f3ff] text-[#0058be] border border-[#dae2f3]">
               {report.target_type} violation
             </span>
             <span
-              className={`px-2.5 py-1 rounded-md text-[10px] font-bold font-mono uppercase ${
+              className={`px-2.5 py-1 rounded-full text-[10px] font-bold font-mono uppercase ${
                 report.priority === "CRITICAL"
-                  ? "bg-rose-500/20 text-rose-300 border border-rose-500/40"
+                  ? "bg-[#ffdad6] text-[#ba1a1a] border border-[#ba1a1a]/30"
                   : report.priority === "HIGH"
-                  ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
-                  : "bg-slate-800 text-slate-300 border border-slate-700"
+                  ? "bg-[#ffe082]/40 text-[#855300] border border-[#855300]/30"
+                  : "bg-[#f0f3ff] text-[#534434] border border-[#dae2f3]"
               }`}
             >
               Priority: {report.priority}
             </span>
             <span
-              className={`px-2.5 py-1 rounded-md text-[10px] font-bold font-mono uppercase ${
+              className={`px-2.5 py-1 rounded-full text-[10px] font-bold font-mono uppercase ${
                 report.status === "RESOLVED"
-                  ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                  ? "bg-[#bbf7d0]/40 text-[#006c49] border border-[#006c49]/30"
                   : report.status === "REJECTED"
-                  ? "bg-slate-800 text-slate-400 border border-slate-700"
-                  : "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                  ? "bg-[#f0f3ff] text-[#534434] border border-[#dae2f3]"
+                  : "bg-[#ffe082]/40 text-[#855300] border border-[#855300]/30"
               }`}
             >
               Status: {report.status}
             </span>
           </div>
-          <h1 className="text-xl font-bold text-white tracking-tight">{report.reason}</h1>
-          <p className="text-xs text-slate-400">
+          <h1 className="text-xl font-bold font-heading text-[#151c27] tracking-tight">{report.reason}</h1>
+          <p className="text-xs text-[#534434]">
             Reported on {new Date(report.created_at).toLocaleString()}
           </p>
         </div>
@@ -235,12 +234,12 @@ export const AdminReportDetail: React.FC = () => {
         {/* Quick Lifecycle Controls */}
         <div className="flex items-center space-x-3 shrink-0">
           <div className="flex items-center space-x-2">
-            <label className="text-[11px] text-slate-400 font-medium">Status:</label>
+            <label className="text-[11px] text-[#534434] font-semibold font-heading">Status:</label>
             <select
               value={report.status}
               disabled={updatingReport}
               onChange={(e) => handleUpdateStatus(e.target.value as ReportStatus)}
-              className="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+              className="bg-[#f0f3ff] border border-[#dae2f3] rounded-xl px-3 py-1.5 text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
             >
               <option value="PENDING">Pending</option>
               <option value="UNDER_REVIEW">Under Review</option>
@@ -251,12 +250,12 @@ export const AdminReportDetail: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-2">
-            <label className="text-[11px] text-slate-400 font-medium">Priority:</label>
+            <label className="text-[11px] text-[#534434] font-semibold font-heading">Priority:</label>
             <select
               value={report.priority}
               disabled={updatingReport}
               onChange={(e) => handleUpdatePriority(e.target.value as ReportPriority)}
-              className="bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+              className="bg-[#f0f3ff] border border-[#dae2f3] rounded-xl px-3 py-1.5 text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
             >
               <option value="LOW">Low</option>
               <option value="MEDIUM">Medium</option>
@@ -272,25 +271,25 @@ export const AdminReportDetail: React.FC = () => {
         {/* Left Column (2 Cols wide on desktop) */}
         <div className="lg:col-span-2 space-y-6">
           {/* Target Content Preview Card */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h2 className="text-sm font-bold text-white flex items-center uppercase tracking-wider">
-                <Eye className="w-4 h-4 mr-2 text-indigo-400" />
+          <div className="bg-white border border-[#e2e8f8] rounded-2xl p-6 shadow-level-1 space-y-4">
+            <div className="flex items-center justify-between border-b border-[#e2e8f8] pb-3">
+              <h2 className="text-sm font-bold font-heading text-[#151c27] flex items-center uppercase tracking-wider">
+                <Eye className="w-4 h-4 mr-2 text-[#0058be]" />
                 Target Content Preview ({report.target_type})
               </h2>
-              <span className="text-[11px] text-slate-500 font-mono">{report.target_id}</span>
+              <span className="text-[11px] text-[#534434]/70 font-mono">{report.target_id}</span>
             </div>
 
             {!targetEntity ? (
-              <div className="p-8 text-center rounded-xl bg-slate-950/60 border border-dashed border-slate-800 text-slate-400 text-xs">
-                <AlertCircle className="w-8 h-8 text-amber-400/70 mx-auto mb-2" />
-                Target content with ID <code className="text-indigo-300 font-mono">{report.target_id}</code> was either removed or is unavailable.
+              <div className="p-8 text-center rounded-xl bg-[#f9f9ff] border border-dashed border-[#dae2f3] text-[#534434] text-xs">
+                <AlertCircle className="w-8 h-8 text-[#855300]/70 mx-auto mb-2" />
+                Target content with ID <code className="text-[#0058be] font-mono">{report.target_id}</code> was either removed or is unavailable.
               </div>
             ) : (
               <div className="space-y-4">
                 {/* Post or Reel Preview */}
                 {(report.target_type === "post" || report.target_type === "reel") && (
-                  <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-4">
+                  <div className="p-4 rounded-xl bg-[#f9f9ff] border border-[#e2e8f8] space-y-4">
                     {/* Post Author Info */}
                     {targetEntity.author && (
                       <div className="flex items-center justify-between">
@@ -299,25 +298,25 @@ export const AdminReportDetail: React.FC = () => {
                             <img
                               src={targetEntity.author.avatar_url}
                               alt=""
-                              className="w-10 h-10 rounded-full object-cover border border-slate-700"
+                              className="w-10 h-10 rounded-full object-cover border border-[#e2e8f8]"
                             />
                           ) : (
-                            <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center font-bold text-slate-300">
+                            <div className="w-10 h-10 rounded-full bg-[#f0f3ff] text-[#0058be] flex items-center justify-center font-bold text-sm">
                               {targetEntity.author.username?.charAt(0).toUpperCase()}
                             </div>
                           )}
                           <div>
-                            <div className="font-semibold text-white text-xs">
+                            <div className="font-semibold text-[#151c27] text-xs">
                               {targetEntity.author.full_name || targetEntity.author.username}
                             </div>
-                            <div className="text-[11px] text-slate-400 font-mono">
+                            <div className="text-[11px] text-[#534434] font-mono">
                               @{targetEntity.author.username}
                             </div>
                           </div>
                         </div>
                         <Link
                           to={`/users/${targetEntity.user_id}`}
-                          className="inline-flex items-center text-xs text-indigo-400 hover:text-indigo-300"
+                          className="inline-flex items-center text-xs font-semibold text-[#0058be] hover:underline"
                         >
                           View Author Profile <ExternalLink className="w-3 h-3 ml-1" />
                         </Link>
@@ -326,7 +325,7 @@ export const AdminReportDetail: React.FC = () => {
 
                     {/* Post Text */}
                     {targetEntity.text && (
-                      <p className="text-xs text-slate-200 whitespace-pre-wrap leading-relaxed bg-slate-900/60 p-3 rounded-lg border border-slate-800/80">
+                      <p className="text-xs text-[#151c27] whitespace-pre-wrap leading-relaxed bg-white p-3.5 rounded-xl border border-[#e2e8f8]">
                         {targetEntity.text}
                       </p>
                     )}
@@ -339,7 +338,7 @@ export const AdminReportDetail: React.FC = () => {
                           return (
                             <div
                               key={m.id || m.url}
-                              className="rounded-xl overflow-hidden bg-black/80 max-h-96 flex items-center justify-center border border-slate-800"
+                              className="rounded-xl overflow-hidden bg-black/90 max-h-96 flex items-center justify-center border border-[#e2e8f8]"
                             >
                               {isVideo ? (
                                 <video
@@ -361,10 +360,10 @@ export const AdminReportDetail: React.FC = () => {
                     )}
 
                     {/* Post Stats */}
-                    <div className="flex items-center space-x-6 text-[11px] text-slate-400 border-t border-slate-800/80 pt-3">
-                      <span>Likes: <strong className="text-white font-mono">{targetEntity.likes_count || 0}</strong></span>
-                      <span>Comments: <strong className="text-white font-mono">{targetEntity.comments_count || 0}</strong></span>
-                      <span>Visibility: <strong className="text-cyan-400 uppercase font-mono">{targetEntity.visibility}</strong></span>
+                    <div className="flex items-center space-x-6 text-[11px] text-[#534434] border-t border-[#e2e8f8] pt-3">
+                      <span>Likes: <strong className="text-[#151c27] font-mono">{targetEntity.likes_count || 0}</strong></span>
+                      <span>Comments: <strong className="text-[#151c27] font-mono">{targetEntity.comments_count || 0}</strong></span>
+                      <span>Visibility: <strong className="text-[#0058be] uppercase font-mono">{targetEntity.visibility}</strong></span>
                       <span>Posted: {new Date(targetEntity.created_at).toLocaleDateString()}</span>
                     </div>
                   </div>
@@ -372,27 +371,27 @@ export const AdminReportDetail: React.FC = () => {
 
                 {/* Comment Preview */}
                 {report.target_type === "comment" && (
-                  <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+                  <div className="p-4 rounded-xl bg-[#f9f9ff] border border-[#e2e8f8] space-y-3">
                     <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-xs">
+                      <div className="w-8 h-8 rounded-full bg-[#ffe082]/40 text-[#855300] flex items-center justify-center font-bold text-xs">
                         <MessageSquare className="w-4 h-4" />
                       </div>
                       <div>
-                        <div className="font-semibold text-white text-xs">
+                        <div className="font-semibold text-[#151c27] text-xs">
                           {targetEntity.author?.full_name || targetEntity.author?.username || "Unknown"}
                         </div>
-                        <div className="text-[11px] text-slate-400 font-mono">
+                        <div className="text-[11px] text-[#534434] font-mono">
                           @{targetEntity.author?.username}
                         </div>
                       </div>
                     </div>
-                    <blockquote className="p-3 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-200 italic">
+                    <blockquote className="p-3.5 rounded-xl bg-white border border-[#e2e8f8] text-xs text-[#151c27] italic">
                       "{targetEntity.comment}"
                     </blockquote>
                     {targetEntity.parentPost && (
-                      <div className="text-[11px] text-slate-400 bg-slate-900/40 p-2.5 rounded-lg border border-slate-800">
-                        <span className="text-slate-500">Parent Post by @{targetEntity.parentPost.author?.username}:</span>{" "}
-                        <span className="text-slate-300 line-clamp-1">{targetEntity.parentPost.text}</span>
+                      <div className="text-[11px] text-[#534434] bg-white p-2.5 rounded-xl border border-[#e2e8f8]">
+                        <span className="text-[#534434]/70">Parent Post by @{targetEntity.parentPost.author?.username}:</span>{" "}
+                        <span className="text-[#151c27] line-clamp-1">{targetEntity.parentPost.text}</span>
                       </div>
                     )}
                   </div>
@@ -400,51 +399,51 @@ export const AdminReportDetail: React.FC = () => {
 
                 {/* User Target Preview */}
                 {report.target_type === "user" && (
-                  <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-4">
+                  <div className="p-4 rounded-xl bg-[#f9f9ff] border border-[#e2e8f8] space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         {targetEntity.avatar_url ? (
                           <img
                             src={targetEntity.avatar_url}
                             alt=""
-                            className="w-12 h-12 rounded-full object-cover border border-slate-700"
+                            className="w-12 h-12 rounded-full object-cover border border-[#e2e8f8]"
                           />
                         ) : (
-                          <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center font-bold text-base text-slate-300">
+                          <div className="w-12 h-12 rounded-full bg-[#f0f3ff] text-[#0058be] flex items-center justify-center font-bold text-base">
                             {targetEntity.username?.charAt(0).toUpperCase()}
                           </div>
                         )}
                         <div>
-                          <div className="font-bold text-white text-sm">
+                          <div className="font-bold font-heading text-[#151c27] text-sm">
                             {targetEntity.full_name || targetEntity.username}
                           </div>
-                          <div className="text-xs text-slate-400 font-mono">@{targetEntity.username}</div>
+                          <div className="text-xs text-[#534434] font-mono">@{targetEntity.username}</div>
                         </div>
                       </div>
                       <Link
                         to={`/users/${targetEntity.id}`}
-                        className="inline-flex items-center px-3 py-1.5 rounded-lg bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 text-xs font-semibold hover:bg-indigo-600/30"
+                        className="inline-flex items-center px-3.5 py-1.5 rounded-xl bg-[#0058be] text-white text-xs font-semibold hover:bg-[#2170e4] transition-colors shadow-sm"
                       >
                         Inspect Full Profile
                       </Link>
                     </div>
                     {targetEntity.bio && (
-                      <p className="text-xs text-slate-300 bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+                      <p className="text-xs text-[#151c27] bg-white p-3.5 rounded-xl border border-[#e2e8f8]">
                         {targetEntity.bio}
                       </p>
                     )}
                     <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                      <div className="p-2 rounded-lg bg-slate-900 border border-slate-800">
-                        <div className="text-[10px] text-slate-400">Status</div>
-                        <div className="font-bold text-white mt-0.5">{targetEntity.status || "ACTIVE"}</div>
+                      <div className="p-2.5 rounded-xl bg-white border border-[#e2e8f8]">
+                        <div className="text-[10px] text-[#534434]">Status</div>
+                        <div className="font-bold text-[#151c27] mt-0.5">{targetEntity.status || "ACTIVE"}</div>
                       </div>
-                      <div className="p-2 rounded-lg bg-slate-900 border border-slate-800">
-                        <div className="text-[10px] text-slate-400">Followers</div>
-                        <div className="font-bold text-white mt-0.5">{targetEntity.followersCount || 0}</div>
+                      <div className="p-2.5 rounded-xl bg-white border border-[#e2e8f8]">
+                        <div className="text-[10px] text-[#534434]">Followers</div>
+                        <div className="font-bold text-[#151c27] mt-0.5">{targetEntity.followersCount || 0}</div>
                       </div>
-                      <div className="p-2 rounded-lg bg-slate-900 border border-slate-800">
-                        <div className="text-[10px] text-slate-400">Posts</div>
-                        <div className="font-bold text-white mt-0.5">{targetEntity.postsCount || 0}</div>
+                      <div className="p-2.5 rounded-xl bg-white border border-[#e2e8f8]">
+                        <div className="text-[10px] text-[#534434]">Posts</div>
+                        <div className="font-bold text-[#151c27] mt-0.5">{targetEntity.postsCount || 0}</div>
                       </div>
                     </div>
                   </div>
@@ -452,24 +451,24 @@ export const AdminReportDetail: React.FC = () => {
 
                 {/* Community Target Preview */}
                 {report.target_type === "community" && (
-                  <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+                  <div className="p-4 rounded-xl bg-[#f9f9ff] border border-[#e2e8f8] space-y-3">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold">
+                      <div className="w-10 h-10 rounded-xl bg-[#f0f3ff] text-[#0058be] flex items-center justify-center font-bold">
                         <Users className="w-5 h-5" />
                       </div>
                       <div>
-                        <div className="font-bold text-white text-sm">{targetEntity.name}</div>
-                        <div className="text-xs text-slate-400 font-mono">c/{targetEntity.slug}</div>
+                        <div className="font-bold font-heading text-[#151c27] text-sm">{targetEntity.name}</div>
+                        <div className="text-xs text-[#534434] font-mono">c/{targetEntity.slug}</div>
                       </div>
                     </div>
                     {targetEntity.description && (
-                      <p className="text-xs text-slate-300 bg-slate-900 p-3 rounded-lg border border-slate-800">
+                      <p className="text-xs text-[#151c27] bg-white p-3.5 rounded-xl border border-[#e2e8f8]">
                         {targetEntity.description}
                       </p>
                     )}
-                    <div className="flex items-center space-x-4 text-[11px] text-slate-400">
-                      <span>Members: <strong className="text-white font-mono">{targetEntity.memberCount || 0}</strong></span>
-                      <span>Archived: <strong className="text-white">{targetEntity.is_archived ? "Yes" : "No"}</strong></span>
+                    <div className="flex items-center space-x-4 text-[11px] text-[#534434]">
+                      <span>Members: <strong className="text-[#151c27] font-mono">{targetEntity.memberCount || 0}</strong></span>
+                      <span>Archived: <strong className="text-[#151c27]">{targetEntity.is_archived ? "Yes" : "No"}</strong></span>
                     </div>
                   </div>
                 )}
@@ -478,87 +477,87 @@ export const AdminReportDetail: React.FC = () => {
           </div>
 
           {/* Reporter & Submission Details Card */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
-            <h2 className="text-sm font-bold text-white flex items-center uppercase tracking-wider border-b border-slate-800 pb-3">
-              <User className="w-4 h-4 mr-2 text-cyan-400" />
+          <div className="bg-white border border-[#e2e8f8] rounded-2xl p-6 shadow-level-1 space-y-4">
+            <h2 className="text-sm font-bold font-heading text-[#151c27] flex items-center uppercase tracking-wider border-b border-[#e2e8f8] pb-3">
+              <User className="w-4 h-4 mr-2 text-[#0058be]" />
               Reporter Submission Details
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-              <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center space-x-3">
+              <div className="p-3.5 rounded-xl bg-[#f9f9ff] border border-[#e2e8f8] flex items-center space-x-3">
                 {report.reporter.avatar_url ? (
                   <img
                     src={report.reporter.avatar_url}
                     alt=""
-                    className="w-10 h-10 rounded-full object-cover"
+                    className="w-10 h-10 rounded-full object-cover border border-[#e2e8f8]"
                   />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center font-bold text-slate-300">
+                  <div className="w-10 h-10 rounded-full bg-[#f0f3ff] text-[#0058be] flex items-center justify-center font-bold text-sm">
                     {report.reporter.username?.charAt(0).toUpperCase()}
                   </div>
                 )}
                 <div>
-                  <div className="font-bold text-white">
+                  <div className="font-bold text-[#151c27]">
                     {report.reporter.full_name || report.reporter.username}
                   </div>
-                  <div className="text-[11px] text-slate-400 font-mono">@{report.reporter.username}</div>
-                  <div className="text-[10px] text-indigo-400 mt-0.5">
+                  <div className="text-[11px] text-[#534434] font-mono">@{report.reporter.username}</div>
+                  <div className="text-[10px] text-[#0058be] font-medium mt-0.5">
                     {report.reporter.verified ? "Verified User" : "Standard Account"}
                   </div>
                 </div>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
-                <div className="text-[10px] text-slate-400 uppercase font-semibold">Report Category</div>
-                <div className="text-sm font-bold text-amber-300">{report.reason}</div>
-                <div className="text-[10px] text-slate-500">
+              <div className="p-3.5 rounded-xl bg-[#f9f9ff] border border-[#e2e8f8] space-y-1">
+                <div className="text-[10px] text-[#534434] uppercase font-semibold">Report Category</div>
+                <div className="text-sm font-bold text-[#855300]">{report.reason}</div>
+                <div className="text-[10px] text-[#534434]/70">
                   Filing Time: {new Date(report.created_at).toLocaleString()}
                 </div>
               </div>
             </div>
 
             {report.description && (
-              <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5">
-                <div className="text-[10px] text-slate-400 uppercase font-semibold">User Statement / Justification</div>
-                <p className="text-xs text-slate-300 whitespace-pre-wrap leading-relaxed">{report.description}</p>
+              <div className="p-3.5 rounded-xl bg-[#f9f9ff] border border-[#e2e8f8] space-y-1.5">
+                <div className="text-[10px] text-[#534434] uppercase font-semibold">User Statement / Justification</div>
+                <p className="text-xs text-[#151c27] whitespace-pre-wrap leading-relaxed">{report.description}</p>
               </div>
             )}
           </div>
 
           {/* Moderation History & Audit Trail */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
-            <h2 className="text-sm font-bold text-white flex items-center uppercase tracking-wider border-b border-slate-800 pb-3">
-              <Clock className="w-4 h-4 mr-2 text-emerald-400" />
+          <div className="bg-white border border-[#e2e8f8] rounded-2xl p-6 shadow-level-1 space-y-4">
+            <h2 className="text-sm font-bold font-heading text-[#151c27] flex items-center uppercase tracking-wider border-b border-[#e2e8f8] pb-3">
+              <Clock className="w-4 h-4 mr-2 text-[#006c49]" />
               Moderation Audit History ({moderationHistory.length})
             </h2>
 
             {moderationHistory.length === 0 ? (
-              <p className="text-xs text-slate-500 italic">No previous moderation actions taken on this item.</p>
+              <p className="text-xs text-[#534434] italic">No previous moderation actions taken on this item.</p>
             ) : (
               <div className="space-y-3">
                 {moderationHistory.map((item) => (
                   <div
                     key={item.id}
-                    className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex items-start justify-between text-xs space-x-4"
+                    className="p-3.5 rounded-xl bg-[#f9f9ff] border border-[#e2e8f8] flex items-start justify-between text-xs space-x-4"
                   >
                     <div className="space-y-1">
                       <div className="flex items-center space-x-2">
-                        <span className="font-mono font-bold text-indigo-300">{item.action}</span>
-                        <span className="text-slate-500">•</span>
-                        <span className="text-slate-400">
-                          by <strong className="text-white">@{item.admin_user?.username || "Admin"}</strong>
+                        <span className="font-mono font-bold text-[#0058be]">{item.action}</span>
+                        <span className="text-[#dae2f3]">•</span>
+                        <span className="text-[#534434]">
+                          by <strong className="text-[#151c27]">@{item.admin_user?.username || "Admin"}</strong>
                         </span>
                       </div>
                       {item.details?.reason && (
-                        <p className="text-slate-300 text-[11px]">Reason: {item.details.reason}</p>
+                        <p className="text-[#151c27] text-[11px]">Reason: {item.details.reason}</p>
                       )}
                       {item.details?.finalStatus && (
-                        <span className="inline-block text-[10px] text-emerald-400 font-mono">
+                        <span className="inline-block text-[10px] text-[#006c49] font-mono font-medium">
                           New Status: {item.details.finalStatus}
                         </span>
                       )}
                     </div>
-                    <div className="text-[10px] text-slate-500 shrink-0 font-mono">
+                    <div className="text-[10px] text-[#534434]/70 shrink-0 font-mono">
                       {new Date(item.created_at).toLocaleString()}
                     </div>
                   </div>
@@ -570,13 +569,13 @@ export const AdminReportDetail: React.FC = () => {
 
         {/* Right Column: Moderation Action Panel */}
         <div className="space-y-6">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4 sticky top-6">
-            <h2 className="text-sm font-bold text-white flex items-center uppercase tracking-wider border-b border-slate-800 pb-3">
-              <Shield className="w-4 h-4 mr-2 text-rose-400" />
+          <div className="bg-white border border-[#e2e8f8] rounded-2xl p-6 shadow-level-1 space-y-4 sticky top-6">
+            <h2 className="text-sm font-bold font-heading text-[#151c27] flex items-center uppercase tracking-wider border-b border-[#e2e8f8] pb-3">
+              <Shield className="w-4 h-4 mr-2 text-[#ba1a1a]" />
               Moderator Action Panel
             </h2>
 
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-[#534434]">
               Apply administrative sanctions or resolve this report. Every action requires a justification and is permanently audited.
             </p>
 
@@ -587,13 +586,13 @@ export const AdminReportDetail: React.FC = () => {
                 <button
                   onClick={() => setSelectedAction("REMOVE_POST")}
                   disabled={!hasPerm("posts.remove")}
-                  className="w-full flex items-center justify-between p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20 text-xs font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                  className="w-full flex items-center justify-between p-3 rounded-xl bg-[#ffdad6]/30 border border-[#ffdad6] text-[#ba1a1a] hover:bg-[#ffdad6]/60 text-xs font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 >
                   <div className="flex items-center space-x-2">
-                    <Trash2 className="w-4 h-4 text-rose-400" />
+                    <Trash2 className="w-4 h-4 text-[#ba1a1a]" />
                     <span>Delete {report.target_type === "reel" ? "Reel" : "Post"}</span>
                   </div>
-                  <span className="text-[10px] font-mono text-rose-400/80">Destructive</span>
+                  <span className="text-[10px] font-mono text-[#ba1a1a]/80">Destructive</span>
                 </button>
               )}
 
@@ -601,13 +600,13 @@ export const AdminReportDetail: React.FC = () => {
                 <button
                   onClick={() => setSelectedAction("REMOVE_COMMENT")}
                   disabled={!hasPerm("comments.remove")}
-                  className="w-full flex items-center justify-between p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20 text-xs font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                  className="w-full flex items-center justify-between p-3 rounded-xl bg-[#ffdad6]/30 border border-[#ffdad6] text-[#ba1a1a] hover:bg-[#ffdad6]/60 text-xs font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 >
                   <div className="flex items-center space-x-2">
-                    <Trash2 className="w-4 h-4 text-rose-400" />
+                    <Trash2 className="w-4 h-4 text-[#ba1a1a]" />
                     <span>Delete Comment</span>
                   </div>
-                  <span className="text-[10px] font-mono text-rose-400/80">Destructive</span>
+                  <span className="text-[10px] font-mono text-[#ba1a1a]/80">Destructive</span>
                 </button>
               )}
 
@@ -615,10 +614,10 @@ export const AdminReportDetail: React.FC = () => {
               <button
                 onClick={() => setSelectedAction("RESTRICT_CONTENT")}
                 disabled={!hasPerm("posts.remove")}
-                className="w-full flex items-center justify-between p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 text-xs font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full flex items-center justify-between p-3 rounded-xl bg-[#ffe082]/20 border border-[#ffe082]/50 text-[#855300] hover:bg-[#ffe082]/40 text-xs font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
                 <div className="flex items-center space-x-2">
-                  <Lock className="w-4 h-4 text-amber-400" />
+                  <Lock className="w-4 h-4 text-[#855300]" />
                   <span>Restrict Content (Make Private)</span>
                 </div>
               </button>
@@ -627,10 +626,10 @@ export const AdminReportDetail: React.FC = () => {
               <button
                 onClick={() => setSelectedAction("WARN_USER")}
                 disabled={!hasPerm("reports.manage")}
-                className="w-full flex items-center justify-between p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/30 text-yellow-300 hover:bg-yellow-500/20 text-xs font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full flex items-center justify-between p-3 rounded-xl bg-[#ffe082]/20 border border-[#ffe082]/50 text-[#855300] hover:bg-[#ffe082]/40 text-xs font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
                 <div className="flex items-center space-x-2">
-                  <AlertCircle className="w-4 h-4 text-yellow-400" />
+                  <AlertCircle className="w-4 h-4 text-[#855300]" />
                   <span>Issue Formal Warning to Author</span>
                 </div>
               </button>
@@ -639,38 +638,38 @@ export const AdminReportDetail: React.FC = () => {
               <button
                 onClick={() => setSelectedAction("SUSPEND_USER")}
                 disabled={!hasPerm("users.suspend")}
-                className="w-full flex items-center justify-between p-3 rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-300 hover:bg-orange-500/20 text-xs font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full flex items-center justify-between p-3 rounded-xl bg-[#ffe082]/30 border border-[#ffe082]/60 text-[#855300] hover:bg-[#ffe082]/50 text-xs font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
                 <div className="flex items-center space-x-2">
-                  <Clock className="w-4 h-4 text-orange-400" />
+                  <Clock className="w-4 h-4 text-[#855300]" />
                   <span>Suspend Author Account</span>
                 </div>
-                <span className="text-[10px] font-mono text-orange-400/80">Temporary</span>
+                <span className="text-[10px] font-mono text-[#855300]/80">Temporary</span>
               </button>
 
               {/* Ban User */}
               <button
                 onClick={() => setSelectedAction("BAN_USER")}
                 disabled={!hasPerm("users.ban")}
-                className="w-full flex items-center justify-between p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 hover:bg-red-500/20 text-xs font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full flex items-center justify-between p-3 rounded-xl bg-[#ffdad6]/40 border border-[#ffdad6] text-[#ba1a1a] hover:bg-[#ffdad6]/70 text-xs font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
                 <div className="flex items-center space-x-2">
-                  <Ban className="w-4 h-4 text-red-400" />
+                  <Ban className="w-4 h-4 text-[#ba1a1a]" />
                   <span>Permanently Ban Author</span>
                 </div>
-                <span className="text-[10px] font-mono text-red-400/80">Permanent</span>
+                <span className="text-[10px] font-mono text-[#ba1a1a]/80">Permanent</span>
               </button>
 
-              <hr className="border-slate-800 my-2" />
+              <hr className="border-[#e2e8f8] my-2" />
 
               {/* Escalate Report */}
               <button
                 onClick={() => setSelectedAction("ESCALATE_REPORT")}
                 disabled={!hasPerm("reports.manage")}
-                className="w-full flex items-center justify-between p-3 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-300 hover:bg-purple-500/20 text-xs font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full flex items-center justify-between p-3 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-[#0058be] hover:bg-[#e7eefe] text-xs font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
                 <div className="flex items-center space-x-2">
-                  <TrendingUp className="w-4 h-4 text-purple-400" />
+                  <TrendingUp className="w-4 h-4 text-[#0058be]" />
                   <span>Escalate to Senior Admin</span>
                 </div>
               </button>
@@ -679,10 +678,10 @@ export const AdminReportDetail: React.FC = () => {
               <button
                 onClick={() => setSelectedAction("REJECT_REPORT")}
                 disabled={!hasPerm("reports.manage")}
-                className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-800/80 border border-slate-700 text-slate-300 hover:bg-slate-700 text-xs font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full flex items-center justify-between p-3 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-[#534434] hover:bg-[#e2e8f8] text-xs font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
                 <div className="flex items-center space-x-2">
-                  <XCircle className="w-4 h-4 text-slate-400" />
+                  <CheckCircle2 className="w-4 h-4 text-[#534434]" />
                   <span>Dismiss Report (No Violation)</span>
                 </div>
               </button>
@@ -691,10 +690,10 @@ export const AdminReportDetail: React.FC = () => {
               <button
                 onClick={() => setSelectedAction("RESOLVE_REPORT")}
                 disabled={!hasPerm("reports.manage")}
-                className="w-full flex items-center justify-between p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20 text-xs font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full flex items-center justify-between p-3 rounded-xl bg-[#bbf7d0]/30 border border-[#bbf7d0] text-[#006c49] hover:bg-[#bbf7d0]/60 text-xs font-semibold transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
                 <div className="flex items-center space-x-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <CheckCircle2 className="w-4 h-4 text-[#006c49]" />
                   <span>Mark Report Resolved</span>
                 </div>
               </button>
@@ -705,32 +704,32 @@ export const AdminReportDetail: React.FC = () => {
 
       {/* Action Execution Confirmation Modal */}
       {selectedAction && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-base font-bold text-white flex items-center">
-                <ShieldAlert className="w-5 h-5 mr-2 text-rose-400" />
+        <div className="fixed inset-0 bg-[#151c27]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-[#e2e8f8] rounded-2xl w-full max-w-md p-6 shadow-level-3 space-y-4">
+            <div className="flex items-center justify-between border-b border-[#e2e8f8] pb-3">
+              <h3 className="text-base font-bold font-heading text-[#151c27] flex items-center">
+                <ShieldAlert className="w-5 h-5 mr-2 text-[#ba1a1a]" />
                 Confirm: {selectedAction.replace(/_/g, " ")}
               </h3>
-              <button onClick={() => setSelectedAction(null)} className="text-slate-400 hover:text-white">
+              <button onClick={() => setSelectedAction(null)} className="text-[#534434] hover:text-[#151c27]">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleExecuteAction} className="space-y-4 text-xs">
-              <p className="text-slate-300">
-                You are about to execute <strong>{selectedAction}</strong> for this report. This action will be permanently recorded in the administrative audit logs.
+              <p className="text-[#534434]">
+                You are about to execute <strong className="text-[#151c27]">{selectedAction}</strong> for this report. This action will be permanently recorded in the administrative audit logs.
               </p>
 
               {selectedAction === "SUSPEND_USER" && (
                 <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
+                  <label className="block text-[11px] font-semibold font-heading uppercase tracking-wider text-[#534434] mb-1.5">
                     Suspension Duration
                   </label>
                   <select
                     value={durationDays}
                     onChange={(e) => setDurationDays(Number(e.target.value))}
-                    className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full p-2.5 bg-[#f0f3ff] border border-[#dae2f3] rounded-xl text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
                   >
                     <option value={1}>1 Day (24 Hours)</option>
                     <option value={3}>3 Days</option>
@@ -743,8 +742,8 @@ export const AdminReportDetail: React.FC = () => {
               )}
 
               <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">
-                  Administrative Justification Reason <span className="text-rose-400">*</span>
+                <label className="block text-[11px] font-semibold font-heading uppercase tracking-wider text-[#534434] mb-1.5">
+                  Administrative Justification Reason <span className="text-[#ba1a1a]">*</span>
                 </label>
                 <textarea
                   rows={3}
@@ -752,7 +751,7 @@ export const AdminReportDetail: React.FC = () => {
                   placeholder="Explain the policy violation or rationale for this moderation action..."
                   value={actionReason}
                   onChange={(e) => setActionReason(e.target.value)}
-                  className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                  className="w-full p-3 bg-[#f0f3ff] border border-[#dae2f3] rounded-xl text-xs text-[#151c27] placeholder-[#534434]/60 focus:outline-none focus:bg-white focus:border-[#0058be]"
                 />
               </div>
 
@@ -760,14 +759,14 @@ export const AdminReportDetail: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setSelectedAction(null)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-xs font-semibold text-[#534434] transition-colors cursor-pointer border border-[#dae2f3]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submittingAction}
-                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-xs font-semibold text-white transition-colors shadow-lg shadow-rose-600/25 disabled:opacity-50 cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-[#ba1a1a] hover:bg-[#93000a] text-xs font-semibold text-white transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
                 >
                   {submittingAction ? "Executing Action..." : "Confirm & Execute Action"}
                 </button>

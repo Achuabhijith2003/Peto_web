@@ -26,7 +26,15 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# Ignore Mobile application (Flutter / Android / iOS) from Docker builds
+Mobile/
+Mobile/**
+
+# Ignore Documentation & Database migrations from Docker runtime
+docs/
+
 # Ignore temporary uploads
 uploads/*
 !uploads/.gitkeep
 temp/*
+

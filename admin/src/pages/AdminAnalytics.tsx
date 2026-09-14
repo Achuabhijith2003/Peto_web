@@ -155,22 +155,22 @@ export const AdminAnalytics: React.FC = () => {
   ];
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6 text-slate-100">
+    <div className="space-y-6">
       {/* Header Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900/60 p-6 rounded-2xl border border-slate-800 backdrop-blur-xl shadow-xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-[#e2e8f8] shadow-level-1">
         <div>
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/20">
+            <div className="p-2.5 rounded-2xl bg-[#0058be] text-white shadow-sm">
               <BarChart3 className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+              <h1 className="text-2xl font-bold font-heading tracking-tight text-[#151c27] flex items-center gap-2">
                 Peto Intelligence & Analytics
-                <span className="text-xs px-2.5 py-0.5 rounded-full font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <span className="text-xs px-2.5 py-0.5 rounded-full font-semibold bg-[#bbf7d0]/40 text-[#006c49] border border-[#006c49]/30">
                   Pre-aggregated Engine
                 </span>
               </h1>
-              <p className="text-sm text-slate-400">
+              <p className="text-xs text-[#534434] mt-0.5">
                 Audited metrics, cohort retention, and platform performance data.
               </p>
             </div>
@@ -180,15 +180,15 @@ export const AdminAnalytics: React.FC = () => {
         {/* Global Controls: Range selector and Export */}
         <div className="flex items-center flex-wrap gap-2.5">
           {/* Range Pills */}
-          <div className="flex items-center bg-slate-800/80 p-1 rounded-xl border border-slate-700/60">
+          <div className="flex items-center bg-[#f0f3ff] p-1 rounded-xl border border-[#dae2f3]">
             {(["24h", "7d", "30d", "90d", "1y", "all"] as AnalyticsRange[]).map((r) => (
               <button
                 key={r}
                 onClick={() => setRange(r)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   range === r
-                    ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
-                    : "text-slate-400 hover:text-slate-200"
+                    ? "bg-white text-[#0058be] shadow-sm font-bold"
+                    : "text-[#534434] hover:text-[#151c27]"
                 }`}
               >
                 {r.toUpperCase()}
@@ -200,17 +200,17 @@ export const AdminAnalytics: React.FC = () => {
           <button
             onClick={() => loadActiveSection()}
             disabled={isLoading}
-            className="p-2 bg-slate-800/80 hover:bg-slate-700 text-slate-300 rounded-xl border border-slate-700/60 transition"
+            className="p-2.5 bg-white hover:bg-[#f9f9ff] text-[#534434] rounded-xl border border-[#e2e8f8] shadow-sm transition cursor-pointer"
             title="Refresh Data"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin text-indigo-400" : ""}`} />
+            <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin text-[#0058be]" : ""}`} />
           </button>
 
           {/* Export CSV Button */}
           <button
             onClick={handleExportCsv}
             disabled={isExporting || isLoading}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-emerald-600/20 transition disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 bg-[#0058be] hover:bg-[#2170e4] text-white rounded-xl text-xs font-semibold shadow-sm transition disabled:opacity-50 cursor-pointer"
           >
             <Download className="w-4 h-4" />
             {isExporting ? "Exporting..." : "Export CSV"}
@@ -219,7 +219,7 @@ export const AdminAnalytics: React.FC = () => {
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none border-b border-slate-800">
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-2 border-b border-[#e2e8f8]">
         {sections.map((sec) => {
           const Icon = sec.icon;
           const isActive = activeSection === sec.id;
@@ -227,13 +227,13 @@ export const AdminAnalytics: React.FC = () => {
             <button
               key={sec.id}
               onClick={() => setActiveSection(sec.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold font-heading whitespace-nowrap transition-all cursor-pointer ${
                 isActive
-                  ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 shadow-sm"
-                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
+                  ? "bg-[#f0f3ff] text-[#0058be] border border-[#0058be]/30 shadow-sm"
+                  : "text-[#534434] hover:text-[#151c27] hover:bg-[#f9f9ff]"
               }`}
             >
-              <Icon className={`w-4 h-4 ${isActive ? "text-indigo-400" : "text-slate-500"}`} />
+              <Icon className={`w-4 h-4 ${isActive ? "text-[#0058be]" : "text-[#534434]"}`} />
               {sec.label}
             </button>
           );
@@ -242,7 +242,7 @@ export const AdminAnalytics: React.FC = () => {
 
       {/* Error state */}
       {error && (
-        <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 text-sm flex items-center gap-3">
+        <div className="p-4 bg-white border border-[#ffdad6] rounded-2xl text-[#ba1a1a] text-xs font-semibold flex items-center gap-3 shadow-level-1">
           <AlertCircle className="w-5 h-5 flex-shrink-0" />
           <span>{error}</span>
         </div>
@@ -251,8 +251,8 @@ export const AdminAnalytics: React.FC = () => {
       {/* Loading state indicator */}
       {isLoading ? (
         <div className="py-24 flex flex-col items-center justify-center space-y-4">
-          <div className="w-10 h-10 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
-          <p className="text-slate-400 text-sm font-medium">Aggregating intelligence datasets...</p>
+          <div className="w-10 h-10 border-4 border-[#e2e8f8] border-t-[#0058be] rounded-full animate-spin" />
+          <p className="text-[#534434] text-xs font-medium font-heading">Aggregating intelligence datasets...</p>
         </div>
       ) : (
         <div>
@@ -292,45 +292,45 @@ export const AdminAnalytics: React.FC = () => {
 
               {/* Engagement Activity Breakdown */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-slate-900/60 p-5 rounded-2xl border border-slate-800 flex items-center justify-between">
+                <div className="bg-white p-5 rounded-2xl border border-[#e2e8f8] shadow-level-1 flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Period Likes</p>
-                    <p className="text-2xl font-bold text-white mt-1">{overviewData.activitySummary.periodLikes.toLocaleString()}</p>
+                    <p className="text-xs text-[#534434] font-semibold font-heading uppercase tracking-wider">Period Likes</p>
+                    <p className="text-2xl font-bold font-mono text-[#151c27] mt-1">{overviewData.activitySummary.periodLikes.toLocaleString()}</p>
                   </div>
-                  <div className="p-3 bg-rose-500/10 text-rose-400 rounded-xl">
+                  <div className="p-3 bg-[#ffdad6]/40 text-[#ba1a1a] rounded-2xl">
                     <Heart className="w-5 h-5" />
                   </div>
                 </div>
-                <div className="bg-slate-900/60 p-5 rounded-2xl border border-slate-800 flex items-center justify-between">
+                <div className="bg-white p-5 rounded-2xl border border-[#e2e8f8] shadow-level-1 flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Period Comments</p>
-                    <p className="text-2xl font-bold text-white mt-1">{overviewData.activitySummary.periodComments.toLocaleString()}</p>
+                    <p className="text-xs text-[#534434] font-semibold font-heading uppercase tracking-wider">Period Comments</p>
+                    <p className="text-2xl font-bold font-mono text-[#151c27] mt-1">{overviewData.activitySummary.periodComments.toLocaleString()}</p>
                   </div>
-                  <div className="p-3 bg-blue-500/10 text-blue-400 rounded-xl">
+                  <div className="p-3 bg-[#f0f3ff] text-[#0058be] rounded-2xl">
                     <MessageSquare className="w-5 h-5" />
                   </div>
                 </div>
-                <div className="bg-slate-900/60 p-5 rounded-2xl border border-slate-800 flex items-center justify-between">
+                <div className="bg-white p-5 rounded-2xl border border-[#e2e8f8] shadow-level-1 flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Period Bookmarks</p>
-                    <p className="text-2xl font-bold text-white mt-1">{overviewData.activitySummary.periodBookmarks.toLocaleString()}</p>
+                    <p className="text-xs text-[#534434] font-semibold font-heading uppercase tracking-wider">Period Bookmarks</p>
+                    <p className="text-2xl font-bold font-mono text-[#151c27] mt-1">{overviewData.activitySummary.periodBookmarks.toLocaleString()}</p>
                   </div>
-                  <div className="p-3 bg-purple-500/10 text-purple-400 rounded-xl">
+                  <div className="p-3 bg-[#ffe082]/40 text-[#855300] rounded-2xl">
                     <Bookmark className="w-5 h-5" />
                   </div>
                 </div>
               </div>
 
               {/* Timeline Trend Table */}
-              <div className="bg-slate-900/60 p-6 rounded-2xl border border-slate-800">
-                <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-                  <BarChart3 className="w-4 h-4 text-indigo-400" />
+              <div className="bg-white p-6 rounded-2xl border border-[#e2e8f8] shadow-level-1">
+                <h3 className="text-base font-bold font-heading text-[#151c27] mb-4 flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4 text-[#0058be]" />
                   Daily Growth & Content Distribution
                 </h3>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase">
+                      <tr className="border-b border-[#e2e8f8] bg-[#f0f3ff] text-[#534434] font-bold font-heading uppercase">
                         <th className="py-3 px-4">Date</th>
                         <th className="py-3 px-4 text-right">New Users</th>
                         <th className="py-3 px-4 text-right">Posts</th>
@@ -338,14 +338,14 @@ export const AdminAnalytics: React.FC = () => {
                         <th className="py-3 px-4 text-right">Interactions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/60">
+                    <tbody className="divide-y divide-[#e2e8f8]">
                       {overviewData.growthTrend.slice(-10).map((row) => (
-                        <tr key={row.date} className="hover:bg-slate-800/30">
-                          <td className="py-3 px-4 font-mono text-slate-300">{row.date}</td>
-                          <td className="py-3 px-4 text-right font-medium text-indigo-400">+{row.newUsers}</td>
-                          <td className="py-3 px-4 text-right text-slate-300">{row.newPosts}</td>
-                          <td className="py-3 px-4 text-right text-slate-300">{row.newReels}</td>
-                          <td className="py-3 px-4 text-right font-medium text-emerald-400">{row.interactions.toLocaleString()}</td>
+                        <tr key={row.date} className="hover:bg-[#f9f9ff] transition">
+                          <td className="py-3 px-4 font-mono text-[#151c27] font-semibold">{row.date}</td>
+                          <td className="py-3 px-4 text-right font-bold text-[#0058be]">+{row.newUsers}</td>
+                          <td className="py-3 px-4 text-right text-[#534434]">{row.newPosts}</td>
+                          <td className="py-3 px-4 text-right text-[#534434]">{row.newReels}</td>
+                          <td className="py-3 px-4 text-right font-bold text-[#006c49]">{row.interactions.toLocaleString()}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -392,47 +392,47 @@ export const AdminAnalytics: React.FC = () => {
               {/* Status breakdown & Platform cards */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Account Status Distribution */}
-                <div className="bg-slate-900/60 p-6 rounded-2xl border border-slate-800">
-                  <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <div className="bg-white p-6 rounded-2xl border border-[#e2e8f8] shadow-level-1">
+                  <h3 className="text-base font-bold font-heading text-[#151c27] mb-4 flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-[#006c49]" />
                     Account Status Distribution
                   </h3>
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 bg-slate-800/40 rounded-xl border border-slate-700/40">
-                      <span className="text-xs text-slate-300">Active Accounts</span>
-                      <span className="text-sm font-bold text-emerald-400">{userData.metrics.activeUsers.toLocaleString()}</span>
+                    <div className="flex items-center justify-between p-3.5 bg-[#f9f9ff] rounded-xl border border-[#e2e8f8]">
+                      <span className="text-xs text-[#534434] font-medium">Active Accounts</span>
+                      <span className="text-sm font-bold font-mono text-[#006c49]">{userData.metrics.activeUsers.toLocaleString()}</span>
                     </div>
-                    <div className="flex items-center justify-between p-3 bg-slate-800/40 rounded-xl border border-slate-700/40">
-                      <span className="text-xs text-slate-300">Suspended Accounts</span>
-                      <span className="text-sm font-bold text-amber-400">{userData.metrics.suspendedAccounts.toLocaleString()}</span>
+                    <div className="flex items-center justify-between p-3.5 bg-[#f9f9ff] rounded-xl border border-[#e2e8f8]">
+                      <span className="text-xs text-[#534434] font-medium">Suspended Accounts</span>
+                      <span className="text-sm font-bold font-mono text-[#855300]">{userData.metrics.suspendedAccounts.toLocaleString()}</span>
                     </div>
-                    <div className="flex items-center justify-between p-3 bg-slate-800/40 rounded-xl border border-slate-700/40">
-                      <span className="text-xs text-slate-300">Banned Accounts</span>
-                      <span className="text-sm font-bold text-rose-400">{userData.metrics.bannedAccounts.toLocaleString()}</span>
+                    <div className="flex items-center justify-between p-3.5 bg-[#f9f9ff] rounded-xl border border-[#e2e8f8]">
+                      <span className="text-xs text-[#534434] font-medium">Banned Accounts</span>
+                      <span className="text-sm font-bold font-mono text-[#ba1a1a]">{userData.metrics.bannedAccounts.toLocaleString()}</span>
                     </div>
-                    <div className="flex items-center justify-between p-3 bg-slate-800/40 rounded-xl border border-slate-700/40">
-                      <span className="text-xs text-slate-300">Deleted Accounts</span>
-                      <span className="text-sm font-bold text-slate-400">{userData.metrics.deletedAccounts.toLocaleString()}</span>
+                    <div className="flex items-center justify-between p-3.5 bg-[#f9f9ff] rounded-xl border border-[#e2e8f8]">
+                      <span className="text-xs text-[#534434] font-medium">Deleted Accounts</span>
+                      <span className="text-sm font-bold font-mono text-[#534434]">{userData.metrics.deletedAccounts.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Platform Distribution */}
-                <div className="bg-slate-900/60 p-6 rounded-2xl border border-slate-800">
-                  <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-                    <Smartphone className="w-4 h-4 text-indigo-400" />
+                <div className="bg-white p-6 rounded-2xl border border-[#e2e8f8] shadow-level-1">
+                  <h3 className="text-base font-bold font-heading text-[#151c27] mb-4 flex items-center gap-2">
+                    <Smartphone className="w-4 h-4 text-[#0058be]" />
                     Client Platform Breakdown
                   </h3>
                   <div className="space-y-4">
                     {userData.platformDistribution.map((p) => (
                       <div key={p.platform} className="space-y-1.5">
                         <div className="flex justify-between text-xs font-semibold">
-                          <span className="text-slate-300">{p.platform}</span>
-                          <span className="text-indigo-400">{p.percentage}% ({p.count})</span>
+                          <span className="text-[#151c27]">{p.platform}</span>
+                          <span className="text-[#0058be] font-mono">{p.percentage}% ({p.count})</span>
                         </div>
-                        <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+                        <div className="h-2 bg-[#e2e8f8] rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full transition-all duration-500"
+                            className="h-full bg-[#0058be] rounded-full transition-all duration-500"
                             style={{ width: `${p.percentage}%` }}
                           />
                         </div>
@@ -479,17 +479,17 @@ export const AdminAnalytics: React.FC = () => {
               </div>
 
               {/* Interaction Share Breakdown */}
-              <div className="bg-slate-900/60 p-6 rounded-2xl border border-slate-800">
-                <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-indigo-400" />
+              <div className="bg-white p-6 rounded-2xl border border-[#e2e8f8] shadow-level-1">
+                <h3 className="text-base font-bold font-heading text-[#151c27] mb-4 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-[#0058be]" />
                   Interaction Type Distribution
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   {engagementData.breakdown.map((item) => (
-                    <div key={item.type} className="p-4 bg-slate-800/40 rounded-xl border border-slate-700/40">
-                      <p className="text-xs text-slate-400 uppercase font-semibold">{item.type}</p>
-                      <p className="text-xl font-bold text-white mt-1">{item.count.toLocaleString()}</p>
-                      <p className="text-xs text-indigo-400 font-medium mt-1">{item.percentage}% of interactions</p>
+                    <div key={item.type} className="p-4 bg-[#f9f9ff] rounded-xl border border-[#e2e8f8]">
+                      <p className="text-xs text-[#534434] uppercase font-semibold font-heading">{item.type}</p>
+                      <p className="text-xl font-bold font-mono text-[#151c27] mt-1">{item.count.toLocaleString()}</p>
+                      <p className="text-xs text-[#0058be] font-medium mt-1">{item.percentage}% of interactions</p>
                     </div>
                   ))}
                 </div>
@@ -532,47 +532,47 @@ export const AdminAnalytics: React.FC = () => {
               </div>
 
               {/* Creator Leaderboard */}
-              <div className="bg-slate-900/60 p-6 rounded-2xl border border-slate-800">
-                <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-                  <Award className="w-4 h-4 text-amber-400" />
+              <div className="bg-white p-6 rounded-2xl border border-[#e2e8f8] shadow-level-1">
+                <h3 className="text-base font-bold font-heading text-[#151c27] mb-4 flex items-center gap-2">
+                  <Award className="w-4 h-4 text-[#855300]" />
                   Top Creator Leaderboard
                 </h3>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase">
+                      <tr className="border-b border-[#e2e8f8] bg-[#f0f3ff] text-[#534434] font-bold font-heading uppercase">
                         <th className="py-3 px-4">Rank</th>
                         <th className="py-3 px-4">Creator</th>
                         <th className="py-3 px-4 text-right">Posts Published</th>
                         <th className="py-3 px-4 text-right">Total Likes Received</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/60">
+                    <tbody className="divide-y divide-[#e2e8f8]">
                       {contentData.topCreators.map((creator, idx) => (
-                        <tr key={creator.authorId} className="hover:bg-slate-800/30">
-                          <td className="py-3 px-4 font-bold text-slate-400">
-                            {idx === 0 && <span className="text-amber-400 font-extrabold">🥇 #1</span>}
-                            {idx === 1 && <span className="text-slate-300 font-bold">🥈 #2</span>}
-                            {idx === 2 && <span className="text-amber-600 font-bold">🥉 #3</span>}
+                        <tr key={creator.authorId} className="hover:bg-[#f9f9ff] transition">
+                          <td className="py-3 px-4 font-bold text-[#534434]">
+                            {idx === 0 && <span className="text-[#855300] font-extrabold">🥇 #1</span>}
+                            {idx === 1 && <span className="text-[#534434] font-bold">🥈 #2</span>}
+                            {idx === 2 && <span className="text-[#855300] font-bold">🥉 #3</span>}
                             {idx > 2 && `#${idx + 1}`}
                           </td>
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-2.5">
-                              <div className="w-7 h-7 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs uppercase">
+                              <div className="w-7 h-7 rounded-full bg-[#f0f3ff] text-[#0058be] flex items-center justify-center font-bold text-xs uppercase">
                                 {creator.author?.username?.[0] || "U"}
                               </div>
                               <div>
-                                <p className="font-semibold text-slate-200">
+                                <p className="font-bold text-[#151c27]">
                                   {creator.author?.full_name || creator.author?.username || "Peto User"}
                                 </p>
-                                <p className="text-[11px] text-slate-400">@{creator.author?.username || "unknown"}</p>
+                                <p className="text-[11px] text-[#534434]">@{creator.author?.username || "unknown"}</p>
                               </div>
                             </div>
                           </td>
-                          <td className="py-3 px-4 text-right font-medium text-slate-300">
+                          <td className="py-3 px-4 text-right font-medium text-[#151c27]">
                             {creator.postCount.toLocaleString()}
                           </td>
-                          <td className="py-3 px-4 text-right font-bold text-rose-400">
+                          <td className="py-3 px-4 text-right font-bold text-[#ba1a1a]">
                             ❤️ {creator.totalLikes.toLocaleString()}
                           </td>
                         </tr>
@@ -619,15 +619,15 @@ export const AdminAnalytics: React.FC = () => {
               </div>
 
               {/* Top Performing Reels */}
-              <div className="bg-slate-900/60 p-6 rounded-2xl border border-slate-800">
-                <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-                  <Video className="w-4 h-4 text-violet-400" />
+              <div className="bg-white p-6 rounded-2xl border border-[#e2e8f8] shadow-level-1">
+                <h3 className="text-base font-bold font-heading text-[#151c27] mb-4 flex items-center gap-2">
+                  <Video className="w-4 h-4 text-[#0058be]" />
                   Top Performing Short-form Reels
                 </h3>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase">
+                      <tr className="border-b border-[#e2e8f8] bg-[#f0f3ff] text-[#534434] font-bold font-heading uppercase">
                         <th className="py-3 px-4">Caption / Title</th>
                         <th className="py-3 px-4">Creator</th>
                         <th className="py-3 px-4 text-right">Plays / Views</th>
@@ -635,22 +635,22 @@ export const AdminAnalytics: React.FC = () => {
                         <th className="py-3 px-4 text-right">Comments</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/60">
+                    <tbody className="divide-y divide-[#e2e8f8]">
                       {reelsData.topReels.map((reel) => (
-                        <tr key={reel.id} className="hover:bg-slate-800/30">
-                          <td className="py-3 px-4 font-medium text-slate-200 max-w-xs truncate">
+                        <tr key={reel.id} className="hover:bg-[#f9f9ff] transition">
+                          <td className="py-3 px-4 font-semibold text-[#151c27] max-w-xs truncate">
                             {reel.caption || "Untitled Reel"}
                           </td>
-                          <td className="py-3 px-4 text-slate-400 font-mono">
+                          <td className="py-3 px-4 text-[#534434] font-mono">
                             @{reel.author?.username || "creator"}
                           </td>
-                          <td className="py-3 px-4 text-right font-bold text-violet-400">
+                          <td className="py-3 px-4 text-right font-bold text-[#0058be]">
                             {reel.views.toLocaleString()}
                           </td>
-                          <td className="py-3 px-4 text-right text-rose-400">
+                          <td className="py-3 px-4 text-right text-[#ba1a1a] font-semibold">
                             {reel.likes.toLocaleString()}
                           </td>
-                          <td className="py-3 px-4 text-right text-blue-400">
+                          <td className="py-3 px-4 text-right text-[#534434]">
                             {reel.comments.toLocaleString()}
                           </td>
                         </tr>
@@ -697,30 +697,30 @@ export const AdminAnalytics: React.FC = () => {
               </div>
 
               {/* Top Communities Table */}
-              <div className="bg-slate-900/60 p-6 rounded-2xl border border-slate-800">
-                <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-                  <Globe className="w-4 h-4 text-emerald-400" />
+              <div className="bg-white p-6 rounded-2xl border border-[#e2e8f8] shadow-level-1">
+                <h3 className="text-base font-bold font-heading text-[#151c27] mb-4 flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-[#006c49]" />
                   Most Active Communities
                 </h3>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase">
+                      <tr className="border-b border-[#e2e8f8] bg-[#f0f3ff] text-[#534434] font-bold font-heading uppercase">
                         <th className="py-3 px-4">Community Name</th>
                         <th className="py-3 px-4 text-right">Members</th>
                         <th className="py-3 px-4 text-right">Posts Count</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/60">
+                    <tbody className="divide-y divide-[#e2e8f8]">
                       {communitiesData.topCommunities.map((c) => (
-                        <tr key={c.id} className="hover:bg-slate-800/30">
-                          <td className="py-3 px-4 font-semibold text-slate-200">
+                        <tr key={c.id} className="hover:bg-[#f9f9ff] transition">
+                          <td className="py-3 px-4 font-bold text-[#151c27]">
                             {c.name}
                           </td>
-                          <td className="py-3 px-4 text-right font-medium text-emerald-400">
+                          <td className="py-3 px-4 text-right font-bold text-[#006c49]">
                             {c.memberCount.toLocaleString()}
                           </td>
-                          <td className="py-3 px-4 text-right text-slate-300">
+                          <td className="py-3 px-4 text-right text-[#534434]">
                             {c.postCount.toLocaleString()}
                           </td>
                         </tr>
@@ -768,23 +768,23 @@ export const AdminAnalytics: React.FC = () => {
               </div>
 
               {/* Retention Heatmap Table */}
-              <div className="bg-slate-900/60 p-6 rounded-2xl border border-slate-800">
+              <div className="bg-white p-6 rounded-2xl border border-[#e2e8f8] shadow-level-1">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-base font-bold text-white flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-indigo-400" />
+                  <h3 className="text-base font-bold font-heading text-[#151c27] flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4 text-[#0058be]" />
                     Weekly Registration Retention Heatmap
                   </h3>
-                  <div className="flex items-center gap-2 text-[11px] text-slate-400">
-                    <span className="w-3 h-3 rounded bg-emerald-500/80 inline-block" /> &gt; 40%
-                    <span className="w-3 h-3 rounded bg-indigo-500/80 inline-block ml-2" /> 20-40%
-                    <span className="w-3 h-3 rounded bg-slate-700/80 inline-block ml-2" /> &lt; 20%
+                  <div className="flex items-center gap-2 text-[11px] text-[#534434]">
+                    <span className="w-3 h-3 rounded-full bg-[#006c49] inline-block" /> &gt; 40%
+                    <span className="w-3 h-3 rounded-full bg-[#0058be] inline-block ml-2" /> 20-40%
+                    <span className="w-3 h-3 rounded-full bg-[#855300] inline-block ml-2" /> &lt; 20%
                   </div>
                 </div>
 
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs">
                     <thead>
-                      <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase">
+                      <tr className="border-b border-[#e2e8f8] bg-[#f0f3ff] text-[#534434] font-bold font-heading uppercase">
                         <th className="py-3 px-4">Cohort Week</th>
                         <th className="py-3 px-4 text-right">Users Registered</th>
                         <th className="py-3 px-4 text-center">Day 1</th>
@@ -793,13 +793,13 @@ export const AdminAnalytics: React.FC = () => {
                         <th className="py-3 px-4 text-center">Day 30</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/60">
+                    <tbody className="divide-y divide-[#e2e8f8]">
                       {retentionData.cohorts.map((c) => (
-                        <tr key={c.cohortWeek} className="hover:bg-slate-800/30">
-                          <td className="py-3 px-4 font-mono text-slate-300 font-medium">
+                        <tr key={c.cohortWeek} className="hover:bg-[#f9f9ff] transition">
+                          <td className="py-3 px-4 font-mono text-[#151c27] font-semibold">
                             {c.cohortWeek}
                           </td>
-                          <td className="py-3 px-4 text-right font-medium text-slate-300">
+                          <td className="py-3 px-4 text-right font-medium text-[#534434]">
                             {c.cohortSize.toLocaleString()}
                           </td>
                           <td className="py-2 px-3 text-center">
@@ -827,31 +827,31 @@ export const AdminAnalytics: React.FC = () => {
           {activeSection === "revenue" && revenueData && (
             <div className="space-y-6">
               {/* Readiness Checks */}
-              <div className="bg-slate-900/60 p-6 rounded-2xl border border-slate-800">
-                <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-                  <DollarSign className="w-4 h-4 text-emerald-400" />
+              <div className="bg-white p-6 rounded-2xl border border-[#e2e8f8] shadow-level-1">
+                <h3 className="text-base font-bold font-heading text-[#151c27] mb-4 flex items-center gap-2">
+                  <DollarSign className="w-4 h-4 text-[#006c49]" />
                   Phase 6 Monetization Architecture Readiness
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 bg-slate-800/40 rounded-xl border border-slate-700/40 flex items-center gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                  <div className="p-4 bg-[#f9f9ff] rounded-xl border border-[#e2e8f8] flex items-center gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-[#006c49] flex-shrink-0" />
                     <div>
-                      <p className="text-xs font-semibold text-white">Ad Delivery Engine</p>
-                      <p className="text-[11px] text-slate-400">Phase 6 Schema Ready</p>
+                      <p className="text-xs font-bold text-[#151c27]">Ad Delivery Engine</p>
+                      <p className="text-[11px] text-[#534434]">Phase 8 Platform Ready</p>
                     </div>
                   </div>
-                  <div className="p-4 bg-slate-800/40 rounded-xl border border-slate-700/40 flex items-center gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                  <div className="p-4 bg-[#f9f9ff] rounded-xl border border-[#e2e8f8] flex items-center gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-[#006c49] flex-shrink-0" />
                     <div>
-                      <p className="text-xs font-semibold text-white">Payment & Stripe Webhooks</p>
-                      <p className="text-[11px] text-slate-400">Ready for Subscriptions</p>
+                      <p className="text-xs font-bold text-[#151c27]">Payment & Stripe Webhooks</p>
+                      <p className="text-[11px] text-[#534434]">Ready for Subscriptions</p>
                     </div>
                   </div>
-                  <div className="p-4 bg-slate-800/40 rounded-xl border border-slate-700/40 flex items-center gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                  <div className="p-4 bg-[#f9f9ff] rounded-xl border border-[#e2e8f8] flex items-center gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-[#006c49] flex-shrink-0" />
                     <div>
-                      <p className="text-xs font-semibold text-white">Premium Verification</p>
-                      <p className="text-[11px] text-slate-400">Badge & Tiers Support</p>
+                      <p className="text-xs font-bold text-[#151c27]">Premium Verification</p>
+                      <p className="text-[11px] text-[#534434]">Badge & Tiers Support</p>
                     </div>
                   </div>
                 </div>
@@ -890,17 +890,17 @@ export const AdminAnalytics: React.FC = () => {
               </div>
 
               {/* Growth Projections */}
-              <div className="bg-slate-900/60 p-6 rounded-2xl border border-slate-800">
-                <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-emerald-400" />
+              <div className="bg-white p-6 rounded-2xl border border-[#e2e8f8] shadow-level-1">
+                <h3 className="text-base font-bold font-heading text-[#151c27] mb-4 flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-[#006c49]" />
                   Quarterly Projected Monetization Runway
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {revenueData.projections.map((proj) => (
-                    <div key={proj.month} className="p-4 bg-slate-800/40 rounded-xl border border-slate-700/40">
-                      <p className="text-xs text-slate-400 font-semibold">{proj.month}</p>
-                      <p className="text-xl font-bold text-emerald-400 mt-1">${proj.projectedRevenueUSD.toLocaleString()} / mo</p>
-                      <p className="text-xs text-slate-400 mt-1">{proj.projectedDAU.toLocaleString()} Projected DAU</p>
+                    <div key={proj.month} className="p-4 bg-[#f9f9ff] rounded-xl border border-[#e2e8f8]">
+                      <p className="text-xs text-[#534434] font-semibold font-heading">{proj.month}</p>
+                      <p className="text-xl font-bold font-mono text-[#006c49] mt-1">${proj.projectedRevenueUSD.toLocaleString()} / mo</p>
+                      <p className="text-xs text-[#534434] mt-1">{proj.projectedDAU.toLocaleString()} Projected DAU</p>
                     </div>
                   ))}
                 </div>
@@ -922,25 +922,25 @@ const MetricCard: React.FC<{
   color: "indigo" | "emerald" | "amber" | "violet" | "rose" | "blue";
 }> = ({ label, value, sub, icon: Icon, color }) => {
   const colorMap = {
-    indigo: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20",
-    emerald: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
-    amber: "text-amber-400 bg-amber-500/10 border-amber-500/20",
-    violet: "text-violet-400 bg-violet-500/10 border-violet-500/20",
-    rose: "text-rose-400 bg-rose-500/10 border-rose-500/20",
-    blue: "text-blue-400 bg-blue-500/10 border-blue-500/20",
+    indigo: "text-[#0058be] bg-[#f0f3ff] border-[#dae2f3]",
+    emerald: "text-[#006c49] bg-[#bbf7d0]/40 border-[#006c49]/30",
+    amber: "text-[#855300] bg-[#ffe082]/40 border-[#855300]/30",
+    violet: "text-[#0058be] bg-[#f0f3ff] border-[#dae2f3]",
+    rose: "text-[#ba1a1a] bg-[#ffdad6]/40 border-[#ffdad6]",
+    blue: "text-[#0058be] bg-[#f0f3ff] border-[#dae2f3]",
   };
 
   return (
-    <div className="bg-slate-900/60 p-5 rounded-2xl border border-slate-800 relative overflow-hidden backdrop-blur-md hover:border-slate-700 transition">
+    <div className="bg-white p-5 rounded-2xl border border-[#e2e8f8] shadow-level-1 hover:shadow-level-2 transition">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-slate-400">{label}</span>
+        <span className="text-xs font-semibold font-heading text-[#534434]">{label}</span>
         <div className={`p-2 rounded-xl border ${colorMap[color]}`}>
           <Icon className="w-4 h-4" />
         </div>
       </div>
       <div className="mt-3">
-        <p className="text-2xl font-extrabold text-white tracking-tight">{value}</p>
-        <p className="text-xs text-slate-400 mt-1">{sub}</p>
+        <p className="text-2xl font-bold font-mono text-[#151c27] tracking-tight">{value}</p>
+        <p className="text-xs text-[#534434] mt-1">{sub}</p>
       </div>
     </div>
   );
@@ -948,17 +948,17 @@ const MetricCard: React.FC<{
 
 // Helper retention heatmap cell
 const RetentionCell: React.FC<{ pct: number }> = ({ pct }) => {
-  let bg = "bg-slate-800/60 text-slate-400";
+  let bg = "bg-[#f0f3ff] text-[#534434] border border-[#dae2f3]";
   if (pct >= 40) {
-    bg = "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30";
+    bg = "bg-[#bbf7d0]/40 text-[#006c49] border border-[#006c49]/30";
   } else if (pct >= 25) {
-    bg = "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30";
+    bg = "bg-[#f0f3ff] text-[#0058be] border border-[#0058be]/30";
   } else if (pct >= 10) {
-    bg = "bg-amber-500/20 text-amber-300 border border-amber-500/30";
+    bg = "bg-[#ffe082]/40 text-[#855300] border border-[#855300]/30";
   }
 
   return (
-    <span className={`inline-block px-3 py-1 rounded-lg text-xs font-bold font-mono ${bg}`}>
+    <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold font-mono ${bg}`}>
       {pct}%
     </span>
   );

@@ -6,5 +6,6 @@ dist
 .DS_Store
 *.log
 Mobile/peto_user/
-*/temp*
-*temp*
+temp/
+*/temp/
+backend/temp/

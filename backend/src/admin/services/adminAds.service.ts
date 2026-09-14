@@ -1,5 +1,6 @@
 import { supabase } from "../../config/supabase";
 import { createAuditLog } from "./adminAudit.service";
+import { sanitizeSearchQuery } from "../utils/adminSanitizer";
 
 export type AdvertiserStatus = "ACTIVE" | "SUSPENDED" | "PENDING_VERIFICATION";
 
@@ -437,9 +438,12 @@ export async function getAdvertisersService(filters?: {
       query = query.eq("status", filters.status);
     }
     if (filters?.search) {
-      query = query.or(
-        `company_name.ilike.%${filters.search}%,contact_name.ilike.%${filters.search}%,contact_email.ilike.%${filters.search}%`
-      );
+      const q = sanitizeSearchQuery(filters.search);
+      if (q) {
+        query = query.or(
+          `company_name.ilike.%${q}%,contact_name.ilike.%${q}%,contact_email.ilike.%${q}%`
+        );
+      }
     }
 
     query = query.range(from, to);

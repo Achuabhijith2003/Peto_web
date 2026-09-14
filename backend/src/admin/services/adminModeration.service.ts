@@ -4,6 +4,7 @@ import { createAuditLog } from "./adminAudit.service";
 import { updateUserStatusService } from "./adminUserManagement.service";
 import { Request } from "express";
 import crypto from "crypto";
+import { sanitizeSearchQuery } from "../utils/adminSanitizer";
 
 export interface CreateReportInput {
   reporterId: string;
@@ -250,8 +251,10 @@ export async function getReportsQueueService(filters: ReportFilterOptions) {
       }
     }
     if (filters.search && filters.search.trim()) {
-      const q = filters.search.trim();
-      query = query.or(`reason.ilike.%${q}%,description.ilike.%${q}%,target_id.ilike.%${q}%`);
+      const q = sanitizeSearchQuery(filters.search);
+      if (q) {
+        query = query.or(`reason.ilike.%${q}%,description.ilike.%${q}%,target_id.ilike.%${q}%`);
+      }
     }
 
     query = query.order(sortColumn, { ascending }).range(from, to);
