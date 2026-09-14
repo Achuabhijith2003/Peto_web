@@ -9,14 +9,21 @@ WORKDIR /app
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
 
-# Copy package manifests
-COPY package*.json ./
+# Copy source files (supports both repository root and admin/ build contexts)
+COPY . ./temp_context/
 
-# Install dependencies
+# Detect context: if built from repo root, extract admin/ directory; otherwise use context root
+RUN if [ -f "./temp_context/admin/package.json" ]; then \
+        echo "Detected repository root context. Extracting admin directory..."; \
+        cp -a ./temp_context/admin/. ./; \
+    else \
+        echo "Detected admin directory context."; \
+        cp -a ./temp_context/. ./; \
+    fi && \
+    rm -rf ./temp_context
+
+# Install dependencies using admin/package.json
 RUN npm ci || npm install
-
-# Copy application source code
-COPY . .
 
 # Build the production bundle
 RUN npm run build
