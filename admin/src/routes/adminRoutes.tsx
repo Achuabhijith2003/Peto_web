@@ -43,8 +43,17 @@ const AdminCompliance = React.lazy(() =>
 const AdminAds = React.lazy(() =>
   import("../pages/AdminAds").then((m) => ({ default: m.AdminAds }))
 );
+const AdminPayments = React.lazy(() =>
+  import("../pages/AdminPayments").then((m) => ({ default: m.AdminPayments }))
+);
+const AdminRegions = React.lazy(() =>
+  import("../pages/AdminRegions").then((m) => ({ default: m.AdminRegions }))
+);
 const AdminNotifications = React.lazy(() =>
   import("../pages/AdminNotifications").then((m) => ({ default: m.AdminNotifications }))
+);
+const AdminVerifications = React.lazy(() =>
+  import("../pages/AdminVerifications").then((m) => ({ default: m.AdminVerifications }))
 );
 const AdminPlaceholder = React.lazy(() =>
   import("../pages/AdminPlaceholder").then((m) => ({ default: m.AdminPlaceholder }))
@@ -147,6 +156,30 @@ export const AppRoutes: React.FC = () => {
               element={<ProtectedAdminRoute requiredPermission="ads.view" />}
             >
               <Route index element={<AdminAds />} />
+            </Route>
+
+            {/* Global Monetization & Payments */}
+            <Route
+              path="/payments"
+              element={<ProtectedAdminRoute requiredPermission="ads.view" />}
+            >
+              <Route index element={<AdminPayments />} />
+            </Route>
+
+            {/* Regional Control Center */}
+            <Route
+              path="/regions"
+              element={<ProtectedAdminRoute requiredPermission="system.view" />}
+            >
+              <Route index element={<AdminRegions />} />
+            </Route>
+
+            {/* Partner & Identity Verifications (Phase 9) */}
+            <Route
+              path="/verifications"
+              element={<ProtectedAdminRoute requiredPermission="ads.view" />}
+            >
+              <Route index element={<AdminVerifications />} />
             </Route>
 
             {/* Future Roadmap Section Placeholders */}

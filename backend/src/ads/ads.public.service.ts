@@ -1,4 +1,5 @@
 import { supabase } from "../config/supabase";
+import { getRegionalConfig } from "../regions/regional.service";
 
 export interface PublicAdItem {
   id: string; // Campaign ID
@@ -102,8 +103,17 @@ const runtimeFallbackPublicAds: PublicAdItem[] = [
 /**
  * Fetch active, approved ads for user feeds
  */
-export async function getActiveFeedAdsService(placement: string = "FEED"): Promise<PublicAdItem[]> {
+export async function getActiveFeedAdsService(
+  placement: string = "FEED",
+  country: string = "GLOBAL"
+): Promise<PublicAdItem[]> {
   try {
+    // 1. Enforce regional ads availability
+    const regionalConfig = await getRegionalConfig(country);
+    if (!regionalConfig.ads_enabled) {
+      return [];
+    }
+
     const now = new Date().toISOString();
 
     const { data, error } = await supabase
@@ -130,6 +140,15 @@ export async function getActiveFeedAdsService(placement: string = "FEED"): Promi
       const publicAds: PublicAdItem[] = [];
 
       data.forEach((camp: any) => {
+        // Exclude prohibited categories in this region
+        const industry = (camp.advertiser?.industry || "").toUpperCase();
+        if (
+          regionalConfig.prohibited_ad_categories &&
+          regionalConfig.prohibited_ad_categories.includes(industry)
+        ) {
+          return;
+        }
+
         const approvedCreatives = (camp.ad_creatives || []).filter(
           (cr: any) => cr.status === "APPROVED"
         );
@@ -141,6 +160,18 @@ export async function getActiveFeedAdsService(placement: string = "FEED"): Promi
         // Check placement filter if targeting specifies
         if (targeting?.placements && targeting.placements.length > 0) {
           if (!targeting.placements.includes(placement) && !targeting.placements.includes("ALL")) {
+            return;
+          }
+        }
+
+        // Check country targeting filter
+        if (targeting?.countries && targeting.countries.length > 0) {
+          const upperCountries = targeting.countries.map((c: string) => c.toUpperCase());
+          if (
+            !upperCountries.includes("ALL") &&
+            country !== "GLOBAL" &&
+            !upperCountries.includes(country.toUpperCase())
+          ) {
             return;
           }
         }

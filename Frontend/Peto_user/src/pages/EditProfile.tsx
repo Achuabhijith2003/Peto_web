@@ -29,7 +29,8 @@ const EditProfileContent = () => {
   const { user, updateUserProfile, refreshUser } = useAuth();
 
   // Form fields state
-  const [fullName, setFullName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
   const [originalUsername, setOriginalUsername] = useState("");
   const [bio, setBio] = useState("");
@@ -68,7 +69,10 @@ const EditProfileContent = () => {
         const profile = res.data.profile || {};
         const userData = res.data.user || user;
 
-        setFullName(profile.full_name || userData?.name || "");
+        const rawName = (profile.full_name || userData?.name || "").trim();
+        const parts = rawName ? rawName.split(/\s+/) : [];
+        setFirstName(parts[0] || "");
+        setLastName(parts.slice(1).join(" ") || "");
         const curUsername = profile.username || userData?.username || "";
         setUsername(curUsername);
         setOriginalUsername(curUsername);
@@ -223,8 +227,9 @@ const EditProfileContent = () => {
 
     try {
       setSaving(true);
+      const combinedFullName = `${firstName.trim()} ${lastName.trim()}`.trim();
       const payload = {
-        full_name: fullName,
+        full_name: combinedFullName,
         username: username.trim().toLowerCase(),
         bio,
         location,
@@ -264,6 +269,7 @@ const EditProfileContent = () => {
     );
   }
 
+  const fullName = `${firstName} ${lastName}`.trim();
   const currentDisplayAvatar =
     avatarPreview ||
     avatarUrl ||
@@ -422,10 +428,10 @@ const EditProfileContent = () => {
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Full Name */}
+            {/* First Name */}
             <div className="space-y-2">
               <label className="block text-xs sm:text-sm font-bold text-slate-700">
-                Full Name
+                First Name *
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
@@ -433,9 +439,29 @@ const EditProfileContent = () => {
                 </div>
                 <input
                   type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="e.g. Sarah Jenkins"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="e.g. John"
+                  className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 text-sm font-medium text-slate-800 transition"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Last Name */}
+            <div className="space-y-2">
+              <label className="block text-xs sm:text-sm font-bold text-slate-700">
+                Last Name *
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <User size={18} />
+                </div>
+                <input
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="e.g. Doe"
                   className="w-full pl-10 pr-4 py-3 rounded-2xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 text-sm font-medium text-slate-800 transition"
                   required
                 />

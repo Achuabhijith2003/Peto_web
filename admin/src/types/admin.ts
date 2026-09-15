@@ -828,6 +828,7 @@ export interface AdvertiserItem {
   contact_email: string;
   website_url?: string | null;
   industry?: string;
+  currency?: string;
   status: AdvertiserStatus;
   total_spend: number;
   balance: number;
@@ -907,6 +908,7 @@ export interface AdCampaignItem {
   total_budget: number;
   daily_budget: number;
   spent: number;
+  currency?: string;
   start_date: string;
   end_date?: string | null;
   status: CampaignStatus;
@@ -938,6 +940,8 @@ export interface AdAnalyticsSummary {
     views: number;
     conversions: number;
     spend: number;
+    baseCurrency?: string;
+    currencyBreakdown?: Record<string, number>;
     avgCtr: number;
     avgCpc: number;
     avgCpm: number;

@@ -411,11 +411,23 @@ export const AdminAds: React.FC = () => {
     }
   };
 
+  const formatCurrency = (amount: number, currency: string = "USD") => {
+    try {
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: currency.toUpperCase(),
+        maximumFractionDigits: 2,
+      }).format(amount);
+    } catch {
+      return `${currency.toUpperCase()} ${amount.toLocaleString()}`;
+    }
+  };
+
   const totalActiveCampaigns = campaigns.filter((c) => c.status === "ACTIVE").length;
   const totalPendingQueue = reviewQueue.length;
-  const totalSpend = analytics?.totals?.spend ?? 4260.5;
-  const totalImpressions = analytics?.totals?.impressions ?? 57500;
-  const avgCtr = analytics?.totals?.avgCtr ?? 4.15;
+  const totalSpend = analytics?.totals?.spend ?? 0;
+  const totalImpressions = analytics?.totals?.impressions ?? 0;
+  const avgCtr = analytics?.totals?.avgCtr ?? 0;
 
   return (
     <div className="space-y-6 pb-12">
@@ -519,11 +531,27 @@ export const AdminAds: React.FC = () => {
         </div>
 
         <div className="p-4 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1 flex flex-col justify-between">
-          <span className="text-xs font-semibold font-heading text-[#534434]">Total Ad Spend</span>
-          <div className="flex items-baseline justify-between mt-2">
-            <span className="text-2xl font-bold text-[#0058be] font-mono">${totalSpend.toLocaleString()}</span>
-            <span className="text-[11px] font-semibold text-[#534434]">USD</span>
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold font-heading text-[#534434]">Total Ad Spend</span>
+            <span className="text-[10px] font-bold text-[#534434] bg-[#f0f3ff] px-1.5 py-0.5 rounded border border-[#dae2f3]">
+              USD Base
+            </span>
           </div>
+          <div className="flex items-baseline justify-between mt-2">
+            <span className="text-2xl font-bold text-[#0058be] font-mono">
+              ${totalSpend.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+            <span className="text-[11px] font-semibold text-[#534434]">USD Eq.</span>
+          </div>
+          {analytics?.totals?.currencyBreakdown && Object.keys(analytics.totals.currencyBreakdown).length > 0 && (
+            <div className="text-[10px] text-[#534434] font-mono mt-1.5 pt-1 border-t border-slate-100 flex flex-wrap gap-1">
+              {Object.entries(analytics.totals.currencyBreakdown).map(([c, amt]) => (
+                <span key={c} className="bg-slate-100 px-1 rounded">
+                  {c}: {amt.toLocaleString()}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="p-4 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1 flex flex-col justify-between">
@@ -845,8 +873,12 @@ export const AdminAds: React.FC = () => {
 
                           <td className="py-3.5 px-4">
                             <div className="flex items-center justify-between text-xs mb-1 font-mono">
-                              <span className="text-[#151c27] font-bold">${camp.spent.toLocaleString()}</span>
-                              <span className="text-[#534434]">/ ${camp.total_budget.toLocaleString()}</span>
+                              <span className="text-[#151c27] font-bold">
+                                {formatCurrency(camp.spent, camp.currency || "USD")}
+                              </span>
+                              <span className="text-[#534434]">
+                                / {formatCurrency(camp.total_budget, camp.currency || "USD")}
+                              </span>
                             </div>
                             <div className="w-32 bg-[#e2e8f8] h-1.5 rounded-full overflow-hidden">
                               <div
@@ -982,7 +1014,9 @@ export const AdminAds: React.FC = () => {
                 <div className="pt-3 border-t border-[#e2e8f8] flex items-center justify-between">
                   <div className="text-xs">
                     <span className="text-[#534434]/70 block text-[10px]">Total Platform Spend</span>
-                    <span className="font-bold text-[#151c27] font-mono">${adv.total_spend.toLocaleString()}</span>
+                    <span className="font-bold text-[#151c27] font-mono">
+                      {formatCurrency(adv.total_spend, adv.currency || "USD")}
+                    </span>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -1066,13 +1100,27 @@ export const AdminAds: React.FC = () => {
             </div>
 
             <div className="p-4 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1">
-              <span className="text-xs font-semibold font-heading text-[#534434]">Total Revenue / Spend</span>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold font-heading text-[#534434]">Total Revenue / Spend</span>
+                <span className="text-[10px] font-bold text-[#534434] bg-[#f0f3ff] px-1.5 py-0.5 rounded border border-[#dae2f3]">
+                  USD Base
+                </span>
+              </div>
               <div className="text-2xl font-bold text-[#855300] font-mono mt-1">
-                ${(analytics?.totals?.spend ?? 0).toLocaleString()}
+                ${(analytics?.totals?.spend ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
               <span className="text-[11px] text-[#534434]/80 mt-1 block">
-                Avg CPM: ${analytics?.totals?.avgCpm ?? 0}
+                Avg CPM: ${(analytics?.totals?.avgCpm ?? 0).toFixed(2)} USD
               </span>
+              {analytics?.totals?.currencyBreakdown && Object.keys(analytics.totals.currencyBreakdown).length > 0 && (
+                <div className="mt-2 pt-1.5 border-t border-slate-100 flex flex-wrap gap-1 text-[10px] font-mono text-[#534434]">
+                  {Object.entries(analytics.totals.currencyBreakdown).map(([c, val]) => (
+                    <span key={c} className="px-1.5 py-0.5 bg-[#f0f3ff] rounded border border-[#dae2f3]">
+                      {c}: {val.toLocaleString()}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 

@@ -9,6 +9,7 @@ import {
   Search,
   Clapperboard,
   Edit3,
+  Building2,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
@@ -187,6 +188,15 @@ const Navbar = () => {
                     >
                       <Bookmark size={15} className="text-slate-400" />
                       Saved Posts
+                    </Link>
+
+                    <Link 
+                      to="/advertiser" 
+                      className="flex items-center gap-2.5 px-3.5 py-1.5 text-xs font-medium text-amber-700 bg-amber-50/50 hover:bg-amber-100/70 transition-colors"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      <Building2 size={15} className="text-amber-500" />
+                      Advertiser Portal
                     </Link>
                   </div>
 

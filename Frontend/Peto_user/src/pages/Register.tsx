@@ -16,7 +16,8 @@ import Button from "../components/common/Button";
 import heroImage from "../assets/hero.png";
 
 interface RegisterForm {
-  fullName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -40,11 +41,14 @@ const Register = () => {
   const onSubmit = async (data: RegisterForm) => {
     try {
       setServerError("");
+      const fullName = `${data.firstName.trim()} ${data.lastName.trim()}`.trim();
       const response = await api.post("/auth/signup", {
         email: data.email,
         password: data.password,
-        fullName: data.fullName,
-        username: data.fullName.toLowerCase().replace(/\s+/g, ""),
+        fullName: fullName,
+        firstName: data.firstName.trim(),
+        lastName: data.lastName.trim(),
+        username: fullName.toLowerCase().replace(/\s+/g, ""),
       });
       if (response.data.success) {
         const token = response.data.token || response.data.session?.access_token;
@@ -69,14 +73,25 @@ const Register = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <InputField
-          label="Full Name"
-          placeholder="John Doe"
-          error={errors.fullName?.message}
-          {...register("fullName", {
-            required: "Full name is required",
-          })}
-        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <InputField
+            label="First Name"
+            placeholder="John"
+            error={errors.firstName?.message}
+            {...register("firstName", {
+              required: "First name is required",
+            })}
+          />
+
+          <InputField
+            label="Last Name"
+            placeholder="Doe"
+            error={errors.lastName?.message}
+            {...register("lastName", {
+              required: "Last name is required",
+            })}
+          />
+        </div>
 
         <InputField
           label="Email"

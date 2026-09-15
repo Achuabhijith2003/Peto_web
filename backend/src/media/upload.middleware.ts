@@ -66,4 +66,27 @@ export const upload = multer({
     fileSize: 200 * 1024 * 1024, // 200MB
   },
   fileFilter: mediaFilter,
-});
+});
+
+// Dedicated secure memory storage for sensitive verification documents (No unencrypted disk persistence)
+const documentMemoryStorage = multer.memoryStorage();
+export const uploadSecureDocumentMiddleware = multer({
+  storage: documentMemoryStorage,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (_req, file, cb) => {
+    const allowed = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/webp",
+      "application/pdf",
+    ];
+    if (allowed.includes(file.mimetype.toLowerCase())) {
+      return cb(null, true);
+    }
+    cb(new Error("Unsupported document type. Only JPEG, PNG, WebP, and PDF files are accepted."));
+  },
+});
+

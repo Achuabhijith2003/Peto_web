@@ -25,6 +25,9 @@ import communityRoutes from "./communities/community.routes";
 import adminRoutes from "./admin/admin.routes";
 import reportRoutes from "./reports/report.routes";
 import publicAdsRoutes from "./ads/ads.public.routes";
+import regionalRoutes from "./regions/regional.routes";
+import paymentRoutes from "./payments/payment.routes";
+import advertiserRoutes from "./advertisers/advertiser.routes";
 import { ensurePublicBuckets } from "./media/storage.service";
 import { telemetryMiddleware } from "./middleware/telemetry.middleware";
 import { maintenanceMiddleware, getCachedMaintenanceState } from "./middleware/maintenance.middleware";
@@ -139,6 +142,9 @@ app.use(
 
 app.use("/api/reports", reportRoutes);
 app.use("/api/ads", publicAdsRoutes);
+app.use("/api/regions", regionalRoutes);
+app.use("/api/payments", paymentRoutes);
+app.use("/api/advertisers", advertiserRoutes);
 
 app.use(morgan("dev"));
 
@@ -238,8 +244,11 @@ app.use(
 // Start Server 
 // ----------------------
 
+import { ensurePrivateVerificationBucket } from "./media/secureStorage.service";
+
 const server = app.listen(PORT, () => {
   ensurePublicBuckets();
+  ensurePrivateVerificationBucket();
   console.log("");
   console.log("====================================");
   console.log("🚀 Peto Backend Started");

@@ -80,6 +80,14 @@ import {
   markAllNotificationsRead,
   createNotificationHandler,
 } from "./controllers/adminNotifications.controller";
+import {
+  getAdminRegionsHandler,
+  updateAdminRegionHandler,
+} from "../regions/regional.controller";
+import {
+  getAdminTransactionsHandler,
+  refundTransactionHandler,
+} from "../payments/payment.controller";
 import { adminRateLimiter } from "./middleware/adminRateLimiter.middleware";
 
 const router = Router();
@@ -185,6 +193,43 @@ router.post("/ads/campaigns/:id/review", requirePermission("ads.manage"), review
 router.post("/ads/creatives/:id/review", requirePermission("ads.manage"), reviewCreativeActionHandler);
 
 router.get("/ads/analytics", requirePermission("ads.view"), getAdsAnalyticsSummaryHandler);
+
+// Global Regional Monetization Configuration (Phase 1)
+router.get("/regions", requirePermission("system.view"), getAdminRegionsHandler);
+router.patch("/regions/:code", requirePermission("system.manage"), updateAdminRegionHandler);
+
+import {
+  getAdminVerificationQueueHandler,
+  getAdminVerificationDetailHandler,
+  getAdminSignedDocumentUrlHandler,
+  reviewVerificationApplicationHandler,
+} from "./controllers/adminVerification.controller";
+
+// Payment Administration & Ledger (Phases 2-4)
+router.get("/payments/transactions", requirePermission("ads.view"), getAdminTransactionsHandler);
+router.post("/payments/refund", requirePermission("ads.manage"), refundTransactionHandler);
+
+// Partner & Identity Verification Management (Phase 9)
+router.get(
+  "/verifications",
+  requireAnyPermission("verification.view", "ads.view"),
+  getAdminVerificationQueueHandler
+);
+router.get(
+  "/verifications/:id",
+  requireAnyPermission("verification.view", "ads.view"),
+  getAdminVerificationDetailHandler
+);
+router.get(
+  "/verifications/:id/documents/:docId/view-token",
+  requireAnyPermission("verification.documents.view", "ads.manage"),
+  getAdminSignedDocumentUrlHandler
+);
+router.post(
+  "/verifications/:id/review",
+  requireAnyPermission("verification.review", "ads.manage"),
+  reviewVerificationApplicationHandler
+);
 
 // Admin Notifications & Operational Alerts (Phase 9)
 router.get("/notifications", getAdminNotifications);

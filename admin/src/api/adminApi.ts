@@ -713,3 +713,117 @@ export async function markAllAdminNotificationsRead(): Promise<{
   const res = await adminApi.post("/admin/notifications/mark-all-read");
   return res.data;
 }
+
+// Global Regional Configuration (Phase 1)
+export async function fetchAdminRegions(): Promise<{
+  success: boolean;
+  regions: any[];
+}> {
+  const res = await adminApi.get("/admin/regions");
+  return res.data;
+}
+
+export async function updateAdminRegion(
+  code: string,
+  updates: Record<string, any>
+): Promise<{
+  success: boolean;
+  message: string;
+  region: any;
+}> {
+  const res = await adminApi.patch(`/admin/regions/${code}`, updates);
+  return res.data;
+}
+
+// Payment Administration & Ledger (Phases 2-4)
+export async function fetchAdminTransactions(params?: {
+  advertiserId?: string;
+  status?: string;
+  provider?: string;
+  page?: number;
+  limit?: number;
+}): Promise<{
+  success: boolean;
+  transactions: any[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}> {
+  const res = await adminApi.get("/admin/payments/transactions", { params });
+  return res.data;
+}
+
+export async function refundPaymentTransaction(data: {
+  transactionId: string;
+  amount?: number;
+  reason?: string;
+}): Promise<{
+  success: boolean;
+  message: string;
+  refund: any;
+}> {
+  const res = await adminApi.post("/admin/payments/refund", data);
+  return res.data;
+}
+
+// Partner & Identity Verification (Phase 9)
+export async function fetchAdminVerifications(params?: {
+  status?: string;
+  country?: string;
+  type?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}): Promise<{
+  success: boolean;
+  items: any[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}> {
+  const res = await adminApi.get("/admin/verifications", { params });
+  return res.data;
+}
+
+export async function fetchAdminVerificationDetail(id: string): Promise<{
+  success: boolean;
+  application: any;
+}> {
+  const res = await adminApi.get(`/admin/verifications/${id}`);
+  return res.data;
+}
+
+export async function fetchAdminSignedDocumentUrl(
+  id: string,
+  docId: string
+): Promise<{
+  success: boolean;
+  signed_url: string;
+  expires_in_seconds: number;
+  document_type: string;
+}> {
+  const res = await adminApi.get(`/admin/verifications/${id}/documents/${docId}/view-token`);
+  return res.data;
+}
+
+export async function reviewAdminVerification(
+  id: string,
+  data: {
+    action: "APPROVE" | "REJECT" | "REQUEST_INFORMATION" | "SUSPEND" | "REVOKE";
+    notes?: string;
+    rejectionReason?: string;
+  }
+): Promise<{
+  success: boolean;
+  message: string;
+  application: any;
+}> {
+  const res = await adminApi.post(`/admin/verifications/${id}/review`, data);
+  return res.data;
+}
+
+

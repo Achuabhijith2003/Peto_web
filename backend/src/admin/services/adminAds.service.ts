@@ -32,386 +32,15 @@ export type CreativeStatus =
 export type ReviewAction = "APPROVE" | "REJECT" | "REQUEST_CHANGES";
 
 // ============================================================
-// RUNTIME FALLBACK STORES (For Resilience & Instant UI Readiness)
+// ============================================================
+// RUNTIME STORES (Empty - No Demo Data)
 // ============================================================
 
-const runtimeAdvertisers: any[] = [
-  {
-    id: "a0000000-0000-0000-0000-000000000001",
-    company_name: "Bark & Whiskers Organic Foods",
-    contact_name: "Sarah Jenkins",
-    contact_email: "partners@barkandwhiskers.pet",
-    website_url: "https://barkandwhiskers.pet",
-    industry: "PET_FOOD",
-    status: "ACTIVE" as AdvertiserStatus,
-    total_spend: 3240.5,
-    balance: 759.5,
-    campaign_count: 1,
-    notes: "Verified premium organic raw pet food manufacturer.",
-    created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: "a0000000-0000-0000-0000-000000000002",
-    company_name: "PawHealth Tele-Vet Services",
-    contact_name: "Dr. Marcus Vance",
-    contact_email: "ads@pawhealthtele.com",
-    website_url: "https://pawhealthtele.com",
-    industry: "VET_HEALTH",
-    status: "ACTIVE" as AdvertiserStatus,
-    total_spend: 5120.0,
-    balance: 1880.0,
-    campaign_count: 1,
-    notes: "Licensed veterinary telehealth consultations platform.",
-    created_at: new Date(Date.now() - 45 * 86400000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: "a0000000-0000-0000-0000-000000000003",
-    company_name: "SafePaws Smart Collars & GPS",
-    contact_name: "Elena Rostova",
-    contact_email: "growth@safepaws.io",
-    website_url: "https://safepaws.io",
-    industry: "PET_ACCESSORIES",
-    status: "ACTIVE" as AdvertiserStatus,
-    total_spend: 1840.0,
-    balance: 3160.0,
-    campaign_count: 1,
-    notes: "Cellular & GPS smart collar wearable hardware.",
-    created_at: new Date(Date.now() - 20 * 86400000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: "a0000000-0000-0000-0000-000000000004",
-    company_name: "HappyTails Adoption Haven",
-    contact_name: "Carlos Mendez",
-    contact_email: "director@happytailshaven.org",
-    website_url: "https://happytailshaven.org",
-    industry: "PET_ADOPTION",
-    status: "PENDING_VERIFICATION" as AdvertiserStatus,
-    total_spend: 0.0,
-    balance: 500.0,
-    campaign_count: 1,
-    notes: "Non-profit senior cat shelter and adoption network.",
-    created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-];
-
-const runtimeCampaigns: any[] = [
-  {
-    id: "c0000000-0000-0000-0000-000000000001",
-    advertiser_id: "a0000000-0000-0000-0000-000000000001",
-    advertiser: {
-      id: "a0000000-0000-0000-0000-000000000001",
-      company_name: "Bark & Whiskers Organic Foods",
-      contact_email: "partners@barkandwhiskers.pet",
-      status: "ACTIVE",
-    },
-    name: "Fresh Freeze-Dried Raw Kibble Launch",
-    objective: "TRAFFIC" as CampaignObjective,
-    budget_type: "DAILY",
-    total_budget: 2000.0,
-    daily_budget: 100.0,
-    spent: 1420.5,
-    start_date: new Date(Date.now() - 14 * 86400000).toISOString(),
-    end_date: new Date(Date.now() + 16 * 86400000).toISOString(),
-    status: "ACTIVE" as CampaignStatus,
-    rejection_reason: null,
-    admin_feedback: null,
-    approved_by: "abd0bd30-b8ba-42c7-a500-5f1f4ad26e80",
-    approved_at: new Date(Date.now() - 14 * 86400000).toISOString(),
-    created_at: new Date(Date.now() - 15 * 86400000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: "c0000000-0000-0000-0000-000000000002",
-    advertiser_id: "a0000000-0000-0000-0000-000000000002",
-    advertiser: {
-      id: "a0000000-0000-0000-0000-000000000002",
-      company_name: "PawHealth Tele-Vet Services",
-      contact_email: "ads@pawhealthtele.com",
-      status: "ACTIVE",
-    },
-    name: "24/7 Virtual Vet Consults for Puppies",
-    objective: "CONVERSIONS" as CampaignObjective,
-    budget_type: "DAILY",
-    total_budget: 3500.0,
-    daily_budget: 150.0,
-    spent: 2840.0,
-    start_date: new Date(Date.now() - 20 * 86400000).toISOString(),
-    end_date: new Date(Date.now() + 10 * 86400000).toISOString(),
-    status: "ACTIVE" as CampaignStatus,
-    rejection_reason: null,
-    admin_feedback: null,
-    approved_by: "abd0bd30-b8ba-42c7-a500-5f1f4ad26e80",
-    approved_at: new Date(Date.now() - 20 * 86400000).toISOString(),
-    created_at: new Date(Date.now() - 21 * 86400000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: "c0000000-0000-0000-0000-000000000003",
-    advertiser_id: "a0000000-0000-0000-0000-000000000003",
-    advertiser: {
-      id: "a0000000-0000-0000-0000-000000000003",
-      company_name: "SafePaws Smart Collars & GPS",
-      contact_email: "growth@safepaws.io",
-      status: "ACTIVE",
-    },
-    name: "Never Lose Your Pet: Smart GPS Collar v2",
-    objective: "AWARENESS" as CampaignObjective,
-    budget_type: "DAILY",
-    total_budget: 1500.0,
-    daily_budget: 50.0,
-    spent: 0.0,
-    start_date: new Date().toISOString(),
-    end_date: new Date(Date.now() + 30 * 86400000).toISOString(),
-    status: "PENDING_REVIEW" as CampaignStatus,
-    rejection_reason: null,
-    admin_feedback: null,
-    approved_by: null,
-    approved_at: null,
-    created_at: new Date(Date.now() - 1 * 86400000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: "c0000000-0000-0000-0000-000000000004",
-    advertiser_id: "a0000000-0000-0000-0000-000000000004",
-    advertiser: {
-      id: "a0000000-0000-0000-0000-000000000004",
-      company_name: "HappyTails Adoption Haven",
-      contact_email: "director@happytailshaven.org",
-      status: "PENDING_VERIFICATION",
-    },
-    name: "Adopt a Senior Cat This Autumn",
-    objective: "ENGAGEMENT" as CampaignObjective,
-    budget_type: "LIFETIME",
-    total_budget: 500.0,
-    daily_budget: 25.0,
-    spent: 0.0,
-    start_date: new Date().toISOString(),
-    end_date: new Date(Date.now() + 15 * 86400000).toISOString(),
-    status: "PENDING_REVIEW" as CampaignStatus,
-    rejection_reason: null,
-    admin_feedback: null,
-    approved_by: null,
-    approved_at: null,
-    created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-];
-
-const runtimeTargeting: Record<string, any> = {
-  "c0000000-0000-0000-0000-000000000001": {
-    campaign_id: "c0000000-0000-0000-0000-000000000001",
-    countries: ["US", "CA", "GB"],
-    regions: ["California", "Texas", "New York"],
-    languages: ["en"],
-    pet_interests: ["DOGS", "CATS", "PET_FOOD"],
-    devices: ["ALL"],
-    placements: ["FEED", "REELS"],
-  },
-  "c0000000-0000-0000-0000-000000000002": {
-    campaign_id: "c0000000-0000-0000-0000-000000000002",
-    countries: ["US"],
-    regions: [],
-    languages: ["en"],
-    pet_interests: ["DOGS", "CATS", "VET_HEALTH"],
-    devices: ["IOS", "ANDROID"],
-    placements: ["FEED", "REELS", "COMMUNITIES"],
-  },
-  "c0000000-0000-0000-0000-000000000003": {
-    campaign_id: "c0000000-0000-0000-0000-000000000003",
-    countries: ["US", "GB", "IN"],
-    regions: [],
-    languages: ["en"],
-    pet_interests: ["DOGS", "PET_ACCESSORIES"],
-    devices: ["ALL"],
-    placements: ["FEED", "EXPLORE"],
-  },
-  "c0000000-0000-0000-0000-000000000004": {
-    campaign_id: "c0000000-0000-0000-0000-000000000004",
-    countries: ["US"],
-    regions: ["East Coast"],
-    languages: ["en"],
-    pet_interests: ["CATS", "PET_ADOPTION"],
-    devices: ["ALL"],
-    placements: ["FEED", "COMMUNITIES"],
-  },
-};
-
-const runtimeCreatives: any[] = [
-  {
-    id: "b0000000-0000-0000-0000-000000000001",
-    campaign_id: "c0000000-0000-0000-0000-000000000001",
-    name: "Raw Feast Single Image Feed",
-    format: "IMAGE" as CreativeFormat,
-    headline: "Wholesome Nutrition for Your Furry Companion",
-    body_text:
-      "100% natural, human-grade freeze-dried meals crafted by veterinary nutritionists. Claim 20% off your first pet box today.",
-    call_to_action: "SHOP_NOW",
-    destination_url: "https://barkandwhiskers.pet/shop-peto",
-    media_urls: [
-      {
-        type: "image",
-        url: "https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=800",
-      },
-    ],
-    status: "APPROVED" as CreativeStatus,
-    rejection_reason: null,
-    admin_feedback: null,
-    created_at: new Date(Date.now() - 15 * 86400000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: "b0000000-0000-0000-0000-000000000002",
-    campaign_id: "c0000000-0000-0000-0000-000000000002",
-    name: "Puppy Care Consultation Video",
-    format: "VIDEO" as CreativeFormat,
-    headline: "Instant Vet Care In Your Pocket — 24/7",
-    body_text:
-      "Connect with certified veterinary doctors in under 2 minutes. No stressful car rides or waiting rooms.",
-    call_to_action: "SIGN_UP",
-    destination_url: "https://pawhealthtele.com/consult",
-    media_urls: [
-      {
-        type: "video",
-        url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-        thumbnail:
-          "https://images.unsplash.com/photo-1576201836106-db1758fd1c97?w=800",
-      },
-    ],
-    status: "APPROVED" as CreativeStatus,
-    rejection_reason: null,
-    admin_feedback: null,
-    created_at: new Date(Date.now() - 21 * 86400000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: "b0000000-0000-0000-0000-000000000003",
-    campaign_id: "c0000000-0000-0000-0000-000000000003",
-    name: "Smart Collar 3-Card Carousel",
-    format: "CAROUSEL" as CreativeFormat,
-    headline: "Real-Time GPS Tracking & Health Monitoring",
-    body_text:
-      "Waterproof, 30-day battery life, and instant escape alerts directly to your phone. Order with free worldwide shipping.",
-    call_to_action: "LEARN_MORE",
-    destination_url: "https://safepaws.io/v2",
-    media_urls: [
-      {
-        type: "image",
-        url: "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=800",
-        title: "Live GPS Tracking",
-      },
-      {
-        type: "image",
-        url: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=800",
-        title: "Waterproof IP68",
-      },
-      {
-        type: "image",
-        url: "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=800",
-        title: "Activity Ring Insights",
-      },
-    ],
-    status: "PENDING_REVIEW" as CreativeStatus,
-    rejection_reason: null,
-    admin_feedback: null,
-    created_at: new Date(Date.now() - 1 * 86400000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: "b0000000-0000-0000-0000-000000000004",
-    campaign_id: "c0000000-0000-0000-0000-000000000004",
-    name: "Adopt Whiskers Sponsored Community Story",
-    format: "SPONSORED_POST" as CreativeFormat,
-    headline: "Give a Loving Forever Home to Gentle Seniors",
-    body_text:
-      "Meet our calm, affectionate rescue cats looking for warm laps and peaceful households. Adoption fees sponsored this month.",
-    call_to_action: "ADOPT_NOW",
-    destination_url: "https://happytailshaven.org/seniors",
-    media_urls: [
-      {
-        type: "image",
-        url: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=800",
-      },
-    ],
-    status: "PENDING_REVIEW" as CreativeStatus,
-    rejection_reason: null,
-    admin_feedback: null,
-    created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-];
-
-const runtimeAnalyticsDaily: any[] = [
-  {
-    campaign_id: "c0000000-0000-0000-0000-000000000001",
-    creative_id: "b0000000-0000-0000-0000-000000000001",
-    date: new Date(Date.now() - 3 * 86400000).toISOString().split("T")[0],
-    impressions: 8400,
-    reach: 7200,
-    clicks: 312,
-    views: 1850,
-    conversions: 24,
-    spend: 102.5,
-  },
-  {
-    campaign_id: "c0000000-0000-0000-0000-000000000001",
-    creative_id: "b0000000-0000-0000-0000-000000000001",
-    date: new Date(Date.now() - 2 * 86400000).toISOString().split("T")[0],
-    impressions: 9150,
-    reach: 7900,
-    clicks: 345,
-    views: 2100,
-    conversions: 28,
-    spend: 114.0,
-  },
-  {
-    campaign_id: "c0000000-0000-0000-0000-000000000001",
-    creative_id: "b0000000-0000-0000-0000-000000000001",
-    date: new Date(Date.now() - 1 * 86400000).toISOString().split("T")[0],
-    impressions: 10200,
-    reach: 8850,
-    clicks: 420,
-    views: 2450,
-    conversions: 35,
-    spend: 128.5,
-  },
-  {
-    campaign_id: "c0000000-0000-0000-0000-000000000002",
-    creative_id: "b0000000-0000-0000-0000-000000000002",
-    date: new Date(Date.now() - 3 * 86400000).toISOString().split("T")[0],
-    impressions: 12400,
-    reach: 10800,
-    clicks: 510,
-    views: 4200,
-    conversions: 42,
-    spend: 145.0,
-  },
-  {
-    campaign_id: "c0000000-0000-0000-0000-000000000002",
-    creative_id: "b0000000-0000-0000-0000-000000000002",
-    date: new Date(Date.now() - 2 * 86400000).toISOString().split("T")[0],
-    impressions: 13100,
-    reach: 11400,
-    clicks: 545,
-    views: 4600,
-    conversions: 48,
-    spend: 152.0,
-  },
-  {
-    campaign_id: "c0000000-0000-0000-0000-000000000002",
-    creative_id: "b0000000-0000-0000-0000-000000000002",
-    date: new Date(Date.now() - 1 * 86400000).toISOString().split("T")[0],
-    impressions: 14250,
-    reach: 12300,
-    clicks: 610,
-    views: 5100,
-    conversions: 54,
-    spend: 165.0,
-  },
-];
+const runtimeAdvertisers: any[] = [];
+const runtimeCampaigns: any[] = [];
+const runtimeTargeting: Record<string, any> = {};
+const runtimeCreatives: any[] = [];
+const runtimeAnalyticsDaily: any[] = [];
 
 // ============================================================
 // 1. ADVERTISERS SERVICES
@@ -448,9 +77,7 @@ export async function getAdvertisersService(filters?: {
 
     query = query.range(from, to);
     const { data, count, error } = await query;
-    if (error) throw error;
-
-    if (data && data.length > 0) {
+    if (!error && data !== null) {
       const formatted = data.map((adv: any) => ({
         ...adv,
         campaign_count: adv.ad_campaigns?.[0]?.count || 0,
@@ -460,13 +87,13 @@ export async function getAdvertisersService(filters?: {
         pagination: {
           page,
           limit,
-          total: count || formatted.length,
-          totalPages: Math.ceil((count || formatted.length) / limit) || 1,
+          total: count ?? formatted.length,
+          totalPages: Math.ceil((count ?? formatted.length) / limit) || 1,
         },
       };
     }
   } catch (err: any) {
-    // Supabase fallback
+    // Database connection error fallback only
   }
 
   let filtered = [...runtimeAdvertisers];
@@ -681,6 +308,7 @@ export async function getCampaignsService(filters?: {
         total_budget,
         daily_budget,
         spent,
+        currency,
         start_date,
         end_date,
         status,
@@ -689,7 +317,7 @@ export async function getCampaignsService(filters?: {
         approved_at,
         created_at,
         updated_at,
-        advertiser:advertisers(id, company_name, contact_email, status),
+        advertiser:advertisers(id, company_name, contact_email, status, currency),
         ad_targeting(*),
         ad_creatives(*)
       `,
@@ -712,21 +340,19 @@ export async function getCampaignsService(filters?: {
 
     query = query.range(from, to);
     const { data, count, error } = await query;
-    if (error) throw error;
-
-    if (data && data.length > 0) {
+    if (!error && data !== null) {
       return {
         campaigns: data,
         pagination: {
           page,
           limit,
-          total: count || data.length,
-          totalPages: Math.ceil((count || data.length) / limit) || 1,
+          total: count ?? data.length,
+          totalPages: Math.ceil((count ?? data.length) / limit) || 1,
         },
       };
     }
   } catch (err: any) {
-    // Supabase fallback
+    // Database connection error fallback only
   }
 
   let filtered = [...runtimeCampaigns];
@@ -1045,13 +671,14 @@ export async function getPendingReviewQueueService(filters?: {
         objective,
         total_budget,
         daily_budget,
+        currency,
         start_date,
         end_date,
         status,
         rejection_reason,
         admin_feedback,
         created_at,
-        advertiser:advertisers(id, company_name, contact_email, status),
+        advertiser:advertisers(id, company_name, contact_email, status, currency),
         ad_targeting(*),
         ad_creatives(*)
       `,
@@ -1061,20 +688,19 @@ export async function getPendingReviewQueueService(filters?: {
       .order("created_at", { ascending: true })
       .range(from, to);
 
-    if (error) throw error;
-    if (data && data.length > 0) {
+    if (!error && data !== null) {
       return {
         queue: data,
         pagination: {
           page,
           limit,
-          total: count || data.length,
-          totalPages: Math.ceil((count || data.length) / limit) || 1,
+          total: count ?? data.length,
+          totalPages: Math.ceil((count ?? data.length) / limit) || 1,
         },
       };
     }
   } catch (err: any) {
-    // Fallback
+    // Database connection error fallback only
   }
 
   const pending = runtimeCampaigns.filter(
@@ -1356,13 +982,11 @@ export async function getAdsAnalyticsSummaryService(filters?: {
     }
 
     const { data, error } = await query;
-    if (error) throw error;
-
-    if (data && data.length > 0) {
+    if (!error && data !== null) {
       return calculateMetricsSummary(data);
     }
   } catch (err: any) {
-    // Fallback
+    // Database connection error fallback only
   }
 
   let filtered = [...runtimeAnalyticsDaily];
@@ -1380,12 +1004,33 @@ function calculateMetricsSummary(rows: any[]) {
   const totalClicks = rows.reduce((sum, r) => sum + Number(r.clicks || 0), 0);
   const totalViews = rows.reduce((sum, r) => sum + Number(r.views || 0), 0);
   const totalConversions = rows.reduce((sum, r) => sum + Number(r.conversions || 0), 0);
-  const totalSpend = rows.reduce((sum, r) => sum + Number(r.spend || 0), 0);
+
+  // Multi-Currency Aggregation:
+  // Normalize everything to Base Reporting Currency (USD) and record exact breakdown
+  const exchangeRatesToUsd: Record<string, number> = {
+    USD: 1.0,
+    INR: 1 / 87.0, // 1 INR ~ 0.0115 USD
+    EUR: 1.08,
+    GBP: 1.28,
+    CAD: 0.73,
+    AUD: 0.65,
+  };
+
+  const currencyBreakdown: Record<string, number> = {};
+  let totalSpendUsd = 0;
+
+  rows.forEach((r) => {
+    const currency = (r.currency || "USD").toUpperCase();
+    const spend = Number(r.spend || 0);
+    currencyBreakdown[currency] = (currencyBreakdown[currency] || 0) + spend;
+    const rate = exchangeRatesToUsd[currency] || 1.0;
+    totalSpendUsd += spend * rate;
+  });
 
   // Exact CTR formula: (Clicks / Impressions) * 100
   const avgCtr = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
-  const avgCpc = totalClicks > 0 ? totalSpend / totalClicks : 0;
-  const avgCpm = totalImpressions > 0 ? (totalSpend / totalImpressions) * 1000 : 0;
+  const avgCpc = totalClicks > 0 ? totalSpendUsd / totalClicks : 0;
+  const avgCpm = totalImpressions > 0 ? (totalSpendUsd / totalImpressions) * 1000 : 0;
 
   // Aggregate by date for daily trends
   const dateMap: Record<string, any> = {};
@@ -1404,7 +1049,8 @@ function calculateMetricsSummary(rows: any[]) {
     dateMap[r.date].clicks += Number(r.clicks || 0);
     dateMap[r.date].views += Number(r.views || 0);
     dateMap[r.date].conversions += Number(r.conversions || 0);
-    dateMap[r.date].spend += Number(r.spend || 0);
+    const rate = exchangeRatesToUsd[(r.currency || "USD").toUpperCase()] || 1.0;
+    dateMap[r.date].spend += Number(r.spend || 0) * rate;
   });
 
   const dailyTrends = Object.values(dateMap).sort((a: any, b: any) =>
@@ -1418,7 +1064,9 @@ function calculateMetricsSummary(rows: any[]) {
       clicks: totalClicks,
       views: totalViews,
       conversions: totalConversions,
-      spend: Number(totalSpend.toFixed(2)),
+      spend: Number(totalSpendUsd.toFixed(2)),
+      baseCurrency: "USD",
+      currencyBreakdown,
       avgCtr: Number(avgCtr.toFixed(2)),
       avgCpc: Number(avgCpc.toFixed(2)),
       avgCpm: Number(avgCpm.toFixed(2)),

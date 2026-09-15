@@ -18,6 +18,7 @@ import Maintenance503 from "../pages/Maintenance503";
 import NotFound404 from "../pages/NotFound404";
 import ServerError500 from "../pages/ServerError500";
 import Forbidden403 from "../pages/Forbidden403";
+import AdvertiserPortal from "../pages/advertiser/AdvertiserPortal";
 
 const AppRoutes = () => {
   return (
@@ -42,6 +43,8 @@ const AppRoutes = () => {
       <Route path="/profile/edit" element={<EditProfile />} />
       <Route path="/profile/:id?" element={<Profile />} />
       <Route path="/bookmarks" element={<Bookmarks />} />
+      <Route path="/advertiser" element={<AdvertiserPortal />} />
+      <Route path="/advertiser/*" element={<AdvertiserPortal />} />
 
       {/* System Status & Error Pages */}
       <Route path="/maintenance" element={<Maintenance503 />} />

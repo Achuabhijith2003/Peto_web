@@ -13,6 +13,8 @@ import {
   Server,
   Bell,
   Sparkles,
+  CreditCard,
+  Globe,
 } from "lucide-react";
 
 interface NavItem {
@@ -80,6 +82,21 @@ export const AdminSidebar: React.FC = () => {
       title: "Ads & Campaigns",
       path: "/ads",
       icon: <Megaphone className="w-4 h-4 text-[#ea580c]" />,
+    },
+    {
+      title: "Verifications",
+      path: "/verifications",
+      icon: <ShieldCheck className="w-4 h-4 text-[#d97706]" />,
+    },
+    {
+      title: "Payments & Ledger",
+      path: "/payments",
+      icon: <CreditCard className="w-4 h-4 text-[#16a34a]" />,
+    },
+    {
+      title: "Regional Controls",
+      path: "/regions",
+      icon: <Globe className="w-4 h-4 text-[#0058be]" />,
     },
   ];
 
