@@ -27,7 +27,7 @@ import reportRoutes from "./reports/report.routes";
 import publicAdsRoutes from "./ads/ads.public.routes";
 import { ensurePublicBuckets } from "./media/storage.service";
 import { telemetryMiddleware } from "./middleware/telemetry.middleware";
-import { maintenanceMiddleware } from "./middleware/maintenance.middleware";
+import { maintenanceMiddleware, getCachedMaintenanceState } from "./middleware/maintenance.middleware";
 
 
 
@@ -147,9 +147,13 @@ app.use(morgan("dev"));
 // ----------------------
 
 app.get("/health", (_, res) => {
+  const maintenance = getCachedMaintenanceState();
   res.status(200).json({
     success: true,
-    status: "OK",
+    status: maintenance.is_enabled ? "MAINTENANCE" : "OK",
+    maintenance: maintenance.is_enabled,
+    message: maintenance.is_enabled ? maintenance.message : undefined,
+    enabled_at: maintenance.is_enabled ? maintenance.enabled_at : undefined,
     timestamp: new Date().toISOString(),
   });
 });

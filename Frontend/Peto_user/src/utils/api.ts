@@ -33,6 +33,23 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+
+    // Handle Controlled Maintenance Mode (HTTP 503)
+    if (
+      error.response?.status === 503 &&
+      (error.response?.data?.maintenance || error.response?.data?.message?.toLowerCase().includes("maintenance"))
+    ) {
+      const msg = error.response?.data?.message;
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("peto:maintenance", {
+            detail: { message: msg },
+          })
+        );
+      }
+      return Promise.reject(error);
+    }
+
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&

@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 
 // import Home from "../pages/Home";
 import Login from "../pages/Login";
@@ -14,6 +14,10 @@ import Profile from "../pages/Profile";
 import Bookmarks from "../pages/Bookmarks";
 import SearchPage from "../pages/Search";
 import Reels from "../pages/Reels";
+import Maintenance503 from "../pages/Maintenance503";
+import NotFound404 from "../pages/NotFound404";
+import ServerError500 from "../pages/ServerError500";
+import Forbidden403 from "../pages/Forbidden403";
 
 const AppRoutes = () => {
   return (
@@ -38,7 +42,16 @@ const AppRoutes = () => {
       <Route path="/profile/edit" element={<EditProfile />} />
       <Route path="/profile/:id?" element={<Profile />} />
       <Route path="/bookmarks" element={<Bookmarks />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
+
+      {/* System Status & Error Pages */}
+      <Route path="/maintenance" element={<Maintenance503 />} />
+      <Route path="/503" element={<Maintenance503 />} />
+      <Route path="/forbidden" element={<Forbidden403 />} />
+      <Route path="/403" element={<Forbidden403 />} />
+      <Route path="/error" element={<ServerError500 />} />
+      <Route path="/500" element={<ServerError500 />} />
+      <Route path="/404" element={<NotFound404 />} />
+      <Route path="*" element={<NotFound404 />} />
     </Routes>
   );
 };
