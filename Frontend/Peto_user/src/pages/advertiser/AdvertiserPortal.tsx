@@ -62,6 +62,7 @@ interface AdvertiserProfile {
   contact_name?: string;
   billing_email?: string;
   contact_email?: string;
+  contact_phone?: string;
   industry?: string;
   country_code?: string;
   status?: string;
@@ -138,6 +139,8 @@ export const AdvertiserPortal: React.FC = () => {
   const [topUpOpen, setTopUpOpen] = useState(false);
   const [topUpAmount, setTopUpAmount] = useState(100);
   const [topUpLoading, setTopUpLoading] = useState(false);
+  const [topUpSuccess, setTopUpSuccess] = useState("");
+  const [topUpError, setTopUpError] = useState("");
 
   // Registration state
   const [regForm, setRegForm] = useState({
@@ -227,6 +230,13 @@ export const AdvertiserPortal: React.FC = () => {
 
   useEffect(() => {
     fetchAdvertiserData();
+    // Pre-load Razorpay Checkout SDK into DOM immediately
+    if (typeof (window as any).Razorpay !== "function" && !document.querySelector('script[src*="checkout.razorpay.com"]')) {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.async = true;
+      document.head.appendChild(script);
+    }
   }, []);
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -389,29 +399,186 @@ export const AdvertiserPortal: React.FC = () => {
     }
   };
 
-  const handleTopUp = async () => {
+  const loadRazorpaySDK = (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      if (typeof (window as any).Razorpay === "function") {
+        resolve(true);
+        return;
+      }
+
+      let script = document.querySelector('script[src*="checkout.razorpay.com"]') as HTMLScriptElement;
+      if (!script) {
+        script = document.createElement("script");
+        script.src = "https://checkout.razorpay.com/v1/checkout.js";
+        script.async = true;
+        document.head.appendChild(script);
+      }
+
+      let resolved = false;
+      const finish = (ok: boolean) => {
+        if (!resolved) {
+          resolved = true;
+          resolve(ok);
+        }
+      };
+
+      script.onload = () => finish(typeof (window as any).Razorpay === "function");
+      script.onerror = () => finish(false);
+
+      // Check periodically for up to 5 seconds
+      let attempts = 0;
+      const interval = setInterval(() => {
+        attempts++;
+        if (typeof (window as any).Razorpay === "function") {
+          clearInterval(interval);
+          finish(true);
+        } else if (attempts >= 50) {
+          clearInterval(interval);
+          finish(typeof (window as any).Razorpay === "function");
+        }
+      }, 100);
+    });
+  };
+
+  const handleTopUp = async (forceSimulate = false) => {
+    if (!topUpAmount || Number(topUpAmount) <= 0) {
+      setTopUpError("Please enter a valid deposit amount greater than zero.");
+      return;
+    }
     setTopUpLoading(true);
+    setTopUpError("");
+    setTopUpSuccess("");
+
     try {
-      const idempotencyKey = `topup_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-      const res = await api.post("/payments/create-session", {
-        amount: topUpAmount,
-        currency: profile?.currency || "USD",
-        purpose: "AD_WALLET_DEPOSIT",
-        metadata: { advertiserId: profile?.id },
-        idempotencyKey,
+      // 1. Create Razorpay order on backend
+      const res = await api.post("/payments/razorpay/order", {
+        amount: Number(topUpAmount),
+        currency: activeCurrency || "INR",
       });
 
-      if (res.data?.checkoutUrl) {
-        window.location.href = res.data.checkoutUrl;
-      } else {
-        alert("Payment initiated. Simulated sandbox balance updated.");
-        setTopUpOpen(false);
-        fetchAdvertiserData();
+      if (!res.data?.success) {
+        throw new Error(res.data?.error || "Failed to initialize payment session");
       }
+
+      const { orderId, amount, currency, keyId } = res.data;
+
+      // Fast test simulation path if explicitly requested
+      if (forceSimulate) {
+        const verifyRes = await api.post("/payments/razorpay/verify", {
+          razorpay_order_id: orderId,
+          razorpay_payment_id: `pay_test_${Date.now()}`,
+          razorpay_signature: "sandbox_signature",
+          amount: Number(topUpAmount),
+          currency: activeCurrency,
+          isSimulated: true,
+        });
+
+        if (verifyRes.data?.success) {
+          setTopUpSuccess(
+            `Fast deposit successful! ${currSymbol}${Number(topUpAmount).toFixed(2)} credited to your Ad Wallet.`
+          );
+          setBilling((prev: any) =>
+            prev ? { ...prev, balance: verifyRes.data.balance } : prev
+          );
+          await fetchAdvertiserData();
+          setTimeout(() => {
+            setTopUpOpen(false);
+            setTopUpSuccess("");
+          }, 1500);
+        } else {
+          throw new Error(verifyRes.data?.error || "Deposit failed");
+        }
+        setTopUpLoading(false);
+        return;
+      }
+
+      // 2. Load Razorpay Checkout SDK
+      const isSdkLoaded = await loadRazorpaySDK();
+
+      if (!isSdkLoaded || typeof (window as any).Razorpay !== "function") {
+        setTopUpLoading(false);
+        setTopUpError(
+          "Razorpay Checkout SDK could not be loaded in your browser. Please check your internet connection or disable ad-blockers for checkout.razorpay.com."
+        );
+        return;
+      }
+
+      // 3. Launch the official Razorpay Checkout popup modal
+      const options = {
+        key: keyId,
+        amount: amount,
+        currency: currency,
+        name: "Peto Advertising",
+        description: `Ad Wallet Top-Up: ${currSymbol}${topUpAmount} ${activeCurrency}`,
+        order_id: orderId,
+        prefill: {
+          name: userProfile?.full_name || (user as any)?.name || profile?.contact_name || "",
+          email: userProfile?.email || (user as any)?.email || profile?.billing_email || "",
+          contact: profile?.contact_phone || "",
+        },
+        theme: {
+          color: "#f59e0b",
+        },
+        handler: async function (response: any) {
+          setTopUpLoading(true);
+          try {
+            const verifyRes = await api.post("/payments/razorpay/verify", {
+              razorpay_order_id: response.razorpay_order_id || orderId,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              amount: Number(topUpAmount),
+              currency: activeCurrency,
+            });
+
+            if (verifyRes.data?.success) {
+              setTopUpSuccess(
+                `Payment verified! ${currSymbol}${Number(topUpAmount).toFixed(2)} has been credited to your Ad Wallet.`
+              );
+              setBilling((prev: any) =>
+                prev ? { ...prev, balance: verifyRes.data.balance } : prev
+              );
+              await fetchAdvertiserData();
+              setTimeout(() => {
+                setTopUpOpen(false);
+                setTopUpSuccess("");
+              }, 1800);
+            } else {
+              throw new Error(verifyRes.data?.error || "Verification failed");
+            }
+          } catch (vErr: any) {
+            setTopUpError(
+              vErr.response?.data?.error || vErr.message || "Payment verification failed."
+            );
+          } finally {
+            setTopUpLoading(false);
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            setTopUpLoading(false);
+          },
+        },
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.on("payment.failed", function (response: any) {
+        setTopUpError(
+          response.error?.description || "Payment was rejected or cancelled."
+        );
+        setTopUpLoading(false);
+      });
+      rzp.open();
     } catch (err: unknown) {
-      const error = err as { response?: { data?: { message?: string } } };
-      alert(error.response?.data?.message || "Deposit session failed");
-    } finally {
+      const error = err as {
+        response?: { data?: { message?: string; error?: string } };
+        message?: string;
+      };
+      setTopUpError(
+        error.response?.data?.message ||
+          error.response?.data?.error ||
+          error.message ||
+          "Payment processing encountered an error."
+      );
       setTopUpLoading(false);
     }
   };
@@ -1626,28 +1793,38 @@ export const AdvertiserPortal: React.FC = () => {
               </div>
 
               <div className="md:col-span-2 bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4">
-                <h3 className="text-sm font-bold text-slate-900">Payment Methods & Billing Routing</h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-slate-900">Payment Gateways & Billing Routing</h3>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                    India Regional Gateway Active
+                  </span>
+                </div>
                 <p className="text-xs text-slate-500 leading-relaxed">
-                  Peto operates a centralized PCI-DSS compliant payment router. For regional compliance, transactions in India route through Razorpay UPI/Netbanking, while international transactions use Stripe Checkout.
+                  Peto operates a centralized PCI-DSS compliant payment system. Advertisers in India fund wallets seamlessly via Razorpay supporting all major UPI apps (Google Pay, PhonePe, Paytm), NetBanking, and RuPay/Visa/MasterCard cards.
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                  <div className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/50 flex items-center justify-between">
+                  <div className="p-3.5 rounded-2xl border-2 border-amber-200 bg-gradient-to-br from-amber-50/40 to-orange-50/20 flex items-center justify-between">
                     <div>
-                      <span className="font-bold text-xs text-slate-800 block">Stripe Global</span>
-                      <span className="text-[11px] text-slate-400">Card, Apple Pay, Google Pay</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-xs text-slate-900 block">Razorpay India</span>
+                        <span className="text-[9px] px-1.5 py-0.2 rounded font-bold bg-amber-500 text-white">
+                          Primary
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-slate-500 mt-0.5 block">UPI, GPay, PhonePe, Cards, NetBanking</span>
                     </div>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
                       Active
                     </span>
                   </div>
 
-                  <div className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/50 flex items-center justify-between">
+                  <div className="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/50 flex items-center justify-between opacity-80">
                     <div>
-                      <span className="font-bold text-xs text-slate-800 block">Razorpay India</span>
-                      <span className="text-[11px] text-slate-400">UPI, Cards, NetBanking</span>
+                      <span className="font-bold text-xs text-slate-700 block">Stripe Global</span>
+                      <span className="text-[11px] text-slate-400 mt-0.5 block">International Cards, Apple Pay, SEPA</span>
                     </div>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700">
-                      Active
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                      Coming Soon
                     </span>
                   </div>
                 </div>
@@ -1742,61 +1919,138 @@ export const AdvertiserPortal: React.FC = () => {
       {/* Top-up Funds Modal */}
       {topUpOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 font-bold text-slate-900 text-base">
-                <CreditCard className="text-amber-500" size={20} />
-                Add Advertising Funds
+                <div className="p-2 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white shadow-sm shadow-amber-500/20">
+                  <CreditCard size={18} />
+                </div>
+                <div>
+                  <h3 className="leading-tight">Add Advertising Funds</h3>
+                  <p className="text-[11px] font-normal text-slate-500">Connected to Razorpay India</p>
+                </div>
               </div>
               <button
                 onClick={() => setTopUpOpen(false)}
-                className="text-slate-400 hover:text-slate-600 text-sm font-bold"
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center text-sm font-bold transition"
               >
                 ✕
               </button>
             </div>
 
-            <p className="text-xs text-slate-600">
-              Select an amount to deposit into your Peto Advertising wallet. The funds are instantly available for campaign pacing.
-            </p>
-
-            <div className="grid grid-cols-3 gap-2">
-              {[50, 100, 250, 500, 1000].map((amt) => (
-                <button
-                  key={amt}
-                  type="button"
-                  onClick={() => setTopUpAmount(amt)}
-                  className={`py-3 rounded-2xl text-xs font-bold border transition ${
-                    topUpAmount === amt
-                      ? "bg-amber-500 text-white border-amber-500 shadow-sm"
-                      : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
-                  }`}
-                >
-                  {currSymbol}{amt}
-                </button>
-              ))}
+            {/* Payment Method Banner */}
+            <div className="p-3 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-amber-500/10 border border-amber-200/80 rounded-2xl flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-[#855300]">Razorpay Gateway</span>
+                <span className="text-[10px] px-2 py-0.5 bg-[#dcfce7] text-[#006c49] border border-[#bbf7d0] rounded-full font-bold">
+                  UPI • Cards • NetBanking
+                </span>
+              </div>
+              <span className="text-[10px] font-semibold text-slate-500">Instant</span>
             </div>
 
-            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 text-xs flex items-center justify-between">
-              <span className="text-slate-500 font-medium">Selected Amount:</span>
-              <strong className="text-slate-900 font-black text-sm">{currSymbol}{topUpAmount}.00 {activeCurrency}</strong>
+            {topUpSuccess && (
+              <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold rounded-2xl flex items-center gap-2">
+                <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+                <span>{topUpSuccess}</span>
+              </div>
+            )}
+
+            {topUpError && (
+              <div className="p-3 bg-red-50 border border-red-200 text-red-800 text-xs font-semibold rounded-2xl flex items-center gap-2">
+                <X size={16} className="text-red-600 shrink-0" />
+                <span>{topUpError}</span>
+              </div>
+            )}
+
+            {/* Quick Amount Selection */}
+            <div>
+              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+                Quick Select Amount
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {(activeCurrency === "INR"
+                  ? [500, 1000, 2500, 5000, 10000, 25000]
+                  : [50, 100, 250, 500, 1000, 2500]
+                ).map((amt) => (
+                  <button
+                    key={amt}
+                    type="button"
+                    onClick={() => setTopUpAmount(amt)}
+                    className={`py-2.5 rounded-2xl text-xs font-bold border transition ${
+                      Number(topUpAmount) === amt
+                        ? "bg-amber-500 text-white border-amber-500 shadow-sm"
+                        : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                    }`}
+                  >
+                    {currSymbol}{amt.toLocaleString()}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2">
+            {/* Custom Amount Input */}
+            <div>
+              <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                Or Enter Custom Amount ({activeCurrency})
+              </label>
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">
+                  {currSymbol}
+                </span>
+                <input
+                  type="number"
+                  min="1"
+                  step="any"
+                  value={topUpAmount || ""}
+                  onChange={(e) => setTopUpAmount(Number(e.target.value))}
+                  placeholder="Enter amount"
+                  className="w-full pl-8 pr-4 py-2.5 bg-[#f0f3ff]/60 border border-[#e2e8f8] rounded-2xl text-sm font-bold text-[#151c27] focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition"
+                />
+              </div>
+            </div>
+
+            {/* Balance Summary Box */}
+            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-1.5">
+              <div className="flex items-center justify-between text-slate-500">
+                <span>Current Balance:</span>
+                <span className="font-semibold">{currSymbol}{(billing?.balance || 0).toFixed(2)}</span>
+              </div>
+              <div className="flex items-center justify-between text-slate-900 pt-1 border-t border-slate-200/60 font-bold">
+                <span>Balance After Deposit:</span>
+                <span className="text-emerald-600 font-extrabold text-sm">
+                  {currSymbol}{((billing?.balance || 0) + (Number(topUpAmount) || 0)).toFixed(2)} {activeCurrency}
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-2 pt-1">
               <button
                 type="button"
-                onClick={() => setTopUpOpen(false)}
-                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+                onClick={() => handleTopUp(false)}
+                disabled={topUpLoading || !topUpAmount || Number(topUpAmount) <= 0}
+                className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-bold rounded-2xl shadow-md shadow-amber-500/20 transition disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
               >
-                Cancel
+                {topUpLoading ? (
+                  <>
+                    <RefreshCw size={14} className="animate-spin" />
+                    <span>Connecting to Razorpay...</span>
+                  </>
+                ) : (
+                  <>
+                    <CreditCard size={14} />
+                    <span>Pay {currSymbol}{Number(topUpAmount || 0).toLocaleString()} with Razorpay</span>
+                  </>
+                )}
               </button>
+
               <button
                 type="button"
-                onClick={handleTopUp}
-                disabled={topUpLoading}
-                className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-bold rounded-xl shadow-md transition disabled:opacity-50"
+                onClick={() => handleTopUp(true)}
+                disabled={topUpLoading || !topUpAmount || Number(topUpAmount) <= 0}
+                className="w-full py-2 text-[11px] font-semibold text-slate-500 hover:text-amber-700 hover:bg-amber-50/60 rounded-xl transition border border-transparent hover:border-amber-200"
               >
-                {topUpLoading ? "Initiating..." : "Proceed to Secure Payment"}
+                ⚡ Fast Test Deposit (Simulate Without Gateway)
               </button>
             </div>
           </div>

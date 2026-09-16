@@ -317,7 +317,7 @@ export async function getCampaignsService(filters?: {
         approved_at,
         created_at,
         updated_at,
-        advertiser:advertisers(id, company_name, contact_email, status, currency),
+        advertiser:advertisers(id, company_name, contact_email, status, currency, balance),
         ad_targeting(*),
         ad_creatives(*)
       `,

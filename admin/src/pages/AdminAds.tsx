@@ -836,7 +836,7 @@ export const AdminAds: React.FC = () => {
                   <tr>
                     <th className="py-3.5 px-4">Campaign & Advertiser</th>
                     <th className="py-3.5 px-4">Objective</th>
-                    <th className="py-3.5 px-4">Budget & Spend</th>
+                    <th className="py-3.5 px-4">Funds Allocated, Used & Balances</th>
                     <th className="py-3.5 px-4">Schedule</th>
                     <th className="py-3.5 px-4">Status</th>
                     <th className="py-3.5 px-4 text-right">Actions</th>
@@ -856,6 +856,10 @@ export const AdminAds: React.FC = () => {
                           ? Math.min(100, Math.round((camp.spent / camp.total_budget) * 100))
                           : 0;
 
+                      const advBal = camp.advertiser?.balance ?? 0;
+                      const hasZeroBalance = advBal <= 0;
+                      const capReached = camp.total_budget > 0 && camp.spent >= camp.total_budget;
+
                       return (
                         <tr key={camp.id} className="hover:bg-[#f9f9ff] transition">
                           <td className="py-3.5 px-4">
@@ -872,19 +876,67 @@ export const AdminAds: React.FC = () => {
                           </td>
 
                           <td className="py-3.5 px-4">
-                            <div className="flex items-center justify-between text-xs mb-1 font-mono">
-                              <span className="text-[#151c27] font-bold">
-                                {formatCurrency(camp.spent, camp.currency || "USD")}
-                              </span>
-                              <span className="text-[#534434]">
-                                / {formatCurrency(camp.total_budget, camp.currency || "USD")}
-                              </span>
-                            </div>
-                            <div className="w-32 bg-[#e2e8f8] h-1.5 rounded-full overflow-hidden">
-                              <div
-                                className="bg-[#0058be] h-full rounded-full transition-all"
-                                style={{ width: `${pctSpent}%` }}
-                              />
+                            <div className="space-y-1.5 min-w-[210px]">
+                              <div className="flex items-center justify-between text-xs font-mono">
+                                <div>
+                                  <span className="text-[10px] text-[#534434] uppercase font-bold block">Allocated Fund:</span>
+                                  <strong className="text-[#151c27]">
+                                    {formatCurrency(camp.total_budget, camp.currency || "USD")}
+                                  </strong>
+                                  <span className="text-[10px] text-[#534434] ml-1">
+                                    ({formatCurrency(camp.daily_budget, camp.currency || "USD")}/d)
+                                  </span>
+                                </div>
+                                <div className="text-right">
+                                  <span className="text-[10px] text-[#534434] uppercase font-bold block">Fund Used:</span>
+                                  <strong className="text-[#0058be]">
+                                    {formatCurrency(camp.spent, camp.currency || "USD")}
+                                  </strong>
+                                </div>
+                              </div>
+
+                              <div className="w-full bg-[#e2e8f8] h-1.5 rounded-full overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full transition-all ${
+                                    pctSpent >= 100 ? "bg-amber-500" : "bg-[#0058be]"
+                                  }`}
+                                  style={{ width: `${pctSpent}%` }}
+                                />
+                              </div>
+
+                              <div className="flex items-center justify-between text-[11px] font-mono pt-1 border-t border-slate-100">
+                                <div>
+                                  <span className="text-[#534434]">Rem. Fund: </span>
+                                  <strong className="text-[#151c27]">
+                                    {formatCurrency(Math.max(0, camp.total_budget - camp.spent), camp.currency || "USD")}
+                                  </strong>
+                                </div>
+                                <div>
+                                  <span className="text-[#534434]">Account Bal: </span>
+                                  <strong className={hasZeroBalance ? "text-red-600 font-bold" : "text-[#006c49] font-bold"}>
+                                    {formatCurrency(advBal, camp.currency || "USD")}
+                                  </strong>
+                                </div>
+                              </div>
+
+                              <div className="pt-0.5">
+                                {hasZeroBalance ? (
+                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full">
+                                    <AlertTriangle size={10} className="text-red-500 shrink-0" />
+                                    Zero Balance (Ads Halted)
+                                  </span>
+                                ) : capReached ? (
+                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                                    <Clock size={10} className="text-amber-500 shrink-0" />
+                                    Budget Cap Reached
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                                    <CheckCircle2 size={10} className="text-emerald-500 shrink-0" />
+                                    Funded & Serving
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </td>
 
@@ -1223,6 +1275,70 @@ export const AdminAds: React.FC = () => {
                   </div>
                 </div>
               )}
+
+              {/* Campaign Financials & Wallet Balance Breakdown Card */}
+              <div className="p-4 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold font-heading text-[#151c27] uppercase tracking-wider flex items-center gap-1.5">
+                    <BarChart3 size={14} className="text-[#0058be]" />
+                    Campaign Funds & Account Balance
+                  </span>
+                  {(selectedCampaignForReview.advertiser?.balance ?? 0) <= 0 ? (
+                    <span className="text-[10px] font-bold text-red-700 bg-red-100 px-2 py-0.5 rounded-full border border-red-200">
+                      Zero Balance (Ads Halted)
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">
+                      Funded & Eligible
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  <div className="bg-white p-2.5 rounded-xl border border-[#e2e8f8]">
+                    <span className="text-[10px] text-[#534434] uppercase font-semibold block">Total Allocated</span>
+                    <strong className="text-xs font-bold font-mono text-[#151c27]">
+                      {formatCurrency(selectedCampaignForReview.total_budget, selectedCampaignForReview.currency || "USD")}
+                    </strong>
+                    <span className="text-[9px] text-[#534434] block">
+                      ({formatCurrency(selectedCampaignForReview.daily_budget, selectedCampaignForReview.currency || "USD")}/day)
+                    </span>
+                  </div>
+
+                  <div className="bg-white p-2.5 rounded-xl border border-[#e2e8f8]">
+                    <span className="text-[10px] text-[#534434] uppercase font-semibold block">Funds Used (Spent)</span>
+                    <strong className="text-xs font-bold font-mono text-[#0058be]">
+                      {formatCurrency(selectedCampaignForReview.spent, selectedCampaignForReview.currency || "USD")}
+                    </strong>
+                    <span className="text-[9px] text-[#534434] block">
+                      {selectedCampaignForReview.total_budget > 0
+                        ? `${Math.round((selectedCampaignForReview.spent / selectedCampaignForReview.total_budget) * 100)}% utilized`
+                        : "0%"}
+                    </span>
+                  </div>
+
+                  <div className="bg-white p-2.5 rounded-xl border border-[#e2e8f8]">
+                    <span className="text-[10px] text-[#534434] uppercase font-semibold block">Remaining Budget</span>
+                    <strong className="text-xs font-bold font-mono text-[#151c27]">
+                      {formatCurrency(
+                        Math.max(0, selectedCampaignForReview.total_budget - selectedCampaignForReview.spent),
+                        selectedCampaignForReview.currency || "USD"
+                      )}
+                    </strong>
+                    <span className="text-[9px] text-[#534434] block">Available to spend</span>
+                  </div>
+
+                  <div className="bg-white p-2.5 rounded-xl border border-[#e2e8f8]">
+                    <span className="text-[10px] text-[#534434] uppercase font-semibold block">Advertiser Balance</span>
+                    <strong className={`text-xs font-bold font-mono ${
+                      (selectedCampaignForReview.advertiser?.balance ?? 0) <= 0 ? "text-red-600" : "text-[#006c49]"
+                    }`}>
+                      {formatCurrency(selectedCampaignForReview.advertiser?.balance ?? 0, selectedCampaignForReview.currency || "USD")}
+                    </strong>
+                    <span className="text-[9px] text-[#534434] block">Prepaid wallet</span>
+                  </div>
+                </div>
+              </div>
 
               {/* Decision Action Selector */}
               <div className="space-y-2">

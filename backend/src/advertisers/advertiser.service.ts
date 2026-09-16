@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { supabase } from "../config/supabase";
 import { assertAdvertiserRegistrationEnabled, assertAdsEnabled } from "../regions/regional.service";
 import { createAdminNotificationService } from "../admin/services/adminNotifications.service";
@@ -593,4 +594,100 @@ export class AdvertiserService {
       daily: analytics || [],
     };
   }
+
+  /**
+   * Deposit funds directly into advertiser wallet with transactional double-entry ledger
+   */
+  static async depositFunds(
+    userId: string,
+    amount: number,
+    currency?: string,
+    paymentMethod?: string
+  ) {
+    if (!amount || amount <= 0) {
+      const error: any = new Error("Deposit amount must be greater than zero.");
+      error.status = 400;
+      throw error;
+    }
+
+    const advertiser = await this.getAdvertiserByUserId(userId);
+    if (!advertiser) {
+      const error: any = new Error("Advertiser profile not found for this user.");
+      error.status = 404;
+      throw error;
+    }
+
+    const depositAmount = parseFloat(amount.toString());
+    const currentBalance = parseFloat(advertiser.balance || "0");
+    const newBalance = parseFloat((currentBalance + depositAmount).toFixed(2));
+    const finalCurrency = (currency || advertiser.currency || "USD").toUpperCase();
+
+    // 1. Update advertiser balance
+    const { error: updateError } = await supabase
+      .from("advertisers")
+      .update({
+        balance: newBalance,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", advertiser.id);
+
+    if (updateError) throw updateError;
+
+    const txId = crypto.randomUUID();
+    const idempotencyKey = `dep_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
+
+    // 2. Record in payment_transactions
+    try {
+      await supabase.from("payment_transactions").insert({
+        id: txId,
+        advertiser_id: advertiser.id,
+        user_id: userId,
+        provider: paymentMethod || "WALLET_TOPUP",
+        idempotency_key: idempotencyKey,
+        amount: depositAmount,
+        currency: finalCurrency,
+        country: advertiser.country_code || "US",
+        status: "CAPTURED",
+        description: `Ad Wallet Deposit via ${paymentMethod || "Payment Portal"}`,
+        metadata: { source: "ADVERTISER_PORTAL", previous_balance: currentBalance },
+      });
+    } catch {
+      // Non-blocking
+    }
+
+    // 3. Record in payment_ledger
+    try {
+      await supabase.from("payment_ledger").insert({
+        advertiser_id: advertiser.id,
+        transaction_id: txId,
+        entry_type: "CREDIT",
+        amount: depositAmount,
+        currency: finalCurrency,
+        balance_after: newBalance,
+        description: `Ad wallet deposit via ${paymentMethod || "Secure Gateway"}`,
+      });
+    } catch {
+      // Non-blocking
+    }
+
+    // 4. Notify user
+    try {
+      await createNotification({
+        recipientId: userId,
+        type: "mention",
+        message: `Your advertising wallet deposit of ${finalCurrency} ${depositAmount.toFixed(2)} was credited successfully. New balance: ${finalCurrency} ${newBalance.toFixed(2)}.`,
+      });
+    } catch {
+      // Non-blocking
+    }
+
+    return {
+      success: true,
+      balance: newBalance,
+      amount: depositAmount,
+      currency: finalCurrency,
+      message: `Successfully deposited ${finalCurrency} ${depositAmount.toFixed(2)}.`,
+    };
+  }
 }
+

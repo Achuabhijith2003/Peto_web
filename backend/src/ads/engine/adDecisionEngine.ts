@@ -61,6 +61,15 @@ export class AdDecisionEngine {
           const adv: any = Array.isArray(camp.advertiser) ? camp.advertiser[0] : camp.advertiser;
           if (!adv) continue;
 
+          // Account Balance Check: Ads ONLY serve when advertiser has positive balance!
+          const advBalance = parseFloat(adv.balance || "0");
+          if (advBalance <= 0) continue;
+
+          // Total Budget Cap Check: Do not serve if campaign budget reached
+          const spent = parseFloat(camp.spent || "0");
+          const totalBudget = parseFloat(camp.total_budget || "0");
+          if (totalBudget > 0 && spent >= totalBudget) continue;
+
           // Category policy check
           const industry = (adv.industry || "").toUpperCase();
           if (
@@ -117,9 +126,7 @@ export class AdDecisionEngine {
             if (hasInterest) relevanceScore = 1.6;
           }
 
-          const spent = parseFloat(camp.spent || "0");
-          const totalBudget = parseFloat(camp.total_budget || "1000");
-          const pacingScore = Math.max(0.3, 1.0 - spent / totalBudget);
+          const pacingScore = Math.max(0.3, 1.0 - (totalBudget > 0 ? spent / totalBudget : 0));
 
           const finalScore = bidScore * relevanceScore * pacingScore;
 

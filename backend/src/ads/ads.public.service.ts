@@ -124,8 +124,11 @@ export async function getActiveFeedAdsService(
         objective,
         start_date,
         end_date,
+        spent,
+        total_budget,
+        daily_budget,
         status,
-        advertiser:advertisers!inner(id, company_name, website_url, industry, status),
+        advertiser:advertisers!inner(id, company_name, website_url, industry, status, balance),
         ad_creatives!inner(*),
         ad_targeting(*)
       `)
@@ -140,6 +143,19 @@ export async function getActiveFeedAdsService(
       const publicAds: PublicAdItem[] = [];
 
       data.forEach((camp: any) => {
+        // 1. Account Balance Check: ADS ONLY SHOW WHEN THERE IS SUFFICIENT BALANCE IN THE ACCOUNT!
+        const advBalance = parseFloat(camp.advertiser?.balance || "0");
+        if (advBalance <= 0) {
+          return;
+        }
+
+        // 2. Total Budget Cap Check
+        const spent = parseFloat(camp.spent || "0");
+        const totalBudget = parseFloat(camp.total_budget || "0");
+        if (totalBudget > 0 && spent >= totalBudget) {
+          return;
+        }
+
         // Exclude prohibited categories in this region
         const industry = (camp.advertiser?.industry || "").toUpperCase();
         if (
@@ -213,20 +229,22 @@ export async function getActiveFeedAdsService(
     // Fallback gracefully
   }
 
-  return runtimeFallbackPublicAds;
+  // If no campaigns with positive balance exist, return empty array (do not show unbacked ads)
+  return [];
 }
 
 /**
- * Record an ad impression
+ * Record an ad impression and deduct nominal allocation
  */
 export async function recordAdImpressionService(campaignId: string, creativeId?: string) {
   const today = new Date().toISOString().split("T")[0];
+  const impressionCost = 0.01;
 
   try {
-    // Attempt upsert/increment in ad_analytics_daily
+    // 1. Attempt upsert/increment in ad_analytics_daily
     const { data: existing } = await supabase
       .from("ad_analytics_daily")
-      .select("id, impressions, reach")
+      .select("id, impressions, reach, spend")
       .eq("campaign_id", campaignId)
       .eq("date", today)
       .maybeSingle();
@@ -237,6 +255,7 @@ export async function recordAdImpressionService(campaignId: string, creativeId?:
         .update({
           impressions: (existing.impressions || 0) + 1,
           reach: (existing.reach || 0) + 1,
+          spend: parseFloat(((existing.spend || 0) + impressionCost).toFixed(2)),
         })
         .eq("id", existing.id);
     } else {
@@ -249,8 +268,36 @@ export async function recordAdImpressionService(campaignId: string, creativeId?:
         clicks: 0,
         views: 0,
         conversions: 0,
-        spend: 0.05, // nominal CPM allocation
+        spend: impressionCost,
       });
+    }
+
+    // 2. Increment campaign spent and deduct from advertiser balance
+    const { data: camp } = await supabase
+      .from("ad_campaigns")
+      .select("id, advertiser_id, spent")
+      .eq("id", campaignId)
+      .maybeSingle();
+
+    if (camp && camp.advertiser_id) {
+      const newCampSpent = parseFloat(((camp.spent || 0) + impressionCost).toFixed(2));
+      await supabase.from("ad_campaigns").update({ spent: newCampSpent }).eq("id", campaignId);
+
+      const { data: adv } = await supabase
+        .from("advertisers")
+        .select("id, balance, total_spend")
+        .eq("id", camp.advertiser_id)
+        .maybeSingle();
+
+      if (adv) {
+        const curBal = parseFloat(adv.balance || "0");
+        const newBal = Math.max(0, parseFloat((curBal - impressionCost).toFixed(2)));
+        const newTotalSpend = parseFloat(((adv.total_spend || 0) + impressionCost).toFixed(2));
+        await supabase
+          .from("advertisers")
+          .update({ balance: newBal, total_spend: newTotalSpend })
+          .eq("id", adv.id);
+      }
     }
   } catch (err: any) {
     // Non-blocking telemetry
@@ -260,15 +307,16 @@ export async function recordAdImpressionService(campaignId: string, creativeId?:
 }
 
 /**
- * Record an ad click
+ * Record an ad click and deduct CPC allocation
  */
 export async function recordAdClickService(campaignId: string, creativeId?: string) {
   const today = new Date().toISOString().split("T")[0];
+  const clickCost = 0.25;
 
   try {
     const { data: existing } = await supabase
       .from("ad_analytics_daily")
-      .select("id, clicks, conversions")
+      .select("id, clicks, conversions, spend")
       .eq("campaign_id", campaignId)
       .eq("date", today)
       .maybeSingle();
@@ -278,6 +326,7 @@ export async function recordAdClickService(campaignId: string, creativeId?: stri
         .from("ad_analytics_daily")
         .update({
           clicks: (existing.clicks || 0) + 1,
+          spend: parseFloat(((existing.spend || 0) + clickCost).toFixed(2)),
         })
         .eq("id", existing.id);
     } else {
@@ -290,8 +339,36 @@ export async function recordAdClickService(campaignId: string, creativeId?: stri
         clicks: 1,
         views: 0,
         conversions: 0,
-        spend: 0.25, // nominal CPC allocation
+        spend: clickCost,
       });
+    }
+
+    // Deduct from advertiser balance and increment campaign spent
+    const { data: camp } = await supabase
+      .from("ad_campaigns")
+      .select("id, advertiser_id, spent")
+      .eq("id", campaignId)
+      .maybeSingle();
+
+    if (camp && camp.advertiser_id) {
+      const newCampSpent = parseFloat(((camp.spent || 0) + clickCost).toFixed(2));
+      await supabase.from("ad_campaigns").update({ spent: newCampSpent }).eq("id", campaignId);
+
+      const { data: adv } = await supabase
+        .from("advertisers")
+        .select("id, balance, total_spend")
+        .eq("id", camp.advertiser_id)
+        .maybeSingle();
+
+      if (adv) {
+        const curBal = parseFloat(adv.balance || "0");
+        const newBal = Math.max(0, parseFloat((curBal - clickCost).toFixed(2)));
+        const newTotalSpend = parseFloat(((adv.total_spend || 0) + clickCost).toFixed(2));
+        await supabase
+          .from("advertisers")
+          .update({ balance: newBal, total_spend: newTotalSpend })
+          .eq("id", adv.id);
+      }
     }
   } catch (err: any) {
     // Non-blocking telemetry

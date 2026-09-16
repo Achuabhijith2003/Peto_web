@@ -9,6 +9,7 @@ import {
   updateAdvertiserCampaignHandler,
   deleteAdvertiserCampaignHandler,
   getAdvertiserBillingHandler,
+  depositAdvertiserFundsHandler,
   getAdvertiserAnalyticsHandler,
   getVerificationStatusHandler,
   getVerificationGuidelinesHandler,
@@ -45,6 +46,7 @@ router.delete("/campaigns/:id", deleteAdvertiserCampaignHandler);
 
 // Financials & Reporting
 router.get("/billing", getAdvertiserBillingHandler);
+router.post("/billing/deposit", depositAdvertiserFundsHandler);
 router.get("/analytics", getAdvertiserAnalyticsHandler);
 
 export default router;
