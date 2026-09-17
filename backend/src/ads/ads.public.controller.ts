@@ -7,6 +7,7 @@ import {
 } from "./ads.public.service";
 import { resolveCountryFromRequest } from "../regions/regional.service";
 import { AdDecisionEngine } from "./engine/adDecisionEngine";
+import { AdEventTrackerService } from "./adEventTracker.service";
 
 export async function getActiveFeedAdsHandler(req: Request, res: Response): Promise<void> {
   try {
@@ -104,5 +105,35 @@ export async function submitAdFeedbackHandler(req: Request, res: Response): Prom
     });
   } catch {
     res.status(200).json({ success: true });
+  }
+}
+
+/**
+ * Record client-side ad lifecycle telemetry event (AD_SHOWN, AD_IMPRESSION, AD_CLICK, AD_ERROR, etc.)
+ * POST /api/ads/events
+ */
+export async function recordAdEventHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const { eventType, adSource, provider, campaignId, creativeId, placement, platform, errorCode, metadata } = req.body || {};
+    const country = resolveCountryFromRequest(req);
+    const userId = (req as any).user?.id;
+
+    await AdEventTrackerService.logEvent({
+      eventType: eventType || "AD_IMPRESSION",
+      adSource: adSource || "EXTERNAL",
+      provider: provider || "ADMOB",
+      campaignId,
+      creativeId,
+      placement: placement || "FEED",
+      platform: platform || "WEB",
+      country,
+      userId,
+      errorCode,
+      metadata,
+    });
+
+    res.json({ success: true });
+  } catch {
+    res.status(200).json({ success: false });
   }
 }

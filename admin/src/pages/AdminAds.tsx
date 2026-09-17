@@ -22,6 +22,12 @@ import {
   ShieldCheck,
   Video,
   Image as ImageIcon,
+  Shield,
+  Radio,
+  Smartphone,
+  Laptop,
+  Activity,
+  Power,
 } from "lucide-react";
 import {
   AdvertiserItem,
@@ -31,6 +37,10 @@ import {
   CampaignObjective,
   AdCreativeItem,
   AdAnalyticsSummary,
+  AdSystemControls,
+  AdProviderHealthItem,
+  ExternalAdAnalyticsData,
+  CombinedAdsAnalyticsData,
 } from "../types/admin";
 import {
   fetchAdvertisers,
@@ -42,10 +52,15 @@ import {
   fetchPendingReviewQueue,
   reviewCampaignAction,
   fetchAdsAnalyticsSummary,
+  fetchAdControlCenter,
+  updateAdControlCenter,
+  triggerEmergencyStop,
+  fetchExternalAdsAnalytics,
+  fetchCombinedAdsAnalytics,
 } from "../api/adminApi";
 import { useAdminAuth } from "../context/AdminAuthContext";
 
-type ActiveTab = "queue" | "campaigns" | "advertisers" | "analytics";
+type ActiveTab = "queue" | "campaigns" | "advertisers" | "analytics" | "controls" | "external-analytics";
 
 export const AdminAds: React.FC = () => {
   const { hasPermission } = useAdminAuth();
@@ -64,6 +79,19 @@ export const AdminAds: React.FC = () => {
   const [campaigns, setCampaigns] = useState<AdCampaignItem[]>([]);
   const [advertisers, setAdvertisers] = useState<AdvertiserItem[]>([]);
   const [analytics, setAnalytics] = useState<AdAnalyticsSummary | null>(null);
+
+  // Unified Controls & External Analytics States
+  const [controls, setControls] = useState<AdSystemControls | null>(null);
+  const [providerHealth, setProviderHealth] = useState<AdProviderHealthItem[]>([]);
+  const [controlsSaving, setControlsSaving] = useState(false);
+  const [emergencyModalOpen, setEmergencyModalOpen] = useState(false);
+  const [emergencyScope, setEmergencyScope] = useState<"ALL" | "INTERNAL" | "EXTERNAL">("ALL");
+  const [emergencyReason, setEmergencyReason] = useState("");
+  const [emergencyLoading, setEmergencyLoading] = useState(false);
+  const [externalAnalytics, setExternalAnalytics] = useState<ExternalAdAnalyticsData | null>(null);
+  const [combinedAnalytics, setCombinedAnalytics] = useState<CombinedAdsAnalyticsData | null>(null);
+  const [extProviderFilter, setExtProviderFilter] = useState("ALL");
+  const [extDaysFilter, setExtDaysFilter] = useState(30);
 
   // Filter States
   const [queueSearch, setQueueSearch] = useState("");
@@ -167,18 +195,109 @@ export const AdminAds: React.FC = () => {
     }
   }, [analyticsTimeframe]);
 
+  const loadControls = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetchAdControlCenter();
+      if (res.success) {
+        setControls(res.controls);
+        setProviderHealth(res.providerHealth || []);
+      }
+    } catch (err) {
+      console.error("Failed to load ad controls", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const loadExternalAnalytics = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [extRes, combRes] = await Promise.allSettled([
+        fetchExternalAdsAnalytics(extDaysFilter, extProviderFilter),
+        fetchCombinedAdsAnalytics(),
+      ]);
+      if (extRes.status === "fulfilled" && extRes.value.success) {
+        setExternalAnalytics(extRes.value);
+      }
+      if (combRes.status === "fulfilled" && combRes.value.success) {
+        setCombinedAnalytics(combRes.value);
+      }
+    } catch (err) {
+      console.error("Failed to load external analytics", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [extDaysFilter, extProviderFilter]);
+
+  const handleToggleControl = async (key: keyof AdSystemControls, value: boolean) => {
+    if (!controls) return;
+    setControlsSaving(true);
+    try {
+      const res = await updateAdControlCenter({ [key]: value }, `Admin toggled ${String(key)} to ${value}`);
+      if (res.success) {
+        setControls(res.controls);
+        showNotification("success", `${String(key).replace(/_/g, " ").toUpperCase()} set to ${value ? "ON" : "OFF"}`);
+      }
+    } catch (err: any) {
+      showNotification("error", err.response?.data?.error || "Failed to update control switch");
+    } finally {
+      setControlsSaving(false);
+    }
+  };
+
+  const handleExecuteEmergencyStop = async () => {
+    if (!emergencyReason.trim() || emergencyReason.trim().length < 5) {
+      showNotification("error", "Please provide a valid operational reason (min 5 chars)");
+      return;
+    }
+    setEmergencyLoading(true);
+    try {
+      const res = await triggerEmergencyStop(emergencyScope, emergencyReason);
+      if (res.success) {
+        setControls(res.controls);
+        setEmergencyModalOpen(false);
+        setEmergencyReason("");
+        showNotification("success", `Emergency Stop activated for ${emergencyScope} ads`);
+      }
+    } catch (err: any) {
+      showNotification("error", err.response?.data?.error || "Failed to trigger emergency stop");
+    } finally {
+      setEmergencyLoading(false);
+    }
+  };
+
+  const handleDeactivateEmergencyStop = async () => {
+    if (!window.confirm("Are you sure you want to deactivate Emergency Ads Stop and resume ad serving?")) return;
+    setControlsSaving(true);
+    try {
+      const res = await updateAdControlCenter({ emergency_stop_active: false, all_ads_enabled: true }, "Admin deactivated emergency stop");
+      if (res.success) {
+        setControls(res.controls);
+        showNotification("success", "Emergency stop deactivated. Ad serving resumed.");
+      }
+    } catch (err: any) {
+      showNotification("error", err.response?.data?.error || "Failed to resume ad serving");
+    } finally {
+      setControlsSaving(false);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === "queue") loadQueue();
     else if (activeTab === "campaigns") loadCampaigns();
     else if (activeTab === "advertisers") loadAdvertisers();
     else if (activeTab === "analytics") loadAnalytics();
-  }, [activeTab, loadQueue, loadCampaigns, loadAdvertisers, loadAnalytics]);
+    else if (activeTab === "controls") loadControls();
+    else if (activeTab === "external-analytics") loadExternalAnalytics();
+  }, [activeTab, loadQueue, loadCampaigns, loadAdvertisers, loadAnalytics, loadControls, loadExternalAnalytics]);
 
   useEffect(() => {
     loadQueue();
     loadCampaigns();
     loadAdvertisers();
     loadAnalytics();
+    loadControls();
   }, []);
 
   // ACTION HANDLERS
@@ -472,7 +591,9 @@ export const AdminAds: React.FC = () => {
               if (activeTab === "queue") loadQueue();
               else if (activeTab === "campaigns") loadCampaigns();
               else if (activeTab === "advertisers") loadAdvertisers();
-              else loadAnalytics();
+              else if (activeTab === "analytics") loadAnalytics();
+              else if (activeTab === "controls") loadControls();
+              else if (activeTab === "external-analytics") loadExternalAnalytics();
             }}
             disabled={loading}
             className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white hover:bg-[#f9f9ff] text-[#534434] text-xs font-semibold border border-[#e2e8f8] shadow-sm transition"
@@ -628,6 +749,35 @@ export const AdminAds: React.FC = () => {
         >
           <BarChart3 size={15} />
           Performance & Targeting Analytics
+        </button>
+
+        <button
+          onClick={() => setActiveTab("controls")}
+          className={`flex items-center gap-2 px-4 py-3 text-xs font-semibold font-heading border-b-2 transition ${
+            activeTab === "controls"
+              ? "border-[#0058be] text-[#0058be] bg-[#f0f3ff]"
+              : "border-transparent text-[#534434] hover:text-[#151c27]"
+          }`}
+        >
+          <Sliders size={15} />
+          Ads Control Center
+          {controls?.emergency_stop_active && (
+            <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-[#ffdad6] text-[#ba1a1a] animate-pulse">
+              EMERGENCY STOPPED
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => setActiveTab("external-analytics")}
+          className={`flex items-center gap-2 px-4 py-3 text-xs font-semibold font-heading border-b-2 transition ${
+            activeTab === "external-analytics"
+              ? "border-purple-600 text-purple-700 bg-purple-50"
+              : "border-transparent text-[#534434] hover:text-[#151c27]"
+          }`}
+        >
+          <Globe size={15} />
+          External Network Analytics
         </button>
       </div>
 
@@ -1224,6 +1374,543 @@ export const AdminAds: React.FC = () => {
                   )}
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 5: ADS CONTROL CENTER & KILL SWITCHES */}
+      {activeTab === "controls" && (
+        <div className="space-y-6">
+          {/* Emergency Stop Banner if active */}
+          {controls?.emergency_stop_active && (
+            <div className="p-5 rounded-2xl bg-[#ffdad6]/60 border-2 border-[#ba1a1a] shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fade-in">
+              <div className="flex items-start gap-3.5">
+                <div className="p-2.5 rounded-xl bg-[#ba1a1a] text-white shrink-0 mt-0.5">
+                  <AlertTriangle size={22} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-bold font-heading text-[#ba1a1a] uppercase tracking-wide">
+                      Emergency Ads Stop Active — Scope: {controls.emergency_stop_scope}
+                    </h3>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#ba1a1a] text-white">
+                      HALTED
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#410002] mt-1 font-medium">
+                    Reason: {controls.emergency_stop_reason || "Administrative intervention"}
+                  </p>
+                  <div className="text-[11px] text-[#93000a] mt-1 font-mono">
+                    Activated at: {controls.emergency_stop_at ? new Date(controls.emergency_stop_at).toLocaleString() : "Recently"}
+                  </div>
+                </div>
+              </div>
+
+              {canManage && (
+                <button
+                  onClick={handleDeactivateEmergencyStop}
+                  disabled={controlsSaving}
+                  className="px-4 py-2.5 rounded-xl bg-[#ba1a1a] hover:bg-[#93000a] text-white text-xs font-bold shadow-sm transition shrink-0 cursor-pointer disabled:opacity-50"
+                >
+                  Deactivate Emergency Stop
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Master Kill Switches Grid */}
+          <div className="bg-white rounded-2xl border border-[#e2e8f8] p-6 shadow-level-1 space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#e2e8f8] pb-4">
+              <div>
+                <h3 className="text-base font-bold font-heading text-[#151c27] flex items-center gap-2">
+                  <Shield size={18} className="text-[#0058be]" />
+                  Global Master Kill Switches
+                </h3>
+                <p className="text-xs text-[#534434]">
+                  Authoritative controls to immediately halt advertising delivery platform-wide
+                </p>
+              </div>
+
+              {canManage && !controls?.emergency_stop_active && (
+                <button
+                  onClick={() => setEmergencyModalOpen(true)}
+                  className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Power size={14} />
+                  Emergency Stop
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* All Ads Master */}
+              <div className={`p-4 rounded-xl border transition flex items-center justify-between ${
+                controls?.all_ads_enabled ? "bg-[#f0fdf4] border-[#bbf7d0]" : "bg-[#fef2f2] border-[#fecaca]"
+              }`}>
+                <div>
+                  <span className="text-xs font-bold text-[#151c27] block">ALL ADVERTISING</span>
+                  <span className="text-[11px] text-[#534434]">
+                    Master platform-wide switch
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  disabled={!canManage || controlsSaving}
+                  onClick={() => handleToggleControl("all_ads_enabled", !controls?.all_ads_enabled)}
+                  className={`w-12 h-6 flex items-center rounded-full p-1 transition cursor-pointer ${
+                    controls?.all_ads_enabled ? "bg-emerald-600 justify-end" : "bg-slate-300 justify-start"
+                  }`}
+                >
+                  <div className="w-4 h-4 rounded-full bg-white shadow-md" />
+                </button>
+              </div>
+
+              {/* Internal Ads */}
+              <div className={`p-4 rounded-xl border transition flex items-center justify-between ${
+                controls?.internal_ads_enabled ? "bg-[#f0fdf4] border-[#bbf7d0]" : "bg-[#fef2f2] border-[#fecaca]"
+              }`}>
+                <div>
+                  <span className="text-xs font-bold text-[#151c27] block">INTERNAL PETO ADS</span>
+                  <span className="text-[11px] text-[#534434]">
+                    Advertiser marketplace campaigns
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  disabled={!canManage || controlsSaving}
+                  onClick={() => handleToggleControl("internal_ads_enabled", !controls?.internal_ads_enabled)}
+                  className={`w-12 h-6 flex items-center rounded-full p-1 transition cursor-pointer ${
+                    controls?.internal_ads_enabled ? "bg-emerald-600 justify-end" : "bg-slate-300 justify-start"
+                  }`}
+                >
+                  <div className="w-4 h-4 rounded-full bg-white shadow-md" />
+                </button>
+              </div>
+
+              {/* External Ads */}
+              <div className={`p-4 rounded-xl border transition flex items-center justify-between ${
+                controls?.external_ads_enabled ? "bg-[#f0fdf4] border-[#bbf7d0]" : "bg-[#fef2f2] border-[#fecaca]"
+              }`}>
+                <div>
+                  <span className="text-xs font-bold text-[#151c27] block">EXTERNAL AD NETWORKS</span>
+                  <span className="text-[11px] text-[#534434]">
+                    AdMob & Web Ads mediation
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  disabled={!canManage || controlsSaving}
+                  onClick={() => handleToggleControl("external_ads_enabled", !controls?.external_ads_enabled)}
+                  className={`w-12 h-6 flex items-center rounded-full p-1 transition cursor-pointer ${
+                    controls?.external_ads_enabled ? "bg-emerald-600 justify-end" : "bg-slate-300 justify-start"
+                  }`}
+                >
+                  <div className="w-4 h-4 rounded-full bg-white shadow-md" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Granular Provider & Platform Controls */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {/* External Provider Toggles */}
+            <div className="bg-white rounded-2xl border border-[#e2e8f8] p-5 shadow-level-1 space-y-4">
+              <h4 className="text-sm font-bold font-heading text-[#151c27] flex items-center gap-2 border-b border-[#e2e8f8] pb-3">
+                <Radio size={16} className="text-[#0058be]" />
+                External Provider Toggles
+              </h4>
+
+              <div className="space-y-3">
+                <div className="p-3.5 rounded-xl border border-[#e2e8f8] bg-[#f9f9ff] flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-[#151c27] block">Google AdMob (Mobile)</span>
+                    <span className="text-[11px] text-[#534434]">Native feed & reels interstitial ads on Android & iOS</span>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={!canManage || controlsSaving}
+                    onClick={() => handleToggleControl("admob_enabled", !controls?.admob_enabled)}
+                    className={`w-11 h-5 flex items-center rounded-full p-0.5 transition cursor-pointer ${
+                      controls?.admob_enabled ? "bg-emerald-600 justify-end" : "bg-slate-300 justify-start"
+                    }`}
+                  >
+                    <div className="w-4 h-4 rounded-full bg-white shadow-md" />
+                  </button>
+                </div>
+
+                <div className="p-3.5 rounded-xl border border-[#e2e8f8] bg-[#f9f9ff] flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-[#151c27] block">Google Web Ads (AdSense / Ad Manager)</span>
+                    <span className="text-[11px] text-[#534434]">Responsive web display slots in desktop & mobile browser</span>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={!canManage || controlsSaving}
+                    onClick={() => handleToggleControl("web_ads_enabled", !controls?.web_ads_enabled)}
+                    className={`w-11 h-5 flex items-center rounded-full p-0.5 transition cursor-pointer ${
+                      controls?.web_ads_enabled ? "bg-emerald-600 justify-end" : "bg-slate-300 justify-start"
+                    }`}
+                  >
+                    <div className="w-4 h-4 rounded-full bg-white shadow-md" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Platform Controls */}
+            <div className="bg-white rounded-2xl border border-[#e2e8f8] p-5 shadow-level-1 space-y-4">
+              <h4 className="text-sm font-bold font-heading text-[#151c27] flex items-center gap-2 border-b border-[#e2e8f8] pb-3">
+                <Laptop size={16} className="text-[#0058be]" />
+                Client Platform Matrix
+              </h4>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div className="p-3 rounded-xl border border-[#e2e8f8] bg-[#f9f9ff] text-center space-y-2">
+                  <Laptop size={16} className="mx-auto text-slate-500" />
+                  <span className="text-xs font-bold text-[#151c27] block">Web</span>
+                  <button
+                    type="button"
+                    disabled={!canManage || controlsSaving}
+                    onClick={() => handleToggleControl("web_enabled", !controls?.web_enabled)}
+                    className={`w-10 h-5 mx-auto flex items-center rounded-full p-0.5 transition cursor-pointer ${
+                      controls?.web_enabled ? "bg-emerald-600 justify-end" : "bg-slate-300 justify-start"
+                    }`}
+                  >
+                    <div className="w-4 h-4 rounded-full bg-white shadow-md" />
+                  </button>
+                </div>
+
+                <div className="p-3 rounded-xl border border-[#e2e8f8] bg-[#f9f9ff] text-center space-y-2">
+                  <Smartphone size={16} className="mx-auto text-slate-500" />
+                  <span className="text-xs font-bold text-[#151c27] block">Android</span>
+                  <button
+                    type="button"
+                    disabled={!canManage || controlsSaving}
+                    onClick={() => handleToggleControl("android_enabled", !controls?.android_enabled)}
+                    className={`w-10 h-5 mx-auto flex items-center rounded-full p-0.5 transition cursor-pointer ${
+                      controls?.android_enabled ? "bg-emerald-600 justify-end" : "bg-slate-300 justify-start"
+                    }`}
+                  >
+                    <div className="w-4 h-4 rounded-full bg-white shadow-md" />
+                  </button>
+                </div>
+
+                <div className="p-3 rounded-xl border border-[#e2e8f8] bg-[#f9f9ff] text-center space-y-2">
+                  <Smartphone size={16} className="mx-auto text-slate-500" />
+                  <span className="text-xs font-bold text-[#151c27] block">iOS</span>
+                  <button
+                    type="button"
+                    disabled={!canManage || controlsSaving}
+                    onClick={() => handleToggleControl("ios_enabled", !controls?.ios_enabled)}
+                    className={`w-10 h-5 mx-auto flex items-center rounded-full p-0.5 transition cursor-pointer ${
+                      controls?.ios_enabled ? "bg-emerald-600 justify-end" : "bg-slate-300 justify-start"
+                    }`}
+                  >
+                    <div className="w-4 h-4 rounded-full bg-white shadow-md" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Placement Toggles */}
+          <div className="bg-white rounded-2xl border border-[#e2e8f8] p-5 shadow-level-1 space-y-4">
+            <h4 className="text-sm font-bold font-heading text-[#151c27] flex items-center gap-2 border-b border-[#e2e8f8] pb-3">
+              <Target size={16} className="text-[#0058be]" />
+              Placement Specific Toggles
+            </h4>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+              {[
+                { key: "feed_enabled", label: "Home Feed", desc: "Native feed scroll ads" },
+                { key: "reels_enabled", label: "Reels Stream", desc: "Short video stream ads" },
+                { key: "community_enabled", label: "Communities", desc: "Community discussion feed" },
+                { key: "explore_enabled", label: "Explore & Search", desc: "Discovery page placements" },
+              ].map(({ key, label, desc }) => (
+                <div key={key} className="p-3.5 rounded-xl border border-[#e2e8f8] bg-[#f9f9ff] flex flex-col justify-between space-y-2">
+                  <div>
+                    <span className="text-xs font-bold text-[#151c27] block">{label}</span>
+                    <span className="text-[10px] text-[#534434]">{desc}</span>
+                  </div>
+                  <div className="pt-2 flex justify-end">
+                    <button
+                      type="button"
+                      disabled={!canManage || controlsSaving}
+                      onClick={() => handleToggleControl(key as keyof AdSystemControls, !((controls as any)?.[key]))}
+                      className={`w-10 h-5 flex items-center rounded-full p-0.5 transition cursor-pointer ${
+                        (controls as any)?.[key] ? "bg-emerald-600 justify-end" : "bg-slate-300 justify-start"
+                      }`}
+                    >
+                      <div className="w-4 h-4 rounded-full bg-white shadow-md" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Provider Health Monitoring Dashboard */}
+          <div className="bg-white rounded-2xl border border-[#e2e8f8] p-6 shadow-level-1 space-y-4">
+            <div className="flex items-center justify-between border-b border-[#e2e8f8] pb-4">
+              <div>
+                <h4 className="text-base font-bold font-heading text-[#151c27] flex items-center gap-2">
+                  <Activity size={18} className="text-[#0058be]" />
+                  External Demand Provider Health Monitoring
+                </h4>
+                <p className="text-xs text-[#534434]">Real-time latency, failure rates, and circuit breaker status</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {providerHealth.map((p) => (
+                <div key={p.provider} className="p-4 rounded-xl border border-[#e2e8f8] bg-[#f9f9ff] space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-[#151c27]">{p.provider}</span>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        p.status === "HEALTHY"
+                          ? "bg-emerald-100 text-emerald-800"
+                          : p.status === "DEGRADED"
+                          ? "bg-amber-100 text-amber-800"
+                          : "bg-red-100 text-red-800"
+                      }`}>
+                        {p.status}
+                      </span>
+                    </div>
+                    <span className="text-xs font-mono text-[#534434]">
+                      Avg Latency: <strong className="text-[#151c27]">{p.avg_latency_ms}ms</strong>
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                    <div className="bg-white p-2 rounded-lg border border-[#e2e8f8]">
+                      <span className="text-[10px] text-[#534434] block">Total Requests</span>
+                      <strong className="font-mono">{p.total_requests}</strong>
+                    </div>
+                    <div className="bg-white p-2 rounded-lg border border-[#e2e8f8]">
+                      <span className="text-[10px] text-[#534434] block">Failure Rate</span>
+                      <strong className={`font-mono ${p.failure_rate_pct > 10 ? "text-red-600" : "text-[#006c49]"}`}>
+                        {p.failure_rate_pct}%
+                      </strong>
+                    </div>
+                    <div className="bg-white p-2 rounded-lg border border-[#e2e8f8]">
+                      <span className="text-[10px] text-[#534434] block">Timeout Rate</span>
+                      <strong className={`font-mono ${p.timeout_rate_pct > 5 ? "text-red-600" : "text-[#006c49]"}`}>
+                        {p.timeout_rate_pct}%
+                      </strong>
+                    </div>
+                  </div>
+
+                  {p.last_error_message && (
+                    <div className="text-[10px] font-mono text-red-600 bg-red-50 p-2 rounded-lg">
+                      Last error: {p.last_error_message}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 6: EXTERNAL & COMBINED ADS ANALYTICS */}
+      {activeTab === "external-analytics" && (
+        <div className="space-y-6">
+          {/* Combined Comparison Table */}
+          {combinedAnalytics?.comparison && (
+            <div className="bg-white rounded-2xl border border-[#e2e8f8] p-6 shadow-level-1 space-y-4">
+              <div className="flex items-center justify-between border-b border-[#e2e8f8] pb-3">
+                <div>
+                  <h3 className="text-base font-bold font-heading text-[#151c27]">Unified Advertising Comparison</h3>
+                  <p className="text-xs text-[#534434]">
+                    Side-by-side volume comparison of Peto Internal vs External Networks (revenues strictly segregated)
+                  </p>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[#f0f3ff] text-[#534434] uppercase font-bold tracking-wider">
+                    <tr>
+                      <th className="py-3 px-4">Metric Dimension</th>
+                      <th className="py-3 px-4 text-[#0058be]">Peto Internal Marketplace</th>
+                      <th className="py-3 px-4 text-purple-700">External Networks (AdMob/Web)</th>
+                      <th className="py-3 px-4 text-[#151c27]">Combined Platform Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#e2e8f8] font-mono">
+                    <tr>
+                      <td className="py-3 px-4 font-sans font-semibold text-[#151c27]">Delivered Impressions</td>
+                      <td className="py-3 px-4 text-[#0058be] font-bold">{combinedAnalytics.comparison.internal.impressions.toLocaleString()}</td>
+                      <td className="py-3 px-4 text-purple-700 font-bold">{combinedAnalytics.comparison.external.impressions.toLocaleString()}</td>
+                      <td className="py-3 px-4 text-[#151c27] font-extrabold">{combinedAnalytics.comparison.total.impressions.toLocaleString()}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-3 px-4 font-sans font-semibold text-[#151c27]">Clicks Captured</td>
+                      <td className="py-3 px-4 text-[#0058be] font-bold">{combinedAnalytics.comparison.internal.clicks.toLocaleString()}</td>
+                      <td className="py-3 px-4 text-purple-700 font-bold">{combinedAnalytics.comparison.external.clicks.toLocaleString()}</td>
+                      <td className="py-3 px-4 text-[#151c27] font-extrabold">{combinedAnalytics.comparison.total.clicks.toLocaleString()}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-3 px-4 font-sans font-semibold text-[#151c27]">Click-Through Rate (CTR)</td>
+                      <td className="py-3 px-4 text-[#0058be]">{combinedAnalytics.comparison.internal.ctr.toFixed(2)}%</td>
+                      <td className="py-3 px-4 text-purple-700">{combinedAnalytics.comparison.external.ctr.toFixed(2)}%</td>
+                      <td className="py-3 px-4 text-[#151c27] font-bold">{combinedAnalytics.comparison.total.combinedCtr.toFixed(2)}%</td>
+                    </tr>
+                    <tr className="bg-slate-50 font-sans">
+                      <td className="py-3 px-4 font-bold text-[#151c27]">Financial Accounting Category</td>
+                      <td className="py-3 px-4 text-[#0058be] font-semibold">
+                        Advertiser Spend: ${combinedAnalytics.comparison.internal.advertiserSpend.toFixed(2)}
+                      </td>
+                      <td className="py-3 px-4 text-purple-700 font-semibold">
+                        Network Revenue: ${combinedAnalytics.comparison.external.networkRevenue.toFixed(2)}
+                      </td>
+                      <td className="py-3 px-4 text-[#534434] text-[11px] italic">
+                        Independent ledgers (never mixed)
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* External Network Metrics Section */}
+          <div className="bg-white rounded-2xl border border-[#e2e8f8] p-6 shadow-level-1 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#e2e8f8] pb-4">
+              <div>
+                <h3 className="text-base font-bold font-heading text-[#151c27]">External Ad Networks Performance</h3>
+                <p className="text-xs text-[#534434]">AdMob & Web Ads requests, fills, impressions, and error metrics</p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <select
+                  value={extProviderFilter}
+                  onChange={(e) => setExtProviderFilter(e.target.value)}
+                  className="px-3 py-1.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs font-semibold text-[#151c27]"
+                >
+                  <option value="ALL">All External Providers</option>
+                  <option value="ADMOB">Google AdMob</option>
+                  <option value="ADSENSE">Google Web Ads (AdSense)</option>
+                </select>
+
+                <select
+                  value={extDaysFilter}
+                  onChange={(e) => setExtDaysFilter(Number(e.target.value))}
+                  className="px-3 py-1.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs font-semibold text-[#151c27]"
+                >
+                  <option value={7}>Last 7 Days</option>
+                  <option value={30}>Last 30 Days</option>
+                  <option value={90}>Last 90 Days</option>
+                </select>
+              </div>
+            </div>
+
+            {/* External KPI Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
+              <div className="p-4 rounded-xl border border-[#e2e8f8] bg-[#f9f9ff]">
+                <span className="text-xs font-bold text-[#534434] block">External Requests</span>
+                <span className="text-2xl font-bold font-mono text-[#151c27] mt-1 block">
+                  {(externalAnalytics?.totals?.requests || 0).toLocaleString()}
+                </span>
+                <span className="text-[11px] text-slate-500">From web & mobile feeds</span>
+              </div>
+
+              <div className="p-4 rounded-xl border border-[#e2e8f8] bg-[#f9f9ff]">
+                <span className="text-xs font-bold text-[#534434] block">Fill Rate</span>
+                <span className="text-2xl font-bold font-mono text-[#006c49] mt-1 block">
+                  {externalAnalytics?.totals?.fillRate || 0}%
+                </span>
+                <span className="text-[11px] text-slate-500">{(externalAnalytics?.totals?.filled || 0).toLocaleString()} filled</span>
+              </div>
+
+              <div className="p-4 rounded-xl border border-[#e2e8f8] bg-[#f9f9ff]">
+                <span className="text-xs font-bold text-[#534434] block">External Impressions</span>
+                <span className="text-2xl font-bold font-mono text-purple-700 mt-1 block">
+                  {(externalAnalytics?.totals?.impressions || 0).toLocaleString()}
+                </span>
+                <span className="text-[11px] text-slate-500">CTR: {externalAnalytics?.totals?.ctr || 0}%</span>
+              </div>
+
+              <div className="p-4 rounded-xl border border-[#e2e8f8] bg-[#f9f9ff]">
+                <span className="text-xs font-bold text-[#534434] block">Errors / Timeouts</span>
+                <span className="text-2xl font-bold font-mono text-red-600 mt-1 block">
+                  {((externalAnalytics?.totals?.errors || 0) + (externalAnalytics?.totals?.timeouts || 0)).toLocaleString()}
+                </span>
+                <span className="text-[11px] text-slate-500">
+                  {externalAnalytics?.totals?.fallbacks || 0} fallbacks
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: EMERGENCY ADS STOP CONFIRMATION */}
+      {emergencyModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#151c27]/60 backdrop-blur-xs animate-fade-in">
+          <div className="w-full max-w-md rounded-2xl bg-white border border-red-200 shadow-level-3 p-6 space-y-4">
+            <div className="flex items-center gap-3 text-red-600 border-b border-red-100 pb-3">
+              <AlertTriangle size={24} />
+              <h3 className="text-base font-bold font-heading">Emergency Ads Kill Switch</h3>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              This action immediately suppresses ad serving across the selected scope without redeployment. All requests will safely fall back to organic content.
+            </p>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+                Select Kill Scope
+              </label>
+              <div className="grid grid-cols-3 gap-2 text-xs">
+                {(["ALL", "INTERNAL", "EXTERNAL"] as const).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setEmergencyScope(s)}
+                    className={`py-2 rounded-xl border font-bold transition cursor-pointer ${
+                      emergencyScope === s
+                        ? "bg-red-600 text-white border-red-600"
+                        : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider block">
+                Operational Incident Reason (Mandatory)
+              </label>
+              <textarea
+                rows={3}
+                placeholder="e.g. Third-party provider latency spike exceeding 3000ms"
+                value={emergencyReason}
+                onChange={(e) => setEmergencyReason(e.target.value)}
+                className="w-full p-2.5 rounded-xl border border-slate-200 text-xs focus:ring-2 focus:ring-red-500/20 focus:border-red-500"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setEmergencyModalOpen(false)}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={emergencyLoading || !emergencyReason.trim() || emergencyReason.trim().length < 5}
+                onClick={handleExecuteEmergencyStop}
+                className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-sm transition disabled:opacity-50 cursor-pointer"
+              >
+                {emergencyLoading ? "Halting..." : "Confirm Emergency Halt"}
+              </button>
             </div>
           </div>
         </div>

@@ -826,4 +826,71 @@ export async function reviewAdminVerification(
   return res.data;
 }
 
+// ============================================================
+// UNIFIED ADS CONTROL CENTER & EXTERNAL ANALYTICS APIS
+// ============================================================
+
+export async function fetchAdControlCenter(): Promise<{
+  success: boolean;
+  controls: any;
+  providerHealth: any[];
+}> {
+  const res = await adminApi.get("/admin/ads/control-center");
+  return res.data;
+}
+
+export async function updateAdControlCenter(
+  updates: Record<string, any>,
+  reason?: string
+): Promise<{
+  success: boolean;
+  controls: any;
+  message: string;
+}> {
+  const res = await adminApi.patch("/admin/ads/control-center", { updates, reason });
+  return res.data;
+}
+
+export async function triggerEmergencyStop(
+  scope: "ALL" | "INTERNAL" | "EXTERNAL",
+  reason: string
+): Promise<{
+  success: boolean;
+  controls: any;
+  message: string;
+}> {
+  const res = await adminApi.post("/admin/ads/control-center/emergency-stop", { scope, reason });
+  return res.data;
+}
+
+export async function fetchAdProviderHealth(): Promise<{
+  success: boolean;
+  providers: any[];
+}> {
+  const res = await adminApi.get("/admin/ads/provider-health");
+  return res.data;
+}
+
+export async function fetchExternalAdsAnalytics(
+  days = 30,
+  provider = "ALL"
+): Promise<{
+  success: boolean;
+  timeframe: string;
+  totals: any;
+  dailyTrends: any[];
+}> {
+  const res = await adminApi.get(`/admin/ads/analytics/external?days=${days}&provider=${provider}`);
+  return res.data;
+}
+
+export async function fetchCombinedAdsAnalytics(): Promise<{
+  success: boolean;
+  comparison: any;
+}> {
+  const res = await adminApi.get("/admin/ads/analytics/combined");
+  return res.data;
+}
+
+
 

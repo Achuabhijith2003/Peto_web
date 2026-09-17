@@ -976,3 +976,107 @@ export interface AdminNotificationItem {
   dedup_key?: string | null;
   created_at: string;
 }
+
+// ============================================================
+// PHASE 10: UNIFIED ADS CONTROL & EXTERNAL ANALYTICS TYPES
+// ============================================================
+
+export interface AdSystemControls {
+  id: string;
+  all_ads_enabled: boolean;
+  internal_ads_enabled: boolean;
+  external_ads_enabled: boolean;
+  admob_enabled: boolean;
+  web_ads_enabled: boolean;
+  web_enabled: boolean;
+  android_enabled: boolean;
+  ios_enabled: boolean;
+  feed_enabled: boolean;
+  reels_enabled: boolean;
+  community_enabled: boolean;
+  explore_enabled: boolean;
+  emergency_stop_active: boolean;
+  emergency_stop_scope: "ALL" | "INTERNAL" | "EXTERNAL" | "NONE";
+  emergency_stop_reason?: string | null;
+  emergency_stop_by?: string | null;
+  emergency_stop_at?: string | null;
+  ad_environment: "DEVELOPMENT" | "STAGING" | "PRODUCTION";
+  updated_at: string;
+}
+
+export interface AdProviderHealthItem {
+  provider: string;
+  status: "HEALTHY" | "DEGRADED" | "UNHEALTHY" | "DISABLED";
+  total_requests: number;
+  successful_requests: number;
+  failed_requests: number;
+  timeout_requests: number;
+  avg_latency_ms: number;
+  failure_rate_pct: number;
+  timeout_rate_pct: number;
+  last_success_at?: string | null;
+  last_failure_at?: string | null;
+  last_error_message?: string | null;
+  updated_at: string;
+}
+
+export interface ExternalAdAnalyticsData {
+  timeframe: string;
+  totals: {
+    requests: number;
+    filled: number;
+    fillRate: number;
+    impressions: number;
+    clicks: number;
+    ctr: number;
+    errors: number;
+    timeouts: number;
+    fallbacks: number;
+    revenue_usd: number;
+    ecpm: number;
+  };
+  dailyTrends: Array<{
+    date: string;
+    provider: string;
+    platform: string;
+    placement: string;
+    requests: number;
+    filled: number;
+    impressions: number;
+    clicks: number;
+    errors: number;
+    timeouts: number;
+    revenue_usd: number;
+  }>;
+}
+
+export interface CombinedAdsAnalyticsData {
+  comparison: {
+    internal: {
+      label: string;
+      impressions: number;
+      clicks: number;
+      ctr: number;
+      conversions: number;
+      advertiserSpend: number;
+      revenueType: string;
+    };
+    external: {
+      label: string;
+      requests: number;
+      filled: number;
+      fillRate: number;
+      impressions: number;
+      clicks: number;
+      ctr: number;
+      networkRevenue: number;
+      revenueType: string;
+    };
+    total: {
+      impressions: number;
+      clicks: number;
+      combinedCtr: number;
+    };
+  };
+}
+

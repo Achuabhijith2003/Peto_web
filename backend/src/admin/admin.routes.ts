@@ -194,6 +194,27 @@ router.post("/ads/creatives/:id/review", requirePermission("ads.manage"), review
 
 router.get("/ads/analytics", requirePermission("ads.view"), getAdsAnalyticsSummaryHandler);
 
+// Unified Ads Control Center & External Demand Management
+import {
+  getAdControlCenterHandler,
+  updateAdControlCenterHandler,
+  emergencyStopHandler,
+  getProviderHealthHandler,
+  getAdProvidersHandler,
+  updateAdProviderHandler,
+  getExternalAdsAnalyticsHandler,
+  getCombinedAdsAnalyticsHandler,
+} from "./controllers/adminAdsControl.controller";
+
+router.get("/ads/control-center", requirePermission("ads.view"), getAdControlCenterHandler);
+router.patch("/ads/control-center", requirePermission("ads.manage"), updateAdControlCenterHandler);
+router.post("/ads/control-center/emergency-stop", requirePermission("ads.manage"), emergencyStopHandler);
+router.get("/ads/provider-health", requirePermission("ads.view"), getProviderHealthHandler);
+router.get("/ads/providers", requirePermission("ads.view"), getAdProvidersHandler);
+router.patch("/ads/providers/:id", requirePermission("ads.manage"), updateAdProviderHandler);
+router.get("/ads/analytics/external", requirePermission("ads.view"), getExternalAdsAnalyticsHandler);
+router.get("/ads/analytics/combined", requirePermission("ads.view"), getCombinedAdsAnalyticsHandler);
+
 // Global Regional Monetization Configuration (Phase 1)
 router.get("/regions", requirePermission("system.view"), getAdminRegionsHandler);
 router.patch("/regions/:code", requirePermission("system.manage"), updateAdminRegionHandler);

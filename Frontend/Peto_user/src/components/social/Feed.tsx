@@ -3,6 +3,7 @@ import api from "../../utils/api";
 import CreatePost from "./CreatePost";
 import PostCard from "./PostCard";
 import SponsoredPostCard from "./SponsoredPostCard";
+import WebExternalAdCard from "./WebExternalAdCard";
 import OnlineFriends from "./OnlineFriends";
 import SuggestedFriends from "./SuggestedFriends";
 import { Loader2, CheckCircle2, RefreshCw } from "lucide-react";
@@ -38,10 +39,20 @@ const Feed = () => {
     const observerTarget = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
-        api.get("/ads/feed")
+        // Request ad decision via unified Peto Ad Decision Engine
+        api.get("/ads/decision?placement=FEED&device=WEB")
             .then((res) => {
-                if (res.data?.ads && Array.isArray(res.data.ads)) {
-                    setAds(res.data.ads);
+                if (res.data?.hasAd) {
+                    setAds([res.data]);
+                } else {
+                    // Fallback to active internal marketplace ads
+                    api.get("/ads/feed")
+                        .then((feedRes) => {
+                            if (feedRes.data?.ads && Array.isArray(feedRes.data.ads)) {
+                                setAds(feedRes.data.ads.map((a: any) => ({ source: "PETO", ad: a })));
+                            }
+                        })
+                        .catch(() => {});
                 }
             })
             .catch(() => {});
@@ -151,9 +162,15 @@ const Feed = () => {
                             <div key={post.id} className="space-y-6">
                                 <PostCard post={post} />
 
-                                {/* Sponsored Ad Placement */}
+                                {/* Sponsored / External Ad Placement */}
                                 {adToShow && (
-                                    <SponsoredPostCard ad={adToShow} />
+                                    adToShow.source === "EXTERNAL" && adToShow.externalPayload ? (
+                                        <WebExternalAdCard externalAd={adToShow.externalPayload} />
+                                    ) : adToShow.ad ? (
+                                        <SponsoredPostCard ad={adToShow.ad} />
+                                    ) : (
+                                        <SponsoredPostCard ad={adToShow} />
+                                    )
                                 )}
 
                                 {/* Insert Suggested Friends on mobile after post 2 or at the end if fewer posts */}
