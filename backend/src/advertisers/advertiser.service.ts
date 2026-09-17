@@ -3,6 +3,7 @@ import { supabase } from "../config/supabase";
 import { assertAdvertiserRegistrationEnabled, assertAdsEnabled } from "../regions/regional.service";
 import { createAdminNotificationService } from "../admin/services/adminNotifications.service";
 import { createNotification } from "../notifications/notification.service";
+import { CurrencyService } from "../currency/currency.service";
 
 export interface RegisterAdvertiserInput {
   // CamelCase
@@ -144,6 +145,11 @@ export class AdvertiserService {
     // Check if advertiser already exists for this user
     const existing = await this.getAdvertiserByUserId(userId);
     if (existing) {
+      // ONE-TIME FIXED BILLING CURRENCY POLICY:
+      // If the advertiser account already has an established billing currency, it is strictly immutable.
+      // If currency was not previously set, this first setup locks it permanently.
+      const lockedCurrency = (existing.currency || currency || "USD").toUpperCase().trim();
+
       const { data, error } = await supabase
         .from("advertisers")
         .update({
@@ -152,7 +158,8 @@ export class AdvertiserService {
           contact_email: contactEmail,
           website_url: websiteUrl,
           industry: industry,
-          currency: currency,
+          currency: lockedCurrency,
+          is_currency_locked: true,
           updated_at: new Date().toISOString(),
         })
         .eq("id", existing.id)
@@ -163,7 +170,7 @@ export class AdvertiserService {
       return data;
     }
 
-    // Create new advertiser
+    // Create new advertiser with permanently locked billing currency
     const { data, error } = await supabase
       .from("advertisers")
       .insert({
@@ -174,6 +181,7 @@ export class AdvertiserService {
         website_url: websiteUrl,
         industry: industry,
         currency: currency,
+        is_currency_locked: true,
         status: "ACTIVE",
         balance: 0.0,
         total_spend: 0.0,
@@ -617,10 +625,25 @@ export class AdvertiserService {
       throw error;
     }
 
-    const depositAmount = parseFloat(amount.toString());
+    const accountCurrency = (advertiser.currency || "USD").toUpperCase().trim();
+    const depositCurrency = (currency || accountCurrency).toUpperCase().trim();
+    const rawDepositAmount = parseFloat(amount.toString());
+
+    let finalAmount = rawDepositAmount;
+    let exchangeRate = 1.0;
+    let originalAmount: number | undefined = undefined;
+    let originalCurrency: string | undefined = undefined;
+
+    if (depositCurrency !== accountCurrency) {
+      const conversion = CurrencyService.convertAmount(rawDepositAmount, depositCurrency, accountCurrency);
+      finalAmount = conversion.targetAmount;
+      exchangeRate = conversion.exchangeRate;
+      originalAmount = rawDepositAmount;
+      originalCurrency = depositCurrency;
+    }
+
     const currentBalance = parseFloat(advertiser.balance || "0");
-    const newBalance = parseFloat((currentBalance + depositAmount).toFixed(2));
-    const finalCurrency = (currency || advertiser.currency || "USD").toUpperCase();
+    const newBalance = parseFloat((currentBalance + finalAmount).toFixed(2));
 
     // 1. Update advertiser balance
     const { error: updateError } = await supabase
@@ -644,27 +667,39 @@ export class AdvertiserService {
         user_id: userId,
         provider: paymentMethod || "WALLET_TOPUP",
         idempotency_key: idempotencyKey,
-        amount: depositAmount,
-        currency: finalCurrency,
+        amount: finalAmount,
+        currency: accountCurrency,
         country: advertiser.country_code || "US",
         status: "CAPTURED",
         description: `Ad Wallet Deposit via ${paymentMethod || "Payment Portal"}`,
-        metadata: { source: "ADVERTISER_PORTAL", previous_balance: currentBalance },
+        metadata: {
+          source: "ADVERTISER_PORTAL",
+          previous_balance: currentBalance,
+          original_amount: originalAmount,
+          original_currency: originalCurrency,
+          exchange_rate: exchangeRate !== 1.0 ? exchangeRate : undefined,
+        },
       });
     } catch {
       // Non-blocking
     }
 
-    // 3. Record in payment_ledger
+    // 3. Record in payment_ledger with double-entry auditability
     try {
       await supabase.from("payment_ledger").insert({
         advertiser_id: advertiser.id,
         transaction_id: txId,
-        entry_type: "CREDIT",
-        amount: depositAmount,
-        currency: finalCurrency,
+        entry_type: "DEPOSIT",
+        amount: finalAmount,
+        currency: accountCurrency,
+        balance_before: currentBalance,
         balance_after: newBalance,
-        description: `Ad wallet deposit via ${paymentMethod || "Secure Gateway"}`,
+        exchange_rate: exchangeRate !== 1.0 ? exchangeRate : undefined,
+        original_amount: originalAmount,
+        original_currency: originalCurrency,
+        description: originalCurrency && originalCurrency !== accountCurrency
+          ? `Deposit of ${originalCurrency} ${originalAmount?.toFixed(2)} converted to ${accountCurrency} ${finalAmount.toFixed(2)}`
+          : `Ad wallet deposit via ${paymentMethod || "Secure Gateway"}`,
       });
     } catch {
       // Non-blocking
@@ -675,7 +710,7 @@ export class AdvertiserService {
       await createNotification({
         recipientId: userId,
         type: "mention",
-        message: `Your advertising wallet deposit of ${finalCurrency} ${depositAmount.toFixed(2)} was credited successfully. New balance: ${finalCurrency} ${newBalance.toFixed(2)}.`,
+        message: `Your advertising wallet deposit of ${accountCurrency} ${finalAmount.toFixed(2)} was credited successfully. New balance: ${accountCurrency} ${newBalance.toFixed(2)}.`,
       });
     } catch {
       // Non-blocking
@@ -684,9 +719,9 @@ export class AdvertiserService {
     return {
       success: true,
       balance: newBalance,
-      amount: depositAmount,
-      currency: finalCurrency,
-      message: `Successfully deposited ${finalCurrency} ${depositAmount.toFixed(2)}.`,
+      amount: finalAmount,
+      currency: accountCurrency,
+      message: `Successfully deposited ${accountCurrency} ${finalAmount.toFixed(2)}.`,
     };
   }
 }

@@ -140,18 +140,20 @@ export async function createRazorpayOrderHandler(req: Request, res: Response): P
       return;
     }
 
-    const { amount, currency = "INR" } = req.body;
+    const advertiser = await AdvertiserService.getAdvertiserByUserId(userId);
+    if (!advertiser) {
+      res.status(404).json({ success: false, error: "Advertiser profile not found. Please register first." });
+      return;
+    }
+
+    const { amount } = req.body;
     const numAmount = parseFloat(amount);
     if (!numAmount || numAmount <= 0) {
       res.status(400).json({ success: false, error: "Deposit amount must be greater than zero." });
       return;
     }
 
-    const advertiser = await AdvertiserService.getAdvertiserByUserId(userId);
-    if (!advertiser) {
-      res.status(404).json({ success: false, error: "Advertiser profile not found. Please register first." });
-      return;
-    }
+    const orderCurrency = (advertiser.currency || req.body.currency || "INR").toUpperCase();
 
     const keyId = (process.env.RAZORPAY_KEY_ID || "").trim();
     const keySecret = (process.env.RAZORPAY_KEY_SECRET || "").trim();
@@ -173,7 +175,7 @@ export async function createRazorpayOrderHandler(req: Request, res: Response): P
           },
           body: JSON.stringify({
             amount: amountInPaise,
-            currency: currency.toUpperCase(),
+            currency: orderCurrency,
             receipt: orderReceipt,
             notes: {
               userId,
@@ -212,7 +214,7 @@ export async function createRazorpayOrderHandler(req: Request, res: Response): P
         provider_order_id: orderId,
         idempotency_key: `rzp_ord_${orderId}`,
         amount: numAmount,
-        currency: currency.toUpperCase(),
+        currency: orderCurrency,
         country: advertiser.country_code || "IN",
         status: "PENDING",
         description: `Ad Wallet Deposit via Razorpay`,
@@ -229,7 +231,7 @@ export async function createRazorpayOrderHandler(req: Request, res: Response): P
       success: true,
       orderId,
       amount: amountInPaise,
-      currency: currency.toUpperCase(),
+      currency: orderCurrency,
       keyId: keyId || "rzp_test_mockkey123",
       isSandbox,
       transactionId: txId,

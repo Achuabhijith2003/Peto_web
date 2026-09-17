@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Building2,
   AlertTriangle,
   Save,
   Shield,
   CreditCard,
+  Lock,
+  Eye,
 } from "lucide-react";
 import api from "../../utils/api";
 
@@ -14,6 +16,8 @@ interface Props {
   billing?: any;
   onRefresh: () => void;
   onGoToVerification: () => void;
+  displayCurrency?: string;
+  onDisplayCurrencyChange?: (currency: string) => void;
 }
 
 export const AdvertiserSettingsTab: React.FC<Props> = ({
@@ -22,6 +26,8 @@ export const AdvertiserSettingsTab: React.FC<Props> = ({
   billing: _billing,
   onRefresh,
   onGoToVerification,
+  displayCurrency = "USD",
+  onDisplayCurrencyChange,
 }) => {
   const [form, setForm] = useState({
     company_name: profile?.company_name || "",
@@ -30,40 +36,17 @@ export const AdvertiserSettingsTab: React.FC<Props> = ({
     website_url: profile?.website_url || "",
     industry: profile?.industry || "Pet Food & Nutrition",
   });
-  const [currency, setCurrency] = useState(profile?.currency || "USD");
-
-  useEffect(() => {
-    if (profile?.currency) {
-      setCurrency(profile.currency);
-    }
-  }, [profile?.currency]);
+  const accountCurrency = profile?.currency || "USD";
+  const [selectedDisplayCurrency, setSelectedDisplayCurrency] = useState(displayCurrency);
   const [saving, setSaving] = useState(false);
-  const [savingCurrency, setSavingCurrency] = useState(false);
   const [msg, setMsg] = useState("");
 
-  const handleSaveCurrency = async () => {
-    setSavingCurrency(true);
-    setMsg("");
-    try {
-      await api.post("/advertisers/register", {
-        company_name: form.company_name,
-        companyName: form.company_name,
-        contact_name: form.contact_name,
-        contactName: form.contact_name,
-        contact_email: form.billing_email,
-        contactEmail: form.billing_email,
-        website_url: form.website_url,
-        websiteUrl: form.website_url,
-        industry: form.industry,
-        currency: currency,
-      });
-      setMsg(`Default billing currency updated to ${currency} successfully.`);
-      await onRefresh();
-    } catch (err: any) {
-      setMsg(err.response?.data?.error || "Failed to update default currency.");
-    } finally {
-      setSavingCurrency(false);
+  const handleDisplayCurrencySave = (newCurr: string) => {
+    setSelectedDisplayCurrency(newCurr);
+    if (onDisplayCurrencyChange) {
+      onDisplayCurrencyChange(newCurr);
     }
+    setMsg(`Display currency preference updated to ${newCurr}. Dashboard values will show approximate estimates in ${newCurr}.`);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -197,54 +180,72 @@ export const AdvertiserSettingsTab: React.FC<Props> = ({
             <div className="w-6 h-6 rounded-xl bg-blue-500/10 text-[#0058be] flex items-center justify-center">
               <CreditCard size={15} />
             </div>
-            Payment & Billing Currency
+            Authoritative Billing Currency
           </h3>
-          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-[#e7eefe] text-[#0058be] border border-[#0058be]/20">
-            Active: {currency}
+          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1">
+            <Lock size={11} /> Fixed for this Account
           </span>
         </div>
 
-        <p className="text-xs text-[#534434] leading-relaxed">
-          Select your primary transaction currency for campaign billing, balance top-ups, daily spending limits, and tax invoices.
-        </p>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs items-end">
+        <div className="p-4 bg-[#f0f3ff]/60 border border-[#e2e8f8] rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
           <div>
-            <label className="block text-[#151c27] font-bold mb-1.5">Default Account Currency *</label>
-            <select
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value)}
-              className="w-full px-4 py-2.5 bg-[#f0f3ff]/60 border border-[#e2e8f8] rounded-2xl focus:bg-white focus:ring-2 focus:ring-[#0058be]/20 focus:border-[#0058be] text-[#151c27] outline-none transition font-medium"
-            >
-              <option value="USD">USD ($) - United States Dollar (Global)</option>
-              <option value="INR">INR (₹) - Indian Rupee (India)</option>
-              <option value="EUR">EUR (€) - Euro (European Union)</option>
-              <option value="GBP">GBP (£) - British Pound (United Kingdom)</option>
-              <option value="CAD">CAD ($) - Canadian Dollar (Canada)</option>
-              <option value="AUD">AUD ($) - Australian Dollar (Australia)</option>
-              <option value="SGD">SGD ($) - Singapore Dollar (Singapore)</option>
-              <option value="AED">AED (د.إ) - UAE Dirham (United Arab Emirates)</option>
-            </select>
+            <span className="text-[#534434] block text-[11px]">Active Account Billing Currency</span>
+            <strong className="text-base text-[#151c27] font-headline">
+              {accountCurrency} ({accountCurrency === "INR" ? "₹" : accountCurrency === "EUR" ? "€" : accountCurrency === "GBP" ? "£" : "$"})
+            </strong>
           </div>
-
-          <div>
-            <button
-              type="button"
-              onClick={handleSaveCurrency}
-              disabled={savingCurrency || currency === (profile?.currency || "USD")}
-              className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-headline font-bold rounded-2xl shadow-sm hover:shadow-md hover:scale-[1.01] active:scale-[0.99] text-xs flex items-center justify-center gap-2 transition"
-            >
-              <Save size={15} />
-              <span>{savingCurrency ? "Updating Currency..." : "Update Currency"}</span>
-            </button>
-          </div>
+          <span className="text-[11px] text-[#534434] bg-white px-3 py-1.5 rounded-xl border border-[#e2e8f8] self-start sm:self-auto font-medium">
+            Permanent • Immutable
+          </span>
         </div>
 
-        <div className="p-3.5 bg-[#f0f3ff]/70 border border-[#e2e8f8] rounded-2xl text-[11px] text-[#534434] leading-relaxed flex items-start gap-2">
-          <AlertTriangle size={15} className="shrink-0 mt-0.5 text-amber-600" />
+        <div className="p-3.5 bg-amber-50/80 border border-amber-200/80 rounded-2xl text-[11px] text-[#855300] leading-relaxed flex items-start gap-2.5">
+          <AlertTriangle size={16} className="shrink-0 mt-0.5 text-amber-600" />
           <span>
-            Note: Changing your account currency will apply to all upcoming ad campaigns and invoice generations. Existing campaign budgets and past ledgers will remain recorded in their historical transaction currency.
+            <strong>Warning:</strong> Your account billing currency is fixed once set and cannot be changed later. All campaign budgets, wallet top-ups, ad click/impression spend, and financial ledger statements are denominated strictly in {accountCurrency}. To view estimates in another currency, use the Display Currency preference below.
           </span>
+        </div>
+
+        {/* Display Currency Preference */}
+        <div className="pt-3 border-t border-[#e2e8f8] space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="text-xs font-bold text-[#151c27] flex items-center gap-1.5">
+                <Eye size={13} className="text-[#0058be]" />
+                Display Currency Preference (Presentation Only)
+              </h4>
+              <p className="text-[11px] text-[#534434] mt-0.5">
+                View approximate converted balances across your dashboard. Your actual wallet and billing remain in {accountCurrency}.
+              </p>
+            </div>
+            <span className="text-[11px] font-mono font-bold text-[#0058be] bg-[#f0f3ff] px-2 py-0.5 rounded-lg border border-[#e2e8f8]">
+              Display: {selectedDisplayCurrency}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs items-end">
+            <div>
+              <label className="block text-[#151c27] font-bold mb-1.5">Preferred Display Currency</label>
+              <select
+                value={selectedDisplayCurrency}
+                onChange={(e) => handleDisplayCurrencySave(e.target.value)}
+                className="w-full px-4 py-2.5 bg-[#f0f3ff]/60 border border-[#e2e8f8] rounded-2xl focus:bg-white focus:ring-2 focus:ring-[#0058be]/20 focus:border-[#0058be] text-[#151c27] outline-none transition font-medium"
+              >
+                <option value="USD">USD ($) - United States Dollar (Global)</option>
+                <option value="INR">INR (₹) - Indian Rupee (India)</option>
+                <option value="EUR">EUR (€) - Euro (European Union)</option>
+                <option value="GBP">GBP (£) - British Pound (United Kingdom)</option>
+                <option value="CAD">CAD (CA$) - Canadian Dollar (Canada)</option>
+                <option value="AUD">AUD (AU$) - Australian Dollar (Australia)</option>
+                <option value="SGD">SGD (SG$) - Singapore Dollar (Singapore)</option>
+                <option value="AED">AED (د.إ) - UAE Dirham (United Arab Emirates)</option>
+                <option value="JPY">JPY (¥) - Japanese Yen (Japan)</option>
+              </select>
+            </div>
+            <div className="text-[11px] text-[#534434] bg-[#f0f3ff]/40 p-2.5 rounded-xl border border-[#e2e8f8]">
+              Conversions are calculated dynamically using real-time baseline rates without mutating any stored records.
+            </div>
+          </div>
         </div>
       </div>
 

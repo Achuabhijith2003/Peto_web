@@ -24,6 +24,8 @@ import {
   Edit3,
   X,
   User,
+  Lock,
+  AlertTriangle,
 } from "lucide-react";
 import api from "../../utils/api";
 import { useAuth } from "../../context/AuthContext";
@@ -53,6 +55,35 @@ export const getCurrencySymbol = (currencyCode?: string): string => {
     default:
       return "$";
   }
+};
+
+export const RATES_TO_USD: Record<string, number> = {
+  USD: 1.0,
+  INR: 1 / 87.0,
+  EUR: 1.08,
+  GBP: 1.28,
+  CAD: 0.73,
+  AUD: 0.65,
+  SGD: 0.76,
+  AED: 0.27,
+  JPY: 0.0066,
+};
+
+export const formatDisplayEstimate = (
+  amount: number,
+  fromCurrency: string = "USD",
+  toCurrency: string = "USD"
+): string | null => {
+  const from = (fromCurrency || "USD").toUpperCase();
+  const to = (toCurrency || "USD").toUpperCase();
+  if (!amount || from === to) return null;
+
+  const rateFrom = RATES_TO_USD[from] || 1.0;
+  const rateTo = RATES_TO_USD[to] || 1.0;
+  const inUsd = amount * rateFrom;
+  const target = inUsd / rateTo;
+  const symbol = getCurrencySymbol(to);
+  return `≈ ${symbol}${target.toFixed(2)} ${to}`;
 };
 
 interface AdvertiserProfile {
@@ -104,11 +135,13 @@ interface BillingInfo {
   advertiser: AdvertiserProfile;
   ledger: Array<{
     id: string;
-    entry_type: "CREDIT" | "DEBIT";
+    entry_type: "CREDIT" | "DEBIT" | "DEPOSIT" | "AD_SPEND" | "REFUND" | string;
     amount: number;
     currency: string;
     balance_after: number;
     description: string;
+    reference_id?: string;
+    campaign_id?: string;
     created_at: string;
   }>;
 }
@@ -142,13 +175,25 @@ export const AdvertiserPortal: React.FC = () => {
   const [topUpSuccess, setTopUpSuccess] = useState("");
   const [topUpError, setTopUpError] = useState("");
 
+  // Display Currency state (presentation preference)
+  const [displayCurrency, setDisplayCurrency] = useState<string>(() => {
+    return localStorage.getItem("peto_display_currency") || "USD";
+  });
+
+  // First-time currency selection & locking modal state
+  const [currencyConfirmModalOpen, setCurrencyConfirmModalOpen] = useState(false);
+  const [firstTimeCurrency, setFirstTimeCurrency] = useState("INR");
+  const [currencyAcknowledged, setCurrencyAcknowledged] = useState(false);
+  const [settingCurrencyLoading, setSettingCurrencyLoading] = useState(false);
+
   // Registration state
   const [regForm, setRegForm] = useState({
     company_name: "",
     billing_email: "",
     contact_phone: "",
     website_url: "",
-    country_code: "US",
+    country_code: "IN",
+    currency: "INR",
     tax_id: "",
     industry: "Pet Food & Nutrition",
   });
@@ -239,6 +284,30 @@ export const AdvertiserPortal: React.FC = () => {
     }
   }, []);
 
+  const handleConfirmFirstTimeCurrency = async () => {
+    if (!currencyAcknowledged) return;
+    setSettingCurrencyLoading(true);
+    try {
+      await api.post("/advertisers/register", {
+        company_name: profile?.company_name || "Advertiser",
+        companyName: profile?.company_name || "Advertiser",
+        contact_name: profile?.contact_name || "",
+        contactName: profile?.contact_name || "",
+        contact_email: profile?.contact_email || profile?.billing_email || "",
+        contactEmail: profile?.contact_email || profile?.billing_email || "",
+        currency: firstTimeCurrency,
+        country: profile?.country_code || (firstTimeCurrency === "INR" ? "IN" : "US"),
+      });
+      await fetchAdvertiserData();
+      setCurrencyConfirmModalOpen(false);
+      setTopUpOpen(true);
+    } catch (err: any) {
+      alert(err.response?.data?.error || "Failed to set permanent billing currency.");
+    } finally {
+      setSettingCurrencyLoading(false);
+    }
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setRegSubmitting(true);
@@ -249,6 +318,7 @@ export const AdvertiserPortal: React.FC = () => {
         contactName: regForm.company_name,
         contactEmail: regForm.billing_email,
         country: regForm.country_code,
+        currency: regForm.currency || (regForm.country_code === "IN" ? "INR" : "USD"),
         websiteUrl: regForm.website_url,
       });
       await fetchAdvertiserData();
@@ -681,17 +751,53 @@ export const AdvertiserPortal: React.FC = () => {
                   </label>
                   <select
                     value={regForm.country_code}
-                    onChange={(e) => setRegForm({ ...regForm, country_code: e.target.value })}
+                    onChange={(e) => {
+                      const c = e.target.value;
+                      const defCurr = c === "IN" ? "INR" : c === "GB" ? "GBP" : c === "DE" || c === "FR" ? "EUR" : c === "CA" ? "CAD" : c === "AU" ? "AUD" : "USD";
+                      setRegForm({ ...regForm, country_code: c, currency: defCurr });
+                    }}
                     className="w-full px-4 py-2.5 text-sm bg-[#f0f3ff]/60 border border-[#e2e8f8] rounded-2xl focus:bg-white focus:ring-2 focus:ring-[#0058be]/20 focus:border-[#0058be] text-[#151c27] transition"
                   >
-                    <option value="US">United States (USD)</option>
                     <option value="IN">India (INR)</option>
+                    <option value="US">United States (USD)</option>
                     <option value="GB">United Kingdom (GBP)</option>
                     <option value="CA">Canada (CAD)</option>
                     <option value="AU">Australia (AUD)</option>
                     <option value="DE">Germany (EUR)</option>
                     <option value="FR">France (EUR)</option>
                   </select>
+                </div>
+              </div>
+
+              {/* Billing Currency Selection */}
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-[#534434] uppercase tracking-wider flex items-center justify-between">
+                  <span>Account Billing Currency *</span>
+                  <span className="text-[10px] text-amber-700 font-bold bg-amber-100 px-2 py-0.5 rounded-full">
+                    Fixed once set
+                  </span>
+                </label>
+                <select
+                  value={regForm.currency}
+                  onChange={(e) => setRegForm({ ...regForm, currency: e.target.value })}
+                  className="w-full px-4 py-2.5 text-sm bg-[#f0f3ff]/60 border border-[#e2e8f8] rounded-2xl focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-[#151c27] font-semibold transition"
+                >
+                  <option value="INR">INR (₹) - Indian Rupee (Recommended for India & UPI)</option>
+                  <option value="USD">USD ($) - United States Dollar (Global)</option>
+                  <option value="EUR">EUR (€) - Euro (European Union)</option>
+                  <option value="GBP">GBP (£) - British Pound (United Kingdom)</option>
+                  <option value="CAD">CAD (CA$) - Canadian Dollar (Canada)</option>
+                  <option value="AUD">AUD (AU$) - Australian Dollar (Australia)</option>
+                  <option value="SGD">SGD (SG$) - Singapore Dollar (Singapore)</option>
+                  <option value="AED">AED (د.إ) - UAE Dirham (United Arab Emirates)</option>
+                  <option value="JPY">JPY (¥) - Japanese Yen (Japan)</option>
+                </select>
+
+                <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl text-xs text-amber-900 leading-relaxed flex items-start gap-2.5">
+                  <AlertTriangle size={16} className="shrink-0 mt-0.5 text-amber-600" />
+                  <span>
+                    <strong>Warning:</strong> Your billing currency is <u>permanently fixed</u> once registered and <u>cannot be changed later</u>. All campaign budgets, wallet top-ups, and ledger records will be in this currency.
+                  </span>
                 </div>
               </div>
 
@@ -787,12 +893,23 @@ export const AdvertiserPortal: React.FC = () => {
               <CreditCard size={14} className="text-[#0058be]" />
               <span>Balance:</span>
               <strong className="text-[#151c27]">
-                {currSymbol}{billing?.balance?.toFixed(2) || "0.00"}
+                {currSymbol}{billing?.balance?.toFixed(2) || "0.00"} {activeCurrency}
               </strong>
+              {formatDisplayEstimate(billing?.balance || 0, activeCurrency, displayCurrency) && (
+                <span className="text-[11px] font-normal text-slate-500">
+                  ({formatDisplayEstimate(billing?.balance || 0, activeCurrency, displayCurrency)})
+                </span>
+              )}
             </div>
 
             <button
-              onClick={() => setTopUpOpen(true)}
+              onClick={() => {
+                if (!profile?.currency) {
+                  setCurrencyConfirmModalOpen(true);
+                } else {
+                  setTopUpOpen(true);
+                }
+              }}
               className="px-3.5 py-1.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-bold shadow-sm transition hover:scale-[1.01] active:scale-[0.99] flex items-center gap-1.5"
             >
               <PlusCircle size={14} />
@@ -913,8 +1030,13 @@ export const AdvertiserPortal: React.FC = () => {
                   </div>
                 </div>
                 <div className="text-2xl font-bold font-headline text-[#151c27]">
-                  {currSymbol}{analytics.spend?.toFixed(2) || "0.00"}
+                  {currSymbol}{analytics.spend?.toFixed(2) || "0.00"} {activeCurrency}
                 </div>
+                {formatDisplayEstimate(analytics.spend || 0, activeCurrency, displayCurrency) && (
+                  <p className="text-[11px] text-slate-500 font-normal">
+                    {formatDisplayEstimate(analytics.spend || 0, activeCurrency, displayCurrency)} (approximate)
+                  </p>
+                )}
                 <p className="text-[11px] text-[#006c49] font-medium flex items-center gap-1">
                   <ArrowUpRight size={12} /> Within monthly budget caps
                 </p>
@@ -1779,13 +1901,24 @@ export const AdvertiserPortal: React.FC = () => {
                   <div className="text-3xl font-black mt-2">
                     {currSymbol}{billing?.balance?.toFixed(2) || "0.00"} {billing?.currency || activeCurrency}
                   </div>
+                  {formatDisplayEstimate(billing?.balance || 0, billing?.currency || activeCurrency, displayCurrency) && (
+                    <div className="text-xs text-amber-300 font-semibold mt-1">
+                      {formatDisplayEstimate(billing?.balance || 0, billing?.currency || activeCurrency, displayCurrency)} (Display Preference)
+                    </div>
+                  )}
                   <p className="text-xs text-slate-400 mt-1">
                     Used automatically for click & impression billing.
                   </p>
                 </div>
 
                 <button
-                  onClick={() => setTopUpOpen(true)}
+                  onClick={() => {
+                    if (!profile?.currency) {
+                      setCurrencyConfirmModalOpen(true);
+                    } else {
+                      setTopUpOpen(true);
+                    }
+                  }}
                   className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-xs rounded-2xl shadow-sm transition"
                 >
                   Deposit Funds
@@ -1857,33 +1990,42 @@ export const AdvertiserPortal: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {billing.ledger.map((item) => (
-                        <tr key={item.id} className="hover:bg-slate-50">
-                          <td className="py-3">
-                            <span
-                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                item.entry_type === "CREDIT"
-                                  ? "bg-emerald-50 text-emerald-700"
-                                  : "bg-amber-50 text-amber-700"
+                      {billing.ledger.map((item) => {
+                        const itemCurr = item.currency || activeCurrency;
+                        const itemSymbol = getCurrencySymbol(itemCurr);
+                        return (
+                          <tr key={item.id} className="hover:bg-slate-50">
+                            <td className="py-3">
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                  item.entry_type === "CREDIT" || item.entry_type === "DEPOSIT"
+                                    ? "bg-emerald-50 text-emerald-700"
+                                    : "bg-amber-50 text-amber-700"
+                                }`}
+                              >
+                                {item.entry_type}
+                              </span>
+                            </td>
+                            <td className="py-3 font-medium text-slate-700">
+                              <div>{item.description}</div>
+                              {item.reference_id && (
+                                <div className="text-[10px] text-slate-400 font-mono mt-0.5">Ref: {item.reference_id}</div>
+                              )}
+                            </td>
+                            <td
+                              className={`py-3 font-bold ${
+                                item.entry_type === "CREDIT" || item.entry_type === "DEPOSIT" ? "text-emerald-600" : "text-slate-800"
                               }`}
                             >
-                              {item.entry_type}
-                            </span>
-                          </td>
-                          <td className="py-3 font-medium text-slate-700">{item.description}</td>
-                          <td
-                            className={`py-3 font-bold ${
-                              item.entry_type === "CREDIT" ? "text-emerald-600" : "text-slate-800"
-                            }`}
-                          >
-                            {item.entry_type === "CREDIT" ? "+" : "-"}{currSymbol}{item.amount.toFixed(2)}
-                          </td>
-                          <td className="py-3 text-slate-500">{currSymbol}{item.balance_after?.toFixed(2)}</td>
-                          <td className="py-3 text-slate-400">
-                            {new Date(item.created_at).toLocaleDateString()}
-                          </td>
-                        </tr>
-                      ))}
+                              {item.entry_type === "CREDIT" || item.entry_type === "DEPOSIT" ? "+" : "-"}{itemSymbol}{Math.abs(item.amount).toFixed(2)} {itemCurr}
+                            </td>
+                            <td className="py-3 text-slate-500">{itemSymbol}{item.balance_after?.toFixed(2)} {itemCurr}</td>
+                            <td className="py-3 text-slate-400">
+                              {new Date(item.created_at).toLocaleDateString()}
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -1910,6 +2052,11 @@ export const AdvertiserPortal: React.FC = () => {
             profile={profile}
             app={verificationApp}
             billing={billing}
+            displayCurrency={displayCurrency}
+            onDisplayCurrencyChange={(curr) => {
+              setDisplayCurrency(curr);
+              localStorage.setItem("peto_display_currency", curr);
+            }}
             onRefresh={fetchAdvertiserData}
             onGoToVerification={() => setActiveTab("verification")}
           />
@@ -2053,6 +2200,94 @@ export const AdvertiserPortal: React.FC = () => {
                 ⚡ Fast Test Deposit (Simulate Without Gateway)
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* First-Time Currency Locking Modal */}
+      {currencyConfirmModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 font-bold text-slate-900 text-base">
+                <div className="p-2 rounded-xl bg-amber-500 text-white shadow-sm shadow-amber-500/20">
+                  <Lock size={18} />
+                </div>
+                <span>Set Permanent Billing Currency</span>
+              </div>
+              <button
+                onClick={() => setCurrencyConfirmModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg transition"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Before adding funds or running campaigns, please select your authoritative billing currency. All wallet deposits, campaign pricing, ad impressions, and financial statements will be permanently maintained in this currency.
+            </p>
+
+            <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl space-y-2">
+              <div className="flex items-center gap-2 text-amber-900 font-bold text-xs">
+                <AlertTriangle size={16} className="text-amber-600 shrink-0" />
+                <span>Permanent Accounting Rule</span>
+              </div>
+              <p className="text-[11px] text-amber-800 leading-relaxed">
+                <strong>Warning:</strong> Your account billing currency <u>cannot be changed later under any circumstances</u>. This maintains strict double-entry ledger accuracy and prevents financial conversion discrepancies.
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Select Billing Currency
+              </label>
+              <select
+                value={firstTimeCurrency}
+                onChange={(e) => setFirstTimeCurrency(e.target.value)}
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-900 focus:bg-white focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition"
+              >
+                <option value="INR">INR (₹) — Indian Rupee (Native for Razorpay UPI / Cards)</option>
+                <option value="USD">USD ($) — United States Dollar</option>
+                <option value="EUR">EUR (€) — Euro</option>
+                <option value="GBP">GBP (£) — British Pound</option>
+                <option value="CAD">CAD (CA$) — Canadian Dollar</option>
+                <option value="AUD">AUD (AU$) — Australian Dollar</option>
+                <option value="SGD">SGD (SG$) — Singapore Dollar</option>
+                <option value="AED">AED (د.إ) — UAE Dirham</option>
+                <option value="JPY">JPY (¥) — Japanese Yen</option>
+              </select>
+            </div>
+
+            <label className="flex items-start gap-2.5 p-3 rounded-2xl border border-slate-200 bg-slate-50/70 cursor-pointer text-xs text-slate-700">
+              <input
+                type="checkbox"
+                checked={currencyAcknowledged}
+                onChange={(e) => setCurrencyAcknowledged(e.target.checked)}
+                className="mt-0.5 rounded text-amber-600 focus:ring-amber-500"
+              />
+              <span className="leading-snug">
+                I understand that <strong>{firstTimeCurrency}</strong> will be permanently locked as my advertiser account's billing currency and cannot be modified.
+              </span>
+            </label>
+
+            <button
+              type="button"
+              disabled={!currencyAcknowledged || settingCurrencyLoading}
+              onClick={handleConfirmFirstTimeCurrency}
+              className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-bold rounded-2xl shadow-md shadow-amber-500/20 transition disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+            >
+              {settingCurrencyLoading ? (
+                <>
+                  <RefreshCw size={14} className="animate-spin" />
+                  <span>Locking Currency...</span>
+                </>
+              ) : (
+                <>
+                  <Lock size={14} />
+                  <span>Confirm & Lock {firstTimeCurrency} Currency</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
       )}
