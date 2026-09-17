@@ -26,12 +26,19 @@ export class WebAdsAdapter implements ExternalAdNetworkAdapter {
     const env = process.env.AD_ENVIRONMENT || "DEVELOPMENT";
     const isProd = env === "PRODUCTION";
 
-    const publisherId = isProd
-      ? process.env.GOOGLE_ADSENSE_CLIENT_ID || "ca-pub-0000000000000000"
-      : "ca-pub-0000000000000000";
+    const publisherId =
+      process.env.GOOGLE_ADSENSE_CLIENT_ID ||
+      process.env.ADSENSE_CLIENT_ID ||
+      process.env.ADMOB_WEB_CLIENT_ID ||
+      "ca-pub-8568607330093795";
 
     const slotId =
-      this.testUnits[context.placement] || this.testUnits.FEED;
+      process.env.GOOGLE_ADSENSE_FEED_SLOT_ID ||
+      "4689992923";
+
+    const layoutKey =
+      process.env.GOOGLE_ADSENSE_FEED_LAYOUT_KEY ||
+      "-6t+ed+2i-1n-4w";
 
     return {
       ad_source: "EXTERNAL",
@@ -39,23 +46,28 @@ export class WebAdsAdapter implements ExternalAdNetworkAdapter {
       network: "adsense",
       platform: "WEB",
       placement: context.placement,
-      format: "BANNER",
+      format: "FLUID",
       adUnitId: slotId,
       appId: publisherId,
-      headline: "Premium Organic Pet Nutrition & Wellness",
-      body: "Wholesome, human-grade food and holistic health products delivered directly to your door.",
+      layoutKey,
+      headline: "Curated Pet Care & Lifestyle Recommendations",
+      body: "Discover trusted health supplements, accessories, and nutrition from Google AdSense verified sponsors.",
       callToAction: "Learn More",
-      advertiserName: "Google Web Ads Network",
+      advertiserName: "Google Partner Network",
       mediaUrl: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=800",
       htmlSnippet: `
-        <div class="peto-web-external-ad" data-ad-client="${publisherId}" data-ad-slot="${slotId}" data-ad-format="auto">
-          <span class="text-[10px] text-slate-400 font-semibold tracking-wider">ADSENSE PARTNER</span>
-        </div>
+        <ins class="adsbygoogle"
+             style="display:block"
+             data-ad-format="fluid"
+             data-ad-layout-key="${layoutKey}"
+             data-ad-client="${publisherId}"
+             data-ad-slot="${slotId}"></ins>
       `.trim(),
       isTestAd: !isProd,
       sdkParameters: {
         publisherId,
         slotId,
+        layoutKey,
         testMode: !isProd,
       },
     };

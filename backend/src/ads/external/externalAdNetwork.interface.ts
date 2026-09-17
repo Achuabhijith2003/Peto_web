@@ -8,9 +8,10 @@ export interface ExternalAdPayload {
   network: string; // backwards-compatible alias
   platform: "ANDROID" | "IOS" | "WEB";
   placement: string;
-  format: "BANNER" | "NATIVE" | "INTERSTITIAL" | "REWARDED";
+  format: "BANNER" | "NATIVE" | "INTERSTITIAL" | "REWARDED" | "FLUID";
   adUnitId: string;
   appId?: string;
+  layoutKey?: string;
   headline?: string;
   body?: string;
   callToAction?: string;

@@ -83,8 +83,8 @@ VALUES
 ('ADMOB', 'IOS', 'DEVELOPMENT', 'ca-app-pub-3940256099942544~1458602516', 'ca-app-pub-3940256099942544/2934735716', 'COMMUNITY_FEED', 'BANNER', true, true),
 
 -- Web Google AdSense / Ad Manager Web Units
-('ADSENSE', 'WEB', 'DEVELOPMENT', 'ca-pub-0000000000000000', 'peto_web_feed_responsive_01', 'FEED', 'BANNER', true, true),
-('ADSENSE', 'WEB', 'DEVELOPMENT', 'ca-pub-0000000000000000', 'peto_web_community_banner_01', 'COMMUNITY_FEED', 'BANNER', true, true)
+('ADSENSE', 'WEB', 'DEVELOPMENT', 'ca-pub-8568607330093795', 'peto_web_feed_responsive_01', 'FEED', 'BANNER', true, true),
+('ADSENSE', 'WEB', 'DEVELOPMENT', 'ca-pub-8568607330093795', 'peto_web_community_banner_01', 'COMMUNITY_FEED', 'BANNER', true, true)
 ON CONFLICT (provider, platform, environment, placement) DO NOTHING;
 
 -- 3. Ad Provider Health & Telemetry State

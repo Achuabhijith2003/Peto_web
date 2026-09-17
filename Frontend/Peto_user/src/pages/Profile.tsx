@@ -12,6 +12,7 @@ import MobileBottomNav from "../components/social/MobileBottomNav";
 import FloatingChatButton from "../components/social/FloatingChatButton";
 import PostCard from "../components/social/PostCard";
 import SponsoredPostCard from "../components/social/SponsoredPostCard";
+import WebExternalAdCard from "../components/social/WebExternalAdCard";
 import FollowListModal, { type FollowUserItem } from "../components/social/FollowListModal";
 
 const ProfileCenter = ({ userId }: { userId?: string }) => {
@@ -95,6 +96,24 @@ const ProfileCenter = ({ userId }: { userId?: string }) => {
   useEffect(() => {
     fetchProfileData();
   }, [fetchProfileData]);
+
+  useEffect(() => {
+    api.get("/ads/decision?placement=PROFILE&device=WEB")
+      .then((res) => {
+        if (res.data?.hasAd) {
+          setAds([res.data]);
+        } else {
+          api.get("/ads/feed?placement=PROFILE")
+            .then((feedRes) => {
+              if (feedRes.data?.ads && Array.isArray(feedRes.data.ads)) {
+                setAds(feedRes.data.ads.map((a: any) => ({ source: "PETO", ad: a })));
+              }
+            })
+            .catch(() => {});
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleToggleFollow = async () => {
     if (!currentUser) {
@@ -311,7 +330,13 @@ const ProfileCenter = ({ userId }: { userId?: string }) => {
             <div key={post.id} className="space-y-3">
               <PostCard post={post} />
               {idx === 1 && ads.length > 0 && (
-                <SponsoredPostCard ad={ads[0]} />
+                ads[0].source === "EXTERNAL" && ads[0].externalPayload ? (
+                  <WebExternalAdCard externalAd={ads[0].externalPayload} />
+                ) : ads[0].ad ? (
+                  <SponsoredPostCard ad={ads[0].ad} />
+                ) : (
+                  <SponsoredPostCard ad={ads[0]} />
+                )
               )}
             </div>
           ))
@@ -320,7 +345,15 @@ const ProfileCenter = ({ userId }: { userId?: string }) => {
             <div className="text-slate-400 text-center py-8 bg-white rounded-xl border border-slate-200/80 shadow-card text-xs">
               No posts shared yet.
             </div>
-            {ads.length > 0 && <SponsoredPostCard ad={ads[0]} />}
+            {ads.length > 0 && (
+              ads[0].source === "EXTERNAL" && ads[0].externalPayload ? (
+                <WebExternalAdCard externalAd={ads[0].externalPayload} />
+              ) : ads[0].ad ? (
+                <SponsoredPostCard ad={ads[0].ad} />
+              ) : (
+                <SponsoredPostCard ad={ads[0]} />
+              )
+            )}
           </div>
         )}
       </div>

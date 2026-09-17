@@ -9,6 +9,7 @@ export interface WebExternalAdProps {
     format: string;
     adUnitId: string;
     appId?: string;
+    layoutKey?: string;
     headline?: string;
     body?: string;
     callToAction?: string;
@@ -27,6 +28,14 @@ export const WebExternalAdCard: React.FC<WebExternalAdProps> = ({ externalAd, on
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportReason, setReportReason] = useState("MISLEADING");
 
+  const isLiveAdSense =
+    externalAd.external_provider === "ADSENSE" &&
+    Boolean(externalAd.appId) &&
+    externalAd.appId!.startsWith("ca-pub-") &&
+    externalAd.appId !== "ca-pub-0000000000000000";
+
+  const insRef = useRef<HTMLModElement | null>(null);
+
   useEffect(() => {
     if (!hasTrackedImpression.current && externalAd) {
       hasTrackedImpression.current = true;
@@ -43,6 +52,28 @@ export const WebExternalAdCard: React.FC<WebExternalAdProps> = ({ externalAd, on
       }).catch(() => {});
     }
   }, [externalAd]);
+
+  useEffect(() => {
+    if (isLiveAdSense && externalAd.appId) {
+      // Ensure Google AdSense script is present in head
+      const scriptId = "google-adsense-script";
+      if (!document.getElementById(scriptId)) {
+        const script = document.createElement("script");
+        script.id = scriptId;
+        script.async = true;
+        script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${externalAd.appId}`;
+        script.crossOrigin = "anonymous";
+        document.head.appendChild(script);
+      }
+
+      // Initialize slot safely
+      try {
+        if (insRef.current && !insRef.current.getAttribute("data-adsbygoogle-status")) {
+          ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
+        }
+      } catch (_) {}
+    }
+  }, [isLiveAdSense, externalAd.appId, externalAd.adUnitId]);
 
   const handleCtaClick = () => {
     api.post("/ads/events", {
@@ -145,19 +176,35 @@ export const WebExternalAdCard: React.FC<WebExternalAdProps> = ({ externalAd, on
         </div>
       </div>
 
-      {/* Media Image / Responsive Banner */}
-      {externalAd.mediaUrl && (
-        <div className="relative max-h-72 overflow-hidden bg-slate-950 flex items-center justify-center">
-          <img
-            src={externalAd.mediaUrl}
-            alt="Sponsored"
-            className="w-full h-auto object-cover max-h-72"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src =
-                "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800";
-            }}
+      {/* Live Google AdSense In-Feed Container */}
+      {isLiveAdSense ? (
+        <div className="p-3 bg-white flex flex-col items-center justify-center min-h-[120px] overflow-hidden border-b border-slate-100">
+          <ins
+            ref={insRef}
+            className="adsbygoogle"
+            style={{ display: "block" }}
+            data-ad-format={externalAd.layoutKey ? "fluid" : "auto"}
+            data-ad-layout-key={externalAd.layoutKey || "-6t+ed+2i-1n-4w"}
+            data-ad-client={externalAd.appId || "ca-pub-8568607330093795"}
+            data-ad-slot={externalAd.adUnitId || "4689992923"}
+            data-adtest={externalAd.isTestAd ? "on" : undefined}
           />
         </div>
+      ) : (
+        /* Media Image / Responsive Banner for Test / Partner Mode */
+        externalAd.mediaUrl && (
+          <div className="relative max-h-72 overflow-hidden bg-slate-950 flex items-center justify-center">
+            <img
+              src={externalAd.mediaUrl}
+              alt="Sponsored"
+              className="w-full h-auto object-cover max-h-72"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src =
+                  "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800";
+              }}
+            />
+          </div>
+        )
       )}
 
       {/* Ad Copy & CTA */}
