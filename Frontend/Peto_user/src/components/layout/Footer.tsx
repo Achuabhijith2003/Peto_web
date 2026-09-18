@@ -4,6 +4,7 @@ import {
   FaXTwitter,
   FaYoutube,
 } from "react-icons/fa6";
+import { Link } from "react-router-dom";
 
 import Logo from "../common/Logo";
 
@@ -71,24 +72,51 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Company */}
+          {/* Company & Legal */}
 
           <div>
             <h4 className="mb-5 text-lg font-semibold">
-              Company
+              Legal & Policies
             </h4>
 
-            <ul className="space-y-3 text-slate-400">
-              <li><a href="#">About</a></li>
-              <li><a href="#">Blog</a></li>
-              <li><a href="#">Contact</a></li>
-              <li><a href="#">Privacy Policy</a></li>
+            <ul className="space-y-3 text-slate-400 text-sm">
+              <li>
+                <Link to="/terms-of-service" className="hover:text-white transition">
+                  Terms of Service
+                </Link>
+              </li>
+              <li>
+                <Link to="/privacy-policy" className="hover:text-white transition">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link to="/community-guidelines" className="hover:text-white transition">
+                  Community Guidelines
+                </Link>
+              </li>
+              <li>
+                <Link to="/policies" className="hover:text-white transition">
+                  All Policies & PDFs
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
 
-        <div className="mt-16 border-t border-slate-700 pt-8 text-center text-sm text-slate-400">
-          © 2026 Pawfect Pals. All rights reserved.
+        <div className="mt-16 border-t border-slate-700 pt-8 text-center text-sm text-slate-400 flex flex-wrap items-center justify-between gap-4">
+          <div>© 2026 Peto (Pawfect Pals). All rights reserved.</div>
+          <div className="flex gap-6 text-xs text-slate-500">
+            <Link to="/privacy-policy" className="hover:text-slate-300 transition">
+              Privacy
+            </Link>
+            <Link to="/terms-of-service" className="hover:text-slate-300 transition">
+              Terms
+            </Link>
+            <Link to="/community-guidelines" className="hover:text-slate-300 transition">
+              Guidelines
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

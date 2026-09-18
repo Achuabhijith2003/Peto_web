@@ -734,21 +734,39 @@ export type CompliancePolicyType =
   | "ADVERTISING_POLICY"
   | "COOKIE_POLICY";
 
-export type CompliancePolicyStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
+export type CompliancePolicyStatus =
+  | "DRAFT"
+  | "PENDING_REVIEW"
+  | "APPROVED"
+  | "PUBLISHED"
+  | "SUPERSEDED"
+  | "ARCHIVED";
 
 export interface CompliancePolicyItem {
   id: string;
   policy_type: CompliancePolicyType;
+  slug?: string | null;
   title: string;
   version: string;
   status: CompliancePolicyStatus;
   content: string;
   summary_of_changes?: string | null;
+  effective_date?: string | null;
   published_at?: string | null;
+  published_by?: string | null;
+  superseded_policy_id?: string | null;
+  requires_acknowledgement?: boolean;
+  region_code?: string;
+  pdf_url?: string | null;
   created_by?: string | null;
   created_at: string;
   updated_at: string;
   creator?: {
+    id: string;
+    username?: string;
+    full_name?: string;
+  } | null;
+  publisher?: {
     id: string;
     username?: string;
     full_name?: string;

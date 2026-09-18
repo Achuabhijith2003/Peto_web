@@ -19,11 +19,22 @@ import NotFound404 from "../pages/NotFound404";
 import ServerError500 from "../pages/ServerError500";
 import Forbidden403 from "../pages/Forbidden403";
 import AdvertiserPortal from "../pages/advertiser/AdvertiserPortal";
+import PolicyPage from "../pages/PolicyPage";
 
 const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<Social />} />
+
+      {/* Compliance & Legal Policies */}
+      <Route path="/policies" element={<PolicyPage />} />
+      <Route path="/policies/:slug" element={<PolicyPage />} />
+      <Route path="/privacy-policy" element={<PolicyPage />} />
+      <Route path="/terms-of-service" element={<PolicyPage />} />
+      <Route path="/terms" element={<PolicyPage />} />
+      <Route path="/privacy" element={<PolicyPage />} />
+      <Route path="/community-guidelines" element={<PolicyPage />} />
+
 
       <Route path="/login" element={<Login />} />
 

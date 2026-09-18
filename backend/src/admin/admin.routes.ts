@@ -51,7 +51,11 @@ import {
   getPolicies,
   getPolicyDetail,
   createPolicyDraft,
+  updatePolicyDraft,
   publishPolicy,
+  getPolicyVersions,
+  rollbackPolicy,
+  getAdminPolicyPdf,
   getDataRequests,
   getDataRequestDetail,
   createDataRequest,
@@ -165,7 +169,11 @@ router.post("/system/maintenance", requirePermission("system.manage"), updateMai
 router.get("/compliance/policies", requirePermission("compliance.view"), getPolicies);
 router.post("/compliance/policies", requirePermission("compliance.manage"), createPolicyDraft);
 router.get("/compliance/policies/:id", requirePermission("compliance.view"), getPolicyDetail);
+router.patch("/compliance/policies/:id", requirePermission("compliance.manage"), updatePolicyDraft);
 router.post("/compliance/policies/:id/publish", requirePermission("compliance.manage"), publishPolicy);
+router.get("/compliance/policies/:id/versions", requirePermission("compliance.view"), getPolicyVersions);
+router.post("/compliance/policies/:id/rollback", requirePermission("compliance.manage"), rollbackPolicy);
+router.get("/compliance/policies/:id/pdf", requirePermission("compliance.view"), getAdminPolicyPdf);
 
 router.get("/compliance/data-requests", requirePermission("compliance.view"), getDataRequests);
 router.post("/compliance/data-requests", requirePermission("compliance.manage"), createDataRequest);
