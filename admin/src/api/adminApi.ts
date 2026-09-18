@@ -443,6 +443,63 @@ export async function publishPolicy(
   return res.data.data;
 }
 
+export async function updatePolicyDraft(
+  id: string,
+  data: {
+    title?: string;
+    version?: string;
+    content?: string;
+    summaryOfChanges?: string;
+    effectiveDate?: string;
+    regionCode?: string;
+    requiresAcknowledgement?: boolean;
+  }
+): Promise<import("../types/admin").CompliancePolicyItem> {
+  const res = await adminApi.patch(`/admin/compliance/policies/${id}`, data);
+  return res.data.data;
+}
+
+export async function fetchPolicyVersions(
+  id: string
+): Promise<import("../types/admin").CompliancePolicyItem[]> {
+  const res = await adminApi.get(`/admin/compliance/policies/${id}/versions`);
+  return res.data.data;
+}
+
+export async function rollbackPolicy(
+  id: string,
+  targetVersion: string
+): Promise<import("../types/admin").CompliancePolicyItem> {
+  const res = await adminApi.post(`/admin/compliance/policies/${id}/rollback`, { targetVersion });
+  return res.data.data;
+}
+
+export function getAdminPolicyPdfUrl(id: string): string {
+  const baseURL = adminApi.defaults.baseURL || "http://localhost:5000/api";
+  const token =
+    localStorage.getItem("peto_admin_token") ||
+    localStorage.getItem("peto_token") ||
+    "";
+  const query = token ? `?token=${encodeURIComponent(token)}` : "";
+  return `${baseURL}/admin/compliance/policies/${id}/pdf${query}`;
+}
+
+export async function downloadAdminPolicyPdf(id: string, filename?: string): Promise<void> {
+  const res = await adminApi.get(`/admin/compliance/policies/${id}/pdf`, {
+    responseType: "blob",
+  });
+  const blob = new Blob([res.data], { type: "application/pdf" });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename || `policy-${id}.pdf`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
+}
+
+
 export async function fetchDataRequests(params?: {
   status?: string;
   requestType?: string;

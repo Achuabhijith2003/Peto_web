@@ -16,6 +16,12 @@ import {
   Info,
   Archive,
   Filter,
+  Download,
+  History,
+  Monitor,
+  Tablet,
+  Smartphone,
+  X,
 } from "lucide-react";
 import {
   CompliancePolicyItem,
@@ -31,6 +37,9 @@ import {
   fetchCompliancePolicies,
   createPolicyDraft,
   publishPolicy,
+  updatePolicyDraft,
+  getAdminPolicyPdfUrl,
+  downloadAdminPolicyPdf,
   fetchDataRequests,
   updateDataRequestStatus,
   createDataRequest,
@@ -39,6 +48,11 @@ import {
   fetchComplianceAuditLogs,
 } from "../api/adminApi";
 import { useAdminAuth } from "../context/AdminAuthContext";
+import { PolicyRenderer } from "../components/compliance/PolicyRenderer";
+import { PolicyEditorModal } from "../components/compliance/PolicyEditorModal";
+import { PublishConfirmModal } from "../components/compliance/PublishConfirmModal";
+import { PolicyHistoryModal } from "../components/compliance/PolicyHistoryModal";
+
 
 type ActiveTab = "policies" | "requests" | "retention" | "audit";
 
@@ -76,20 +90,17 @@ export const AdminCompliance: React.FC = () => {
   const [selectedPolicyType, setSelectedPolicyType] = useState<string>("ALL");
   const [selectedPolicyStatus, setSelectedPolicyStatus] = useState<string>("ALL");
   const [viewingPolicy, setViewingPolicy] = useState<CompliancePolicyItem | null>(null);
-  const [isDraftModalOpen, setIsDraftModalOpen] = useState<boolean>(false);
-  const [draftForm, setDraftForm] = useState<{
-    policyType: CompliancePolicyType;
-    title: string;
-    version: string;
-    content: string;
-    summaryOfChanges: string;
-  }>({
-    policyType: "TERMS_OF_SERVICE",
-    title: "Terms of Service",
-    version: "1.1.0",
-    content: "",
-    summaryOfChanges: "",
-  });
+  const [viewingViewport, setViewingViewport] = useState<"desktop" | "tablet" | "mobile">("desktop");
+  
+  const [isEditorModalOpen, setIsEditorModalOpen] = useState<boolean>(false);
+  const [selectedPolicyForEditor, setSelectedPolicyForEditor] = useState<CompliancePolicyItem | null>(null);
+
+  const [isPublishModalOpen, setIsPublishModalOpen] = useState<boolean>(false);
+  const [selectedPolicyForPublish, setSelectedPolicyForPublish] = useState<CompliancePolicyItem | null>(null);
+
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState<boolean>(false);
+  const [selectedPolicyForHistory, setSelectedPolicyForHistory] = useState<CompliancePolicyItem | null>(null);
+
 
   // Data Requests State
   const [dataRequests, setDataRequests] = useState<ComplianceDataRequestItem[]>([]);
@@ -195,41 +206,57 @@ export const AdminCompliance: React.FC = () => {
   }, [refreshCurrentTab]);
 
   // POLICY ACTIONS
-  const handleCreateDraft = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!draftForm.title.trim() || !draftForm.version.trim() || !draftForm.content.trim()) {
-      showNotification("error", "Title, version, and content are required.");
-      return;
-    }
-
+  const handleSaveDraft = async (data: {
+    id?: string;
+    policyType: CompliancePolicyType;
+    title: string;
+    version: string;
+    content: string;
+    summaryOfChanges?: string;
+    effectiveDate?: string;
+    regionCode?: string;
+    requiresAcknowledgement?: boolean;
+  }) => {
     try {
       setActionLoading(true);
-      await createPolicyDraft({
-        policyType: draftForm.policyType,
-        title: draftForm.title,
-        version: draftForm.version,
-        content: draftForm.content,
-        summaryOfChanges: draftForm.summaryOfChanges,
-      });
-      setIsDraftModalOpen(false);
-      showNotification("success", `Created draft for ${draftForm.title} (${draftForm.version})`);
+      if (data.id && data.id !== "temp-id") {
+        await updatePolicyDraft(data.id, {
+          title: data.title,
+          version: data.version,
+          content: data.content,
+          summaryOfChanges: data.summaryOfChanges,
+          effectiveDate: data.effectiveDate,
+          regionCode: data.regionCode,
+          requiresAcknowledgement: data.requiresAcknowledgement,
+        });
+        showNotification("success", `Updated draft for ${data.title} (v${data.version})`);
+      } else {
+        await createPolicyDraft({
+          policyType: data.policyType,
+          title: data.title,
+          version: data.version,
+          content: data.content,
+          summaryOfChanges: data.summaryOfChanges,
+        });
+        showNotification("success", `Created draft for ${data.title} (v${data.version})`);
+      }
+      setIsEditorModalOpen(false);
+      setSelectedPolicyForEditor(null);
       loadPolicies();
     } catch (err: any) {
-      showNotification("error", err.response?.data?.message || "Failed to create policy draft.");
+      showNotification("error", err.response?.data?.message || "Failed to save draft.");
     } finally {
       setActionLoading(false);
     }
   };
 
-  const handlePublishPolicy = async (policy: CompliancePolicyItem) => {
-    if (!window.confirm(`Are you sure you want to publish ${policy.title} v${policy.version}? Any prior active version will be archived.`)) {
-      return;
-    }
-
+  const handleConfirmPublish = async (policyId: string, _effectiveDate?: string) => {
     try {
       setActionLoading(true);
-      await publishPolicy(policy.id);
-      showNotification("success", `Published ${policy.title} v${policy.version}! Previous version archived.`);
+      await publishPolicy(policyId);
+      showNotification("success", "Policy revision published successfully! Web & Mobile clients updated.");
+      setIsPublishModalOpen(false);
+      setSelectedPolicyForPublish(null);
       loadPolicies();
     } catch (err: any) {
       showNotification("error", err.response?.data?.message || "Failed to publish policy.");
@@ -237,6 +264,18 @@ export const AdminCompliance: React.FC = () => {
       setActionLoading(false);
     }
   };
+
+  const handleDownloadPdf = async (policy: CompliancePolicyItem) => {
+    try {
+      const filename = `peto-${policy.slug || policy.policy_type.toLowerCase().replace(/_/g, "-")}-v${policy.version}.pdf`;
+      await downloadAdminPolicyPdf(policy.id, filename);
+    } catch (err) {
+      console.warn("Direct blob download failed, falling back to authenticated URL", err);
+      window.open(getAdminPolicyPdfUrl(policy.id), "_blank");
+    }
+  };
+
+
 
   // DATA REQUEST ACTIONS
   const handleUpdateProcessStatus = async (e: React.FormEvent) => {
@@ -335,6 +374,20 @@ export const AdminCompliance: React.FC = () => {
             {status}
           </span>
         );
+      case "SUPERSEDED":
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-300">
+            <Archive size={12} />
+            SUPERSEDED
+          </span>
+        );
+      case "APPROVED":
+        return (
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#bbf7d0]/40 text-[#006c49] border border-[#006c49]/30">
+            <CheckCircle2 size={12} />
+            APPROVED
+          </span>
+        );
       case "REJECTED":
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#ffdad6]/40 text-[#ba1a1a] border border-[#ffdad6]">
@@ -342,6 +395,7 @@ export const AdminCompliance: React.FC = () => {
             {status}
           </span>
         );
+
       default:
         return (
           <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#f0f3ff] text-[#534434] border border-[#dae2f3]">
@@ -390,21 +444,16 @@ export const AdminCompliance: React.FC = () => {
           {canManage && activeTab === "policies" && (
             <button
               onClick={() => {
-                setDraftForm({
-                  policyType: "TERMS_OF_SERVICE",
-                  title: "Terms of Service",
-                  version: "1.1.0",
-                  content: "# New Policy Content\n\nEnter markdown here...",
-                  summaryOfChanges: "Revised terms for updated feature set.",
-                });
-                setIsDraftModalOpen(true);
+                setSelectedPolicyForEditor(null);
+                setIsEditorModalOpen(true);
               }}
               className="px-4 py-2 rounded-xl bg-[#0058be] hover:bg-[#2170e4] text-white text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer"
             >
               <Plus size={14} />
-              <span>Create Policy Draft</span>
+              <span>Create Policy Revision</span>
             </button>
           )}
+
 
           {canManage && activeTab === "requests" && (
             <button
@@ -533,89 +582,147 @@ export const AdminCompliance: React.FC = () => {
 
           {/* Policies Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {policies.map((p) => (
-              <div
-                key={p.id}
-                className="bg-white hover:shadow-level-2 border border-[#e2e8f8] rounded-2xl p-5 transition flex flex-col justify-between space-y-4 shadow-level-1"
-              >
-                <div>
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <div>
-                      <span className="text-[10px] font-mono uppercase tracking-wider text-[#0058be] font-bold">
-                        {POLICY_TYPE_LABELS[p.policy_type] || p.policy_type}
-                      </span>
-                      <h3 className="text-base font-bold font-heading text-[#151c27] tracking-tight mt-0.5">
-                        {p.title}
-                      </h3>
+            {policies.map((p) => {
+              const slug = p.slug || p.policy_type.toLowerCase().replace(/_/g, "-");
+              const isDraft = p.status === "DRAFT";
+
+              return (
+                <div
+                  key={p.id}
+                  className="bg-white hover:shadow-level-2 border border-[#e2e8f8] rounded-2xl p-5 transition flex flex-col justify-between space-y-4 shadow-level-1"
+                >
+                  <div>
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <div>
+                        <span className="text-[10px] font-mono uppercase tracking-wider text-[#0058be] font-bold">
+                          {POLICY_TYPE_LABELS[p.policy_type] || p.policy_type}
+                        </span>
+                        <h3 className="text-base font-bold font-heading text-[#151c27] tracking-tight mt-0.5">
+                          {p.title}
+                        </h3>
+                      </div>
+                      {renderStatusBadge(p.status)}
                     </div>
-                    {renderStatusBadge(p.status)}
-                  </div>
 
-                  <div className="flex items-center gap-2 text-xs text-[#534434] my-2">
-                    <span className="px-2 py-0.5 rounded-full bg-[#f0f3ff] font-mono text-[11px] text-[#0058be] font-semibold border border-[#dae2f3]">
-                      v{p.version}
-                    </span>
-                    <span>•</span>
-                    <span className="text-[11px]">
-                      {p.published_at
-                        ? `Published ${new Date(p.published_at).toLocaleDateString()}`
-                        : `Drafted ${new Date(p.created_at).toLocaleDateString()}`}
-                    </span>
-                  </div>
+                    <div className="flex items-center gap-2 text-xs text-[#534434] my-2">
+                      <span className="px-2 py-0.5 rounded-full bg-[#f0f3ff] font-mono text-[11px] text-[#0058be] font-semibold border border-[#dae2f3]">
+                        v{p.version}
+                      </span>
+                      <span>•</span>
+                      <span className="text-[11px]">
+                        {p.published_at
+                          ? `Published ${new Date(p.published_at).toLocaleDateString()}`
+                          : `Drafted ${new Date(p.created_at).toLocaleDateString()}`}
+                      </span>
+                    </div>
 
-                  {p.summary_of_changes && (
-                    <p className="text-xs text-[#151c27] bg-[#f9f9ff] p-3 rounded-xl border border-[#e2e8f8] line-clamp-2">
-                      <span className="font-semibold text-[#534434]">Notes:</span> {p.summary_of_changes}
-                    </p>
-                  )}
-                </div>
+                    {p.summary_of_changes && (
+                      <p className="text-xs text-[#151c27] bg-[#f9f9ff] p-3 rounded-xl border border-[#e2e8f8] line-clamp-2">
+                        <span className="font-semibold text-[#534434]">Notes:</span> {p.summary_of_changes}
+                      </p>
+                    )}
 
-                <div className="pt-3 border-t border-[#e2e8f8] flex items-center justify-between gap-2">
-                  <button
-                    onClick={() => setViewingPolicy(p)}
-                    className="px-3.5 py-1.5 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#151c27] text-xs font-semibold transition flex items-center gap-1 border border-[#dae2f3] cursor-pointer"
-                  >
-                    <Eye size={13} />
-                    <span>View Text</span>
-                  </button>
-
-                  {canManage && (
-                    <div className="flex items-center gap-1.5">
-                      {p.status === "DRAFT" ? (
-                        <button
-                          onClick={() => handlePublishPolicy(p)}
-                          disabled={actionLoading}
-                          className="px-3.5 py-1.5 rounded-xl bg-[#006c49] hover:bg-[#00553a] text-white text-xs font-semibold transition flex items-center gap-1 shadow-sm disabled:opacity-50 cursor-pointer"
-                        >
-                          <Send size={12} />
-                          <span>Publish</span>
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => {
-                            const [major, minor] = p.version.split(".").map(Number);
-                            const nextVer = `${major}.${(minor || 0) + 1}.0`;
-                            setDraftForm({
-                              policyType: p.policy_type,
-                              title: p.title,
-                              version: nextVer,
-                              content: p.content,
-                              summaryOfChanges: `Revision updated from v${p.version}`,
-                            });
-                            setIsDraftModalOpen(true);
-                          }}
-                          className="px-3.5 py-1.5 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#0058be] text-xs font-semibold border border-[#dae2f3] transition flex items-center gap-1 cursor-pointer"
-                        >
-                          <Edit3 size={12} />
-                          <span>New Version</span>
-                        </button>
+                    <div className="flex items-center justify-between text-[11px] text-[#534434] mt-3 pt-2 border-t border-[#f0f3ff]">
+                      <span className="font-mono text-[#0058be] flex items-center gap-1">
+                        /{slug}
+                      </span>
+                      {p.effective_date && (
+                        <span>
+                          Effective: {new Date(p.effective_date).toLocaleDateString()}
+                        </span>
                       )}
                     </div>
-                  )}
+                  </div>
+
+                  <div className="pt-3 border-t border-[#e2e8f8] flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => {
+                          setViewingPolicy(p);
+                          setViewingViewport("desktop");
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#151c27] text-xs font-semibold transition flex items-center gap-1 border border-[#dae2f3] cursor-pointer"
+                        title="Live Final-User Preview"
+                      >
+                        <Eye size={13} />
+                        <span>Preview</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDownloadPdf(p)}
+                        className="p-1.5 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#0058be] border border-[#dae2f3] transition cursor-pointer"
+                        title="Download Policy PDF"
+                      >
+                        <Download size={14} />
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setSelectedPolicyForHistory(p);
+                          setIsHistoryModalOpen(true);
+                        }}
+                        className="p-1.5 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#534434] hover:text-[#151c27] border border-[#dae2f3] transition cursor-pointer"
+                        title="Version History & Rollback"
+                      >
+                        <History size={14} />
+                      </button>
+                    </div>
+
+                    {canManage && (
+                      <div className="flex items-center gap-1.5">
+                        {isDraft ? (
+                          <>
+                            <button
+                              onClick={() => {
+                                setSelectedPolicyForEditor(p);
+                                setIsEditorModalOpen(true);
+                              }}
+                              className="px-3 py-1.5 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#0058be] text-xs font-semibold border border-[#dae2f3] transition flex items-center gap-1 cursor-pointer"
+                            >
+                              <Edit3 size={12} />
+                              <span>Edit</span>
+                            </button>
+                            <button
+                              onClick={() => {
+                                setSelectedPolicyForPublish(p);
+                                setIsPublishModalOpen(true);
+                              }}
+                              disabled={actionLoading}
+                              className="px-3.5 py-1.5 rounded-xl bg-[#006c49] hover:bg-[#00553a] text-white text-xs font-semibold transition flex items-center gap-1 shadow-sm disabled:opacity-50 cursor-pointer"
+                            >
+                              <Send size={12} />
+                              <span>Publish</span>
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              const [major, minor] = p.version.split(".").map(Number);
+                              const nextVer = `${major || 1}.${(minor || 0) + 1}.0`;
+                              setSelectedPolicyForEditor({
+                                ...p,
+                                id: "", // Treat as new revision
+                                version: nextVer,
+                                summary_of_changes: `Updated revision from v${p.version}`,
+                                status: "DRAFT",
+                              });
+                              setIsEditorModalOpen(true);
+                            }}
+                            className="px-3 py-1.5 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#0058be] text-xs font-semibold border border-[#dae2f3] transition flex items-center gap-1 cursor-pointer"
+                          >
+                            <Edit3 size={12} />
+                            <span>New Version</span>
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
+
         </div>
       )}
 
@@ -938,165 +1045,149 @@ export const AdminCompliance: React.FC = () => {
         </div>
       )}
 
-      {/* MODAL: VIEW POLICY TEXT */}
+      {/* MODAL: ACCURATE FINAL-USER PREVIEW & DOWNLOAD */}
       {viewingPolicy && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#151c27]/40 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-white border border-[#e2e8f8] rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-level-3 overflow-hidden">
-            <div className="p-5 border-b border-[#e2e8f8] flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-bold font-heading text-[#151c27] flex items-center gap-2">
-                  {viewingPolicy.title}
-                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#f0f3ff] text-[#0058be] font-mono border border-[#dae2f3]">
-                    v{viewingPolicy.version}
-                  </span>
-                </h3>
-                <p className="text-xs text-[#534434] mt-0.5">
-                  {POLICY_TYPE_LABELS[viewingPolicy.policy_type]} • Status: {viewingPolicy.status}
-                </p>
-              </div>
-              <button
-                onClick={() => setViewingPolicy(null)}
-                className="text-[#534434] hover:text-[#151c27] text-lg p-1 cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="p-6 overflow-y-auto font-mono text-xs text-[#151c27] leading-relaxed whitespace-pre-wrap bg-[#f9f9ff] select-text">
-              {viewingPolicy.content}
-            </div>
-
-            <div className="p-4 border-t border-[#e2e8f8] flex justify-end">
-              <button
-                onClick={() => setViewingPolicy(null)}
-                className="px-4 py-2 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#534434] text-xs font-semibold border border-[#dae2f3] cursor-pointer"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: CREATE POLICY DRAFT */}
-      {isDraftModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#151c27]/40 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-white border border-[#e2e8f8] rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-level-3 overflow-hidden">
-            <div className="p-5 border-b border-[#e2e8f8] flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-bold font-heading text-[#151c27]">Create Policy Revision Draft</h3>
-                <p className="text-xs text-[#534434]">
-                  Author a new revision. Drafts remain unpublished until an administrator approves.
-                </p>
-              </div>
-              <button
-                onClick={() => setIsDraftModalOpen(false)}
-                className="text-[#534434] hover:text-[#151c27] text-lg p-1 cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateDraft} className="p-6 overflow-y-auto space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-[#151c27]/60 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-white border border-[#e2e8f8] rounded-3xl w-full max-w-5xl h-[92vh] flex flex-col shadow-level-3 overflow-hidden">
+            <div className="px-6 py-4 border-b border-[#e2e8f8] flex items-center justify-between flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#f0f3ff] border border-[#dae2f3] text-[#0058be] flex items-center justify-center font-bold">
+                  <Eye size={20} />
+                </div>
                 <div>
-                  <label className="block text-xs font-semibold font-heading text-[#534434] mb-1">
-                    Policy Document Type
-                  </label>
-                  <select
-                    value={draftForm.policyType}
-                    onChange={(e) => {
-                      const t = e.target.value as CompliancePolicyType;
-                      setDraftForm({
-                        ...draftForm,
-                        policyType: t,
-                        title: POLICY_TYPE_LABELS[t],
-                      });
-                    }}
-                    className="w-full bg-[#f0f3ff] border border-[#dae2f3] rounded-xl px-3 py-2 text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-bold font-heading text-[#151c27]">
+                      {viewingPolicy.title}
+                    </h3>
+                    <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#f0f3ff] text-[#0058be] font-mono font-bold border border-[#dae2f3]">
+                      v{viewingPolicy.version}
+                    </span>
+                    {renderStatusBadge(viewingPolicy.status)}
+                  </div>
+                  <p className="text-xs text-[#534434]">
+                    {POLICY_TYPE_LABELS[viewingPolicy.policy_type]} • Route:{" "}
+                    <span className="font-mono text-[#0058be]">
+                      /policies/{viewingPolicy.slug || viewingPolicy.policy_type.toLowerCase().replace(/_/g, "-")}
+                    </span>
+                  </p>
+                </div>
+              </div>
+
+              {/* Viewport switch & actions */}
+              <div className="flex items-center gap-2">
+                <div className="bg-[#f0f3ff] p-1 rounded-2xl border border-[#dae2f3] flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setViewingViewport("desktop")}
+                    className={`p-1.5 rounded-xl text-xs transition ${
+                      viewingViewport === "desktop"
+                        ? "bg-white text-[#0058be] shadow-sm"
+                        : "text-[#534434] hover:text-[#151c27]"
+                    }`}
+                    title="Desktop Preview"
                   >
-                    {Object.entries(POLICY_TYPE_LABELS).map(([k, v]) => (
-                      <option key={k} value={k}>
-                        {v}
-                      </option>
-                    ))}
-                  </select>
+                    <Monitor size={15} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewingViewport("tablet")}
+                    className={`p-1.5 rounded-xl text-xs transition ${
+                      viewingViewport === "tablet"
+                        ? "bg-white text-[#0058be] shadow-sm"
+                        : "text-[#534434] hover:text-[#151c27]"
+                    }`}
+                    title="Tablet Preview"
+                  >
+                    <Tablet size={15} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewingViewport("mobile")}
+                    className={`p-1.5 rounded-xl text-xs transition ${
+                      viewingViewport === "mobile"
+                        ? "bg-white text-[#0058be] shadow-sm"
+                        : "text-[#534434] hover:text-[#151c27]"
+                    }`}
+                    title="Mobile App Viewport"
+                  >
+                    <Smartphone size={15} />
+                  </button>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold font-heading text-[#534434] mb-1">
-                    Version Code (Semantic)
-                  </label>
-                  <input
-                    type="text"
-                    value={draftForm.version}
-                    onChange={(e) => setDraftForm({ ...draftForm, version: e.target.value })}
-                    placeholder="e.g. 1.1.0"
-                    required
-                    className="w-full bg-[#f0f3ff] border border-[#dae2f3] rounded-xl px-3 py-2 text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be] font-mono"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold font-heading text-[#534434] mb-1">
-                  Document Title
-                </label>
-                <input
-                  type="text"
-                  value={draftForm.title}
-                  onChange={(e) => setDraftForm({ ...draftForm, title: e.target.value })}
-                  required
-                  className="w-full bg-[#f0f3ff] border border-[#dae2f3] rounded-xl px-3 py-2 text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold font-heading text-[#534434] mb-1">
-                  Summary of Changes / Release Notes
-                </label>
-                <input
-                  type="text"
-                  value={draftForm.summaryOfChanges}
-                  onChange={(e) => setDraftForm({ ...draftForm, summaryOfChanges: e.target.value })}
-                  placeholder="e.g. Updated Section 3 with regional privacy rights declaration."
-                  className="w-full bg-[#f0f3ff] border border-[#dae2f3] rounded-xl px-3 py-2 text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold font-heading text-[#534434] mb-1">
-                  Policy Text (Markdown Content)
-                </label>
-                <textarea
-                  value={draftForm.content}
-                  onChange={(e) => setDraftForm({ ...draftForm, content: e.target.value })}
-                  rows={10}
-                  required
-                  className="w-full bg-[#f0f3ff] border border-[#dae2f3] rounded-xl p-3 text-xs text-[#151c27] font-mono focus:outline-none focus:bg-white focus:border-[#0058be]"
-                />
-              </div>
-
-              <div className="pt-3 border-t border-[#e2e8f8] flex justify-end gap-2">
                 <button
                   type="button"
-                  onClick={() => setIsDraftModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#534434] text-xs font-semibold border border-[#dae2f3] cursor-pointer"
+                  onClick={() => handleDownloadPdf(viewingPolicy)}
+                  className="px-3.5 py-1.5 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#0058be] text-xs font-semibold border border-[#dae2f3] transition flex items-center gap-1.5 cursor-pointer"
                 >
-                  Cancel
+                  <Download size={13} />
+                  <span>Download PDF</span>
                 </button>
+
                 <button
-                  type="submit"
-                  disabled={actionLoading}
-                  className="px-4 py-2 rounded-xl bg-[#0058be] hover:bg-[#2170e4] text-white text-xs font-semibold shadow-sm disabled:opacity-50 cursor-pointer"
+                  onClick={() => setViewingPolicy(null)}
+                  className="p-2 text-[#534434] hover:text-[#151c27] hover:bg-[#f0f3ff] rounded-xl transition cursor-pointer"
                 >
-                  {actionLoading ? "Saving..." : "Save Draft"}
+                  <X size={20} />
                 </button>
               </div>
-            </form>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 bg-[#f0f3ff]/30 flex justify-center">
+              <PolicyRenderer
+                title={viewingPolicy.title}
+                version={viewingPolicy.version}
+                effectiveDate={viewingPolicy.effective_date}
+                content={viewingPolicy.content}
+                viewport={viewingViewport}
+                showToc={viewingViewport === "desktop"}
+              />
+            </div>
           </div>
         </div>
       )}
+
+      {/* MODAL: POLICY EDITOR (LIVE SPLIT PREVIEW) */}
+      <PolicyEditorModal
+        isOpen={isEditorModalOpen}
+        onClose={() => {
+          setIsEditorModalOpen(false);
+          setSelectedPolicyForEditor(null);
+        }}
+        policyToEdit={selectedPolicyForEditor}
+        onSaveDraft={handleSaveDraft}
+        onOpenPublish={(draft) => {
+          setIsEditorModalOpen(false);
+          setSelectedPolicyForPublish(draft);
+          setIsPublishModalOpen(true);
+        }}
+        isLoading={actionLoading}
+      />
+
+      {/* MODAL: PUBLISH CONFIRMATION WITH PRE-FLIGHT NOTICE */}
+      <PublishConfirmModal
+        isOpen={isPublishModalOpen}
+        onClose={() => {
+          setIsPublishModalOpen(false);
+          setSelectedPolicyForPublish(null);
+        }}
+        policy={selectedPolicyForPublish}
+        onConfirmPublish={handleConfirmPublish}
+        isLoading={actionLoading}
+      />
+
+      {/* MODAL: VERSION HISTORY & ROLLBACK */}
+      <PolicyHistoryModal
+        isOpen={isHistoryModalOpen}
+        onClose={() => {
+          setIsHistoryModalOpen(false);
+          setSelectedPolicyForHistory(null);
+        }}
+        policy={selectedPolicyForHistory}
+        onRollbackComplete={() => {
+          loadPolicies();
+        }}
+      />
+
 
       {/* MODAL: PROCESS DATA REQUEST */}
       {isProcessModalOpen && selectedRequest && (

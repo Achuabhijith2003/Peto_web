@@ -3,7 +3,10 @@ import {
   getPoliciesService,
   getPolicyDetailService,
   createPolicyDraftService,
+  updatePolicyDraftService,
   publishPolicyService,
+  getPolicyVersionsService,
+  rollbackPolicyService,
   getDataRequestsService,
   getDataRequestDetailService,
   createDataRequestService,
@@ -12,6 +15,7 @@ import {
   updateRetentionPolicyService,
   getComplianceAuditLogsService,
 } from "../services/adminCompliance.service";
+import { generatePolicyPdf } from "../../services/policyPdf.service";
 
 // ============================================================
 // POLICIES CONTROLLERS
@@ -19,10 +23,11 @@ import {
 
 export async function getPolicies(req: Request, res: Response) {
   try {
-    const { policyType, status } = req.query;
+    const { policyType, status, search } = req.query;
     const policies = await getPoliciesService({
       policyType: policyType ? String(policyType) : undefined,
       status: status ? String(status) : undefined,
+      search: search ? String(search) : undefined,
     });
 
     return res.status(200).json({
@@ -61,7 +66,17 @@ export async function createPolicyDraft(req: Request, res: Response) {
     const adminUser = (req as any).admin;
     const adminUserId = adminUser?.userId || adminUser?.id;
 
-    const { policyType, title, version, content, summaryOfChanges } = req.body;
+    const {
+      policyType,
+      title,
+      version,
+      content,
+      slug,
+      summaryOfChanges,
+      effectiveDate,
+      regionCode,
+      requiresAcknowledgement,
+    } = req.body;
 
     const policy = await createPolicyDraftService(
       {
@@ -69,7 +84,11 @@ export async function createPolicyDraft(req: Request, res: Response) {
         title,
         version,
         content,
+        slug,
         summaryOfChanges,
+        effectiveDate,
+        regionCode,
+        requiresAcknowledgement,
       },
       adminUserId
     );
@@ -88,6 +107,28 @@ export async function createPolicyDraft(req: Request, res: Response) {
   }
 }
 
+export async function updatePolicyDraft(req: Request, res: Response) {
+  try {
+    const adminUser = (req as any).admin;
+    const adminUserId = adminUser?.userId || adminUser?.id;
+    const id = String(req.params.id);
+
+    const policy = await updatePolicyDraftService(id, req.body, adminUserId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Policy draft updated successfully.",
+      data: policy,
+    });
+  } catch (error: any) {
+    console.error("[ComplianceController] updatePolicyDraft error:", error);
+    return res.status(error.status || 500).json({
+      success: false,
+      message: error.message || "Failed to update policy draft.",
+    });
+  }
+}
+
 export async function publishPolicy(req: Request, res: Response) {
   try {
     const adminUser = (req as any).admin;
@@ -98,7 +139,7 @@ export async function publishPolicy(req: Request, res: Response) {
 
     return res.status(200).json({
       success: true,
-      message: "Policy version successfully published. Prior versions have been archived.",
+      message: "Policy version successfully published. Prior version is now superseded.",
       data: published,
     });
   } catch (error: any) {
@@ -106,6 +147,68 @@ export async function publishPolicy(req: Request, res: Response) {
     return res.status(error.status || 500).json({
       success: false,
       message: error.message || "Failed to publish policy version.",
+    });
+  }
+}
+
+export async function getPolicyVersions(req: Request, res: Response) {
+  try {
+    const id = String(req.params.id);
+    const policy = await getPolicyDetailService(id);
+    const versions = await getPolicyVersionsService(policy.policy_type);
+
+    return res.status(200).json({
+      success: true,
+      data: versions,
+    });
+  } catch (error: any) {
+    console.error("[ComplianceController] getPolicyVersions error:", error);
+    return res.status(error.status || 500).json({
+      success: false,
+      message: error.message || "Failed to fetch policy versions.",
+    });
+  }
+}
+
+export async function rollbackPolicy(req: Request, res: Response) {
+  try {
+    const adminUser = (req as any).admin;
+    const adminUserId = adminUser?.userId || adminUser?.id;
+    const id = String(req.params.id);
+    const { targetVersion } = req.body;
+
+    const draft = await rollbackPolicyService(id, targetVersion, adminUserId);
+
+    return res.status(201).json({
+      success: true,
+      message: `Rollback draft v${draft.version} created successfully.`,
+      data: draft,
+    });
+  } catch (error: any) {
+    console.error("[ComplianceController] rollbackPolicy error:", error);
+    return res.status(error.status || 500).json({
+      success: false,
+      message: error.message || "Failed to create rollback revision.",
+    });
+  }
+}
+
+export async function getAdminPolicyPdf(req: Request, res: Response) {
+  try {
+    const id = String(req.params.id);
+    const policy = await getPolicyDetailService(id);
+    const pdfBuffer = await generatePolicyPdf(policy);
+
+    const filename = `peto-${policy.slug || policy.policy_type.toLowerCase()}-v${policy.version}.pdf`;
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
+    res.setHeader("Content-Length", pdfBuffer.length);
+    return res.end(pdfBuffer);
+  } catch (error: any) {
+    console.error("[ComplianceController] getAdminPolicyPdf error:", error);
+    return res.status(error.status || 500).json({
+      success: false,
+      message: error.message || "Failed to generate policy PDF.",
     });
   }
 }

@@ -17,9 +17,10 @@ export async function requireAdminAuth(
   next: NextFunction
 ) {
   const authHeader = req.headers.authorization;
-  const token = authHeader?.startsWith("Bearer ")
-    ? authHeader.substring(7)
-    : null;
+  const token =
+    (authHeader?.startsWith("Bearer ") ? authHeader.substring(7) : null) ||
+    (typeof req.query.token === "string" ? req.query.token : null) ||
+    (typeof req.query.access_token === "string" ? req.query.access_token : null);
 
   if (!token) {
     return res.status(401).json({
