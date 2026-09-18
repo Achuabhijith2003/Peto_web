@@ -247,11 +247,11 @@ setInterval(() => {
 router.get("/google/url", (req, res) => {
   try {
     const redirect = (req.query.redirect_to as string) || (req.query.redirectTo as string);
-    const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
-    const targetRedirect = redirect || `${clientUrl}/auth/callback`;
-    const supabaseUrl = process.env.SUPABASE_URL || "https://ednleoavhuxlarnnlmkq.supabase.co";
+    const clientUrl = process.env.CLIENT_URL || "https://peto-web.onrender.com";
+    const targetRedirect = redirect || `${clientUrl}/auth/callback?source=mobile`;
 
-    const url = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(targetRedirect)}`;
+    // Point to client-side GoogleLaunch page that initiates Supabase PKCE properly in browser
+    const url = `${clientUrl}/auth/google-launch?redirect_to=${encodeURIComponent(targetRedirect)}`;
 
     return res.json({
       success: true,

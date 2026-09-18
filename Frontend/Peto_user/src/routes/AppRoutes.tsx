@@ -22,6 +22,7 @@ import AdvertiserPortal from "../pages/advertiser/AdvertiserPortal";
 import PolicyPage from "../pages/PolicyPage";
 import Settings from "../pages/Settings";
 import AuthCallback from "../pages/AuthCallback";
+import GoogleLaunch from "../pages/GoogleLaunch";
 
 const AppRoutes = () => {
   return (
@@ -29,7 +30,8 @@ const AppRoutes = () => {
       <Route path="/" element={<Social />} />
       <Route path="/settings" element={<Settings />} />
 
-      {/* Auth Callback for OAuth (Google) */}
+      {/* Auth Launch & Callback for OAuth (Google) */}
+      <Route path="/auth/google-launch" element={<GoogleLaunch />} />
       <Route path="/auth/callback" element={<AuthCallback />} />
 
       {/* Compliance & Legal Policies */}
