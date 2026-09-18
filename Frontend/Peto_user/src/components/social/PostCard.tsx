@@ -15,6 +15,8 @@ import {
   Flag,
   Bookmark,
   Link as LinkIcon,
+  Reply,
+  CornerDownRight,
 } from "lucide-react";
 import api from "../../utils/api";
 import { useAuth } from "../../context/AuthContext";
@@ -61,6 +63,9 @@ const PostCard = ({ post }: PostCardProps) => {
   const [commentText, setCommentText] = useState("");
   const [loadingComments, setLoadingComments] = useState(false);
   const [submittingComment, setSubmittingComment] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<{ id: string; username: string; parentCommentId?: string } | null>(null);
+  const [expandedReplies, setExpandedReplies] = useState<Record<string, boolean>>({});
+  const commentInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -195,6 +200,25 @@ const PostCard = ({ post }: PostCardProps) => {
     setShowComments(!showComments);
   };
 
+  const handleReplyClick = (commentId: string, authorUsername: string, parentCommentId?: string) => {
+    // If replying to a reply, target the parent comment or current comment ID
+    const targetParentId = parentCommentId || commentId;
+    setReplyingTo({ id: targetParentId, username: authorUsername, parentCommentId });
+    setCommentText(`@${authorUsername} `);
+    setTimeout(() => {
+      commentInputRef.current?.focus();
+    }, 50);
+  };
+
+  const cancelReply = () => {
+    setReplyingTo(null);
+    setCommentText("");
+  };
+
+  const toggleReplies = (commentId: string) => {
+    setExpandedReplies((prev) => ({ ...prev, [commentId]: !prev[commentId] }));
+  };
+
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
@@ -205,11 +229,19 @@ const PostCard = ({ post }: PostCardProps) => {
 
     try {
       setSubmittingComment(true);
-      await api.post(`/posts/${post.id}/comments`, { comment: commentText });
+      const payload: any = { comment: commentText.trim() };
+      if (replyingTo) {
+        payload.parent_comment_id = replyingTo.id;
+      }
+      await api.post(`/posts/${post.id}/comments`, payload);
 
       const fetchRes = await api.get(`/posts/${post.id}/comments`);
       setComments(fetchRes.data.comments || []);
 
+      if (replyingTo) {
+        setExpandedReplies((prev) => ({ ...prev, [replyingTo.id]: true }));
+      }
+      setReplyingTo(null);
       setCommentText("");
       setCommentsCount((p: number) => p + 1);
     } catch (err) {
@@ -462,6 +494,26 @@ const PostCard = ({ post }: PostCardProps) => {
 
         {showComments && (
           <div className="mt-4 pt-4 border-t border-slate-100 space-y-4 animate-in fade-in duration-200">
+            {/* Replying Banner */}
+            {replyingTo && (
+              <div className="flex items-center justify-between px-3.5 py-2 bg-amber-50 border border-amber-200/80 rounded-2xl text-xs text-amber-900 animate-in fade-in">
+                <div className="flex items-center gap-2">
+                  <CornerDownRight size={14} className="text-amber-600 shrink-0" />
+                  <span>
+                    Replying to <strong className="font-bold text-amber-800">@{replyingTo.username}</strong>
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={cancelReply}
+                  className="p-1 rounded-full hover:bg-amber-100 text-amber-700 transition cursor-pointer"
+                  title="Cancel reply"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            )}
+
             {/* Add Comment Input */}
             <form onSubmit={handleAddComment} className="flex gap-3 items-center">
               <img
@@ -475,8 +527,9 @@ const PostCard = ({ post }: PostCardProps) => {
               />
               <div className="flex-1 relative">
                 <input
+                  ref={commentInputRef}
                   type="text"
-                  placeholder="Write a comment..."
+                  placeholder={replyingTo ? `Reply to @${replyingTo.username}...` : "Write a comment..."}
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
                   className="w-full rounded-2xl bg-slate-100/80 px-4 py-2.5 pr-10 text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-amber-200 border border-transparent focus:border-amber-300 transition-all"
@@ -484,7 +537,7 @@ const PostCard = ({ post }: PostCardProps) => {
                 <button
                   type="submit"
                   disabled={submittingComment || !commentText.trim()}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-xl bg-amber-500 text-white transition hover:bg-amber-600 disabled:opacity-40"
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-xl bg-amber-500 text-white transition hover:bg-amber-600 disabled:opacity-40 cursor-pointer"
                   aria-label="Send Comment"
                 >
                   <Send size={13} />
@@ -500,43 +553,144 @@ const PostCard = ({ post }: PostCardProps) => {
               </div>
             ) : comments.length > 0 ? (
               <div className="space-y-3 pt-1">
-                {comments.map((c: any) => {
-                  const author = c.profiles || c.author || c.user;
-                  const cAuthorName = author?.full_name || author?.username || "Pet Lover";
-                  const cAvatar =
-                    author?.avatar_url && author.avatar_url !== "null"
-                      ? author.avatar_url
-                      : `https://ui-avatars.com/api/?name=${encodeURIComponent(cAuthorName)}&background=f59e0b&color=fff`;
+                {(() => {
+                  const topLevel = comments.filter((c: any) => !c.parent_comment_id);
+                  const repliesMap: Record<string, any[]> = {};
+                  comments.forEach((c: any) => {
+                    if (c.parent_comment_id) {
+                      if (!repliesMap[c.parent_comment_id]) {
+                        repliesMap[c.parent_comment_id] = [];
+                      }
+                      repliesMap[c.parent_comment_id].push(c);
+                    }
+                  });
 
-                  return (
-                    <div key={c.id} className="flex gap-3 text-xs group/comment">
-                      <img
-                        onClick={(e) => handleCommentAuthorClick(author, e)}
-                        src={cAvatar}
-                        alt={cAuthorName}
-                        className="h-8 w-8 rounded-full object-cover border border-slate-200 shrink-0 cursor-pointer hover:opacity-90 transition mt-0.5"
-                        title={`View ${cAuthorName}'s profile`}
-                      />
-                      <div className="flex-1 rounded-2xl bg-slate-50 p-3 border border-slate-100/60 hover:bg-slate-100/60 transition">
-                        <div className="flex justify-between items-center mb-1">
-                          <span
+                  return topLevel.map((c: any) => {
+                    const author = c.profiles || c.author || c.user;
+                    const cAuthorName = author?.full_name || author?.username || "Pet Lover";
+                    const cAuthorUsername = author?.username || cAuthorName;
+                    const cAvatar =
+                      author?.avatar_url && author.avatar_url !== "null"
+                        ? author.avatar_url
+                        : `https://ui-avatars.com/api/?name=${encodeURIComponent(cAuthorName)}&background=f59e0b&color=fff`;
+                    const replies = repliesMap[c.id] || [];
+                    const isExpanded = expandedReplies[c.id];
+
+                    return (
+                      <div key={c.id} className="space-y-2 group/comment">
+                        {/* Parent Comment */}
+                        <div className="flex gap-3 text-xs">
+                          <img
                             onClick={(e) => handleCommentAuthorClick(author, e)}
-                            className="font-bold text-slate-900 hover:text-amber-600 cursor-pointer transition"
+                            src={cAvatar}
+                            alt={cAuthorName}
+                            className="h-8 w-8 rounded-full object-cover border border-slate-200 shrink-0 cursor-pointer hover:opacity-90 transition mt-0.5"
                             title={`View ${cAuthorName}'s profile`}
-                          >
-                            {cAuthorName}
-                          </span>
-                          <span className="text-[10px] text-slate-400">
-                            {formatTimeAgo(c.created_at)}
-                          </span>
+                          />
+                          <div className="flex-1 rounded-2xl bg-slate-50 p-3 border border-slate-100/60 hover:bg-slate-100/60 transition">
+                            <div className="flex justify-between items-center mb-1">
+                              <span
+                                onClick={(e) => handleCommentAuthorClick(author, e)}
+                                className="font-bold text-slate-900 hover:text-amber-600 cursor-pointer transition"
+                                title={`View ${cAuthorName}'s profile`}
+                              >
+                                {cAuthorName}
+                              </span>
+                              <span className="text-[10px] text-slate-400">
+                                {formatTimeAgo(c.created_at)}
+                              </span>
+                            </div>
+                            <p className="text-slate-700 leading-relaxed font-normal">
+                              {c.comment || c.text}
+                            </p>
+                            <div className="flex items-center gap-3 mt-1.5 pt-1 border-t border-slate-200/40">
+                              <button
+                                type="button"
+                                onClick={() => handleReplyClick(c.id, cAuthorUsername)}
+                                className="text-[11px] font-semibold text-slate-500 hover:text-amber-600 transition flex items-center gap-1 cursor-pointer"
+                              >
+                                <Reply size={12} />
+                                <span>Reply</span>
+                              </button>
+                            </div>
+                          </div>
                         </div>
-                        <p className="text-slate-700 leading-relaxed font-normal">
-                          {c.comment || c.text}
-                        </p>
+
+                        {/* View Replies Toggle Button */}
+                        {replies.length > 0 && (
+                          <div className="ml-11">
+                            <button
+                              type="button"
+                              onClick={() => toggleReplies(c.id)}
+                              className="text-[11px] font-bold text-amber-600 hover:text-amber-700 flex items-center gap-1.5 py-0.5 cursor-pointer"
+                            >
+                              <CornerDownRight size={12} />
+                              <span>
+                                {isExpanded
+                                  ? "Hide replies"
+                                  : `View ${replies.length} ${replies.length === 1 ? "reply" : "replies"}`}
+                              </span>
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Nested Replies List */}
+                        {replies.length > 0 && isExpanded && (
+                          <div className="ml-8 sm:ml-11 border-l-2 border-amber-200/80 pl-3 space-y-2 pt-1 animate-in fade-in duration-150">
+                            {replies.map((reply: any) => {
+                              const rAuthor = reply.profiles || reply.author || reply.user;
+                              const rAuthorName = rAuthor?.full_name || rAuthor?.username || "Pet Lover";
+                              const rAuthorUsername = rAuthor?.username || rAuthorName;
+                              const rAvatar =
+                                rAuthor?.avatar_url && rAuthor.avatar_url !== "null"
+                                  ? rAuthor.avatar_url
+                                  : `https://ui-avatars.com/api/?name=${encodeURIComponent(rAuthorName)}&background=f59e0b&color=fff`;
+
+                              return (
+                                <div key={reply.id} className="flex gap-2.5 text-xs">
+                                  <img
+                                    onClick={(e) => handleCommentAuthorClick(rAuthor, e)}
+                                    src={rAvatar}
+                                    alt={rAuthorName}
+                                    className="h-7 w-7 rounded-full object-cover border border-slate-200 shrink-0 cursor-pointer hover:opacity-90 transition mt-0.5"
+                                    title={`View ${rAuthorName}'s profile`}
+                                  />
+                                  <div className="flex-1 rounded-2xl bg-slate-100/70 p-2.5 border border-slate-200/60 hover:bg-slate-100 transition">
+                                    <div className="flex justify-between items-center mb-1">
+                                      <span
+                                        onClick={(e) => handleCommentAuthorClick(rAuthor, e)}
+                                        className="font-bold text-slate-900 hover:text-amber-600 cursor-pointer transition"
+                                        title={`View ${rAuthorName}'s profile`}
+                                      >
+                                        {rAuthorName}
+                                      </span>
+                                      <span className="text-[10px] text-slate-400">
+                                        {formatTimeAgo(reply.created_at)}
+                                      </span>
+                                    </div>
+                                    <p className="text-slate-700 leading-relaxed font-normal">
+                                      {reply.comment || reply.text}
+                                    </p>
+                                    <div className="flex items-center gap-3 mt-1 pt-1 border-t border-slate-200/40">
+                                      <button
+                                        type="button"
+                                        onClick={() => handleReplyClick(c.id, rAuthorUsername)}
+                                        className="text-[10px] font-semibold text-slate-500 hover:text-amber-600 transition flex items-center gap-1 cursor-pointer"
+                                      >
+                                        <Reply size={11} />
+                                        <span>Reply</span>
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  });
+                })()}
               </div>
             ) : (
               <div className="text-center py-4 text-xs text-slate-400">

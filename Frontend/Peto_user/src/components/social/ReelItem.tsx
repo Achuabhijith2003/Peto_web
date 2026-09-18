@@ -17,6 +17,8 @@ import {
   Maximize2,
   Minimize2,
   Flag,
+  Reply,
+  CornerDownRight,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import api from "../../utils/api";
@@ -48,6 +50,9 @@ const ReelItem = ({ post, isActive }: ReelItemProps) => {
   const [commentText, setCommentText] = useState("");
   const [loadingComments, setLoadingComments] = useState(false);
   const [submittingComment, setSubmittingComment] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<{ id: string; username: string } | null>(null);
+  const [expandedReplies, setExpandedReplies] = useState<Record<string, boolean>>({});
+  const commentInputRef = useRef<HTMLInputElement>(null);
   const [copied, setCopied] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
 
@@ -208,6 +213,37 @@ const ReelItem = ({ post, isActive }: ReelItemProps) => {
     setShowComments(!showComments);
   };
 
+  const formatTimeAgo = (dateString?: string) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "";
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    if (diffInSeconds < 60) return "Just now";
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  };
+
+  const handleReplyClick = (commentId: string, authorUsername: string, parentCommentId?: string) => {
+    const targetParentId = parentCommentId || commentId;
+    setReplyingTo({ id: targetParentId, username: authorUsername });
+    setCommentText(`@${authorUsername} `);
+    setTimeout(() => {
+      commentInputRef.current?.focus();
+    }, 50);
+  };
+
+  const cancelReply = () => {
+    setReplyingTo(null);
+    setCommentText("");
+  };
+
+  const toggleReplies = (commentId: string) => {
+    setExpandedReplies((prev) => ({ ...prev, [commentId]: !prev[commentId] }));
+  };
+
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
@@ -217,9 +253,17 @@ const ReelItem = ({ post, isActive }: ReelItemProps) => {
     if (!commentText.trim()) return;
     try {
       setSubmittingComment(true);
-      await api.post(`/posts/${post.id}/comments`, { comment: commentText });
+      const payload: any = { comment: commentText.trim() };
+      if (replyingTo) {
+        payload.parent_comment_id = replyingTo.id;
+      }
+      await api.post(`/posts/${post.id}/comments`, payload);
       const fetchRes = await api.get(`/posts/${post.id}/comments`);
       setComments(fetchRes.data.comments || []);
+      if (replyingTo) {
+        setExpandedReplies((prev) => ({ ...prev, [replyingTo.id]: true }));
+      }
+      setReplyingTo(null);
       setCommentText("");
     } catch (err) {
       console.error("Failed to add comment", err);
@@ -462,26 +506,132 @@ const ReelItem = ({ post, isActive }: ReelItemProps) => {
             {loadingComments ? (
               <p className="text-center py-6 text-xs text-slate-400">Loading comments...</p>
             ) : comments.length > 0 ? (
-              comments.map((c: any) => (
-                <div key={c.id} className="flex gap-3 text-xs">
-                  <img
-                    src={
-                      c.profiles?.avatar_url ||
-                      `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                        c.profiles?.username || "user"
-                      )}`
+              (() => {
+                const topLevel = comments.filter((c: any) => !c.parent_comment_id);
+                const repliesMap: Record<string, any[]> = {};
+                comments.forEach((c: any) => {
+                  if (c.parent_comment_id) {
+                    if (!repliesMap[c.parent_comment_id]) {
+                      repliesMap[c.parent_comment_id] = [];
                     }
-                    alt="User"
-                    className="h-8 w-8 rounded-full object-cover border border-slate-200"
-                  />
-                  <div className="flex-1 rounded-2xl bg-slate-50 p-2.5">
-                    <p className="font-bold text-slate-900">
-                      {c.profiles?.full_name || c.profiles?.username}
-                    </p>
-                    <p className="text-slate-700 mt-0.5">{c.comment || c.text}</p>
-                  </div>
-                </div>
-              ))
+                    repliesMap[c.parent_comment_id].push(c);
+                  }
+                });
+
+                return topLevel.map((c: any) => {
+                  const author = c.profiles || c.author || c.user;
+                  const cAuthorName = author?.full_name || author?.username || "Pet Lover";
+                  const cAuthorUsername = author?.username || cAuthorName;
+                  const cAvatar =
+                    author?.avatar_url && author.avatar_url !== "null"
+                      ? author.avatar_url
+                      : `https://ui-avatars.com/api/?name=${encodeURIComponent(cAuthorName)}&background=f59e0b&color=fff`;
+                  const replies = repliesMap[c.id] || [];
+                  const isExpanded = expandedReplies[c.id];
+
+                  return (
+                    <div key={c.id} className="space-y-2 group/comment">
+                      {/* Parent Comment */}
+                      <div className="flex gap-3 text-xs">
+                        <img
+                          src={cAvatar}
+                          alt={cAuthorName}
+                          className="h-8 w-8 rounded-full object-cover border border-slate-200 shrink-0 mt-0.5"
+                        />
+                        <div className="flex-1 rounded-2xl bg-slate-50 p-2.5 border border-slate-100">
+                          <div className="flex justify-between items-center mb-0.5">
+                            <span className="font-bold text-slate-900">
+                              {cAuthorName}
+                            </span>
+                            <span className="text-[10px] text-slate-400">
+                              {formatTimeAgo(c.created_at)}
+                            </span>
+                          </div>
+                          <p className="text-slate-700 leading-relaxed font-normal">
+                            {c.comment || c.text}
+                          </p>
+                          <div className="flex items-center gap-3 mt-1 pt-1 border-t border-slate-200/40">
+                            <button
+                              type="button"
+                              onClick={() => handleReplyClick(c.id, cAuthorUsername)}
+                              className="text-[11px] font-semibold text-slate-500 hover:text-amber-600 transition flex items-center gap-1 cursor-pointer"
+                            >
+                              <Reply size={11} />
+                              <span>Reply</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* View Replies Toggle */}
+                      {replies.length > 0 && (
+                        <div className="ml-11">
+                          <button
+                            type="button"
+                            onClick={() => toggleReplies(c.id)}
+                            className="text-[11px] font-bold text-amber-600 hover:text-amber-700 flex items-center gap-1.5 py-0.5 cursor-pointer"
+                          >
+                            <CornerDownRight size={12} />
+                            <span>
+                              {isExpanded
+                                ? "Hide replies"
+                                : `View ${replies.length} ${replies.length === 1 ? "reply" : "replies"}`}
+                            </span>
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Nested Replies List */}
+                      {replies.length > 0 && isExpanded && (
+                        <div className="ml-8 sm:ml-11 border-l-2 border-amber-200/80 pl-3 space-y-2 pt-1">
+                          {replies.map((reply: any) => {
+                            const rAuthor = reply.profiles || reply.author || reply.user;
+                            const rAuthorName = rAuthor?.full_name || rAuthor?.username || "Pet Lover";
+                            const rAuthorUsername = rAuthor?.username || rAuthorName;
+                            const rAvatar =
+                              rAuthor?.avatar_url && rAuthor.avatar_url !== "null"
+                                ? rAuthor.avatar_url
+                                : `https://ui-avatars.com/api/?name=${encodeURIComponent(rAuthorName)}&background=f59e0b&color=fff`;
+
+                            return (
+                              <div key={reply.id} className="flex gap-2 text-xs">
+                                <img
+                                  src={rAvatar}
+                                  alt={rAuthorName}
+                                  className="h-7 w-7 rounded-full object-cover border border-slate-200 shrink-0 mt-0.5"
+                                />
+                                <div className="flex-1 rounded-2xl bg-slate-100/70 p-2 border border-slate-200/60">
+                                  <div className="flex justify-between items-center mb-0.5">
+                                    <span className="font-bold text-slate-900">
+                                      {rAuthorName}
+                                    </span>
+                                    <span className="text-[10px] text-slate-400">
+                                      {formatTimeAgo(reply.created_at)}
+                                    </span>
+                                  </div>
+                                  <p className="text-slate-700 leading-relaxed font-normal">
+                                    {reply.comment || reply.text}
+                                  </p>
+                                  <div className="flex items-center gap-3 mt-1 pt-1 border-t border-slate-200/40">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleReplyClick(c.id, rAuthorUsername)}
+                                      className="text-[10px] font-semibold text-slate-500 hover:text-amber-600 transition flex items-center gap-1 cursor-pointer"
+                                    >
+                                      <Reply size={10} />
+                                      <span>Reply</span>
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                });
+              })()
             ) : (
               <p className="text-center py-6 text-xs text-slate-400">
                 No comments yet. Be the first!
@@ -489,13 +639,32 @@ const ReelItem = ({ post, isActive }: ReelItemProps) => {
             )}
           </div>
 
+          {/* Replying Banner */}
+          {replyingTo && (
+            <div className="flex items-center justify-between bg-amber-50 border border-amber-200/60 rounded-xl px-3 py-1.5 mb-2 text-xs text-amber-900 animate-in fade-in duration-200">
+              <span className="flex items-center gap-1.5 font-medium">
+                <Reply size={12} className="text-amber-600" />
+                Replying to <span className="font-bold">@{replyingTo.username}</span>
+              </span>
+              <button
+                type="button"
+                onClick={cancelReply}
+                className="text-slate-400 hover:text-slate-600 p-0.5 rounded-full hover:bg-amber-100 transition"
+                title="Cancel reply"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          )}
+
           <form
             onSubmit={handleAddComment}
             className="flex gap-2 pt-2 border-t border-slate-100"
           >
             <input
+              ref={commentInputRef}
               type="text"
-              placeholder="Add a comment..."
+              placeholder={replyingTo ? `Reply to @${replyingTo.username}...` : "Add a comment..."}
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               className="flex-1 rounded-2xl bg-slate-100 px-4 py-2 text-xs text-slate-900 outline-none focus:ring-2 focus:ring-amber-400"
