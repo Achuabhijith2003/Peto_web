@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
-import { UserPlus, UserCheck, Loader2, Edit3, MapPin, Link as LinkIcon, CheckCircle2 } from "lucide-react";
+import { UserPlus, UserCheck, Loader2, Edit3, MapPin, Link as LinkIcon, CheckCircle2, Settings as SettingsIcon } from "lucide-react";
 import api from "../utils/api";
 import { useAuth } from "../context/AuthContext";
 
@@ -202,15 +202,25 @@ const ProfileCenter = ({ userId }: { userId?: string }) => {
               />
             </div>
 
-            {/* Edit Profile Button for Own Profile or Follow Button for Other Profiles */}
+            {/* Edit Profile & Settings Button for Own Profile or Follow Button for Other Profiles */}
             {isOwnProfile ? (
-              <Link
-                to="/edit-profile"
-                className="rounded-lg border border-slate-200/80 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-micro flex items-center gap-1.5 active:scale-[0.98]"
-              >
-                <Edit3 size={14} className="text-slate-500" />
-                <span>Edit Profile</span>
-              </Link>
+              <div className="flex items-center gap-2">
+                <Link
+                  to="/edit-profile"
+                  className="rounded-lg border border-slate-200/80 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-micro flex items-center gap-1.5 active:scale-[0.98]"
+                >
+                  <Edit3 size={14} className="text-slate-500" />
+                  <span>Edit Profile</span>
+                </Link>
+                <Link
+                  to="/settings"
+                  className="rounded-lg border border-slate-200/80 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition shadow-micro flex items-center gap-1.5 active:scale-[0.98]"
+                  title="Account Settings"
+                >
+                  <SettingsIcon size={14} className="text-slate-500" />
+                  <span>Settings</span>
+                </Link>
+              </div>
             ) : (
               <button
                 onClick={handleToggleFollow}

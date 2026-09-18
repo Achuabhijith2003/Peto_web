@@ -5,6 +5,7 @@ import {
   Users,
   Search,
   Clapperboard,
+  Settings as SettingsIcon,
 } from "lucide-react";
 
 import { useAuth } from "../../context/AuthContext";
@@ -16,6 +17,7 @@ const menu = [
   { icon: Search, label: "Explore", path: "/search" },
   { icon: Users, label: "Communities", path: "/community" },
   { icon: Bookmark, label: "Saved Posts", path: "/bookmarks" },
+  { icon: SettingsIcon, label: "Settings", path: "/settings" },
 ];
 
 const LeftSidebar = () => {

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { signup } from "./signup";
 import { login } from "./login";
+import { authenticate } from "./auth.middleware";
 import { supabase } from "../config/supabase";
 
 console.log("✅ Auth routes loaded");
@@ -153,4 +154,66 @@ router.post("/reset-password", async (req, res) => {
   }
 });
 
-export default router;
+// Change Password for authenticated user
+router.post("/change-password", authenticate, async (req, res) => {
+  try {
+    const user = (req as any).user;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!newPassword || typeof newPassword !== "string" || newPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "New password must be at least 6 characters long.",
+      });
+    }
+
+    if (!user?.email) {
+      return res.status(400).json({
+        success: false,
+        message: "User account email could not be resolved.",
+      });
+    }
+
+    // Verify current password if provided
+    if (currentPassword) {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword,
+      });
+
+      if (signInError) {
+        return res.status(400).json({
+          success: false,
+          message: "Current password is incorrect.",
+        });
+      }
+    }
+
+    // Update password using Supabase Admin API
+    const { error: updateError } = await supabase.auth.admin.updateUserById(
+      user.id,
+      { password: newPassword }
+    );
+
+    if (updateError) {
+      console.error("Supabase change-password error:", updateError);
+      return res.status(400).json({
+        success: false,
+        message: updateError.message || "Failed to update password.",
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Password updated successfully.",
+    });
+  } catch (err: any) {
+    console.error("Change password route error:", err);
+    return res.status(500).json({
+      success: false,
+      message: err.message || "Internal server error",
+    });
+  }
+});
+
+export default router;

@@ -20,11 +20,14 @@ import ServerError500 from "../pages/ServerError500";
 import Forbidden403 from "../pages/Forbidden403";
 import AdvertiserPortal from "../pages/advertiser/AdvertiserPortal";
 import PolicyPage from "../pages/PolicyPage";
+import Settings from "../pages/Settings";
 
 const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<Social />} />
+      <Route path="/settings" element={<Settings />} />
+
 
       {/* Compliance & Legal Policies */}
       <Route path="/policies" element={<PolicyPage />} />
