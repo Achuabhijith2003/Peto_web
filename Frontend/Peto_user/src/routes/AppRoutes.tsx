@@ -21,6 +21,7 @@ import Forbidden403 from "../pages/Forbidden403";
 import AdvertiserPortal from "../pages/advertiser/AdvertiserPortal";
 import PolicyPage from "../pages/PolicyPage";
 import Settings from "../pages/Settings";
+import AuthCallback from "../pages/AuthCallback";
 
 const AppRoutes = () => {
   return (
@@ -28,6 +29,8 @@ const AppRoutes = () => {
       <Route path="/" element={<Social />} />
       <Route path="/settings" element={<Settings />} />
 
+      {/* Auth Callback for OAuth (Google) */}
+      <Route path="/auth/callback" element={<AuthCallback />} />
 
       {/* Compliance & Legal Policies */}
       <Route path="/policies" element={<PolicyPage />} />
@@ -37,7 +40,6 @@ const AppRoutes = () => {
       <Route path="/terms" element={<PolicyPage />} />
       <Route path="/privacy" element={<PolicyPage />} />
       <Route path="/community-guidelines" element={<PolicyPage />} />
-
 
       <Route path="/login" element={<Login />} />
 
