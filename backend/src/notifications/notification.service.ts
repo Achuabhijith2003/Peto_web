@@ -5,6 +5,7 @@ import {
     UpdateNotificationSettingsInput,
 } from "./notification.types";
 import { sendPushNotificationToUser } from "./push.service";
+import { sendFcmNotificationToUser } from "./fcm.service";
 
 /*
 |--------------------------------------------------------------------------
@@ -110,12 +111,28 @@ export async function createNotification(input: CreateNotificationInput) {
         throw error;
     }
 
-    // 4. Send Web Push Notification if push is enabled
+    // 4. Send Web & Mobile Push Notification if push is enabled
     if (settings.push_enabled) {
         const actorName = data.actor?.full_name || data.actor?.username || "Someone";
         const pushTitle = `Peto Notification`;
         const pushBody = `${actorName} ${input.message}`;
+
+        // Web Push (Browser)
         sendPushNotificationToUser(input.recipientId, pushTitle, pushBody, "/social");
+
+        // Mobile Push (FCM - delivers to Android/iOS even when the app is closed)
+        sendFcmNotificationToUser(input.recipientId, {
+            title: pushTitle,
+            body: pushBody,
+            data: {
+                type: String(input.type || ""),
+                notificationId: String(data.id || ""),
+                postId: String(input.postId || ""),
+                commentId: String(input.commentId || ""),
+                actorId: String(input.actorId || ""),
+                url: "/notifications",
+            },
+        });
     }
 
     return data;

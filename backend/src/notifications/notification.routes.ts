@@ -10,6 +10,8 @@ import {
     getVapidKey,
     subscribePush,
     unsubscribePush,
+    registerDeviceToken,
+    unregisterDeviceToken,
 } from "./notification.controller";
 import { authenticate } from "../auth/auth.middleware";
 
@@ -28,6 +30,10 @@ router.put("/settings", authenticate, updateSettings);
 router.get("/vapid-key", getVapidKey);
 router.post("/push-subscribe", authenticate, subscribePush);
 router.post("/push-unsubscribe", authenticate, unsubscribePush);
+
+// Mobile Device Token (FCM for closed/background app notifications)
+router.post("/device-token", authenticate, registerDeviceToken);
+router.delete("/device-token", authenticate, unregisterDeviceToken);
 
 // Parameterized item endpoints
 router.patch("/:id/read", authenticate, readNotification);

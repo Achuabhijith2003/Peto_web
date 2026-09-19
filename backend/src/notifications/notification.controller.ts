@@ -13,6 +13,10 @@ import {
     removePushSubscription,
     getVapidPublicKey,
 } from "./push.service";
+import {
+    saveDeviceToken,
+    removeDeviceToken,
+} from "./fcm.service";
 
 /*
 |--------------------------------------------------------------------------
@@ -219,6 +223,63 @@ export async function unsubscribePush(req: Request, res: Response) {
         return res.json({
             success: true,
             message: "Push subscription removed.",
+        });
+    } catch (error: any) {
+        return res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+}
+
+/*
+|--------------------------------------------------------------------------
+| Mobile Device FCM Token Handlers
+|--------------------------------------------------------------------------
+*/
+
+export async function registerDeviceToken(req: Request, res: Response) {
+    try {
+        const userId = (req as any).user.id;
+        const { fcmToken, platform } = req.body;
+
+        if (!fcmToken) {
+            return res.status(400).json({
+                success: false,
+                message: "fcmToken is required.",
+            });
+        }
+
+        const data = await saveDeviceToken(userId, fcmToken, platform || "android");
+        return res.json({
+            success: true,
+            message: "Device token registered successfully.",
+            data,
+        });
+    } catch (error: any) {
+        return res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+}
+
+export async function unregisterDeviceToken(req: Request, res: Response) {
+    try {
+        const userId = (req as any).user.id;
+        const { fcmToken } = req.body;
+
+        if (!fcmToken) {
+            return res.status(400).json({
+                success: false,
+                message: "fcmToken is required.",
+            });
+        }
+
+        await removeDeviceToken(userId, fcmToken);
+        return res.json({
+            success: true,
+            message: "Device token unregistered.",
         });
     } catch (error: any) {
         return res.status(500).json({
