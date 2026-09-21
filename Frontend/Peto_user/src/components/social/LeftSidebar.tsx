@@ -6,6 +6,7 @@ import {
   Search,
   Clapperboard,
   Settings as SettingsIcon,
+  Building2,
 } from "lucide-react";
 
 import { useAuth } from "../../context/AuthContext";
@@ -17,6 +18,7 @@ const menu = [
   { icon: Search, label: "Explore", path: "/search" },
   { icon: Users, label: "Communities", path: "/community" },
   { icon: Bookmark, label: "Saved Posts", path: "/bookmarks" },
+  { icon: Building2, label: "Advertiser Portal", path: "/advertiser" },
   { icon: SettingsIcon, label: "Settings", path: "/settings" },
 ];
 

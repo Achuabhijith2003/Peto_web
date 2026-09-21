@@ -17,6 +17,15 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    const userCountry = localStorage.getItem("peto_user_country");
+    const userRegion = localStorage.getItem("peto_user_region");
+    const userState = localStorage.getItem("peto_user_state");
+    const userDistrict = localStorage.getItem("peto_user_district");
+    if (userCountry) config.headers["x-user-country"] = userCountry;
+    if (userRegion) config.headers["x-user-region"] = userRegion;
+    if (userState) config.headers["x-user-state"] = userState;
+    if (userDistrict) config.headers["x-user-district"] = userDistrict;
+
     if (config.data instanceof FormData) {
       delete config.headers["Content-Type"];
       delete config.headers["content-type"];

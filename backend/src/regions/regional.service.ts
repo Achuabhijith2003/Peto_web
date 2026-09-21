@@ -1,6 +1,6 @@
 import { Request } from "express";
 import { supabase } from "../config/supabase";
-import { RegionalConfig } from "./regional.types";
+import { RegionalConfig, UserLocationInfo } from "./regional.types";
 import { createAuditLog } from "../admin/services/adminAudit.service";
 
 // ============================================================
@@ -207,7 +207,7 @@ let lastCacheTime = 0;
 const CACHE_TTL_MS = 60 * 1000; // 1 minute cache TTL
 
 /**
- * Resolve country code from incoming request headers
+ * Resolve country code from incoming request headers or parameters
  */
 export function resolveCountryFromRequest(req: Request): string {
   // 1. Check Cloudflare / Reverse proxy standard geo headers
@@ -216,19 +216,233 @@ export function resolveCountryFromRequest(req: Request): string {
     return cfCountry.toUpperCase();
   }
 
-  const xCountry = req.headers["x-country-code"] || req.headers["x-geo-country"];
+  const xCountry =
+    req.headers["x-country-code"] ||
+    req.headers["x-geo-country"] ||
+    req.headers["x-user-country"];
   if (typeof xCountry === "string" && xCountry.length === 2) {
     return xCountry.toUpperCase();
   }
 
   // 2. Check query parameter override if caller provides explicitly (e.g. client app passing localized country)
-  const queryCountry = req.query.country || req.query.region;
+  const queryCountry = req.query.country || req.query.user_country || req.query.region;
   if (typeof queryCountry === "string" && queryCountry.length === 2) {
     return queryCountry.toUpperCase();
   }
 
   // 3. Fallback to default
   return "GLOBAL";
+}
+
+/**
+ * Resolve full user geographical context (country, state/region, district/city)
+ */
+export async function resolveUserLocationFromRequest(req: Request): Promise<UserLocationInfo> {
+  const country = resolveCountryFromRequest(req);
+
+  const queryRegion = (req.query.region || req.query.state) as string | undefined;
+  const queryState = req.query.state as string | undefined;
+  const queryDistrict = (req.query.district || req.query.city) as string | undefined;
+  const queryCity = req.query.city as string | undefined;
+
+  const headerRegion = (
+    req.headers["x-user-region"] ||
+    req.headers["x-geo-region"] ||
+    req.headers["cf-region"] ||
+    req.headers["cf-region-code"]
+  ) as string | undefined;
+
+  const headerState = (
+    req.headers["x-user-state"] ||
+    req.headers["x-state-code"]
+  ) as string | undefined;
+
+  const headerDistrict = (
+    req.headers["x-user-district"] ||
+    req.headers["x-user-city"] ||
+    req.headers["cf-ipcity"]
+  ) as string | undefined;
+
+  const headerLocationText = req.headers["x-user-location"] as string | undefined;
+
+  let state = queryState || headerState || queryRegion || headerRegion;
+  let district = queryDistrict || queryCity || headerDistrict;
+  let city = queryCity || headerDistrict;
+  let locationText = headerLocationText || (state && district ? `${district}, ${state}, ${country}` : state || country);
+
+  // If user is logged in and state/district wasn't passed in query/headers, fetch from profiles.location
+  const userId = (req as any).user?.id || (req.query.userId as string | undefined);
+  if (userId && (!state || state.length <= 2)) {
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("location")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (profile?.location && typeof profile.location === "string") {
+        locationText = profile.location;
+        const parts = profile.location.split(",").map((p: string) => p.trim());
+        if (parts.length >= 2) {
+          if (!district) district = parts[0];
+          if (!state) state = parts[1];
+        } else if (!state) {
+          state = parts[0];
+        }
+      }
+    } catch {
+      // Non-blocking fallback
+    }
+  }
+
+  return {
+    country,
+    region: state,
+    state,
+    district,
+    city,
+    locationText,
+  };
+}
+
+/**
+ * Normalizes state codes & names (e.g. "CA" <-> "CALIFORNIA", "MH" <-> "MAHARASHTRA")
+ */
+const STATE_NORM_MAP: Record<string, string[]> = {
+  // US States
+  CA: ["CA", "CALIFORNIA"],
+  TX: ["TX", "TEXAS"],
+  NY: ["NY", "NEW YORK"],
+  FL: ["FL", "FLORIDA"],
+  WA: ["WA", "WASHINGTON"],
+  IL: ["IL", "ILLINOIS"],
+  PA: ["PA", "PENNSYLVANIA"],
+  OH: ["OH", "OHIO"],
+  GA: ["GA", "GEORGIA"],
+  NC: ["NC", "NORTH CAROLINA"],
+  CO: ["CO", "COLORADO"],
+  AZ: ["AZ", "ARIZONA"],
+  MA: ["MA", "MASSACHUSETTS"],
+  VA: ["VA", "VIRGINIA"],
+  MI: ["MI", "MICHIGAN"],
+
+  // Indian States
+  MH: ["MH", "MAHARASHTRA"],
+  KA: ["KA", "KARNATAKA"],
+  DL: ["DL", "DELHI", "NEW DELHI"],
+  TN: ["TN", "TAMIL NADU"],
+  KL: ["KL", "KERALA"],
+  GJ: ["GJ", "GUJARAT"],
+  UP: ["UP", "UTTAR PRADESH"],
+  RJ: ["RJ", "RAJASTHAN"],
+  WB: ["WB", "WEST BENGAL"],
+  TS: ["TS", "TG", "TELANGANA"],
+  AP: ["AP", "ANDHRA PRADESH"],
+  PB: ["PB", "PUNJAB"],
+  HR: ["HR", "HARYANA"],
+  BR: ["BR", "BIHAR"],
+  MP: ["MP", "MADHYA PRADESH"],
+  OR: ["OR", "ODISHA", "ORISSA"],
+  AS: ["AS", "ASSAM"],
+  GA_IN: ["GOA"],
+};
+
+/**
+ * Determine if an ad's targeting parameters are eligible for the given user location.
+ * Specifically enforces:
+ * - If countries are defined, user must match a targeted country.
+ * - If regions are defined within that country, user MUST match one of the specified regions/states/districts!
+ */
+export function isAdTargetingEligible(targeting: any, location: UserLocationInfo): boolean {
+  if (!targeting) return true;
+
+  const userCountry = (location.country || "GLOBAL").toUpperCase().trim();
+
+  // 1. Country Check:
+  if (targeting.countries && Array.isArray(targeting.countries) && targeting.countries.length > 0) {
+    const targetCountries = targeting.countries.map((c: string) => c.toUpperCase().trim());
+    const countryMatch =
+      targetCountries.includes("ALL") ||
+      userCountry === "GLOBAL" ||
+      targetCountries.includes(userCountry);
+
+    if (!countryMatch) {
+      return false;
+    }
+  }
+
+  // 2. Sub-Region / State / District Check:
+  const regions: string[] = targeting.regions || [];
+  if (!Array.isArray(regions) || regions.length === 0) {
+    // No specific sub-region restriction -> eligible across the entire country!
+    return true;
+  }
+
+  // If specific sub-regions are configured, the user MUST match at least one
+  const userState = (location.state || location.region || "").toUpperCase().trim();
+  const userDistrict = (location.district || location.city || "").toUpperCase().trim();
+  const userLocText = (location.locationText || `${userDistrict} ${userState} ${userCountry}`).toUpperCase().trim();
+
+  // Resolve all aliases for user's state
+  const userStateAliases: string[] = [userState];
+  for (const [code, names] of Object.entries(STATE_NORM_MAP)) {
+    if (code === userState || names.some((n) => n === userState || userLocText.includes(n))) {
+      userStateAliases.push(...names);
+      userStateAliases.push(code);
+    }
+  }
+
+  return regions.some((targetReg) => {
+    const rawTarget = targetReg.trim();
+    if (!rawTarget) return false;
+
+    // Pattern format: "COUNTRY:STATE:DISTRICT" or "COUNTRY:STATE:ALL"
+    const parts = rawTarget.split(":");
+    if (parts.length >= 2) {
+      const regCountry = parts[0].toUpperCase().trim();
+      const regState = parts[1].toUpperCase().trim();
+      const regDistrict = (parts.slice(2).join(":") || "ALL").toUpperCase().trim();
+
+      // Country match check
+      if (regCountry && userCountry !== "GLOBAL" && regCountry !== userCountry) {
+        return false;
+      }
+
+      // State match check
+      const stateMatches =
+        !regState ||
+        regState === "ALL" ||
+        userStateAliases.some((alias) => alias === regState || regState.includes(alias)) ||
+        userLocText.includes(regState);
+
+      if (!stateMatches) {
+        return false;
+      }
+
+      // If whole state is targeted ("ALL"), state match is sufficient
+      if (regDistrict === "ALL") {
+        return true;
+      }
+
+      // District / City match check
+      const districtMatches =
+        !userDistrict ||
+        userDistrict === regDistrict ||
+        userDistrict.includes(regDistrict) ||
+        regDistrict.includes(userDistrict) ||
+        userLocText.includes(regDistrict);
+
+      return districtMatches;
+    }
+
+    // Direct string match fallback
+    const upperTarget = rawTarget.toUpperCase();
+    return (
+      userStateAliases.includes(upperTarget) ||
+      userDistrict === upperTarget ||
+      userLocText.includes(upperTarget)
+    );
+  });
 }
 
 /**

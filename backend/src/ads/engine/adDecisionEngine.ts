@@ -1,5 +1,6 @@
 import { supabase } from "../../config/supabase";
-import { getRegionalConfig } from "../../regions/regional.service";
+import { getRegionalConfig, isAdTargetingEligible } from "../../regions/regional.service";
+import { UserLocationInfo } from "../../regions/regional.types";
 import { AdRequestContext, AdDecisionResult } from "./adDecisionEngine.types";
 import { FrequencyCapper } from "./frequencyCapper";
 import { AdDemandRouter } from "../external/adDemandRouter";
@@ -141,14 +142,17 @@ export class AdDecisionEngine {
               if (!hasPlacement) continue;
             }
 
-            // Country check
-            if (targeting.countries && targeting.countries.length > 0) {
-              const upperCountries = targeting.countries.map((c: string) => c.toUpperCase());
-              const hasCountry =
-                upperCountries.includes("ALL") ||
-                context.country === "GLOBAL" ||
-                upperCountries.includes(context.country.toUpperCase());
-              if (!hasCountry) continue;
+            // Country & Region targeting check
+            const userLoc: UserLocationInfo = {
+              country: context.country,
+              region: context.region,
+              state: context.state || context.region,
+              district: context.district || context.city,
+              city: context.city,
+              locationText: context.locationText,
+            };
+            if (targeting && !isAdTargetingEligible(targeting, userLoc)) {
+              continue;
             }
 
             // Device check

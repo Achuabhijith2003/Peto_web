@@ -1,5 +1,14 @@
 export type RegionalLevel = 'GLOBAL' | 'CONTINENT' | 'COUNTRY' | 'STATE' | 'CITY';
 
+export interface UserLocationInfo {
+  country: string;
+  region?: string;
+  state?: string;
+  district?: string;
+  city?: string;
+  locationText?: string;
+}
+
 export interface RegionalConfig {
   id: string;
   level: RegionalLevel;

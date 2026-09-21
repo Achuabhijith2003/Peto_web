@@ -5,16 +5,16 @@ import {
   recordAdImpressionService,
   recordAdClickService,
 } from "./ads.public.service";
-import { resolveCountryFromRequest } from "../regions/regional.service";
+import { resolveCountryFromRequest, resolveUserLocationFromRequest } from "../regions/regional.service";
 import { AdDecisionEngine } from "./engine/adDecisionEngine";
 import { AdEventTrackerService } from "./adEventTracker.service";
 
 export async function getActiveFeedAdsHandler(req: Request, res: Response): Promise<void> {
   try {
     const { placement } = req.query;
-    const country = resolveCountryFromRequest(req);
-    const ads = await getActiveFeedAdsService(placement ? String(placement) : "FEED", country);
-    res.json({ success: true, count: ads.length, country, ads });
+    const location = await resolveUserLocationFromRequest(req);
+    const ads = await getActiveFeedAdsService(placement ? String(placement) : "FEED", location);
+    res.json({ success: true, count: ads.length, country: location.country, location, ads });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message || "Failed to fetch active feed ads." });
   }
@@ -49,14 +49,19 @@ export async function recordAdClickHandler(req: Request, res: Response): Promise
 export async function getAdDecisionHandler(req: Request, res: Response): Promise<void> {
   try {
     const { placement, device, language, interests, organicCount } = req.query;
-    const country = resolveCountryFromRequest(req);
+    const location = await resolveUserLocationFromRequest(req);
     const userId = (req as any).user?.id;
 
     const petInterests = interests ? String(interests).split(",").map((i) => i.trim()) : undefined;
 
     const result = await AdDecisionEngine.decide({
       userId,
-      country,
+      country: location.country,
+      region: location.region,
+      state: location.state,
+      district: location.district,
+      city: location.city,
+      locationText: location.locationText,
       placement: (placement as any) || "FEED",
       device: (device as any) || "WEB",
       language: language ? String(language) : "en",
@@ -66,7 +71,8 @@ export async function getAdDecisionHandler(req: Request, res: Response): Promise
 
     res.json({
       success: true,
-      country,
+      country: location.country,
+      location,
       ...result,
     });
   } catch (err: any) {

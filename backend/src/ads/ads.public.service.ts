@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { supabase } from "../config/supabase";
-import { getRegionalConfig } from "../regions/regional.service";
+import { getRegionalConfig, isAdTargetingEligible } from "../regions/regional.service";
+import { UserLocationInfo } from "../regions/regional.types";
 import { CurrencyService } from "../currency/currency.service";
 
 export interface PublicAdItem {
@@ -40,9 +41,13 @@ export interface PublicAdItem {
  */
 export async function getActiveFeedAdsService(
   placement: string = "FEED",
-  country: string = "GLOBAL"
+  locationInput: string | UserLocationInfo = "GLOBAL"
 ): Promise<PublicAdItem[]> {
   try {
+    const location: UserLocationInfo =
+      typeof locationInput === "string" ? { country: locationInput } : locationInput;
+    const country = location.country || "GLOBAL";
+
     // 1. Enforce regional ads availability
     const regionalConfig = await getRegionalConfig(country);
     if (!regionalConfig.ads_enabled) {
@@ -115,16 +120,9 @@ export async function getActiveFeedAdsService(
           }
         }
 
-        // Check country targeting filter
-        if (targeting?.countries && targeting.countries.length > 0) {
-          const upperCountries = targeting.countries.map((c: string) => c.toUpperCase());
-          if (
-            !upperCountries.includes("ALL") &&
-            country !== "GLOBAL" &&
-            !upperCountries.includes(country.toUpperCase())
-          ) {
-            return;
-          }
+        // Check regional & country targeting filter
+        if (targeting && !isAdTargetingEligible(targeting, location)) {
+          return;
         }
 
         publicAds.push({

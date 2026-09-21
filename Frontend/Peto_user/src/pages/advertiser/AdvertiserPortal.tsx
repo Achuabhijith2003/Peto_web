@@ -32,6 +32,8 @@ import { useAuth } from "../../context/AuthContext";
 import { AdvertiserVerificationTab } from "../../components/advertiser/AdvertiserVerificationTab";
 import { VerificationGuidelinesModal } from "../../components/advertiser/VerificationGuidelinesModal";
 import { AdvertiserSettingsTab } from "../../components/advertiser/AdvertiserSettingsTab";
+import { AdMediaUploader } from "../../components/advertiser/AdMediaUploader";
+import { RegionTargetingSelector } from "../../components/advertiser/RegionTargetingSelector";
 
 export const getCurrencySymbol = (currencyCode?: string): string => {
   switch (currencyCode?.toUpperCase()) {
@@ -210,7 +212,8 @@ export const AdvertiserPortal: React.FC = () => {
     start_date: new Date().toISOString().split("T")[0],
     end_date: "",
     // Targeting
-    locations: ["US", "CA", "GB"],
+    locations: ["IN"],
+    regions: [] as string[],
     pet_types: ["DOG", "CAT"],
     interests: ["Pet Nutrition", "Health & Wellness"],
     // Creative
@@ -358,6 +361,7 @@ export const AdvertiserPortal: React.FC = () => {
         targeting: {
           locations: campaignForm.locations,
           countries: campaignForm.locations,
+          regions: campaignForm.regions || [],
           pet_types: campaignForm.pet_types,
           interests: campaignForm.interests,
           petInterests: campaignForm.interests,
@@ -1652,40 +1656,20 @@ export const AdvertiserPortal: React.FC = () => {
                       </div>
 
                       <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
-                          Target Countries
+                        <label className="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">
+                          Target Countries, States & Districts
                         </label>
-                        <div className="flex flex-wrap gap-2">
-                          {["US", "IN", "GB", "CA", "AU", "DE", "FR"].map((country) => {
-                            const isSelected = campaignForm.locations.includes(country);
-                            return (
-                              <button
-                                type="button"
-                                key={country}
-                                onClick={() => {
-                                  if (isSelected) {
-                                    setCampaignForm({
-                                      ...campaignForm,
-                                      locations: campaignForm.locations.filter((c) => c !== country),
-                                    });
-                                  } else {
-                                    setCampaignForm({
-                                      ...campaignForm,
-                                      locations: [...campaignForm.locations, country],
-                                    });
-                                  }
-                                }}
-                                className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition ${
-                                  isSelected
-                                    ? "bg-slate-900 text-white border-slate-900"
-                                    : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
-                                }`}
-                              >
-                                {country}
-                              </button>
-                            );
-                          })}
-                        </div>
+                        <RegionTargetingSelector
+                          selectedCountries={campaignForm.locations}
+                          selectedRegions={campaignForm.regions || []}
+                          onChange={({ countries, regions }) => {
+                            setCampaignForm({
+                              ...campaignForm,
+                              locations: countries,
+                              regions: regions,
+                            });
+                          }}
+                        />
                       </div>
 
                       <div className="flex justify-between pt-4">
@@ -1740,17 +1724,19 @@ export const AdvertiserPortal: React.FC = () => {
                       </div>
 
                       <div>
-                        <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
-                          Creative Image URL *
+                        <label className="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">
+                          Ad Media Asset (Photo or Video) *
                         </label>
-                        <input
-                          type="url"
-                          required
-                          value={campaignForm.media_url}
-                          onChange={(e) =>
-                            setCampaignForm({ ...campaignForm, media_url: e.target.value })
-                          }
-                          className="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white"
+                        <AdMediaUploader
+                          mediaUrl={campaignForm.media_url}
+                          format={campaignForm.format}
+                          onChange={({ mediaUrl, format }) => {
+                            setCampaignForm({
+                              ...campaignForm,
+                              media_url: mediaUrl,
+                              format: format,
+                            });
+                          }}
                         />
                       </div>
 
@@ -1842,16 +1828,25 @@ export const AdvertiserPortal: React.FC = () => {
                 </div>
 
                 {campaignForm.media_url && (
-                  <div className="max-h-64 overflow-hidden bg-slate-950 flex items-center justify-center">
-                    <img
-                      src={campaignForm.media_url}
-                      alt="Ad Preview"
-                      className="w-full h-auto object-cover max-h-64"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src =
-                          "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800&auto=format&fit=crop&q=80";
-                      }}
-                    />
+                  <div className="max-h-72 overflow-hidden bg-slate-950 flex items-center justify-center relative">
+                    {campaignForm.format === "VIDEO" || /\.(mp4|webm|mov|mkv)(\?.*)?$/i.test(campaignForm.media_url) ? (
+                      <video
+                        src={campaignForm.media_url}
+                        controls
+                        playsInline
+                        className="w-full max-h-72 object-cover"
+                      />
+                    ) : (
+                      <img
+                        src={campaignForm.media_url}
+                        alt="Ad Preview"
+                        className="w-full h-auto object-cover max-h-72"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src =
+                            "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800&auto=format&fit=crop&q=80";
+                        }}
+                      />
+                    )}
                   </div>
                 )}
 

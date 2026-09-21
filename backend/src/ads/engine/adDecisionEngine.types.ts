@@ -4,6 +4,11 @@ export type AdSource = 'PETO' | 'EXTERNAL' | 'NONE';
 export interface AdRequestContext {
   userId?: string;
   country: string;
+  region?: string;
+  state?: string;
+  district?: string;
+  city?: string;
+  locationText?: string;
   placement: AdPlacement;
   device?: 'IOS' | 'ANDROID' | 'WEB' | 'ALL';
   language?: string;
