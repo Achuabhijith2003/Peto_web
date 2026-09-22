@@ -15,9 +15,13 @@ import {
   Loader2,
   ShieldCheck,
   CheckCircle2,
+  X,
+  ChevronRight,
+  Maximize2,
 } from "lucide-react";
 import api from "../../utils/api";
 import { useAuth } from "../../context/AuthContext";
+import Navbar from "../../components/layout/Navbar";
 import { PetParentModal } from "../../components/pets/PetParentModal";
 import PostCard from "../../components/social/PostCard";
 import CreatePost from "../../components/social/CreatePost";
@@ -109,6 +113,26 @@ export default function PetProfilePage() {
 
   // Quick visibility change state
   const [updatingVisibility, setUpdatingVisibility] = useState(false);
+
+  // Photo viewer / lightbox state
+  const [enlargedPhoto, setEnlargedPhoto] = useState<string | null>(null);
+
+  // Invitation response state
+  const [respondingInvite, setRespondingInvite] = useState(false);
+
+  const handleRespondToInvite = async (accept: boolean) => {
+    if (!id) return;
+    try {
+      setRespondingInvite(true);
+      await api.post(`/pets/${id}/parents/respond`, { accept });
+      await fetchPet();
+    } catch (err: any) {
+      console.error("Failed to respond to invite:", err);
+      alert(err.response?.data?.message || "Failed to respond to invitation.");
+    } finally {
+      setRespondingInvite(false);
+    }
+  };
 
   const fetchPet = async () => {
     if (!id) return;
@@ -289,14 +313,21 @@ export default function PetProfilePage() {
   const petVisibility = ((pet.visibility || (pet as any).profile_visibility || "PUBLIC") as string).toUpperCase();
   const profilePhotoUrl = pet.profile_photo_url || (pet as any).profile_media_url || (pet as any).avatar_url;
 
+  const pendingInviteForCurrentUser = pet.parents?.find(
+    (p) => p.user_id === user?.id && p.status === "PENDING_INVITE"
+  );
+
   return (
     <div className="min-h-screen bg-slate-50/60 pb-20">
+      {/* Global Application Header */}
+      <Navbar />
+
       {/* Top Sticky Bar */}
       <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200/80 px-4 py-3 sm:px-6">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-slate-600 hover:text-slate-900 font-medium text-sm transition-colors"
+            className="flex items-center gap-2 text-slate-600 hover:text-slate-900 font-medium text-sm transition-colors cursor-pointer"
           >
             <ArrowLeft size={18} />
             <span>Back</span>
@@ -323,7 +354,7 @@ export default function PetProfilePage() {
             {permissions.can_edit && (
               <button
                 onClick={() => navigate(`/pets/${pet.id}/edit`)}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition-colors shadow-sm"
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition-colors shadow-sm cursor-pointer"
               >
                 <Edit3 size={13} />
                 <span>Edit Pet</span>
@@ -333,25 +364,83 @@ export default function PetProfilePage() {
         </div>
       </div>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 pt-5 space-y-6">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 pt-4 space-y-6">
+        {/* Breadcrumb Navigation */}
+        <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+          <Link to="/" className="hover:text-amber-600 transition-colors">Home</Link>
+          <ChevronRight size={12} className="text-slate-400" />
+          <Link to="/social" className="hover:text-amber-600 transition-colors">Social Feed</Link>
+          <ChevronRight size={12} className="text-slate-400" />
+          <Link to="/profile" className="hover:text-amber-600 transition-colors">Pets Showcase</Link>
+          <ChevronRight size={12} className="text-slate-400" />
+          <span className="text-slate-900 font-bold">{pet.name}</span>
+        </div>
+
+        {/* Pending Invitation Banner */}
+        {pendingInviteForCurrentUser && (
+          <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white p-4 sm:p-5 rounded-3xl shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-2xl bg-white/20 flex items-center justify-center font-bold text-2xl shrink-0">
+                🐾
+              </div>
+              <div>
+                <h4 className="font-bold text-sm sm:text-base leading-tight">
+                  You have been invited to co-parent {pet.name}!
+                </h4>
+                <p className="text-xs text-white/90 mt-0.5">
+                  Role: <span className="font-bold capitalize">{pendingInviteForCurrentUser.relationship_type.replace(/_/g, " ").toLowerCase()}</span>.
+                  Join {pet.name}'s family circle to help manage, upload photos, and post about them.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5 self-end sm:self-auto">
+              <button
+                disabled={respondingInvite}
+                onClick={() => handleRespondToInvite(true)}
+                className="px-4 py-2 rounded-xl bg-white text-emerald-700 font-bold text-xs hover:bg-emerald-50 transition shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {respondingInvite ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle2 size={14} />}
+                <span>Accept Invitation</span>
+              </button>
+              <button
+                disabled={respondingInvite}
+                onClick={() => handleRespondToInvite(false)}
+                className="px-3.5 py-2 rounded-xl bg-white/20 hover:bg-white/30 text-white font-semibold text-xs transition cursor-pointer disabled:opacity-50"
+              >
+                Decline
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Profile Header Card (Clean Profile Avatar presentation, NO cover banner) */}
         <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-sm space-y-6">
           {/* Header Row: Avatar, Identity, and Action Buttons */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 pb-6 border-b border-slate-100">
             {/* Avatar & Quick Title */}
             <div className="flex items-center gap-5">
-              <div className="relative inline-block shrink-0">
-                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-amber-50 border-2 border-amber-200/60 overflow-hidden flex items-center justify-center shadow-xs">
+              <div
+                onClick={() => profilePhotoUrl && setEnlargedPhoto(profilePhotoUrl)}
+                className={`relative inline-block shrink-0 ${profilePhotoUrl ? "cursor-pointer group" : ""}`}
+                title={profilePhotoUrl ? "Click to enlarge photo" : undefined}
+              >
+                <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-amber-50 border-2 border-amber-200/60 overflow-hidden flex items-center justify-center shadow-xs group-hover:border-amber-400 transition-all">
                   {profilePhotoUrl ? (
                     <img
                       src={profilePhotoUrl}
                       alt={pet.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                     />
                   ) : (
                     <span className="text-4xl sm:text-5xl">{emoji}</span>
                   )}
                 </div>
+                {profilePhotoUrl && (
+                  <div className="absolute top-1.5 right-1.5 w-6 h-6 rounded-lg bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Maximize2 size={12} />
+                  </div>
+                )}
                 <div className="absolute -bottom-1.5 -right-1.5 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white border border-slate-100 shadow-xs flex items-center justify-center text-sm sm:text-base">
                   {emoji}
                 </div>
@@ -673,13 +762,19 @@ export default function PetProfilePage() {
                 {pet.media.map((item) => (
                   <div
                     key={item.id}
-                    className="group relative aspect-square rounded-2xl overflow-hidden bg-slate-100 border border-slate-200/80 shadow-sm"
+                    onClick={() => setEnlargedPhoto(item.media_url)}
+                    className="group relative aspect-square rounded-2xl overflow-hidden bg-slate-100 border border-slate-200/80 shadow-sm cursor-pointer"
                   >
                     <img
                       src={item.media_url}
                       alt={item.caption || pet.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                      <div className="w-8 h-8 rounded-full bg-white/90 text-slate-800 flex items-center justify-center shadow-sm">
+                        <Maximize2 size={14} />
+                      </div>
+                    </div>
                     {item.is_profile && (
                       <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-slate-900/80 backdrop-blur-sm text-white text-[10px] font-bold">
                         Avatar
@@ -754,6 +849,31 @@ export default function PetProfilePage() {
             fetchPet();
           }}
         />
+      )}
+
+      {/* Lightbox / Enlarged Photo Modal */}
+      {enlargedPhoto && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setEnlargedPhoto(null)}
+        >
+          <div
+            className="relative max-w-4xl max-h-[85vh] w-full rounded-3xl overflow-hidden bg-slate-900 border border-slate-700 shadow-2xl flex items-center justify-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setEnlargedPhoto(null)}
+              className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-black/60 hover:bg-black text-white flex items-center justify-center transition cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+            <img
+              src={enlargedPhoto}
+              alt="Pet"
+              className="w-full h-full max-h-[85vh] object-contain"
+            />
+          </div>
+        </div>
       )}
     </div>
   );

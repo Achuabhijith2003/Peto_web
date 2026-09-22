@@ -7,6 +7,7 @@ import {
   updatePetVisibilityService,
   getUserPetsService,
   getMyPetsService,
+  getMyPendingPetInvitesService,
   addPetMediaService,
   deletePetMediaService,
   invitePetParentService,
@@ -170,10 +171,24 @@ export async function invitePetParentHandler(req: Request, res: Response): Promi
   }
 }
 
+export async function getMyPendingPetInvitesHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const userId = (req as any).user?.id;
+    if (!userId) {
+      res.status(401).json({ success: false, message: "Unauthorized" });
+      return;
+    }
+    const invites = await getMyPendingPetInvitesService(userId);
+    res.json({ success: true, data: invites });
+  } catch (err: any) {
+    res.status(err.status || 500).json({ success: false, message: err.message || "Failed to fetch pending pet invites" });
+  }
+}
+
 export async function respondPetParentInviteHandler(req: Request, res: Response): Promise<void> {
   try {
     const petId = req.params.id as string;
-    const inviteId = req.params.inviteId as string;
+    const inviteId = (req.params.inviteId || req.body.inviteId) as string;
     const userId = (req as any).user?.id;
     const { accept } = req.body;
 
@@ -182,7 +197,8 @@ export async function respondPetParentInviteHandler(req: Request, res: Response)
       return;
     }
 
-    const result = await respondPetParentInviteService(petId, userId, Boolean(accept));
+    const targetId = inviteId || petId;
+    const result = await respondPetParentInviteService(targetId, userId, Boolean(accept));
     res.json({ success: true, data: result });
   } catch (err: any) {
     res.status(err.status || 500).json({ success: false, message: err.message || "Failed to respond to invite" });

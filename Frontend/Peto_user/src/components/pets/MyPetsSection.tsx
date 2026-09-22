@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Plus, PawPrint, Loader2 } from "lucide-react";
+import { Plus, PawPrint, Loader2, Check, X } from "lucide-react";
 import api from "../../utils/api";
 import { PetCard, type PetCardData } from "./PetCard";
 
@@ -14,30 +14,54 @@ export const MyPetsSection: React.FC<MyPetsSectionProps> = ({
   isOwnProfile = false,
 }) => {
   const [pets, setPets] = useState<PetCardData[]>([]);
+  const [pendingInvites, setPendingInvites] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [respondingId, setRespondingId] = useState<string | null>(null);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const endpoint = isOwnProfile ? "/pets/my" : `/pets/user/${userId}`;
+      const res = await api.get(endpoint);
+      if (res.data?.data) {
+        setPets(res.data.data);
+      }
+
+      if (isOwnProfile) {
+        try {
+          const inviteRes = await api.get("/pets/invites/pending");
+          if (inviteRes.data?.data) {
+            setPendingInvites(inviteRes.data.data);
+          }
+        } catch (_) {}
+      }
+    } catch (err) {
+      console.error("Failed to load pets:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    let isMounted = true;
-    async function loadPets() {
-      try {
-        setLoading(true);
-        const endpoint = isOwnProfile ? "/pets/my" : `/pets/user/${userId}`;
-        const res = await api.get(endpoint);
-        if (isMounted && res.data?.data) {
-          setPets(res.data.data);
-        }
-      } catch (err) {
-        console.error("Failed to load pets:", err);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    }
-
-    loadPets();
-    return () => {
-      isMounted = false;
-    };
+    loadData();
   }, [userId, isOwnProfile]);
+
+  const handleRespondInvite = async (inviteId: string, accept: boolean) => {
+    try {
+      setRespondingId(inviteId);
+      await api.post(`/pets/invites/${inviteId}/respond`, { accept });
+      // Remove from list
+      setPendingInvites((prev) => prev.filter((i) => i.id !== inviteId));
+      if (accept) {
+        // Reload pets so newly accepted pet appears immediately
+        await loadData();
+      }
+    } catch (err) {
+      console.error("Failed to respond to invite:", err);
+    } finally {
+      setRespondingId(null);
+    }
+  };
 
   return (
     <div className="bg-white rounded-3xl border border-slate-200/80 p-5 sm:p-6 shadow-sm space-y-4">
@@ -72,6 +96,85 @@ export const MyPetsSection: React.FC<MyPetsSectionProps> = ({
           </Link>
         )}
       </div>
+
+      {/* Pending Pet Invitations Banner */}
+      {isOwnProfile && pendingInvites.length > 0 && (
+        <div className="bg-gradient-to-br from-amber-50 to-orange-50/50 border border-amber-200/80 rounded-2xl p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="flex h-2 w-2 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+              </span>
+              <span className="text-xs font-bold text-amber-900 uppercase tracking-wide">
+                Pending Pet Invitations ({pendingInvites.length})
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-2.5">
+            {pendingInvites.map((inv) => {
+              const pet = inv.pet;
+              const inviter = inv.inviter;
+              const roleDisplay = (inv.relationship || "CO_OWNER").replace(/_/g, " ").toLowerCase();
+              const isResponding = respondingId === inv.id;
+
+              return (
+                <div
+                  key={inv.id}
+                  className="bg-white rounded-xl border border-amber-200/70 p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-xl bg-amber-100/70 overflow-hidden flex items-center justify-center shrink-0 border border-amber-200">
+                      {pet?.avatar_url ? (
+                        <img
+                          src={pet.avatar_url}
+                          alt={pet.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <PawPrint size={20} className="text-amber-600" />
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm text-slate-900 leading-tight">
+                        {pet?.name || "Unnamed Pet"}
+                      </h4>
+                      <p className="text-[11px] text-slate-600">
+                        Invited to be a <span className="font-semibold capitalize text-amber-800">{roleDisplay}</span>
+                        {inviter?.username && (
+                          <span> by <span className="font-medium text-slate-800">@{inviter.username}</span></span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 self-end sm:self-auto">
+                    <button
+                      type="button"
+                      disabled={isResponding}
+                      onClick={() => handleRespondInvite(inv.id, true)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
+                    >
+                      {isResponding ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
+                      <span>Accept</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isResponding}
+                      onClick={() => handleRespondInvite(inv.id, false)}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600 text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer"
+                    >
+                      <X size={13} />
+                      <span>Decline</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Content */}
       {loading ? (

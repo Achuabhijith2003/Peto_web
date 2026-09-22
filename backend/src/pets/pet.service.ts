@@ -125,10 +125,10 @@ export async function createPetService(
   }
 
   // 3. Register media roles if media IDs provided
-  if (input.profile_media_id) {
+  if (profileMediaId) {
     await supabase.from("pet_media").insert({
       pet_id: pet.id,
-      media_id: input.profile_media_id,
+      media_id: profileMediaId,
       role: "PROFILE",
       visibility: "INHERIT",
       is_primary: true,
@@ -493,6 +493,21 @@ export async function getUserPetsService(
       if (m?.url) avatarUrl = m.url;
     }
 
+    if (!avatarUrl) {
+      const { data: petMediaRows } = await supabase
+        .from("pet_media")
+        .select("media:media_id(url), role, is_primary")
+        .eq("pet_id", pet.id)
+        .order("is_primary", { ascending: false });
+
+      if (petMediaRows && petMediaRows.length > 0) {
+        const profileMedia = petMediaRows.find((pm: any) => pm.role === "PROFILE") || petMediaRows[0];
+        if ((profileMedia as any)?.media?.url) {
+          avatarUrl = (profileMedia as any).media.url;
+        }
+      }
+    }
+
     visiblePets.push({
       ...pet,
       visibility: pet.profile_visibility || "PUBLIC",
@@ -543,6 +558,21 @@ export async function getMyPetsService(userId: string): Promise<Pet[]> {
       if (m?.url) avatarUrl = m.url;
     }
 
+    if (!avatarUrl) {
+      const { data: petMediaRows } = await supabase
+        .from("pet_media")
+        .select("media:media_id(url), role, is_primary")
+        .eq("pet_id", pet.id)
+        .order("is_primary", { ascending: false });
+
+      if (petMediaRows && petMediaRows.length > 0) {
+        const profileMedia = petMediaRows.find((pm: any) => pm.role === "PROFILE") || petMediaRows[0];
+        if ((profileMedia as any)?.media?.url) {
+          avatarUrl = (profileMedia as any).media.url;
+        }
+      }
+    }
+
     if (pet.cover_media_id) {
       const { data: m } = await supabase
         .from("media")
@@ -574,6 +604,19 @@ export async function getMyPetsService(userId: string): Promise<Pet[]> {
       is_parent: true,
       can_edit: true,
       can_manage_parents: row.is_primary || (row.permissions && row.permissions.includes("MANAGE_PARENTS")),
+      viewer_permissions: {
+        can_view: true,
+        can_edit: true,
+        can_upload_media: true,
+        can_manage_parents: row.is_primary || (row.permissions && row.permissions.includes("MANAGE_PARENTS")),
+        can_manage_privacy: row.is_primary || (row.permissions && row.permissions.includes("MANAGE_PRIVACY")),
+      },
+      viewer_relationship: {
+        is_parent: true,
+        is_primary: row.is_primary || false,
+        relationship_type: row.relationship,
+        permissions: row.permissions || [],
+      },
     });
   }
 
@@ -801,20 +844,107 @@ export async function invitePetParentService(
 }
 
 /**
- * 11. Respond to Pet Parent Invitation (Accept / Decline)
+ * 11. Get Current User's Pending Pet Invitations
+ */
+export async function getMyPendingPetInvitesService(userId: string): Promise<any[]> {
+  const { data: invites, error } = await supabase
+    .from("pet_parents")
+    .select(`
+      id,
+      pet_id,
+      relationship,
+      permissions,
+      status,
+      created_at,
+      pets:pet_id (
+        id,
+        name,
+        species,
+        species_name,
+        breed,
+        profile_media_id,
+        status
+      )
+    `)
+    .eq("user_id", userId)
+    .eq("status", "PENDING_INVITE");
+
+  if (error || !invites) return [];
+
+  const enrichedInvites: any[] = [];
+  for (const inv of invites) {
+    const pet = Array.isArray(inv.pets) ? inv.pets[0] : inv.pets;
+    if (!pet) continue;
+
+    // Resolve avatar
+    let avatarUrl: string | null = null;
+    if (pet.profile_media_id) {
+      const { data: m } = await supabase
+        .from("media")
+        .select("url")
+        .eq("id", pet.profile_media_id)
+        .maybeSingle();
+      if (m?.url) avatarUrl = m.url;
+    }
+    if (!avatarUrl) {
+      const { data: pm } = await supabase
+        .from("pet_media")
+        .select("media:media_id(url)")
+        .eq("pet_id", pet.id)
+        .limit(1)
+        .maybeSingle();
+      if ((pm as any)?.media?.url) avatarUrl = (pm as any).media.url;
+    }
+
+    // Get primary owner / inviter
+    const { data: primaryOwnerRow } = await supabase
+      .from("pet_parents")
+      .select("user_id, profiles:user_id(id, username, full_name, avatar_url)")
+      .eq("pet_id", pet.id)
+      .eq("is_primary", true)
+      .maybeSingle();
+
+    const inviter = (primaryOwnerRow as any)?.profiles || null;
+
+    enrichedInvites.push({
+      id: inv.id,
+      pet_id: inv.pet_id,
+      relationship: inv.relationship,
+      permissions: inv.permissions,
+      status: inv.status,
+      created_at: inv.created_at,
+      pet: {
+        ...pet,
+        avatar_url: avatarUrl,
+        profile_photo_url: avatarUrl,
+      },
+      inviter: inviter,
+    });
+  }
+
+  return enrichedInvites;
+}
+
+/**
+ * 12. Respond to Pet Parent Invitation (Accept / Decline)
  */
 export async function respondPetParentInviteService(
-  petId: string,
+  petIdOrInviteId: string,
   userId: string,
   accept: boolean
 ): Promise<any> {
-  const { data: invite, error } = await supabase
+  // Can look up either by pet_id + user_id or by id (invite_id) + user_id
+  let query = supabase
     .from("pet_parents")
-    .select("*")
-    .eq("pet_id", petId)
+    .select("*, pets:pet_id(name)")
     .eq("user_id", userId)
-    .eq("status", "PENDING_INVITE")
-    .maybeSingle();
+    .eq("status", "PENDING_INVITE");
+
+  if (petIdOrInviteId) {
+    query = query.or(`id.eq.${petIdOrInviteId},pet_id.eq.${petIdOrInviteId}`);
+  }
+
+  const { data: invite, error } = await query.maybeSingle();
 
   if (error || !invite) {
     const err: any = new Error("Pending invitation not found.");
@@ -832,6 +962,38 @@ export async function respondPetParentInviteService(
     .single();
 
   if (updateError) throw updateError;
+
+  // Notify primary owner of the response
+  try {
+    const { data: primaryOwner } = await supabase
+      .from("pet_parents")
+      .select("user_id")
+      .eq("pet_id", invite.pet_id)
+      .eq("is_primary", true)
+      .maybeSingle();
+
+    const { data: responderProfile } = await supabase
+      .from("profiles")
+      .select("username")
+      .eq("id", userId)
+      .maybeSingle();
+
+    const petName = (invite as any)?.pets?.name || "your pet";
+
+    if (primaryOwner?.user_id && responderProfile?.username) {
+      const verb = accept ? "accepted" : "declined";
+      await supabase.from("notifications").insert({
+        user_id: primaryOwner.user_id,
+        actor_id: userId,
+        type: "PET_INVITE_RESPONSE",
+        message: `@${responderProfile.username} ${verb} your invitation to be a ${(invite.relationship || "co_owner").toLowerCase().replace("_", " ")} for "${petName}".`,
+        read: false,
+      });
+    }
+  } catch (notifErr) {
+    console.warn("Failed to dispatch pet invite response notification:", notifErr);
+  }
+
   return updated;
 }
 

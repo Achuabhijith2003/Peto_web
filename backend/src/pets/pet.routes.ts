@@ -8,6 +8,7 @@ import {
   updatePetVisibilityHandler,
   getUserPetsHandler,
   getMyPetsHandler,
+  getMyPendingPetInvitesHandler,
   addPetMediaHandler,
   deletePetMediaHandler,
   invitePetParentHandler,
@@ -21,6 +22,10 @@ const router = Router();
 // Pet Creation & My Pets
 router.post("/", authenticate, createPetHandler);
 router.get("/my", authenticate, getMyPetsHandler);
+
+// Pending Pet Parent Invitations (MUST be before /:id)
+router.get("/invites/pending", authenticate, getMyPendingPetInvitesHandler);
+router.post("/invites/:inviteId/respond", authenticate, respondPetParentInviteHandler);
 
 // User Showcase Pets
 router.get("/user/:userId", optionalAuthenticate, getUserPetsHandler);
@@ -42,6 +47,7 @@ router.delete("/:id/media/:mediaId", authenticate, deletePetMediaHandler);
 
 // Pet Parent Authorization & Invitations
 router.post("/:id/parents/invite", authenticate, invitePetParentHandler);
+router.post("/:id/parents/respond", authenticate, respondPetParentInviteHandler);
 router.post("/:id/parents/invites/:inviteId/respond", authenticate, respondPetParentInviteHandler);
 router.delete("/:id/parents/:parentUserId", authenticate, removePetParentHandler);
 
