@@ -17,6 +17,7 @@ import {
   Link as LinkIcon,
   Reply,
   CornerDownRight,
+  PawPrint,
 } from "lucide-react";
 import api from "../../utils/api";
 import { useAuth } from "../../context/AuthContext";
@@ -326,6 +327,20 @@ const PostCard = ({ post }: PostCardProps) => {
                 >
                   <Users size={11} className="shrink-0" />
                   <span>c/{post.community.name}</span>
+                </button>
+              )}
+              {post.pet && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/pets/${post.pet.id}`);
+                  }}
+                  className="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2.5 py-0.5 text-[11px] font-semibold text-orange-800 hover:bg-orange-100 transition border border-orange-200/70"
+                  title={`Showcasing ${post.pet.name}`}
+                >
+                  <PawPrint size={11} className="shrink-0 text-orange-600" />
+                  <span>{post.pet.name}</span>
                 </button>
               )}
               {post.is_locked && (

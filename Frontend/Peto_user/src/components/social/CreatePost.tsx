@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Image, Video, X, Loader2, Sparkles, PawPrint, Play } from "lucide-react";
 import api from "../../utils/api";
 import { useAuth } from "../../context/AuthContext";
@@ -7,16 +7,37 @@ interface CreatePostProps {
   onPostCreated?: () => void;
   communityId?: string;
   communityName?: string;
+  petId?: string;
 }
 
-const CreatePost = ({ onPostCreated, communityId, communityName }: CreatePostProps) => {
+const CreatePost = ({ onPostCreated, communityId, communityName, petId }: CreatePostProps) => {
   const { user, openAuthModal } = useAuth();
   const [text, setText] = useState("");
   const [mediaFiles, setMediaFiles] = useState<{ file: File; preview: string; type: "image" | "video" }[]>([]);
   const [uploadingMedia, setUploadingMedia] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [myPets, setMyPets] = useState<{ id: string; name: string; species: string }[]>([]);
+  const [selectedPetId, setSelectedPetId] = useState<string>(petId || "");
   const photoInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (petId) {
+      setSelectedPetId(petId);
+    }
+  }, [petId]);
+
+  useEffect(() => {
+    if (user && !petId) {
+      api.get("/pets/my")
+        .then((res) => {
+          if (res.data?.data) {
+            setMyPets(res.data.data);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [user, petId]);
 
   const handlePhotoClick = () => {
     if (!user) {
@@ -115,10 +136,12 @@ const CreatePost = ({ onPostCreated, communityId, communityName }: CreatePostPro
         visibility: "public",
         media: mediaPayload,
         community_id: communityId || undefined,
+        pet_id: selectedPetId || petId || undefined,
       });
 
       setText("");
       setMediaFiles([]);
+      if (!petId) setSelectedPetId("");
       if (onPostCreated) onPostCreated();
     } catch (error) {
       console.error("Error creating post:", error);
@@ -241,6 +264,25 @@ const CreatePost = ({ onPostCreated, communityId, communityName }: CreatePostPro
               <span className="text-xs font-medium text-slate-400 ml-1">
                 {mediaFiles.length}/{MAX_MEDIA} items
               </span>
+            )}
+
+            {myPets.length > 0 && !petId && (
+              <div className="flex items-center gap-1.5 rounded-xl bg-amber-50/70 px-2.5 py-1.5 text-xs text-slate-700 border border-amber-200/60 ml-1">
+                <PawPrint size={13} className="text-amber-600" />
+                <span className="font-semibold text-slate-600">Pet:</span>
+                <select
+                  value={selectedPetId}
+                  onChange={(e) => setSelectedPetId(e.target.value)}
+                  className="bg-transparent text-xs font-bold text-amber-900 border-none outline-none cursor-pointer"
+                >
+                  <option value="">None</option>
+                  {myPets.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             )}
           </div>
 

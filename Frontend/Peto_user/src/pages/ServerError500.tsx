@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ServerCrash, RefreshCw, Home, ChevronDown, ChevronUp, Copy, Check } from "lucide-react";
 
@@ -106,13 +105,13 @@ export const ServerError500: React.FC<ServerError500Props> = ({
               <span>Try Again</span>
             </button>
 
-            <Link
-              to="/"
+            <a
+              href="/"
               className="py-2.5 px-4 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#151c27] font-semibold text-xs border border-[#dae2f3] transition-all flex items-center justify-center space-x-2"
             >
               <Home className="w-4 h-4 text-[#0058be]" />
               <span>Go to Home</span>
-            </Link>
+            </a>
           </div>
 
           {/* Diagnostic Details */}

@@ -9,6 +9,7 @@ interface CreatePostData {
     visibility: "public" | "followers" | "private";
     media?: any[];
     communityId?: string;
+    petId?: string;
 }
 
 const isUUID = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
@@ -21,7 +22,8 @@ export async function createPostService(
         text,
         visibility = "public",
         media = [],
-        communityId
+        communityId,
+        petId
     } = data;
 
     // If posting to a community, verify membership & ban status
@@ -79,6 +81,7 @@ export async function createPostService(
             text: text || "",
             visibility,
             community_id: communityId || null,
+            pet_id: petId || null,
             media_count: mediaList.length
         })
         .select()

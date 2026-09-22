@@ -29,6 +29,7 @@ import regionalRoutes from "./regions/regional.routes";
 import paymentRoutes from "./payments/payment.routes";
 import advertiserRoutes from "./advertisers/advertiser.routes";
 import publicPolicyRoutes from "./routes/publicPolicy.routes";
+import petRoutes from "./pets/pet.routes";
 import { ensurePublicBuckets } from "./media/storage.service";
 import { telemetryMiddleware } from "./middleware/telemetry.middleware";
 import { maintenanceMiddleware, getCachedMaintenanceState } from "./middleware/maintenance.middleware";
@@ -58,10 +59,25 @@ app.use(
           "'unsafe-eval'",
           "https://checkout.razorpay.com",
           "https://*.razorpay.com",
+          "https://pagead2.googlesyndication.com",
+          "https://*.googlesyndication.com",
+          "https://www.googletagservices.com",
+          "https://adservice.google.com",
+          "https://*.google.com",
+          "https://*.doubleclick.net",
+          "https://googleads.g.doubleclick.net",
         ],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
-        imgSrc: ["'self'", "data:", "blob:", "https:"],
+        imgSrc: [
+          "'self'",
+          "data:",
+          "blob:",
+          "https:",
+          "https://*.google.com",
+          "https://*.googlesyndication.com",
+          "https://*.doubleclick.net",
+        ],
         mediaSrc: ["'self'", "data:", "blob:", "https:"],
         connectSrc: [
           "'self'",
@@ -71,12 +87,22 @@ app.use(
           "https://*.razorpay.com",
           "https://api.razorpay.com",
           "https://lumberjack.razorpay.com",
+          "https://pagead2.googlesyndication.com",
+          "https://*.googlesyndication.com",
+          "https://*.google.com",
+          "https://*.doubleclick.net",
+          "https://googleads.g.doubleclick.net",
         ],
         frameSrc: [
           "'self'",
           "https://api.razorpay.com",
           "https://checkout.razorpay.com",
           "https://*.razorpay.com",
+          "https://pagead2.googlesyndication.com",
+          "https://*.googlesyndication.com",
+          "https://googleads.g.doubleclick.net",
+          "https://*.google.com",
+          "https://*.doubleclick.net",
         ],
       },
     },
@@ -167,6 +193,8 @@ app.use("/api/regions", regionalRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/advertisers", advertiserRoutes);
 app.use("/api/policies", publicPolicyRoutes);
+app.use("/api/pets", petRoutes);
+app.use("/api/pet", petRoutes);
 
 app.use(morgan("dev"));
 

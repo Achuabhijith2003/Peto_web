@@ -12,6 +12,7 @@ export const createPost = async (req: Request, res: Response) => {
         const visibility = req.body.visibility || "public";
         const mediaInput = req.body.media || [];
         const communityId = req.body.community_id || req.body.communityId || undefined;
+        const petId = req.body.pet_id || req.body.petId || undefined;
 
         const parsed = createPostSchema.safeParse({
             text: textContent,
@@ -19,6 +20,7 @@ export const createPost = async (req: Request, res: Response) => {
             visibility,
             media: mediaInput,
             community_id: communityId,
+            pet_id: petId,
         });
 
         if (!parsed.success) {
@@ -34,6 +36,7 @@ export const createPost = async (req: Request, res: Response) => {
             visibility,
             media: mediaInput,
             communityId,
+            petId,
         });
 
         return res.status(201).json({

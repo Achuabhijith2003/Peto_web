@@ -23,6 +23,9 @@ import PolicyPage from "../pages/PolicyPage";
 import Settings from "../pages/Settings";
 import AuthCallback from "../pages/AuthCallback";
 import GoogleLaunch from "../pages/GoogleLaunch";
+import PetProfilePage from "../pages/pets/PetProfilePage";
+import AddPetPage from "../pages/pets/AddPetPage";
+import EditPetPage from "../pages/pets/EditPetPage";
 
 const AppRoutes = () => {
   return (
@@ -60,6 +63,12 @@ const AppRoutes = () => {
       <Route path="/edit-profile" element={<EditProfile />} />
       <Route path="/profile/edit" element={<EditProfile />} />
       <Route path="/profile/:id?" element={<Profile />} />
+
+      {/* Pet System & Showcase Routes */}
+      <Route path="/pets/new" element={<AddPetPage />} />
+      <Route path="/pets/:id" element={<PetProfilePage />} />
+      <Route path="/pets/:id/edit" element={<EditPetPage />} />
+
       <Route path="/bookmarks" element={<Bookmarks />} />
       <Route path="/advertiser" element={<AdvertiserPortal />} />
       <Route path="/advertiser/*" element={<AdvertiserPortal />} />

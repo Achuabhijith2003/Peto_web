@@ -14,6 +14,7 @@ import PostCard from "../components/social/PostCard";
 import SponsoredPostCard from "../components/social/SponsoredPostCard";
 import WebExternalAdCard from "../components/social/WebExternalAdCard";
 import FollowListModal, { type FollowUserItem } from "../components/social/FollowListModal";
+import { MyPetsSection } from "../components/pets/MyPetsSection";
 
 const ProfileCenter = ({ userId }: { userId?: string }) => {
   const { user: currentUser, openAuthModal } = useAuth();
@@ -329,6 +330,9 @@ const ProfileCenter = ({ userId }: { userId?: string }) => {
           </div>
         </div>
       </div>
+
+      {/* Pets Showcase Section */}
+      <MyPetsSection userId={fetchId} isOwnProfile={isOwnProfile} />
 
       {/* Posts Section */}
       <div className="space-y-3">

@@ -11,6 +11,9 @@ export const createPostSchema = z.object({
     ]).default("public"),
     media: z.any().optional(),
     community_id: z.string().uuid("Invalid community ID").optional(),
+    communityId: z.string().uuid("Invalid community ID").optional(),
+    pet_id: z.string().uuid("Invalid pet ID").optional(),
+    petId: z.string().uuid("Invalid pet ID").optional(),
 });
 
 const allowedVisibility = [
