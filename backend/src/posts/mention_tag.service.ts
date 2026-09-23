@@ -407,6 +407,43 @@ export async function getMentionsAndTagsForPosts(postIds: string[]): Promise<{
                 }
             }
         }
+
+        // Fallback: check posts table for direct pet_id association
+        const remainingPostIds = postIds.filter(id => !tagsByPostId.has(id));
+        if (remainingPostIds.length > 0) {
+            const { data: postsWithPet } = await supabase
+                .from("posts")
+                .select(`
+                    id,
+                    pet_id,
+                    pet:pets(
+                        id,
+                        name,
+                        species,
+                        breed,
+                        profile_visibility,
+                        profile_media:media!pets_profile_media_id_fkey(url)
+                    )
+                `)
+                .in("id", remainingPostIds)
+                .not("pet_id", "is", null);
+
+            if (Array.isArray(postsWithPet)) {
+                for (const item of postsWithPet) {
+                    const pet = item.pet as any;
+                    if (item.id && pet) {
+                        tagsByPostId.set(item.id, [{
+                            id: pet.id,
+                            name: pet.name,
+                            species: pet.species,
+                            breed: pet.breed || undefined,
+                            avatar_url: (pet.profile_media as any)?.url || undefined,
+                            profile_visibility: pet.profile_visibility || "PUBLIC"
+                        }]);
+                    }
+                }
+            }
+        }
     } catch (err) {
         console.warn("Could not query post_pets:", err);
     }

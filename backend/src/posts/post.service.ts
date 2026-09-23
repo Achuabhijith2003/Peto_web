@@ -179,16 +179,22 @@ export async function createPostService(
         }
     }
 
+    // Consolidate tagged pet IDs from both taggedPetIds and petId
+    const effectivePetIds = [...(data.taggedPetIds || [])];
+    if (data.petId && !effectivePetIds.includes(data.petId)) {
+        effectivePetIds.push(data.petId);
+    }
+
     // Sync mentions and pet tags
     if (
         (data.mentionedUserIds && data.mentionedUserIds.length > 0) ||
-        (data.taggedPetIds && data.taggedPetIds.length > 0)
+        effectivePetIds.length > 0
     ) {
         await syncPostMentionsAndTags(
             post.id,
             userId,
             data.mentionedUserIds || [],
-            data.taggedPetIds || []
+            effectivePetIds
         );
     }
 
