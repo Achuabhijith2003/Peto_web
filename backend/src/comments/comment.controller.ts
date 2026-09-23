@@ -20,7 +20,9 @@ export async function createComment(
         const {
             comment,
             content,
-            parent_comment_id
+            parent_comment_id,
+            mentioned_user_ids,
+            mentionedUserIds
         } = req.body;
 
         const commentText = (comment || content || "").toString().trim();
@@ -31,11 +33,14 @@ export async function createComment(
             });
         }
 
+        const resolvedMentionedUserIds = mentioned_user_ids || mentionedUserIds || [];
+
         const data = await createCommentService(
             userId,
             postId,
             commentText,
-            parent_comment_id
+            parent_comment_id,
+            resolvedMentionedUserIds
         );
 
         res.json({

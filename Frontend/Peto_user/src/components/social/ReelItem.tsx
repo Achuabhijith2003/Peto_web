@@ -23,6 +23,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import api from "../../utils/api";
 import { useAuth } from "../../context/AuthContext";
+import MentionText from "./MentionText";
 import { ReportModal } from "../common/ReportModal";
 
 interface ReelItemProps {
@@ -483,9 +484,12 @@ const ReelItem = ({ post, isActive }: ReelItemProps) => {
 
         {/* Caption */}
         {post.text && (
-          <p className="text-xs sm:text-sm text-slate-100 font-normal leading-relaxed line-clamp-3 drop-shadow-sm">
-            {post.text}
-          </p>
+          <MentionText
+            text={post.text}
+            mentions={post.mentions}
+            taggedPets={post.tagged_pets}
+            className="text-xs sm:text-sm text-slate-100 font-normal leading-relaxed line-clamp-3 drop-shadow-sm"
+          />
         )}
       </div>
 
@@ -547,9 +551,12 @@ const ReelItem = ({ post, isActive }: ReelItemProps) => {
                               {formatTimeAgo(c.created_at)}
                             </span>
                           </div>
-                          <p className="text-slate-700 leading-relaxed font-normal">
-                            {c.comment || c.text}
-                          </p>
+                          <MentionText
+                            text={c.comment || c.text}
+                            mentions={c.mentions}
+                            showPetChips={false}
+                            className="text-slate-700 leading-relaxed font-normal"
+                          />
                           <div className="flex items-center gap-3 mt-1 pt-1 border-t border-slate-200/40">
                             <button
                               type="button"
@@ -609,9 +616,12 @@ const ReelItem = ({ post, isActive }: ReelItemProps) => {
                                       {formatTimeAgo(reply.created_at)}
                                     </span>
                                   </div>
-                                  <p className="text-slate-700 leading-relaxed font-normal">
-                                    {reply.comment || reply.text}
-                                  </p>
+                                  <MentionText
+                                    text={reply.comment || reply.text}
+                                    mentions={reply.mentions}
+                                    showPetChips={false}
+                                    className="text-slate-700 leading-relaxed font-normal"
+                                  />
                                   <div className="flex items-center gap-3 mt-1 pt-1 border-t border-slate-200/40">
                                     <button
                                       type="button"

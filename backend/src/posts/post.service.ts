@@ -1,7 +1,7 @@
 import { supabase } from "../config/supabase";
 import { deleteStorageFile } from "../media/storage.service";
 import { mapPostForFeed } from "./feed.mapper";
-
+import { syncPostMentionsAndTags, getMentionsAndTagsForPosts } from "./mention_tag.service";
 
 interface CreatePostData {
     userId: string;
@@ -10,6 +10,8 @@ interface CreatePostData {
     media?: any[];
     communityId?: string;
     petId?: string;
+    mentionedUserIds?: string[];
+    taggedPetIds?: string[];
 }
 
 const isUUID = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
@@ -177,6 +179,19 @@ export async function createPostService(
         }
     }
 
+    // Sync mentions and pet tags
+    if (
+        (data.mentionedUserIds && data.mentionedUserIds.length > 0) ||
+        (data.taggedPetIds && data.taggedPetIds.length > 0)
+    ) {
+        await syncPostMentionsAndTags(
+            post.id,
+            userId,
+            data.mentionedUserIds || [],
+            data.taggedPetIds || []
+        );
+    }
+
     return post;
 }
 
@@ -229,6 +244,10 @@ export async function getPostById(
     const likedPosts = new Set(likeData ? [post.id] : []);
     const bookmarkedPosts = new Set(bookmarkData ? [post.id] : []);
 
+    const { mentionsByPostId, tagsByPostId } = await getMentionsAndTagsForPosts([post.id]);
+    post.mentions = mentionsByPostId.get(post.id) || [];
+    post.tagged_pets = tagsByPostId.get(post.id) || [];
+
     return mapPostForFeed(
         post,
         currentUserId,
@@ -239,15 +258,12 @@ export async function getPostById(
 
 
 export async function updatePostById(
-
     postId: string,
-
     userId: string,
-
     text?: string,
-
-    visibility?: string
-
+    visibility?: string,
+    mentionedUserIds?: string[],
+    taggedPetIds?: string[]
 ) {
 
     //--------------------------------------------------
@@ -255,25 +271,17 @@ export async function updatePostById(
     //--------------------------------------------------
 
     const { data: existing } = await supabase
-
         .from("posts")
-
         .select("id,user_id")
-
         .eq("id", postId)
-
         .maybeSingle();
 
     if (!existing) {
-
         return null;
-
     }
 
     if (existing.user_id !== userId) {
-
         return null;
-
     }
 
     //--------------------------------------------------
@@ -281,21 +289,15 @@ export async function updatePostById(
     //--------------------------------------------------
 
     const updateData: Record<string, any> = {
-
         updated_at: new Date().toISOString()
-
     };
 
     if (text !== undefined) {
-
         updateData.text = text.trim();
-
     }
 
     if (visibility !== undefined) {
-
         updateData.visibility = visibility;
-
     }
 
     //--------------------------------------------------
@@ -303,25 +305,26 @@ export async function updatePostById(
     //--------------------------------------------------
 
     const { data, error } = await supabase
-
         .from("posts")
-
         .update(updateData)
-
         .eq("id", postId)
-
         .select()
-
         .single();
 
     if (error) {
-
         throw error;
+    }
 
+    if (mentionedUserIds !== undefined || taggedPetIds !== undefined) {
+        await syncPostMentionsAndTags(
+            postId,
+            userId,
+            mentionedUserIds || [],
+            taggedPetIds || []
+        );
     }
 
     return data;
-
 }
 
 
@@ -541,21 +544,18 @@ export async function getMyPostsService(
 
     );
 
-    const feed = posts?.map(post =>
+    const { mentionsByPostId, tagsByPostId } = await getMentionsAndTagsForPosts(postIds);
 
-        mapPostForFeed(
-
+    const feed = posts?.map(post => {
+        post.mentions = mentionsByPostId.get(post.id) || [];
+        post.tagged_pets = tagsByPostId.get(post.id) || [];
+        return mapPostForFeed(
             post,
-
             userId,
-
             likedPosts,
-
             bookmarkedPosts
-
-        )
-
-    );
+        );
+    });
 
     return {
 
@@ -583,6 +583,30 @@ export async function getUserPostsService(
     page: number = 1,
     limit: number = 10
 ) {
+    let targetUserId = profileId;
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(profileId);
+    if (!isUuid) {
+        const { data: u } = await supabase
+            .from("profiles")
+            .select("id")
+            .ilike("username", profileId.trim())
+            .maybeSingle();
+
+        if (!u?.id) {
+            return {
+                posts: [],
+                pagination: {
+                    page,
+                    limit,
+                    total: 0,
+                    totalPages: 0,
+                    hasNextPage: false
+                }
+            };
+        }
+        targetUserId = u.id;
+    }
+
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
@@ -599,7 +623,7 @@ export async function getUserPostsService(
             ),
             media(*)
         `, { count: "exact" })
-        .eq("user_id", profileId)
+        .eq("user_id", targetUserId)
         .eq("visibility", "public")
         .order("created_at", { ascending: false })
         .range(from, to);
@@ -626,14 +650,18 @@ export async function getUserPostsService(
         bookmarkedPosts = new Set((bookmarks ?? []).map(x => x.post_id));
     }
 
-    const feed = (posts ?? []).map(post =>
-        mapPostForFeed(
+    const { mentionsByPostId, tagsByPostId } = await getMentionsAndTagsForPosts(postIds);
+
+    const feed = (posts ?? []).map(post => {
+        post.mentions = mentionsByPostId.get(post.id) || [];
+        post.tagged_pets = tagsByPostId.get(post.id) || [];
+        return mapPostForFeed(
             post,
             currentUserId,
             likedPosts,
             bookmarkedPosts
-        )
-    );
+        );
+    });
 
     return {
         posts: feed,
@@ -693,14 +721,18 @@ export async function getGlobalFeedService(
         bookmarkedPosts = new Set((bookmarks ?? []).map(x => x.post_id));
     }
 
-    const feed = (posts ?? []).map(post =>
-        mapPostForFeed(
+    const { mentionsByPostId, tagsByPostId } = await getMentionsAndTagsForPosts(postIds);
+
+    const feed = (posts ?? []).map(post => {
+        post.mentions = mentionsByPostId.get(post.id) || [];
+        post.tagged_pets = tagsByPostId.get(post.id) || [];
+        return mapPostForFeed(
             post,
             currentUserId,
             likedPosts,
             bookmarkedPosts
-        )
-    );
+        );
+    });
 
     return {
         posts: feed,
@@ -762,14 +794,18 @@ export async function searchPostsService(
         bookmarkedPosts = new Set((bookmarks ?? []).map(x => x.post_id));
     }
 
-    const feed = (posts ?? []).map(post =>
-        mapPostForFeed(
+    const { mentionsByPostId, tagsByPostId } = await getMentionsAndTagsForPosts(postIds);
+
+    const feed = (posts ?? []).map(post => {
+        post.mentions = mentionsByPostId.get(post.id) || [];
+        post.tagged_pets = tagsByPostId.get(post.id) || [];
+        return mapPostForFeed(
             post,
             currentUserId,
             likedPosts,
             bookmarkedPosts
-        )
-    );
+        );
+    });
 
     return {
         posts: feed || [],
@@ -835,14 +871,18 @@ export async function getReelsFeedService(
         bookmarkedPosts = new Set((bookmarks ?? []).map(x => x.post_id));
     }
 
-    const feed = videoPosts.map(post =>
-        mapPostForFeed(
+    const { mentionsByPostId, tagsByPostId } = await getMentionsAndTagsForPosts(postIds);
+
+    const feed = videoPosts.map(post => {
+        post.mentions = mentionsByPostId.get(post.id) || [];
+        post.tagged_pets = tagsByPostId.get(post.id) || [];
+        return mapPostForFeed(
             post,
             currentUserId,
             likedPosts,
             bookmarkedPosts
-        )
-    );
+        );
+    });
 
     const totalCount = count ?? videoPosts.length;
 
@@ -953,14 +993,18 @@ export async function getCommunityFeedService(
         bookmarkedPosts = new Set((bookmarks ?? []).map(x => x.post_id));
     }
 
-    const feed = (posts ?? []).map(post =>
-        mapPostForFeed(
+    const { mentionsByPostId, tagsByPostId } = await getMentionsAndTagsForPosts(postIds);
+
+    const feed = (posts ?? []).map(post => {
+        post.mentions = mentionsByPostId.get(post.id) || [];
+        post.tagged_pets = tagsByPostId.get(post.id) || [];
+        return mapPostForFeed(
             post,
             currentUserId,
             likedPosts,
             bookmarkedPosts
-        )
-    );
+        );
+    });
 
     return {
         posts: feed,

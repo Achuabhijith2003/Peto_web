@@ -30,6 +30,9 @@ export const createPost = async (req: Request, res: Response) => {
             });
         }
 
+        const mentionedUserIds = req.body.mentioned_user_ids || req.body.mentionedUserIds || [];
+        const taggedPetIds = req.body.tagged_pet_ids || req.body.taggedPetIds || [];
+
         const post = await createPostService({
             userId: user.id,
             text: textContent,
@@ -37,6 +40,8 @@ export const createPost = async (req: Request, res: Response) => {
             media: mediaInput,
             communityId,
             petId,
+            mentionedUserIds,
+            taggedPetIds,
         });
 
         return res.status(201).json({
@@ -116,18 +121,18 @@ export async function updatePost(
 
         const postId = (req as any).params.id;
 
-        const { text, visibility } = req.body;
+        const { text, visibility, mentioned_user_ids, mentionedUserIds, tagged_pet_ids, taggedPetIds } = req.body;
+
+        const resolvedMentionedUserIds = mentioned_user_ids !== undefined ? mentioned_user_ids : mentionedUserIds;
+        const resolvedTaggedPetIds = tagged_pet_ids !== undefined ? tagged_pet_ids : taggedPetIds;
 
         const post = await updatePostById(
-
             postId,
-
             userId,
-
             text,
-
-            visibility
-
+            visibility,
+            resolvedMentionedUserIds,
+            resolvedTaggedPetIds
         );
 
         if (!post) {

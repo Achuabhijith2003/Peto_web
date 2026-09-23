@@ -47,7 +47,7 @@ export const getUserById = async (
 ) => {
     try {
 
-        const { id } = req.params;
+        const id = String(req.params.id || "").trim();
 
         if (!id) {
             return res.status(400).json({
@@ -56,7 +56,9 @@ export const getUserById = async (
             });
         }
 
-        const { data, error } = await supabase
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
+        let query = supabase
             .from("profiles")
             .select(`
         id,
@@ -72,11 +74,17 @@ export const getUserById = async (
         following_count,
         posts_count,
         created_at
-      `)
-            .eq("id", id)
-            .single();
+      `);
 
-        if (error) {
+        if (isUuid) {
+            query = query.eq("id", id);
+        } else {
+            query = query.ilike("username", id.trim());
+        }
+
+        const { data, error } = await query.maybeSingle();
+
+        if (error || !data) {
             return res.status(404).json({
                 success: false,
                 message: "User not found.",

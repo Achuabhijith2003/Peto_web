@@ -15,6 +15,7 @@ import {
   respondPetParentInviteHandler,
   removePetParentHandler,
   getPetPostsHandler,
+  searchTaggablePetsHandler,
 } from "./pet.controller";
 
 const router = Router();
@@ -22,6 +23,7 @@ const router = Router();
 // Pet Creation & My Pets
 router.post("/", authenticate, createPetHandler);
 router.get("/my", authenticate, getMyPetsHandler);
+router.get("/taggable", authenticate, searchTaggablePetsHandler);
 
 // Pending Pet Parent Invitations (MUST be before /:id)
 router.get("/invites/pending", authenticate, getMyPendingPetInvitesHandler);

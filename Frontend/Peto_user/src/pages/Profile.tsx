@@ -49,16 +49,23 @@ const ProfileCenter = ({ userId }: { userId?: string }) => {
 
     try {
       setLoading(true);
-      const [profileRes, postsRes, followersRes, followingRes] = await Promise.allSettled([
-        api.get(`/users/${fetchId}`),
-        api.get(`/posts/users/${fetchId}/posts`),
-        api.get(`/user/${fetchId}/followers`),
-        api.get(`/user/${fetchId}/following`),
-      ]);
+      const profileRes = await api.get(`/users/${fetchId}`);
+      const profileData = profileRes.data?.data;
 
-      if (profileRes.status === "fulfilled" && profileRes.value.data?.data) {
-        setProfile(profileRes.value.data.data);
+      if (!profileData) {
+        setProfile(null);
+        return;
       }
+
+      setProfile(profileData);
+      const resolvedId = profileData.id;
+      const isOwner = !userId || userId === currentUser?.id || currentUser?.id === resolvedId;
+
+      const [postsRes, followersRes, followingRes] = await Promise.allSettled([
+        api.get(`/posts/users/${resolvedId}/posts`),
+        api.get(`/user/${resolvedId}/followers`),
+        api.get(`/user/${resolvedId}/following`),
+      ]);
 
       if (postsRes.status === "fulfilled") {
         setPosts(postsRes.value.data?.posts || []);
@@ -76,9 +83,9 @@ const ProfileCenter = ({ userId }: { userId?: string }) => {
         setFollowingList(formatted);
       }
 
-      if (!isOwnProfile) {
+      if (!isOwner) {
         try {
-          const statusRes = await api.get(`/user/${fetchId}/follow-status`);
+          const statusRes = await api.get(`/user/${resolvedId}/follow-status`);
           setIsFollowing(statusRes.data?.isFollowing || false);
         } catch {
           setIsFollowing(false);
@@ -92,7 +99,7 @@ const ProfileCenter = ({ userId }: { userId?: string }) => {
     } finally {
       setLoading(false);
     }
-  }, [fetchId, isOwnProfile]);
+  }, [fetchId, isOwnProfile, userId, currentUser?.id]);
 
   useEffect(() => {
     fetchProfileData();
@@ -121,7 +128,8 @@ const ProfileCenter = ({ userId }: { userId?: string }) => {
       openAuthModal("follow pet parents");
       return;
     }
-    if (!fetchId || isOwnProfile) return;
+    const targetUserId = profile?.id || fetchId;
+    if (!targetUserId || targetUserId === currentUser.id) return;
     setFollowActionLoading(true);
 
     const nextState = !isFollowing;
@@ -129,9 +137,9 @@ const ProfileCenter = ({ userId }: { userId?: string }) => {
 
     try {
       if (isFollowing) {
-        await api.delete(`/user/${fetchId}/follow`);
+        await api.delete(`/user/${targetUserId}/follow`);
       } else {
-        await api.post(`/user/${fetchId}/follow`);
+        await api.post(`/user/${targetUserId}/follow`);
       }
       fetchProfileData();
     } catch (err) {

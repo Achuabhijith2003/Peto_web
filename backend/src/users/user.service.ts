@@ -6,8 +6,9 @@ export async function getUserProfile(
 ) {
 
     // ---------------- Profile ----------------
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(profileUserId);
 
-    const { data: profile, error: profileError } = await supabase
+    let profileQuery = supabase
         .from("profiles")
         .select(`
             id,
@@ -22,13 +23,21 @@ export async function getUserProfile(
             date_of_birth,
             verified,
             created_at
-        `)
-        .eq("id", profileUserId)
-        .single();
+        `);
+
+    if (isUuid) {
+        profileQuery = profileQuery.eq("id", profileUserId);
+    } else {
+        profileQuery = profileQuery.ilike("username", profileUserId.trim());
+    }
+
+    const { data: profile, error: profileError } = await profileQuery.maybeSingle();
 
     if (profileError || !profile) {
         throw new Error("User not found.");
     }
+
+    const actualUserId = profile.id;
 
     // ---------------- Followers ----------------
 
@@ -38,7 +47,7 @@ export async function getUserProfile(
             count: "exact",
             head: true
         })
-        .eq("following_id", profileUserId);
+        .eq("following_id", actualUserId);
 
     // ---------------- Following ----------------
 
@@ -48,7 +57,7 @@ export async function getUserProfile(
             count: "exact",
             head: true
         })
-        .eq("follower_id", profileUserId);
+        .eq("follower_id", actualUserId);
 
     // ---------------- Posts ----------------
 
@@ -58,7 +67,7 @@ export async function getUserProfile(
             count: "exact",
             head: true
         })
-        .eq("user_id", profileUserId);
+        .eq("user_id", actualUserId);
 
     // ---------------- Viewer follows profile ----------------
 
@@ -66,7 +75,7 @@ export async function getUserProfile(
         .from("follows")
         .select("id")
         .eq("follower_id", currentUserId)
-        .eq("following_id", profileUserId)
+        .eq("following_id", actualUserId)
         .maybeSingle();
 
     // ---------------- Profile follows viewer ----------------
@@ -74,7 +83,7 @@ export async function getUserProfile(
     const { data: follower } = await supabase
         .from("follows")
         .select("id")
-        .eq("follower_id", profileUserId)
+        .eq("follower_id", actualUserId)
         .eq("following_id", currentUserId)
         .maybeSingle();
 
@@ -125,9 +134,30 @@ export async function searchUsers(
 
     if (error) throw error;
 
+    let blockedUserIds = new Set<string>();
+    if (currentUserId) {
+        try {
+            const { data: blocks } = await supabase
+                .from("user_blocks")
+                .select("blocker_id, blocked_id")
+                .or(`blocker_id.eq.${currentUserId},blocked_id.eq.${currentUserId}`);
+
+            if (Array.isArray(blocks)) {
+                for (const b of blocks) {
+                    if (b.blocker_id === currentUserId) blockedUserIds.add(b.blocked_id);
+                    if (b.blocked_id === currentUserId) blockedUserIds.add(b.blocker_id);
+                }
+            }
+        } catch {
+            // graceful fallback
+        }
+    }
+
     const results = [];
 
     for (const user of users ?? []) {
+        if (blockedUserIds.has(user.id)) continue;
+
         const { count: followers } = await supabase
             .from("follows")
             .select("*", {

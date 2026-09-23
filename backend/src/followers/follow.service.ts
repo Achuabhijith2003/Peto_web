@@ -1,10 +1,20 @@
 import { supabase } from "../config/supabase";
 import { createNotification, removeNotificationByEvent } from "../notifications/notification.service";
 
+async function resolveProfileId(idOrUsername: string): Promise<string> {
+    if (!idOrUsername) throw new Error("User ID is required.");
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrUsername);
+    if (isUuid) return idOrUsername;
+    const { data } = await supabase.from("profiles").select("id").ilike("username", idOrUsername.trim()).maybeSingle();
+    if (!data?.id) throw new Error("User not found.");
+    return data.id;
+}
+
 export async function followUser(
     currentUserId: string,
-    targetUserId: string
+    rawTargetUserId: string
 ) {
+    const targetUserId = await resolveProfileId(rawTargetUserId);
 
     // Cannot follow yourself
     if (currentUserId === targetUserId) {
@@ -67,8 +77,9 @@ export async function followUser(
 
 export async function unfollowUser(
     currentUserId: string,
-    targetUserId: string
+    rawTargetUserId: string
 ) {
+    const targetUserId = await resolveProfileId(rawTargetUserId);
 
     const { data: follow } = await supabase
         .from("follows")
@@ -106,8 +117,14 @@ export async function unfollowUser(
 
 export async function getFollowStatus(
     currentUserId: string,
-    targetUserId: string
+    rawTargetUserId: string
 ) {
+    let targetUserId = rawTargetUserId;
+    try {
+        targetUserId = await resolveProfileId(rawTargetUserId);
+    } catch {
+        return { isFollowing: false };
+    }
 
     const { data } = await supabase
         .from("follows")
@@ -122,7 +139,13 @@ export async function getFollowStatus(
 }
 
 
-export async function getFollowers(userId: string) {
+export async function getFollowers(rawUserId: string) {
+    let userId = rawUserId;
+    try {
+        userId = await resolveProfileId(rawUserId);
+    } catch {
+        return [];
+    }
 
     const { data, error } = await supabase
         .from("follows")
@@ -146,7 +169,13 @@ export async function getFollowers(userId: string) {
     return data;
 }
 
-export async function getFollowing(userId: string) {
+export async function getFollowing(rawUserId: string) {
+    let userId = rawUserId;
+    try {
+        userId = await resolveProfileId(rawUserId);
+    } catch {
+        return [];
+    }
 
     const { data, error } = await supabase
         .from("follows")

@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from "react";
 import { Image, Video, X, Loader2, Sparkles, PawPrint, Play } from "lucide-react";
 import api from "../../utils/api";
 import { useAuth } from "../../context/AuthContext";
+import MentionSuggestions, { type MentionUser } from "./MentionSuggestions";
+import PetPickerModal, { type TaggablePet } from "./PetPickerModal";
 
 interface CreatePostProps {
   onPostCreated?: () => void;
@@ -16,28 +18,22 @@ const CreatePost = ({ onPostCreated, communityId, communityName, petId }: Create
   const [mediaFiles, setMediaFiles] = useState<{ file: File; preview: string; type: "image" | "video" }[]>([]);
   const [uploadingMedia, setUploadingMedia] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [myPets, setMyPets] = useState<{ id: string; name: string; species: string }[]>([]);
   const [selectedPetId, setSelectedPetId] = useState<string>(petId || "");
+  const [taggedPets, setTaggedPets] = useState<TaggablePet[]>([]);
+  const [isPetPickerOpen, setIsPetPickerOpen] = useState(false);
+  const [mentionedUsers, setMentionedUsers] = useState<MentionUser[]>([]);
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [mentionCursorPos, setMentionCursorPos] = useState<number>(0);
+
   const photoInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (petId) {
       setSelectedPetId(petId);
     }
   }, [petId]);
-
-  useEffect(() => {
-    if (user && !petId) {
-      api.get("/pets/my")
-        .then((res) => {
-          if (res.data?.data) {
-            setMyPets(res.data.data);
-          }
-        })
-        .catch(() => {});
-    }
-  }, [user, petId]);
 
   const handlePhotoClick = () => {
     if (!user) {
@@ -90,6 +86,48 @@ const CreatePost = ({ onPostCreated, communityId, communityName, petId }: Create
     });
   };
 
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    const cursorPos = e.target.selectionStart || 0;
+    setText(val);
+    setMentionCursorPos(cursorPos);
+
+    const textBeforeCursor = val.slice(0, cursorPos);
+    const match = textBeforeCursor.match(/@([a-zA-Z0-9_]*)$/);
+    if (match) {
+      setMentionQuery(match[1]);
+    } else {
+      setMentionQuery(null);
+    }
+  };
+
+  const handleSelectMention = (selectedUser: MentionUser) => {
+    if (mentionQuery === null) return;
+    const textBeforeCursor = text.slice(0, mentionCursorPos);
+    const textAfterCursor = text.slice(mentionCursorPos);
+
+    const prefix = textBeforeCursor.replace(/@([a-zA-Z0-9_]*)$/, `@${selectedUser.username} `);
+    const newText = prefix + textAfterCursor;
+    setText(newText);
+    setMentionQuery(null);
+
+    if (!mentionedUsers.some((u) => u.id === selectedUser.id)) {
+      setMentionedUsers((prev) => [...prev, selectedUser]);
+    }
+
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        const nextPos = prefix.length;
+        textareaRef.current.setSelectionRange(nextPos, nextPos);
+      }
+    }, 50);
+  };
+
+  const handleRemoveTaggedPet = (petIdToRemove: string) => {
+    setTaggedPets((prev) => prev.filter((p) => p.id !== petIdToRemove));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
@@ -136,11 +174,15 @@ const CreatePost = ({ onPostCreated, communityId, communityName, petId }: Create
         visibility: "public",
         media: mediaPayload,
         community_id: communityId || undefined,
-        pet_id: selectedPetId || petId || undefined,
+        pet_id: taggedPets.length > 0 ? taggedPets[0].id : (selectedPetId || petId || undefined),
+        mentioned_user_ids: mentionedUsers.map((u) => u.id),
+        tagged_pet_ids: taggedPets.map((p) => p.id),
       });
 
       setText("");
       setMediaFiles([]);
+      setTaggedPets([]);
+      setMentionedUsers([]);
       if (!petId) setSelectedPetId("");
       if (onPostCreated) onPostCreated();
     } catch (error) {
@@ -174,23 +216,58 @@ const CreatePost = ({ onPostCreated, communityId, communityName, petId }: Create
             </div>
           )}
 
-          <div className="flex-1 space-y-3">
+          <div className="flex-1 space-y-3 relative">
             <textarea
+              ref={textareaRef}
               rows={3}
               placeholder={
                 communityName
-                  ? `Share your thoughts with members of ${communityName}...`
+                  ? `Share your thoughts with members of ${communityName}... Type @ to mention`
                   : user
-                  ? "Share something wonderful about your pet..."
+                  ? "Share something wonderful... Type @ to mention someone"
                   : "Log in to share a post with the community..."
               }
               value={text}
               onFocus={() => {
                 if (!user) openAuthModal("share posts with pet lovers");
               }}
-              onChange={(e) => setText(e.target.value)}
+              onChange={handleTextChange}
               className="w-full resize-none rounded-2xl bg-slate-50 p-4 text-sm text-slate-900 placeholder-slate-400 outline-none border-2 border-transparent focus:border-amber-500 focus:bg-white focus:ring-4 focus:ring-amber-100/50 transition duration-200"
             />
+
+            {/* Mention Suggestions Popover */}
+            {mentionQuery !== null && (
+              <MentionSuggestions
+                query={mentionQuery}
+                onSelect={handleSelectMention}
+              />
+            )}
+
+            {/* Tagged Pets Chips */}
+            {taggedPets.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                <span className="text-xs font-semibold text-slate-500 mr-1 flex items-center gap-1">
+                  <PawPrint size={13} className="text-emerald-600" />
+                  Tagged:
+                </span>
+                {taggedPets.map((pet) => (
+                  <span
+                    key={pet.id}
+                    className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-900 border border-emerald-200 shadow-2xs"
+                  >
+                    <span>{pet.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTaggedPet(pet.id)}
+                      className="rounded-full hover:bg-emerald-200/80 p-0.5 text-emerald-700 transition"
+                      title="Remove tagged pet"
+                    >
+                      <X size={12} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
 
             {mediaFiles.length > 0 && (
               <div className="flex flex-wrap gap-3 pt-1">
@@ -236,16 +313,16 @@ const CreatePost = ({ onPostCreated, communityId, communityName, petId }: Create
           className="hidden"
         />
 
-        <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
-          <div className="flex items-center gap-2">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-4">
+          <div className="flex flex-wrap items-center gap-2">
             <button 
               type="button"
               onClick={handlePhotoClick}
               disabled={uploadingMedia || mediaFiles.length >= MAX_MEDIA}
-              className="flex items-center gap-2 rounded-xl bg-amber-50 px-3.5 py-2 text-xs font-bold text-amber-700 hover:bg-amber-100 transition border border-amber-200/50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 rounded-xl bg-amber-50 px-3.5 py-2 text-xs font-bold text-amber-700 hover:bg-amber-100 transition border border-amber-200/50 disabled:opacity-50 disabled:cursor-not-allowed"
               title={mediaFiles.length >= MAX_MEDIA ? "Maximum 5 media items reached" : "Add photo"}
             >
-              <Image size={16} className="text-amber-600" />
+              <Image size={15} className="text-amber-600" />
               <span>Photo</span>
             </button>
 
@@ -253,11 +330,28 @@ const CreatePost = ({ onPostCreated, communityId, communityName, petId }: Create
               type="button"
               onClick={handleVideoClick}
               disabled={uploadingMedia || mediaFiles.length >= MAX_MEDIA}
-              className="flex items-center gap-2 rounded-xl bg-rose-50 px-3.5 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100 transition border border-rose-200/50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 rounded-xl bg-rose-50 px-3.5 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100 transition border border-rose-200/50 disabled:opacity-50 disabled:cursor-not-allowed"
               title={mediaFiles.length >= MAX_MEDIA ? "Maximum 5 media items reached" : "Add video"}
             >
-              <Video size={16} className="text-rose-600" />
+              <Video size={15} className="text-rose-600" />
               <span>Video</span>
+            </button>
+
+            {/* Dedicated Tag Pet Button */}
+            <button
+              type="button"
+              onClick={() => {
+                if (!user) {
+                  openAuthModal("tag pets in your posts");
+                  return;
+                }
+                setIsPetPickerOpen(true);
+              }}
+              className="flex items-center gap-1.5 rounded-xl bg-emerald-50 px-3.5 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-100 transition border border-emerald-200/60"
+              title="Tag pets in this post"
+            >
+              <PawPrint size={15} className="text-emerald-600" />
+              <span>Tag Pet {taggedPets.length > 0 ? `(${taggedPets.length})` : ""}</span>
             </button>
 
             {mediaFiles.length > 0 && (
@@ -265,31 +359,12 @@ const CreatePost = ({ onPostCreated, communityId, communityName, petId }: Create
                 {mediaFiles.length}/{MAX_MEDIA} items
               </span>
             )}
-
-            {myPets.length > 0 && !petId && (
-              <div className="flex items-center gap-1.5 rounded-xl bg-amber-50/70 px-2.5 py-1.5 text-xs text-slate-700 border border-amber-200/60 ml-1">
-                <PawPrint size={13} className="text-amber-600" />
-                <span className="font-semibold text-slate-600">Pet:</span>
-                <select
-                  value={selectedPetId}
-                  onChange={(e) => setSelectedPetId(e.target.value)}
-                  className="bg-transparent text-xs font-bold text-amber-900 border-none outline-none cursor-pointer"
-                >
-                  <option value="">None</option>
-                  {myPets.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
           </div>
 
           <button
             type="submit"
             disabled={submitting || (!text.trim() && mediaFiles.length === 0)}
-            className="flex items-center gap-2 rounded-xl bg-amber-500 px-6 py-2.5 text-xs font-bold text-white shadow-sm shadow-amber-500/25 hover:bg-amber-600 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 transition duration-200"
+            className="flex items-center gap-2 rounded-xl bg-amber-500 px-6 py-2.5 text-xs font-bold text-white shadow-sm shadow-amber-500/25 hover:bg-amber-600 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 transition duration-200 ml-auto"
           >
             {submitting ? (
               <>
@@ -302,6 +377,15 @@ const CreatePost = ({ onPostCreated, communityId, communityName, petId }: Create
           </button>
         </div>
       </form>
+
+      {/* Pet Picker Modal */}
+      <PetPickerModal
+        isOpen={isPetPickerOpen}
+        onClose={() => setIsPetPickerOpen(false)}
+        selectedPets={taggedPets}
+        onSelectPets={(pets) => setTaggedPets(pets)}
+        maxPets={5}
+      />
     </div>
   );
 };
