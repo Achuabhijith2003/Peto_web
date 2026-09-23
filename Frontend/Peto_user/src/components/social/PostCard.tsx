@@ -26,6 +26,8 @@ import { ReportModal } from "../common/ReportModal";
 import ImageGrid from "./ImageGrid";
 import PostActions from "./PostActions";
 import PostStats from "./PostStats";
+import MentionText from "./MentionText";
+import MentionSuggestions, { type MentionUser } from "./MentionSuggestions";
 
 interface PostCardProps {
   post: any;
@@ -66,6 +68,9 @@ const PostCard = ({ post }: PostCardProps) => {
   const [submittingComment, setSubmittingComment] = useState(false);
   const [replyingTo, setReplyingTo] = useState<{ id: string; username: string; parentCommentId?: string } | null>(null);
   const [expandedReplies, setExpandedReplies] = useState<Record<string, boolean>>({});
+  const [commentMentionQuery, setCommentMentionQuery] = useState<string | null>(null);
+  const [commentMentionCursorPos, setCommentMentionCursorPos] = useState<number>(0);
+  const [commentMentionedUsers, setCommentMentionedUsers] = useState<MentionUser[]>([]);
   const commentInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -230,7 +235,10 @@ const PostCard = ({ post }: PostCardProps) => {
 
     try {
       setSubmittingComment(true);
-      const payload: any = { comment: commentText.trim() };
+      const payload: any = {
+        comment: commentText.trim(),
+        mentioned_user_ids: commentMentionedUsers.map((u) => u.id),
+      };
       if (replyingTo) {
         payload.parent_comment_id = replyingTo.id;
       }
@@ -244,12 +252,52 @@ const PostCard = ({ post }: PostCardProps) => {
       }
       setReplyingTo(null);
       setCommentText("");
+      setCommentMentionedUsers([]);
+      setCommentMentionQuery(null);
       setCommentsCount((p: number) => p + 1);
     } catch (err) {
       console.error("Failed to add comment", err);
     } finally {
       setSubmittingComment(false);
     }
+  };
+
+  const handleCommentTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    const cursorPos = e.target.selectionStart || 0;
+    setCommentText(val);
+    setCommentMentionCursorPos(cursorPos);
+
+    const textBeforeCursor = val.slice(0, cursorPos);
+    const match = textBeforeCursor.match(/@([a-zA-Z0-9_]*)$/);
+    if (match) {
+      setCommentMentionQuery(match[1]);
+    } else {
+      setCommentMentionQuery(null);
+    }
+  };
+
+  const handleSelectCommentMention = (u: MentionUser) => {
+    if (commentMentionQuery === null) return;
+    const textBeforeCursor = commentText.slice(0, commentMentionCursorPos);
+    const textAfterCursor = commentText.slice(commentMentionCursorPos);
+
+    const prefix = textBeforeCursor.replace(/@([a-zA-Z0-9_]*)$/, `@${u.username} `);
+    const newText = prefix + textAfterCursor;
+    setCommentText(newText);
+    setCommentMentionQuery(null);
+
+    if (!commentMentionedUsers.some((item) => item.id === u.id)) {
+      setCommentMentionedUsers((prev) => [...prev, u]);
+    }
+
+    setTimeout(() => {
+      if (commentInputRef.current) {
+        commentInputRef.current.focus();
+        const nextPos = prefix.length;
+        commentInputRef.current.setSelectionRange(nextPos, nextPos);
+      }
+    }, 50);
   };
 
   if (isDeleted) return null;
@@ -477,9 +525,14 @@ const PostCard = ({ post }: PostCardProps) => {
         </form>
       ) : (
         postText && (
-          <p className="px-6 pb-4 text-[15px] leading-relaxed text-slate-800 font-normal whitespace-pre-line">
-            {postText}
-          </p>
+          <div className="px-6 pb-4">
+            <MentionText
+              text={postText}
+              mentions={post.mentions}
+              taggedPets={post.tagged_pets}
+              className="text-[15px] leading-relaxed text-slate-800 font-normal"
+            />
+          </div>
         )
       )}
 
@@ -544,11 +597,18 @@ const PostCard = ({ post }: PostCardProps) => {
                 <input
                   ref={commentInputRef}
                   type="text"
-                  placeholder={replyingTo ? `Reply to @${replyingTo.username}...` : "Write a comment..."}
+                  placeholder={replyingTo ? `Reply to @${replyingTo.username}...` : "Write a comment... (Type @ to mention)"}
                   value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
+                  onChange={handleCommentTextChange}
                   className="w-full rounded-2xl bg-slate-100/80 px-4 py-2.5 pr-10 text-xs text-slate-800 outline-none focus:bg-white focus:ring-2 focus:ring-amber-200 border border-transparent focus:border-amber-300 transition-all"
                 />
+
+                {commentMentionQuery !== null && (
+                  <MentionSuggestions
+                    query={commentMentionQuery}
+                    onSelect={handleSelectCommentMention}
+                  />
+                )}
                 <button
                   type="submit"
                   disabled={submittingComment || !commentText.trim()}
@@ -615,9 +675,12 @@ const PostCard = ({ post }: PostCardProps) => {
                                 {formatTimeAgo(c.created_at)}
                               </span>
                             </div>
-                            <p className="text-slate-700 leading-relaxed font-normal">
-                              {c.comment || c.text}
-                            </p>
+                            <MentionText
+                              text={c.comment || c.text}
+                              mentions={c.mentions}
+                              showPetChips={false}
+                              className="text-slate-700 leading-relaxed font-normal"
+                            />
                             <div className="flex items-center gap-3 mt-1.5 pt-1 border-t border-slate-200/40">
                               <button
                                 type="button"
@@ -683,9 +746,12 @@ const PostCard = ({ post }: PostCardProps) => {
                                         {formatTimeAgo(reply.created_at)}
                                       </span>
                                     </div>
-                                    <p className="text-slate-700 leading-relaxed font-normal">
-                                      {reply.comment || reply.text}
-                                    </p>
+                                    <MentionText
+                                      text={reply.comment || reply.text}
+                                      mentions={reply.mentions}
+                                      showPetChips={false}
+                                      className="text-slate-700 leading-relaxed font-normal"
+                                    />
                                     <div className="flex items-center gap-3 mt-1 pt-1 border-t border-slate-200/40">
                                       <button
                                         type="button"

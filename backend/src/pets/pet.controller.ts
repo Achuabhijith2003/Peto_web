@@ -14,6 +14,7 @@ import {
   respondPetParentInviteService,
   removePetParentService,
   getPetPostsService,
+  searchTaggablePetsService,
 } from "./pet.service";
 
 export async function createPetHandler(req: Request, res: Response): Promise<void> {
@@ -234,5 +235,21 @@ export async function getPetPostsHandler(req: Request, res: Response): Promise<v
     res.json({ success: true, ...result });
   } catch (err: any) {
     res.status(err.status || 500).json({ success: false, message: err.message || "Failed to fetch pet posts" });
+  }
+}
+
+export async function searchTaggablePetsHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const userId = (req as any).user?.id;
+    if (!userId) {
+      res.status(401).json({ success: false, message: "Unauthorized" });
+      return;
+    }
+
+    const query = (req.query.q as string) || "";
+    const pets = await searchTaggablePetsService(userId, query);
+    res.json({ success: true, data: pets });
+  } catch (err: any) {
+    res.status(err.status || 500).json({ success: false, message: err.message || "Failed to search taggable pets" });
   }
 }

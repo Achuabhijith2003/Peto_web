@@ -1082,3 +1082,77 @@ export async function getPetPostsService(
     count: count || 0,
   };
 }
+
+/**
+ * Search pets eligible for tagging by the current user:
+ * - Current user's own/co-owned pets always prioritized
+ * - If query provided, searches pets matching query
+ * - Enforces evaluatePetVisibility so private pets of others are NEVER returned
+ * - Prevents archived/deleted pets from appearing
+ */
+export async function searchTaggablePetsService(
+  userId: string,
+  query: string = ""
+): Promise<any[]> {
+  const cleanQuery = (query || "").trim();
+
+  // 1. Get user's own pets first
+  const myPets = await getMyPetsService(userId);
+  const myPetIds = new Set(myPets.map(p => p.id));
+
+  const taggablePets: any[] = myPets
+    .filter(p => !cleanQuery || p.name.toLowerCase().includes(cleanQuery.toLowerCase()))
+    .map(p => ({
+      id: p.id,
+      name: p.name,
+      species: p.species,
+      breed: p.breed,
+      avatar_url: p.profile_photo_url || p.profile_media_id,
+      profile_visibility: p.profile_visibility,
+      is_own_pet: true
+    }));
+
+  // 2. If query provided, search other pets
+  if (cleanQuery.length > 0) {
+    const { data: matchedPets, error } = await supabase
+      .from("pets")
+      .select(`
+        id,
+        name,
+        species,
+        breed,
+        profile_visibility,
+        status,
+        profile_media:media!pets_profile_media_id_fkey(url)
+      `)
+      .ilike("name", `%${cleanQuery}%`)
+      .eq("status", "ACTIVE")
+      .limit(20);
+
+    if (!error && Array.isArray(matchedPets)) {
+      for (const pet of matchedPets) {
+        if (myPetIds.has(pet.id)) continue;
+
+        const vis = await evaluatePetVisibility(userId, {
+          id: pet.id,
+          profile_visibility: (pet.profile_visibility as any) || "PUBLIC"
+        });
+
+        if (vis.allowed) {
+          taggablePets.push({
+            id: pet.id,
+            name: pet.name,
+            species: pet.species,
+            breed: pet.breed,
+            avatar_url: (pet.profile_media as any)?.url || null,
+            profile_visibility: pet.profile_visibility || "PUBLIC",
+            is_own_pet: false
+          });
+        }
+      }
+    }
+  }
+
+  return taggablePets;
+}
+

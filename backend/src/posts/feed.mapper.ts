@@ -48,6 +48,8 @@ export function mapPostForFeed(
             liked: likedPosts ? likedPosts.has(post.id) : false,
             bookmarked: bookmarkedPosts ? bookmarkedPosts.has(post.id) : false,
             owner: currentUserId ? post.user_id === currentUserId : false
-        }
+        },
+        mentions: post.mentions ?? [],
+        tagged_pets: post.tagged_pets ?? []
     };
 }
