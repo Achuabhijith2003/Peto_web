@@ -103,58 +103,46 @@ export const followers = async (
     req: Request,
     res: Response
 ) => {
-
-
     try {
-
         const userId = (req as any).params.id;
+        const currentUserId = (req as any).user?.id;
 
-        const data = await getFollowers(userId);
+        const data = await getFollowers(userId, currentUserId);
 
         return res.json({
             success: true,
             count: data.length,
             data
         });
-
     } catch (error: any) {
-
         return res.status(400).json({
             success: false,
             message: error.message
         });
-
     }
-
 };
 
 export const following = async (
     req: Request,
     res: Response
 ) => {
- 
-
     try {
-
         const userId = (req as any).params.id;
+        const currentUserId = (req as any).user?.id;
 
-        const data = await getFollowing(userId);
+        const data = await getFollowing(userId, currentUserId);
 
         return res.json({
             success: true,
             count: data.length,
             data
         });
-
     } catch (error: any) {
-
         return res.status(400).json({
             success: false,
             message: error.message
         });
-
     }
-
 };
 
 // suggestion

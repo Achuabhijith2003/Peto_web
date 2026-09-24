@@ -91,9 +91,25 @@ export const getUserById = async (
             });
         }
 
+        const currentUserId = (req as any).user?.id;
+        let isFollowing = false;
+        if (currentUserId && currentUserId !== data.id) {
+            const { data: followRel } = await supabase
+                .from("follows")
+                .select("id")
+                .eq("follower_id", currentUserId)
+                .eq("following_id", data.id)
+                .maybeSingle();
+            isFollowing = !!followRel;
+        }
+
         return res.status(200).json({
             success: true,
-            data,
+            data: {
+                ...data,
+                is_following: isFollowing,
+                isFollowing: isFollowing,
+            },
         });
 
     } catch (err) {

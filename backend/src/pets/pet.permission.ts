@@ -116,21 +116,34 @@ export async function evaluatePetVisibility(
 /**
  * Field-level privacy sanitizer. Strips private administration details for non-parents.
  */
-export function sanitizePetForRequester(pet: any, isParent: boolean): any {
+export function sanitizePetForRequester(pet: any, isParent: boolean, requesterId?: string | null): any {
   const sanitized = { ...pet };
 
-  if (!isParent) {
-    // Non-parents should not see pending invitations or internal permission arrays
-    if (Array.isArray(sanitized.parents)) {
+  if (Array.isArray(sanitized.parents)) {
+    if (!isParent) {
+      // Non-parents should only see ACTIVE parents, plus any PENDING invite specifically for the requester
       sanitized.parents = sanitized.parents
-        .filter((p: any) => p.status === "ACTIVE")
+        .filter((p: any) => p.status === "ACTIVE" || (requesterId && p.user_id === requesterId))
         .map((p: any) => ({
           id: p.id,
           user_id: p.user_id,
           relationship: p.relationship,
-          is_primary: p.is_primary,
+          relationship_type: p.relationship_type || p.relationship,
+          is_primary: Boolean(p.is_primary),
+          status: p.status,
+          username: p.username || p.user?.username,
+          full_name: p.full_name || p.user?.full_name,
+          avatar_url: p.avatar_url || p.user?.avatar_url,
           user: p.user,
         }));
+    } else {
+      sanitized.parents = sanitized.parents.map((p: any) => ({
+        ...p,
+        relationship_type: p.relationship_type || p.relationship,
+        username: p.username || p.user?.username,
+        full_name: p.full_name || p.user?.full_name,
+        avatar_url: p.avatar_url || p.user?.avatar_url,
+      }));
     }
   }
 

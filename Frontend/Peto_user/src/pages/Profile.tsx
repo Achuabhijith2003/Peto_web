@@ -15,6 +15,7 @@ import SponsoredPostCard from "../components/social/SponsoredPostCard";
 import WebExternalAdCard from "../components/social/WebExternalAdCard";
 import FollowListModal, { type FollowUserItem } from "../components/social/FollowListModal";
 import { MyPetsSection } from "../components/pets/MyPetsSection";
+import { ProfileSkeleton } from "../components/common/Skeleton";
 
 const ProfileCenter = ({ userId }: { userId?: string }) => {
   const { user: currentUser, openAuthModal } = useAuth();
@@ -142,9 +143,16 @@ const ProfileCenter = ({ userId }: { userId?: string }) => {
         await api.post(`/user/${targetUserId}/follow`);
       }
       fetchProfileData();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Follow toggle error:", err);
-      setIsFollowing(isFollowing);
+      const errMsg = (err.response?.data?.message || err.message || "").toLowerCase();
+      if (nextState && errMsg.includes("already following")) {
+        setIsFollowing(true);
+      } else if (!nextState && errMsg.includes("not following")) {
+        setIsFollowing(false);
+      } else {
+        setIsFollowing(isFollowing);
+      }
     } finally {
       setFollowActionLoading(false);
     }
@@ -156,12 +164,7 @@ const ProfileCenter = ({ userId }: { userId?: string }) => {
   };
 
   if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 bg-white rounded-xl border border-slate-200/80 shadow-card">
-        <Loader2 size={24} className="animate-spin text-slate-600 mb-2" />
-        <p className="text-xs font-medium text-slate-500">Loading profile details...</p>
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   if (!profile) {
@@ -234,10 +237,10 @@ const ProfileCenter = ({ userId }: { userId?: string }) => {
               <button
                 onClick={handleToggleFollow}
                 disabled={followActionLoading}
-                className={`rounded-lg px-4 py-1.5 font-semibold text-xs transition flex items-center gap-1.5 shadow-micro ${
+                className={`rounded-full px-4 py-1.5 font-semibold text-xs transition-all duration-200 flex items-center gap-1.5 shadow-micro active:scale-[0.98] ${
                   isFollowing
-                    ? "bg-slate-100 text-slate-700 hover:bg-slate-200/70 border border-slate-200/60"
-                    : "bg-slate-900 text-white hover:bg-slate-800 border border-slate-950/20 active:scale-[0.98]"
+                    ? "bg-slate-100 text-slate-700 hover:bg-slate-200/80 border border-slate-200/80"
+                    : "bg-amber-500 text-white hover:bg-amber-600 border border-amber-600/20 shadow-sm"
                 }`}
               >
                 {followActionLoading ? (

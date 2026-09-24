@@ -41,7 +41,7 @@ export async function followUser(
         .maybeSingle();
 
     if (existing) {
-        throw new Error("Already following this user.");
+        return existing;
     }
 
     // Insert follow
@@ -89,7 +89,10 @@ export async function unfollowUser(
         .maybeSingle();
 
     if (!follow) {
-        throw new Error("You are not following this user.");
+        return {
+            success: true,
+            message: "User unfollowed successfully."
+        };
     }
 
     const { error } = await supabase
@@ -139,7 +142,7 @@ export async function getFollowStatus(
 }
 
 
-export async function getFollowers(rawUserId: string) {
+export async function getFollowers(rawUserId: string, currentUserId?: string) {
     let userId = rawUserId;
     try {
         userId = await resolveProfileId(rawUserId);
@@ -166,10 +169,51 @@ export async function getFollowers(rawUserId: string) {
         throw error;
     }
 
-    return data;
+    if (!data || data.length === 0) {
+        return [];
+    }
+
+    let myFollowingSet = new Set<string>();
+    if (currentUserId) {
+        try {
+            const resolvedCurrentUserId = await resolveProfileId(currentUserId);
+            const targetIds = data
+                .map((d: any) => d.follower?.id)
+                .filter(Boolean);
+
+            if (targetIds.length > 0) {
+                const { data: myFollows } = await supabase
+                    .from("follows")
+                    .select("following_id")
+                    .eq("follower_id", resolvedCurrentUserId)
+                    .in("following_id", targetIds);
+
+                if (myFollows) {
+                    myFollowingSet = new Set(myFollows.map((f: any) => f.following_id));
+                }
+            }
+        } catch {
+            // ignore
+        }
+    }
+
+    return data.map((item: any) => {
+        const follower = item.follower || {};
+        const isF = myFollowingSet.has(follower.id);
+        return {
+            ...item,
+            is_following: isF,
+            isFollowing: isF,
+            follower: {
+                ...follower,
+                is_following: isF,
+                isFollowing: isF,
+            },
+        };
+    });
 }
 
-export async function getFollowing(rawUserId: string) {
+export async function getFollowing(rawUserId: string, currentUserId?: string) {
     let userId = rawUserId;
     try {
         userId = await resolveProfileId(rawUserId);
@@ -196,7 +240,54 @@ export async function getFollowing(rawUserId: string) {
         throw error;
     }
 
-    return data;
+    if (!data || data.length === 0) {
+        return [];
+    }
+
+    let myFollowingSet = new Set<string>();
+    let isSelf = false;
+
+    if (currentUserId) {
+        try {
+            const resolvedCurrentUserId = await resolveProfileId(currentUserId);
+            isSelf = resolvedCurrentUserId === userId;
+
+            if (!isSelf) {
+                const targetIds = data
+                    .map((d: any) => d.following?.id)
+                    .filter(Boolean);
+
+                if (targetIds.length > 0) {
+                    const { data: myFollows } = await supabase
+                        .from("follows")
+                        .select("following_id")
+                        .eq("follower_id", resolvedCurrentUserId)
+                        .in("following_id", targetIds);
+
+                    if (myFollows) {
+                        myFollowingSet = new Set(myFollows.map((f: any) => f.following_id));
+                    }
+                }
+            }
+        } catch {
+            // ignore
+        }
+    }
+
+    return data.map((item: any) => {
+        const following = item.following || {};
+        const isF = isSelf ? true : myFollowingSet.has(following.id);
+        return {
+            ...item,
+            is_following: isF,
+            isFollowing: isF,
+            following: {
+                ...following,
+                is_following: isF,
+                isFollowing: isF,
+            },
+        };
+    });
 }
 
 

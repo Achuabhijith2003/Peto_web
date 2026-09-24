@@ -162,8 +162,8 @@ app.use(maintenanceMiddleware);
 app.use("/api/auth", authRoutes);
 
 app.use("/api/users", userRoutes);
-
 app.use("/api/user", followRoutes);
+app.use("/api/users", followRoutes);
 
 app.use("/api/posts", postRoutes);
 

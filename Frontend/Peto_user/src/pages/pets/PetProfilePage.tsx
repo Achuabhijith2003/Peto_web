@@ -25,6 +25,7 @@ import Navbar from "../../components/layout/Navbar";
 import { PetParentModal } from "../../components/pets/PetParentModal";
 import PostCard from "../../components/social/PostCard";
 import CreatePost from "../../components/social/CreatePost";
+import { PetProfileSkeleton } from "../../components/common/Skeleton";
 
 interface PetDetails {
   id: string;
@@ -47,13 +48,21 @@ interface PetDetails {
   parents?: Array<{
     id: string;
     user_id: string;
-    relationship_type: string;
+    relationship?: string;
+    relationship_type?: string;
     is_primary: boolean;
     status: string;
-    username: string;
-    full_name: string;
-    avatar_url: string;
-    verified: boolean;
+    username?: string;
+    full_name?: string;
+    avatar_url?: string;
+    verified?: boolean;
+    user?: {
+      id?: string;
+      username?: string;
+      full_name?: string;
+      avatar_url?: string;
+      verified?: boolean;
+    };
   }>;
   media?: Array<{
     id: string;
@@ -257,14 +266,7 @@ export default function PetProfilePage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
-          <p className="text-sm font-medium text-slate-500">Loading pet showcase...</p>
-        </div>
-      </div>
-    );
+    return <PetProfileSkeleton />;
   }
 
   if (error || !pet) {
@@ -388,8 +390,15 @@ export default function PetProfilePage() {
                   You have been invited to co-parent {pet.name}!
                 </h4>
                 <p className="text-xs text-white/90 mt-0.5">
-                  Role: <span className="font-bold capitalize">{pendingInviteForCurrentUser.relationship_type.replace(/_/g, " ").toLowerCase()}</span>.
-                  Join {pet.name}'s family circle to help manage, upload photos, and post about them.
+                  Role:{" "}
+                  <span className="font-bold capitalize">
+                    {(pendingInviteForCurrentUser.relationship_type ||
+                      pendingInviteForCurrentUser.relationship ||
+                      "CO_OWNER")
+                      .replace(/_/g, " ")
+                      .toLowerCase()}
+                  </span>
+                  . Join {pet.name}'s family circle to help manage, upload photos, and post about them.
                 </p>
               </div>
             </div>
@@ -564,41 +573,51 @@ export default function PetProfilePage() {
               </div>
 
               <div className="flex flex-wrap gap-3">
-                {pet.parents && pet.parents.length > 0 ? (
-                  pet.parents.map((parent) => (
-                    <Link
-                      key={parent.id}
-                      to={`/profile/${parent.username || parent.user_id}`}
-                      className="group flex items-center gap-2.5 p-2 rounded-2xl bg-slate-50 hover:bg-amber-50/70 border border-slate-200/80 transition-all"
-                    >
-                      <div className="w-9 h-9 rounded-xl bg-white overflow-hidden border border-slate-200 shrink-0">
-                        {parent.avatar_url ? (
-                          <img
-                            src={parent.avatar_url}
-                            alt={parent.username}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center font-bold text-slate-500 text-xs">
-                            {(parent.full_name || parent.username || "P")[0].toUpperCase()}
+                {pet.parents && pet.parents.filter((p) => p.status === "ACTIVE").length > 0 ? (
+                  pet.parents
+                    .filter((p) => p.status === "ACTIVE")
+                    .map((parent) => {
+                      const username = parent.username || parent.user?.username;
+                      const fullName = parent.full_name || parent.user?.full_name || (username ? `@${username}` : "Pet Parent");
+                      const avatar = parent.avatar_url || parent.user?.avatar_url;
+                      const roleDisplay = (parent.relationship_type || parent.relationship || "CO_OWNER")
+                        .replace(/_/g, " ");
+
+                      return (
+                        <Link
+                          key={parent.id}
+                          to={username ? `/profile/${username}` : `/profile/${parent.user_id}`}
+                          className="group flex items-center gap-2.5 p-2 rounded-2xl bg-slate-50 hover:bg-amber-50/70 border border-slate-200/80 transition-all"
+                        >
+                          <div className="w-9 h-9 rounded-xl bg-white overflow-hidden border border-slate-200 shrink-0">
+                            {avatar ? (
+                              <img
+                                src={avatar}
+                                alt={username || "Parent"}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center font-bold text-slate-500 text-xs">
+                                {(fullName || "P")[0].toUpperCase()}
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                      <div className="text-left pr-2">
-                        <div className="flex items-center gap-1">
-                          <span className="text-xs font-bold text-slate-900 group-hover:text-amber-600 transition-colors">
-                            {parent.full_name || `@${parent.username}`}
-                          </span>
-                          {parent.verified && (
-                            <CheckCircle2 size={12} className="text-amber-500 fill-amber-100" />
-                          )}
-                        </div>
-                        <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide block">
-                          {parent.is_primary ? "👑 Primary Parent" : parent.relationship_type.replace(/_/g, " ")}
-                        </span>
-                      </div>
-                    </Link>
-                  ))
+                          <div className="text-left pr-2">
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs font-bold text-slate-900 group-hover:text-amber-600 transition-colors">
+                                {fullName}
+                              </span>
+                              {(parent.verified || parent.user?.verified) && (
+                                <CheckCircle2 size={12} className="text-amber-500 fill-amber-100" />
+                              )}
+                            </div>
+                            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide block">
+                              {parent.is_primary ? "👑 Primary Parent" : roleDisplay}
+                            </span>
+                          </div>
+                        </Link>
+                      );
+                    })
                 ) : (
                   <p className="text-xs text-slate-400">No parent information available.</p>
                 )}

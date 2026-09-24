@@ -195,20 +195,27 @@ export async function getPetByIdService(
       profiles:user_id(id, username, full_name, avatar_url)
     `)
     .eq("pet_id", petId)
-    .eq("status", "ACTIVE");
+    .in("status", ["ACTIVE", "PENDING"]);
 
-  const parents: PetParent[] = (parentsRaw || []).map((p: any) => ({
-    id: p.id,
-    pet_id: p.pet_id,
-    user_id: p.user_id,
-    relationship: p.relationship,
-    is_primary: p.is_primary,
-    status: p.status,
-    permissions: p.permissions || [],
-    created_at: p.created_at,
-    updated_at: p.updated_at,
-    user: Array.isArray(p.profiles) ? p.profiles[0] : p.profiles,
-  }));
+  const parents: any[] = (parentsRaw || []).map((p: any) => {
+    const userProfile = Array.isArray(p.profiles) ? p.profiles[0] : p.profiles;
+    return {
+      id: p.id,
+      pet_id: p.pet_id,
+      user_id: p.user_id,
+      relationship: p.relationship,
+      relationship_type: p.relationship,
+      is_primary: Boolean(p.is_primary),
+      status: p.status,
+      permissions: p.permissions || [],
+      created_at: p.created_at,
+      updated_at: p.updated_at,
+      username: userProfile?.username,
+      full_name: userProfile?.full_name,
+      avatar_url: userProfile?.avatar_url,
+      user: userProfile,
+    };
+  });
 
   // Fetch Pet Media
   const { data: mediaRaw } = await supabase
@@ -323,7 +330,7 @@ export async function getPetByIdService(
     },
   };
 
-  return sanitizePetForRequester(enrichedPet, isParent);
+  return sanitizePetForRequester(enrichedPet, isParent, requesterId);
 }
 
 /**

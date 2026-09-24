@@ -145,7 +145,7 @@ export const PetParentModal: React.FC<PetParentModalProps> = ({
                           )}
                         </div>
                         <div className="text-[11px] text-slate-500 capitalize">
-                          {parent.relationship?.toLowerCase().replace("_", " ")}
+                          {(parent.relationship || (parent as any).relationship_type || "CO_OWNER").toLowerCase().replace(/_/g, " ")}
                         </div>
                       </div>
                     </div>
