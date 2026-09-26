@@ -2,7 +2,6 @@ import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import {
   ArrowLeft,
-  PawPrint,
   Edit3,
   Users,
   Lock,
@@ -18,13 +17,14 @@ import {
   X,
   ChevronRight,
   Maximize2,
+  Play,
+  Trash2,
+  Film,
 } from "lucide-react";
 import api from "../../utils/api";
 import { useAuth } from "../../context/AuthContext";
 import Navbar from "../../components/layout/Navbar";
 import { PetParentModal } from "../../components/pets/PetParentModal";
-import PostCard from "../../components/social/PostCard";
-import CreatePost from "../../components/social/CreatePost";
 import { PetProfileSkeleton } from "../../components/common/Skeleton";
 
 interface PetDetails {
@@ -109,9 +109,7 @@ export default function PetProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [activeTab, setActiveTab] = useState<"about" | "photos" | "posts">("about");
-  const [posts, setPosts] = useState<any[]>([]);
-  const [loadingPosts, setLoadingPosts] = useState(false);
+  const [activeTab, setActiveTab] = useState<"about" | "photos">("about");
 
   // Parent management modal
   const [showParentModal, setShowParentModal] = useState(false);
@@ -123,8 +121,8 @@ export default function PetProfilePage() {
   // Quick visibility change state
   const [updatingVisibility, setUpdatingVisibility] = useState(false);
 
-  // Photo viewer / lightbox state
-  const [enlargedPhoto, setEnlargedPhoto] = useState<string | null>(null);
+  // Media viewer / lightbox state
+  const [enlargedMedia, setEnlargedMedia] = useState<{ url: string; isVideo: boolean } | null>(null);
 
   // Invitation response state
   const [respondingInvite, setRespondingInvite] = useState(false);
@@ -172,27 +170,6 @@ export default function PetProfilePage() {
     fetchPet();
   }, [id]);
 
-  useEffect(() => {
-    if (activeTab === "posts" && id) {
-      loadPetPosts();
-    }
-  }, [activeTab, id]);
-
-  const loadPetPosts = async () => {
-    if (!id) return;
-    try {
-      setLoadingPosts(true);
-      const res = await api.get(`/pets/${id}/posts`);
-      if (res.data?.posts) {
-        setPosts(res.data.posts);
-      }
-    } catch (err) {
-      console.error("Failed to fetch pet posts:", err);
-    } finally {
-      setLoadingPosts(false);
-    }
-  };
-
   const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !id) return;
@@ -211,16 +188,32 @@ export default function PetProfilePage() {
       if (mediaId) {
         await api.post(`/pets/${id}/media`, {
           media_id: mediaId,
+          mediaId: mediaId,
+          url: uploadRes.data?.mediaUrl,
           caption: "",
         });
         await fetchPet();
       }
     } catch (err: any) {
       console.error("Failed to upload pet media:", err);
-      alert(err.response?.data?.message || "Failed to upload photo");
+      alert(err.response?.data?.message || "Failed to upload photo or video");
     } finally {
       setUploadingPhoto(false);
       if (e.target) e.target.value = "";
+    }
+  };
+
+  const handleDeleteMedia = async (mediaItem: any) => {
+    if (!id || !window.confirm(`Are you sure you want to remove this ${mediaItem.media_type === "VIDEO" ? "video" : "photo"} from ${pet?.name}'s gallery?`)) {
+      return;
+    }
+    try {
+      const targetId = mediaItem.id || mediaItem.media_id;
+      await api.delete(`/pets/${id}/media/${targetId}`);
+      await fetchPet();
+    } catch (err: any) {
+      console.error("Failed to delete pet media:", err);
+      alert(err.response?.data?.message || "Failed to remove media item.");
     }
   };
 
@@ -307,7 +300,6 @@ export default function PetProfilePage() {
     can_manage_privacy: false,
   };
 
-  const isParent = pet.viewer_relationship?.is_parent || false;
   const ageString = calculateAge();
   const speciesStr = pet.species ? String(pet.species) : "OTHER";
   const emoji = speciesEmojis[speciesStr.toUpperCase()] || "🐾";
@@ -430,7 +422,7 @@ export default function PetProfilePage() {
             {/* Avatar & Quick Title */}
             <div className="flex items-center gap-5">
               <div
-                onClick={() => profilePhotoUrl && setEnlargedPhoto(profilePhotoUrl)}
+                onClick={() => profilePhotoUrl && setEnlargedMedia({ url: profilePhotoUrl, isVideo: false })}
                 className={`relative inline-block shrink-0 ${profilePhotoUrl ? "cursor-pointer group" : ""}`}
                 title={profilePhotoUrl ? "Click to enlarge photo" : undefined}
               >
@@ -656,25 +648,6 @@ export default function PetProfilePage() {
               </span>
             )}
           </button>
-          <button
-            onClick={() => setActiveTab("posts")}
-            className={`px-4 py-2 text-xs sm:text-sm font-bold rounded-xl transition-colors flex items-center gap-1.5 ${
-              activeTab === "posts"
-                ? "bg-amber-500 text-white shadow-sm"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-            }`}
-          >
-            <span>Posts</span>
-            {posts.length > 0 && (
-              <span
-                className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                  activeTab === "posts" ? "bg-amber-600 text-white" : "bg-slate-200 text-slate-700"
-                }`}
-              >
-                {posts.length}
-              </span>
-            )}
-          </button>
         </div>
 
         {/* Tab 1: About */}
@@ -777,77 +750,92 @@ export default function PetProfilePage() {
             )}
 
             {pet.media && pet.media.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                {pet.media.map((item) => (
-                  <div
-                    key={item.id}
-                    onClick={() => setEnlargedPhoto(item.media_url)}
-                    className="group relative aspect-square rounded-2xl overflow-hidden bg-slate-100 border border-slate-200/80 shadow-sm cursor-pointer"
-                  >
-                    <img
-                      src={item.media_url}
-                      alt={item.caption || pet.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                      <div className="w-8 h-8 rounded-full bg-white/90 text-slate-800 flex items-center justify-center shadow-sm">
-                        <Maximize2 size={14} />
-                      </div>
+              <div className="columns-2 sm:columns-3 md:columns-4 gap-3 space-y-3">
+                {pet.media.map((item) => {
+                  const isVideo =
+                    item.media_type === "VIDEO" ||
+                    /\.(mp4|mov|webm|m4v|avi|mkv)$/i.test(item.media_url);
+
+                  return (
+                    <div
+                      key={item.id}
+                      onClick={() => setEnlargedMedia({ url: item.media_url, isVideo })}
+                      className="group relative break-inside-avoid rounded-2xl overflow-hidden bg-slate-900 border border-slate-200/80 shadow-sm cursor-pointer select-none mb-3"
+                    >
+                      {isVideo ? (
+                        <div className="w-full relative bg-slate-950 flex items-center justify-center">
+                          <video
+                            src={item.media_url}
+                            className="w-full h-auto max-h-[520px] object-cover group-hover:scale-[1.02] transition-transform duration-300"
+                            muted
+                            playsInline
+                            preload="metadata"
+                          />
+                          {/* Centered Play Button */}
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/35 transition-colors">
+                            <div className="w-11 h-11 rounded-full bg-white/90 text-slate-900 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                              <Play size={18} className="fill-slate-900 ml-0.5" />
+                            </div>
+                          </div>
+                          {/* Video Badge */}
+                          <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-black/65 backdrop-blur-md text-white text-[10px] font-semibold flex items-center gap-1">
+                            <Film size={11} /> Video
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="w-full relative">
+                          <img
+                            src={item.media_url}
+                            alt={item.caption || pet.name}
+                            className="w-full h-auto object-cover group-hover:scale-[1.02] transition-transform duration-300 block"
+                            loading="lazy"
+                          />
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/25 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                            <div className="w-9 h-9 rounded-full bg-white/90 text-slate-800 flex items-center justify-center shadow-sm">
+                              <Maximize2 size={15} />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Profile / Cover Tags */}
+                      {item.is_profile && (
+                        <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-slate-900/80 backdrop-blur-sm text-white text-[10px] font-bold">
+                          Avatar
+                        </span>
+                      )}
+                      {item.is_cover && (
+                        <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-amber-600/90 backdrop-blur-sm text-white text-[10px] font-bold">
+                          Cover
+                        </span>
+                      )}
+
+                      {/* Delete Action if owner/authorized */}
+                      {permissions.can_edit && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteMedia(item);
+                          }}
+                          title="Remove media"
+                          className="absolute bottom-2 right-2 w-7 h-7 rounded-full bg-red-600/90 hover:bg-red-600 text-white flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      )}
                     </div>
-                    {item.is_profile && (
-                      <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-slate-900/80 backdrop-blur-sm text-white text-[10px] font-bold">
-                        Avatar
-                      </span>
-                    )}
-                    {item.is_cover && (
-                      <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-amber-600/90 backdrop-blur-sm text-white text-[10px] font-bold">
-                        Cover
-                      </span>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="bg-white rounded-3xl border border-slate-200/80 p-10 text-center space-y-2">
                 <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
                   <ImageIcon size={24} />
                 </div>
-                <h4 className="text-sm font-bold text-slate-800">No photos added yet</h4>
+                <h4 className="text-sm font-bold text-slate-800">No photos or videos yet</h4>
                 <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                  Photos uploaded by pet parents will appear here in {pet.name}'s showcase gallery.
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Tab 3: Posts */}
-        {activeTab === "posts" && (
-          <div className="space-y-4">
-            {isParent && (
-              <CreatePost
-                onPostCreated={loadPetPosts}
-                communityId={undefined}
-                communityName={`Pet: ${pet.name}`}
-              />
-            )}
-
-            {loadingPosts ? (
-              <div className="py-10 flex justify-center">
-                <Loader2 className="w-6 h-6 text-amber-500 animate-spin" />
-              </div>
-            ) : posts.length > 0 ? (
-              posts.map((post) => (
-                <PostCard key={post.id} post={post} />
-              ))
-            ) : (
-              <div className="bg-white rounded-3xl border border-slate-200/80 p-10 text-center space-y-2">
-                <div className="w-12 h-12 mx-auto rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center">
-                  <PawPrint size={24} />
-                </div>
-                <h4 className="text-sm font-bold text-slate-800">No posts shared yet</h4>
-                <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                  Posts highlighting {pet.name} will appear here.
+                  Photos and videos uploaded by pet parents will appear here in {pet.name}'s showcase gallery.
                 </p>
               </div>
             )}
@@ -870,27 +858,37 @@ export default function PetProfilePage() {
         />
       )}
 
-      {/* Lightbox / Enlarged Photo Modal */}
-      {enlargedPhoto && (
+      {/* Lightbox / Enlarged Media Modal */}
+      {enlargedMedia && (
         <div
-          className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
-          onClick={() => setEnlargedPhoto(null)}
+          className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setEnlargedMedia(null)}
         >
           <div
-            className="relative max-w-4xl max-h-[85vh] w-full rounded-3xl overflow-hidden bg-slate-900 border border-slate-700 shadow-2xl flex items-center justify-center"
+            className="relative max-w-4xl max-h-[88vh] w-full rounded-3xl overflow-hidden bg-black/90 border border-slate-700/60 shadow-2xl flex items-center justify-center"
             onClick={(e) => e.stopPropagation()}
           >
             <button
-              onClick={() => setEnlargedPhoto(null)}
-              className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-black/60 hover:bg-black text-white flex items-center justify-center transition cursor-pointer"
+              onClick={() => setEnlargedMedia(null)}
+              className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-black/60 hover:bg-black text-white flex items-center justify-center transition cursor-pointer backdrop-blur-sm shadow-md"
             >
               <X size={18} />
             </button>
-            <img
-              src={enlargedPhoto}
-              alt="Pet"
-              className="w-full h-full max-h-[85vh] object-contain"
-            />
+            {enlargedMedia.isVideo ? (
+              <video
+                src={enlargedMedia.url}
+                controls
+                autoPlay
+                playsInline
+                className="w-full h-full max-h-[85vh] object-contain rounded-2xl"
+              />
+            ) : (
+              <img
+                src={enlargedMedia.url}
+                alt="Pet Media"
+                className="w-full h-full max-h-[85vh] object-contain rounded-2xl"
+              />
+            )}
           </div>
         </div>
       )}

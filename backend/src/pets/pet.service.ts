@@ -232,26 +232,44 @@ export async function getPetByIdService(
       is_primary,
       created_by,
       created_at,
-      media:media_id(id, url, type)
+      media:media_id(id, url, type, thumbnail_url)
     `)
     .eq("pet_id", petId)
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: false });
 
-  const mediaList: PetMediaItem[] = (mediaRaw || []).map((m: any) => ({
-    id: m.id,
-    pet_id: m.pet_id,
-    media_id: m.media_id,
-    role: m.role,
-    visibility: m.visibility,
-    caption: m.caption,
-    alt_text: m.alt_text,
-    sort_order: m.sort_order,
-    is_primary: m.is_primary,
-    created_by: m.created_by,
-    created_at: m.created_at,
-    url: m.media?.url || null,
-  }));
+  const mediaList: PetMediaItem[] = (mediaRaw || []).map((m: any) => {
+    const mediaObj = m.media;
+    const mediaUrl = mediaObj?.url || null;
+    const isVideo =
+      mediaObj?.type === "video" ||
+      mediaUrl?.toLowerCase().endsWith(".mp4") ||
+      mediaUrl?.toLowerCase().endsWith(".mov") ||
+      mediaUrl?.toLowerCase().endsWith(".mkv") ||
+      mediaUrl?.toLowerCase().endsWith(".webm");
+    const mediaType = isVideo ? "VIDEO" : "IMAGE";
+
+    return {
+      id: m.id,
+      pet_id: m.pet_id,
+      media_id: m.media_id,
+      role: m.role,
+      visibility: m.visibility,
+      caption: m.caption,
+      alt_text: m.alt_text,
+      sort_order: m.sort_order,
+      is_primary: m.is_primary,
+      created_by: m.created_by,
+      created_at: m.created_at,
+      url: mediaUrl,
+      media_url: mediaUrl,
+      type: mediaObj?.type || (isVideo ? "video" : "image"),
+      media_type: mediaType,
+      thumbnail_url: mediaObj?.thumbnail_url || null,
+      is_profile: m.role === "PROFILE" || Boolean(m.is_primary),
+      is_cover: m.role === "COVER",
+    };
+  });
 
   // Resolve Profile and Cover URLs
   let profileUrl: string | null = null;
@@ -637,11 +655,17 @@ export async function addPetMediaService(
   petId: string,
   userId: string,
   input: {
-    mediaId: string;
+    mediaId?: string;
+    media_id?: string;
+    url?: string;
+    mediaUrl?: string;
+    media_url?: string;
     role?: "PROFILE" | "COVER" | "GALLERY" | "MEMORY";
     caption?: string;
     altText?: string;
+    alt_text?: string;
     isPrimary?: boolean;
+    is_primary?: boolean;
   }
 ): Promise<PetMediaItem> {
   const allowed = await hasPetPermission(userId, petId, "UPLOAD_MEDIA");
@@ -651,18 +675,63 @@ export async function addPetMediaService(
     throw error;
   }
 
-  const role = input.role || "GALLERY";
+  let mediaId = input.mediaId || (input as any).media_id;
+  const rawUrl = input.url || (input as any).mediaUrl || (input as any).media_url;
+
+  // Fallback: If mediaId is missing but URL is provided, find or create the media record
+  if (!mediaId && rawUrl && typeof rawUrl === "string" && rawUrl.trim()) {
+    try {
+      const { data: existingMedia } = await supabase
+        .from("media")
+        .select("id")
+        .eq("url", rawUrl.trim())
+        .maybeSingle();
+
+      if (existingMedia?.id) {
+        mediaId = existingMedia.id;
+      } else {
+        const isVideo =
+          rawUrl.toLowerCase().includes(".mp4") ||
+          rawUrl.toLowerCase().includes(".mov") ||
+          rawUrl.toLowerCase().includes(".webm");
+        const { data: newMedia } = await supabase
+          .from("media")
+          .insert({
+            user_id: userId,
+            type: isVideo ? "video" : "image",
+            url: rawUrl.trim(),
+            mime_type: isVideo ? "video/mp4" : "image/webp",
+          })
+          .select("id")
+          .single();
+        if (newMedia?.id) mediaId = newMedia.id;
+      }
+    } catch (lookupErr) {
+      console.warn("Failed to find/create media record for pet gallery:", lookupErr);
+    }
+  }
+
+  if (!mediaId) {
+    const error: any = new Error("media_id or media_url is required to add media to pet gallery.");
+    error.status = 400;
+    throw error;
+  }
+
+  const role = (input.role || "GALLERY").toUpperCase() as "PROFILE" | "COVER" | "GALLERY" | "MEMORY";
+  const caption = (input.caption || (input as any).caption)?.trim() || null;
+  const altText = (input.altText || (input as any).alt_text)?.trim() || null;
+  const isPrimary = Boolean(input.isPrimary ?? (input as any).is_primary);
 
   const { data: mediaRecord, error } = await supabase
     .from("pet_media")
     .insert({
       pet_id: petId,
-      media_id: input.mediaId,
+      media_id: mediaId,
       role: role,
       visibility: "INHERIT",
-      caption: input.caption?.trim() || null,
-      alt_text: input.altText?.trim() || null,
-      is_primary: Boolean(input.isPrimary),
+      caption: caption,
+      alt_text: altText,
+      is_primary: isPrimary,
       created_by: userId,
     })
     .select(`
@@ -677,18 +746,29 @@ export async function addPetMediaService(
       is_primary,
       created_by,
       created_at,
-      media:media_id(id, url, type)
+      media:media_id(id, url, type, thumbnail_url)
     `)
     .single();
 
-  if (error || !mediaRecord) throw error || new Error("Failed to link media to pet.");
+  if (error || !mediaRecord) {
+    console.error("addPetMediaService error:", error);
+    throw error || new Error("Failed to link media to pet.");
+  }
 
   // If role is PROFILE, update pets.profile_media_id
   if (role === "PROFILE") {
-    await supabase.from("pets").update({ profile_media_id: input.mediaId }).eq("id", petId);
+    await supabase.from("pets").update({ profile_media_id: mediaId }).eq("id", petId);
   } else if (role === "COVER") {
-    await supabase.from("pets").update({ cover_media_id: input.mediaId }).eq("id", petId);
+    await supabase.from("pets").update({ cover_media_id: mediaId }).eq("id", petId);
   }
+
+  const mediaObj = (mediaRecord as any).media;
+  const mediaUrl = mediaObj?.url || rawUrl || null;
+  const isVideo =
+    mediaObj?.type === "video" ||
+    mediaUrl?.toLowerCase().endsWith(".mp4") ||
+    mediaUrl?.toLowerCase().endsWith(".mov");
+  const mediaType = isVideo ? "VIDEO" : "IMAGE";
 
   return {
     id: mediaRecord.id,
@@ -702,7 +782,13 @@ export async function addPetMediaService(
     is_primary: mediaRecord.is_primary,
     created_by: mediaRecord.created_by,
     created_at: mediaRecord.created_at,
-    url: (mediaRecord as any).media?.url,
+    url: mediaUrl,
+    media_url: mediaUrl,
+    type: mediaObj?.type || (isVideo ? "video" : "image"),
+    media_type: mediaType,
+    thumbnail_url: mediaObj?.thumbnail_url || null,
+    is_profile: mediaRecord.role === "PROFILE" || mediaRecord.is_primary,
+    is_cover: mediaRecord.role === "COVER",
   };
 }
 
@@ -739,7 +825,7 @@ export async function deletePetMediaService(
     .from("pet_media")
     .delete()
     .eq("pet_id", petId)
-    .eq("media_id", mediaId);
+    .or(`media_id.eq.${mediaId},id.eq.${mediaId}`);
 
   if (error) throw error;
 }

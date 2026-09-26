@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAdminAuth } from "../context/AdminAuthContext";
 import { getApiBaseUrl } from "../api/adminApi";
-import { Shield, Lock, Mail, AlertCircle, ArrowRight, Settings, Check } from "lucide-react";
+import { Lock, Mail, AlertCircle, ArrowRight, Settings, Check } from "lucide-react";
 
 export const AdminLogin: React.FC = () => {
   const { login, isAuthenticated, loading } = useAdminAuth();
@@ -75,8 +75,8 @@ export const AdminLogin: React.FC = () => {
       <div className="w-full max-w-md relative z-10">
         {/* Brand Banner */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#0058be] shadow-level-2 mb-4">
-            <Shield className="w-7 h-7 text-white" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-white border border-[#e2e8f8] shadow-level-2 mb-4 p-2 overflow-hidden">
+            <img src="/peto_logo.png" alt="Peto Logo" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-2xl font-bold font-heading tracking-tight text-[#151c27]">
             Peto Control Center

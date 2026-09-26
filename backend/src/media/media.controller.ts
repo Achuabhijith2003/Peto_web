@@ -31,11 +31,13 @@ export const uploadImages = async (req: Request, res: Response) => {
 
         const firstResult = uploaded[0];
         const mediaUrl = typeof firstResult === "string" ? firstResult : (firstResult as any)?.url || (firstResult as any)?.path || null;
+        const mediaId = (firstResult as any)?.id || null;
 
         return res.status(201).json({
             success: true,
             data: uploaded,
-            mediaUrl
+            mediaUrl,
+            mediaId
         });
     } catch (err: any) {
         console.error("Upload images error:", err);
@@ -61,12 +63,14 @@ export const uploadVideoController = async (req: Request, res: Response) => {
         const user = (req as any).user;
         const uploaded = await processMedia(user.id, file);
         const mediaUrl = typeof uploaded === "string" ? uploaded : (uploaded as any)?.url || (uploaded as any)?.path || null;
+        const mediaId = (uploaded as any)?.id || null;
 
         return res.status(200).json({
             success: true,
             message: "Video uploaded successfully.",
             data: uploaded,
-            mediaUrl
+            mediaUrl,
+            mediaId
         });
     } catch (err: any) {
         console.error("Upload video error:", err);
@@ -96,11 +100,13 @@ export const uploadMedia = async (req: Request, res: Response) => {
 
         const firstResult = uploaded[0];
         const mediaUrl = typeof firstResult === "string" ? firstResult : (firstResult as any)?.url || (firstResult as any)?.path || null;
+        const mediaId = (firstResult as any)?.id || null;
 
         return res.status(201).json({
             success: true,
             data: uploaded,
-            mediaUrl
+            mediaUrl,
+            mediaId
         });
     } catch (err: any) {
         console.error("Upload media error:", err);
