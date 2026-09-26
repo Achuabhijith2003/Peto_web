@@ -69,7 +69,13 @@ export interface PetMediaItem {
   is_primary: boolean;
   created_by?: string | null;
   created_at: string;
-  url?: string;
+  url?: string | null;
+  media_url?: string | null;
+  type?: string | null;
+  media_type?: string | null;
+  thumbnail_url?: string | null;
+  is_profile?: boolean;
+  is_cover?: boolean;
 }
 
 export interface Pet {

@@ -12,7 +12,6 @@ import {
   Scale,
   Server,
   Bell,
-  Sparkles,
   CreditCard,
   Globe,
 } from "lucide-react";
@@ -111,8 +110,8 @@ export const AdminSidebar: React.FC = () => {
     <aside className="w-64 bg-white border-r border-[#e2e8f8] shadow-level-1 flex flex-col shrink-0 h-screen sticky top-0 overflow-y-auto z-20">
       {/* Brand Header */}
       <div className="h-16 px-6 border-b border-[#e2e8f8] flex items-center space-x-3 bg-white">
-        <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[#f59e0b] via-[#ffb95f] to-[#2170e4] flex items-center justify-center shadow-md shadow-amber-500/20">
-          <Sparkles className="w-4 h-4 text-white" />
+        <div className="w-10 h-10 rounded-2xl bg-white border border-[#e2e8f8] p-1 flex items-center justify-center shadow-xs overflow-hidden">
+          <img src="/peto_logo.png" alt="Peto Logo" className="w-full h-full object-contain" />
         </div>
         <div>
           <span className="font-heading text-base font-bold tracking-tight text-[#151c27] flex items-center">

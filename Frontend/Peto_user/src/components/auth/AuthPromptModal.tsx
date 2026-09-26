@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { X, PawPrint,  UserPlus, LogIn } from "lucide-react";
+import { X, UserPlus, LogIn } from "lucide-react";
 
 interface AuthPromptModalProps {
   isOpen: boolean;
@@ -35,8 +35,8 @@ const AuthPromptModal: React.FC<AuthPromptModalProps> = ({
 
         {/* Modal Content */}
         <div className="text-center pt-2 pb-4">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-tr from-amber-400 via-orange-400 to-rose-400 shadow-md text-white">
-            <PawPrint size={32} />
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white border border-slate-100 shadow-md p-1.5 overflow-hidden">
+            <img src="/peto_logo.png" alt="Peto" className="w-full h-full object-contain" />
           </div>
 
           <h2 className="text-xl font-bold text-slate-900">
