@@ -59,51 +59,115 @@ export async function uploadImageToStorage(
 export async function uploadAvatarToStorage(
     file: Buffer,
     filename: string,
-    contentType: string = "image/jpeg"
+    contentType: string = "image/webp"
 ) {
     const path = filename;
 
-    const { error } = await supabase.storage
-        .from("avatars")
-        .upload(path, file, {
-            contentType,
-            upsert: true
-        });
+    try {
+        const { error } = await supabase.storage
+            .from("avatars")
+            .upload(path, file, {
+                contentType,
+                upsert: true
+            });
 
-    if (error) {
-        throw error;
+        if (error) {
+            console.warn("Upload to avatars bucket failed, trying posts-images fallback:", error.message);
+            const { error: fallbackError } = await supabase.storage
+                .from("posts-images")
+                .upload(path, file, {
+                    contentType,
+                    upsert: true
+                });
+
+            if (fallbackError) throw fallbackError;
+
+            const { data } = supabase.storage
+                .from("posts-images")
+                .getPublicUrl(path);
+
+            return data.publicUrl;
+        }
+
+        const { data } = supabase.storage
+            .from("avatars")
+            .getPublicUrl(path);
+
+        return data.publicUrl;
+    } catch (err: any) {
+        console.warn("Avatars upload error, attempting final fallback to posts-images:", err.message);
+        const { error: fallbackError } = await supabase.storage
+            .from("posts-images")
+            .upload(path, file, {
+                contentType,
+                upsert: true
+            });
+
+        if (fallbackError) throw fallbackError;
+
+        const { data } = supabase.storage
+            .from("posts-images")
+            .getPublicUrl(path);
+
+        return data.publicUrl;
     }
-
-    const { data } = supabase.storage
-        .from("avatars")
-        .getPublicUrl(path);
-
-    return data.publicUrl;
 }
 
 export async function uploadCoverToStorage(
     file: Buffer,
     filename: string,
-    contentType: string = "image/jpeg"
+    contentType: string = "image/webp"
 ) {
     const path = filename;
 
-    const { error } = await supabase.storage
-        .from("covers")
-        .upload(path, file, {
-            contentType,
-            upsert: true
-        });
+    try {
+        const { error } = await supabase.storage
+            .from("covers")
+            .upload(path, file, {
+                contentType,
+                upsert: true
+            });
 
-    if (error) {
-        throw error;
+        if (error) {
+            console.warn("Upload to covers bucket failed, trying posts-images fallback:", error.message);
+            const { error: fallbackError } = await supabase.storage
+                .from("posts-images")
+                .upload(path, file, {
+                    contentType,
+                    upsert: true
+                });
+
+            if (fallbackError) throw fallbackError;
+
+            const { data } = supabase.storage
+                .from("posts-images")
+                .getPublicUrl(path);
+
+            return data.publicUrl;
+        }
+
+        const { data } = supabase.storage
+            .from("covers")
+            .getPublicUrl(path);
+
+        return data.publicUrl;
+    } catch (err: any) {
+        console.warn("Covers upload error, attempting final fallback to posts-images:", err.message);
+        const { error: fallbackError } = await supabase.storage
+            .from("posts-images")
+            .upload(path, file, {
+                contentType,
+                upsert: true
+            });
+
+        if (fallbackError) throw fallbackError;
+
+        const { data } = supabase.storage
+            .from("posts-images")
+            .getPublicUrl(path);
+
+        return data.publicUrl;
     }
-
-    const { data } = supabase.storage
-        .from("covers")
-        .getPublicUrl(path);
-
-    return data.publicUrl;
 }
 
 

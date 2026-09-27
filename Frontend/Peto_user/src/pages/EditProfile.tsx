@@ -165,9 +165,11 @@ const EditProfileContent = () => {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      if (res.data.success && res.data.avatar_url) {
-        setAvatarUrl(res.data.avatar_url);
-        updateUserProfile({ avatar_url: res.data.avatar_url });
+      if (res.data.success && (res.data.avatar_url || res.data.avatarUrl)) {
+        const newAvatar = res.data.avatar_url || res.data.avatarUrl;
+        setAvatarUrl(newAvatar);
+        updateUserProfile({ avatar_url: newAvatar, avatarUrl: newAvatar });
+        await refreshUser();
         setSuccessMessage("Avatar picture updated!");
       }
     } catch (err: any) {
@@ -201,9 +203,11 @@ const EditProfileContent = () => {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      if (res.data.success && res.data.cover_url) {
-        setCoverUrl(res.data.cover_url);
-        updateUserProfile({ cover_url: res.data.cover_url });
+      if (res.data.success && (res.data.cover_url || res.data.coverUrl)) {
+        const newCover = res.data.cover_url || res.data.coverUrl;
+        setCoverUrl(newCover);
+        updateUserProfile({ cover_url: newCover, coverUrl: newCover });
+        await refreshUser();
         setSuccessMessage("Cover photo updated!");
       }
     } catch (err: any) {
@@ -230,6 +234,7 @@ const EditProfileContent = () => {
       const combinedFullName = `${firstName.trim()} ${lastName.trim()}`.trim();
       const payload = {
         full_name: combinedFullName,
+        fullName: combinedFullName,
         username: username.trim().toLowerCase(),
         bio,
         location,
@@ -237,7 +242,9 @@ const EditProfileContent = () => {
         phone,
         date_of_birth: dateOfBirth || null,
         avatar_url: avatarUrl,
+        avatarUrl: avatarUrl,
         cover_url: coverUrl,
+        coverUrl: coverUrl,
       };
 
       const res = await api.patch("/users/me", payload);

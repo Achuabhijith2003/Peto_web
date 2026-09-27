@@ -4,11 +4,17 @@ import api from "../utils/api";
 import AuthPromptModal from "../components/auth/AuthPromptModal";
 
 interface User {
-  avatar_url: any;
   id: string;
   email: string;
   username: string;
+  full_name?: string;
+  fullName?: string;
+  avatar_url?: any;
+  avatarUrl?: any;
+  cover_url?: any;
+  coverUrl?: any;
   profile?: any;
+  [key: string]: any;
 }
 
 interface AuthContextType {
@@ -47,8 +53,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (token) {
       try {
         const response = await api.get("/users/me");
-        const userData = response.data.user || response.data;
-        setUser({ ...userData, profile: response.data.profile });
+        const profile = response.data.profile || {};
+        const userData = response.data.user || response.data || {};
+        const resolvedAvatar =
+          profile.avatar_url ||
+          profile.avatarUrl ||
+          userData.avatar_url ||
+          userData.avatarUrl ||
+          null;
+        const resolvedCover =
+          profile.cover_url ||
+          profile.coverUrl ||
+          userData.cover_url ||
+          userData.coverUrl ||
+          null;
+
+        setUser({
+          ...userData,
+          ...profile,
+          avatar_url: resolvedAvatar,
+          avatarUrl: resolvedAvatar,
+          cover_url: resolvedCover,
+          coverUrl: resolvedCover,
+          profile: { ...(userData.profile || {}), ...profile, avatar_url: resolvedAvatar, cover_url: resolvedCover },
+        });
       } catch (error) {
         console.error("User refresh failed:", error);
       }
@@ -59,11 +87,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser((prev) => {
       if (!prev) return prev;
       const updatedProfile = { ...(prev.profile || {}), ...profileData };
+      const resolvedAvatar =
+        profileData.avatar_url ||
+        profileData.avatarUrl ||
+        profileData.avatar ||
+        prev.avatar_url;
+      const resolvedCover =
+        profileData.cover_url ||
+        profileData.coverUrl ||
+        profileData.cover ||
+        prev.cover_url;
+
       return {
         ...prev,
         username: profileData.username || prev.username,
-        avatar_url: profileData.avatar_url || prev.avatar_url,
-        profile: updatedProfile,
+        avatar_url: resolvedAvatar,
+        avatarUrl: resolvedAvatar,
+        cover_url: resolvedCover,
+        coverUrl: resolvedCover,
+        profile: {
+          ...updatedProfile,
+          avatar_url: resolvedAvatar,
+          cover_url: resolvedCover,
+        },
       };
     });
   };
@@ -74,8 +120,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (token) {
         try {
           const response = await api.get("/users/me");
-          const userData = response.data.user || response.data;
-          setUser({ ...userData, profile: response.data.profile });
+          const profile = response.data.profile || {};
+          const userData = response.data.user || response.data || {};
+          const resolvedAvatar =
+            profile.avatar_url ||
+            profile.avatarUrl ||
+            userData.avatar_url ||
+            userData.avatarUrl ||
+            null;
+          const resolvedCover =
+            profile.cover_url ||
+            profile.coverUrl ||
+            userData.cover_url ||
+            userData.coverUrl ||
+            null;
+
+          setUser({
+            ...userData,
+            ...profile,
+            avatar_url: resolvedAvatar,
+            avatarUrl: resolvedAvatar,
+            cover_url: resolvedCover,
+            coverUrl: resolvedCover,
+            profile: { ...(userData.profile || {}), ...profile, avatar_url: resolvedAvatar, cover_url: resolvedCover },
+          });
         } catch (error) {
           console.error("Auth check failed:", error);
           localStorage.removeItem("peto_token");

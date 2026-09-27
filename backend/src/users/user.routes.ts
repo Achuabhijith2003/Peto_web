@@ -18,10 +18,15 @@ router.get("/check-username", userController.checkUsername);
 router.get("/:id", optionalAuthenticate, userController.getUserById);
 
 router.patch("/me", authenticate, userController.updateProfile);
+router.put("/me", authenticate, userController.updateProfile);
+router.patch("/profile", authenticate, userController.updateProfile);
+router.put("/profile", authenticate, userController.updateProfile);
 
 router.patch("/avatar", authenticate, uploadImage.any(), userController.updateAvatar);
+router.post("/avatar", authenticate, uploadImage.any(), userController.updateAvatar);
 
 router.patch("/cover", authenticate, uploadImage.any(), userController.updateCover);
+router.post("/cover", authenticate, uploadImage.any(), userController.updateCover);
 
 router.delete("/me", authenticate, userController.deleteAccount);
 

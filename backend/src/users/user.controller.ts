@@ -1,4 +1,6 @@
 import { Request, Response } from "express";
+import fs from "fs/promises";
+import sharp from "sharp";
 import { supabase } from "../config/supabase";
 import { getUserProfile, searchUsers } from "./user.service";
 import { uploadAvatarToStorage, uploadCoverToStorage } from "../media/storage.service";
@@ -24,10 +26,20 @@ export const getCurrentUser = async (
             });
         }
 
+        const mergedUser = {
+            ...user,
+            ...(data || {}),
+            avatar_url: data?.avatar_url || user?.avatar_url || user?.user_metadata?.avatar_url || null,
+            avatarUrl: data?.avatar_url || user?.avatar_url || user?.user_metadata?.avatar_url || null,
+            cover_url: data?.cover_url || user?.cover_url || user?.user_metadata?.cover_url || null,
+            coverUrl: data?.cover_url || user?.cover_url || user?.user_metadata?.cover_url || null,
+        };
+
         return res.status(200).json({
             success: true,
-            user,
+            user: mergedUser,
             profile: data || null,
+            data: mergedUser,
         });
 
     } catch (err) {
@@ -125,7 +137,7 @@ export const getUserById = async (
 export const updateProfile = async (req: Request, res: Response) => {
     try {
         const user = (req as any).user;
-        const { username, full_name, fullName, bio, location, website, phone, dateOfBirth, date_of_birth, avatar_url, cover_url } = req.body;
+        const { username, full_name, fullName, bio, location, website, phone, dateOfBirth, date_of_birth, avatar_url, avatarUrl, avatar, cover_url, coverUrl, cover } = req.body;
 
         const updateData: any = {};
         if (full_name !== undefined || fullName !== undefined) updateData.full_name = full_name || fullName;
@@ -134,8 +146,12 @@ export const updateProfile = async (req: Request, res: Response) => {
         if (website !== undefined) updateData.website = website;
         if (phone !== undefined) updateData.phone = phone;
         if (dateOfBirth !== undefined || date_of_birth !== undefined) updateData.date_of_birth = dateOfBirth || date_of_birth;
-        if (avatar_url !== undefined) updateData.avatar_url = avatar_url;
-        if (cover_url !== undefined) updateData.cover_url = cover_url;
+
+        const resolvedAvatar = avatar_url !== undefined ? avatar_url : (avatarUrl !== undefined ? avatarUrl : avatar);
+        if (resolvedAvatar !== undefined) updateData.avatar_url = resolvedAvatar;
+
+        const resolvedCover = cover_url !== undefined ? cover_url : (coverUrl !== undefined ? coverUrl : cover);
+        if (resolvedCover !== undefined) updateData.cover_url = resolvedCover;
 
         if (username !== undefined && username !== "") {
             const trimmedUsername = username.trim().toLowerCase();
@@ -193,9 +209,17 @@ export const updateProfile = async (req: Request, res: Response) => {
 };
 
 export const updateAvatar = async (req: Request, res: Response) => {
+    let file = req.file || (req.files && Array.isArray(req.files) ? req.files[0] : undefined);
+    if (!file && req.files && typeof req.files === "object") {
+        const filesObj = req.files as Record<string, Express.Multer.File[]>;
+        const firstKey = Object.keys(filesObj)[0];
+        if (firstKey && filesObj[firstKey]?.length > 0) {
+            file = filesObj[firstKey][0];
+        }
+    }
+
     try {
         const user = (req as any).user;
-        const file = req.file || (req.files && Array.isArray(req.files) ? req.files[0] : undefined);
 
         if (!file) {
             return res.status(400).json({
@@ -204,9 +228,32 @@ export const updateAvatar = async (req: Request, res: Response) => {
             });
         }
 
-        const ext = file.originalname ? file.originalname.split('.').pop() : 'jpg';
-        const filename = `${user.id}_avatar_${Date.now()}.${ext}`;
-        const avatar_url = await uploadAvatarToStorage(file.buffer, filename, file.mimetype || "image/jpeg");
+        let fileBuffer = file.buffer;
+        if (!fileBuffer && file.path) {
+            fileBuffer = await fs.readFile(file.path);
+        }
+
+        if (!fileBuffer) {
+            return res.status(400).json({
+                success: false,
+                message: "Could not read avatar image file.",
+            });
+        }
+
+        // Compress and optimize avatar with sharp
+        let processedBuffer: Buffer = fileBuffer;
+        try {
+            processedBuffer = await sharp(fileBuffer)
+                .rotate()
+                .resize({ width: 600, height: 600, fit: "cover" })
+                .webp({ quality: 85 })
+                .toBuffer();
+        } catch (sharpErr) {
+            console.warn("Sharp avatar processing warning, using original buffer:", sharpErr);
+        }
+
+        const filename = `${user.id}_avatar_${Date.now()}.webp`;
+        const avatar_url = await uploadAvatarToStorage(processedBuffer, filename, "image/webp");
 
         const { data, error } = await supabase
             .from("profiles")
@@ -226,6 +273,7 @@ export const updateAvatar = async (req: Request, res: Response) => {
             success: true,
             message: "Avatar updated successfully",
             avatar_url,
+            avatarUrl: avatar_url,
             data,
         });
     } catch (err: any) {
@@ -234,13 +282,27 @@ export const updateAvatar = async (req: Request, res: Response) => {
             success: false,
             message: err.message || "Internal server error",
         });
+    } finally {
+        if (file?.path) {
+            try {
+                await fs.unlink(file.path);
+            } catch (_) {}
+        }
     }
 };
 
 export const updateCover = async (req: Request, res: Response) => {
+    let file = req.file || (req.files && Array.isArray(req.files) ? req.files[0] : undefined);
+    if (!file && req.files && typeof req.files === "object") {
+        const filesObj = req.files as Record<string, Express.Multer.File[]>;
+        const firstKey = Object.keys(filesObj)[0];
+        if (firstKey && filesObj[firstKey]?.length > 0) {
+            file = filesObj[firstKey][0];
+        }
+    }
+
     try {
         const user = (req as any).user;
-        const file = req.file || (req.files && Array.isArray(req.files) ? req.files[0] : undefined);
 
         if (!file) {
             return res.status(400).json({
@@ -249,9 +311,31 @@ export const updateCover = async (req: Request, res: Response) => {
             });
         }
 
-        const ext = file.originalname ? file.originalname.split('.').pop() : 'jpg';
-        const filename = `${user.id}_cover_${Date.now()}.${ext}`;
-        const cover_url = await uploadCoverToStorage(file.buffer, filename, file.mimetype || "image/jpeg");
+        let fileBuffer = file.buffer;
+        if (!fileBuffer && file.path) {
+            fileBuffer = await fs.readFile(file.path);
+        }
+
+        if (!fileBuffer) {
+            return res.status(400).json({
+                success: false,
+                message: "Could not read cover image file.",
+            });
+        }
+
+        let processedBuffer: Buffer = fileBuffer;
+        try {
+            processedBuffer = await sharp(fileBuffer)
+                .rotate()
+                .resize({ width: 1400, height: 600, fit: "cover" })
+                .webp({ quality: 85 })
+                .toBuffer();
+        } catch (sharpErr) {
+            console.warn("Sharp cover processing warning, using original buffer:", sharpErr);
+        }
+
+        const filename = `${user.id}_cover_${Date.now()}.webp`;
+        const cover_url = await uploadCoverToStorage(processedBuffer, filename, "image/webp");
 
         const { data, error } = await supabase
             .from("profiles")
@@ -271,6 +355,7 @@ export const updateCover = async (req: Request, res: Response) => {
             success: true,
             message: "Cover image updated successfully",
             cover_url,
+            coverUrl: cover_url,
             data,
         });
     } catch (err: any) {
@@ -279,6 +364,12 @@ export const updateCover = async (req: Request, res: Response) => {
             success: false,
             message: err.message || "Internal server error",
         });
+    } finally {
+        if (file?.path) {
+            try {
+                await fs.unlink(file.path);
+            } catch (_) {}
+        }
     }
 };
 
