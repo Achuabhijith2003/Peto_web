@@ -26,6 +26,7 @@ import GoogleLaunch from "../pages/GoogleLaunch";
 import PetProfilePage from "../pages/pets/PetProfilePage";
 import AddPetPage from "../pages/pets/AddPetPage";
 import EditPetPage from "../pages/pets/EditPetPage";
+import BusinessProfilePage from "../pages/business/BusinessProfilePage";
 
 const AppRoutes = () => {
   return (
@@ -72,6 +73,10 @@ const AppRoutes = () => {
       <Route path="/bookmarks" element={<Bookmarks />} />
       <Route path="/advertiser" element={<AdvertiserPortal />} />
       <Route path="/advertiser/*" element={<AdvertiserPortal />} />
+
+      {/* Business Identity & Profile Routes */}
+      <Route path="/business/:id" element={<BusinessProfilePage />} />
+      <Route path="/businesses/:id" element={<BusinessProfilePage />} />
 
       {/* System Status & Error Pages */}
       <Route path="/maintenance" element={<Maintenance503 />} />

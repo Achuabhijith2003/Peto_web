@@ -34,6 +34,48 @@ export async function getUserProfile(
     const { data: profile, error: profileError } = await profileQuery.maybeSingle();
 
     if (profileError || !profile) {
+        // Fallback: check if profileUserId is a business ID or business username
+        try {
+            let bizQuery = supabase
+                .from("business_identities")
+                .select("id, name, legal_name, username, avatar_url, cover_url, description, business_category, country_code, verification_status, status");
+
+            if (isUuid) {
+                bizQuery = bizQuery.eq("id", profileUserId);
+            } else {
+                const cleanSlug = profileUserId.replace(/^@+/, "").trim();
+                bizQuery = bizQuery.or(`username.ilike.${cleanSlug},name.ilike.${cleanSlug}`);
+            }
+
+            const { data: biz } = await bizQuery.maybeSingle();
+            if (biz) {
+                const isBizVerified = biz.verification_status === "APPROVED" || biz.status === "VERIFIED";
+                return {
+                    id: biz.id,
+                    username: biz.username || biz.name.toLowerCase().replace(/\s+/g, "_"),
+                    full_name: biz.name,
+                    name: biz.name,
+                    bio: biz.description || biz.business_category || "",
+                    avatar_url: biz.avatar_url,
+                    cover_url: biz.cover_url,
+                    location: biz.country_code || "",
+                    verified: isBizVerified,
+                    is_verified: isBizVerified,
+                    is_business: true,
+                    type: "BUSINESS",
+                    badge_type: isBizVerified ? "BUSINESS_VERIFIED" : null,
+                    verification_badge_type: isBizVerified ? "BUSINESS_VERIFIED" : null,
+                    business_id: biz.id,
+                    followers_count: 0,
+                    following_count: 0,
+                    posts_count: 0,
+                    is_following: false,
+                    isFollowing: false,
+                    created_at: new Date().toISOString(),
+                };
+            }
+        } catch (_) {}
+
         throw new Error("User not found.");
     }
 
@@ -153,7 +195,51 @@ export async function searchUsers(
         }
     }
 
+    const cleanQuery = query.replace(/^@+/, "").trim();
     const results = [];
+
+    // Search business identities
+    try {
+        const { data: businesses } = await supabase
+            .from("business_identities")
+            .select("id, name, legal_name, username, avatar_url, business_category, description, country_code, verification_status, status")
+            .or(`name.ilike.%${cleanQuery}%,legal_name.ilike.%${cleanQuery}%,username.ilike.%${cleanQuery}%,business_category.ilike.%${cleanQuery}%`)
+            .limit(limit);
+
+        if (businesses && businesses.length > 0) {
+            const bizIds = businesses.map(b => b.id);
+            const { data: verifs } = await supabase
+                .from("verification_applications")
+                .select("business_id, status")
+                .eq("verification_type", "BUSINESS_IDENTITY")
+                .eq("status", "APPROVED")
+                .in("business_id", bizIds);
+            const verifiedSet = new Set((verifs ?? []).map(v => v.business_id));
+
+            for (const b of businesses) {
+                const isVerified = b.verification_status === "APPROVED" || b.status === "VERIFIED" || verifiedSet.has(b.id);
+                results.push({
+                    id: b.id,
+                    type: "BUSINESS",
+                    name: b.name,
+                    username: b.username || b.name.toLowerCase().replace(/\s+/g, "_"),
+                    full_name: b.name,
+                    avatar_url: b.avatar_url || null,
+                    category: b.business_category || "Business",
+                    bio: b.description || b.business_category || "",
+                    verified: isVerified,
+                    is_verified: isVerified,
+                    badge_type: isVerified ? "BUSINESS_VERIFIED" : null,
+                    verification_badge_type: isVerified ? "BUSINESS_VERIFIED" : null,
+                    is_business: true,
+                    followersCount: 0,
+                    isFollowing: false
+                });
+            }
+        }
+    } catch (_) {
+        // graceful
+    }
 
     for (const user of users ?? []) {
         if (blockedUserIds.has(user.id)) continue;
@@ -179,6 +265,8 @@ export async function searchUsers(
 
         results.push({
             ...user,
+            type: "PERSON",
+            badge_type: user.verified ? "VERIFIED" : null,
             followersCount: followers ?? 0,
             isFollowing
         });

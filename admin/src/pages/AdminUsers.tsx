@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useAdminAuth } from "../context/AdminAuthContext";
-import { fetchUsers, updateUserStatus, updateUserVerification } from "../api/adminApi";
+import { fetchUsers, updateUserStatus } from "../api/adminApi";
 import { PetoUserItem, PaginationInfo } from "../types/admin";
 import { StatusBadge } from "../components/ui/StatusBadge";
 import { LoadingSpinner } from "../components/ui/LoadingSpinner";
@@ -57,7 +57,6 @@ export const AdminUsers: React.FC = () => {
 
   const canSuspend = hasPermission("users.suspend");
   const canBan = hasPermission("users.ban");
-  const canVerify = hasPermission("users.verify");
 
   const loadUsers = async (page = 1) => {
     try {
@@ -123,19 +122,6 @@ export const AdminUsers: React.FC = () => {
       setError(err.message || "Failed to update account status.");
     } finally {
       setSubmittingStatus(false);
-    }
-  };
-
-  const handleToggleVerification = async (user: PetoUserItem) => {
-    if (!canVerify) return;
-    try {
-      setError(null);
-      const nextVerified = !user.verified;
-      await updateUserVerification(user.id, nextVerified);
-      setActionSuccess(`User @${user.username} is now ${nextVerified ? "Verified" : "Unverified"}.`);
-      loadUsers(pagination.page);
-    } catch (err: any) {
-      setError(err.message || "Failed to alter verification badge.");
     }
   };
 
@@ -357,20 +343,14 @@ export const AdminUsers: React.FC = () => {
                           <Eye className="w-3.5 h-3.5" />
                         </Link>
 
-                        {/* Quick Verify Toggle */}
-                        {canVerify && (
-                          <button
-                            onClick={() => handleToggleVerification(user)}
-                            title={user.verified ? "Revoke Verification" : "Grant Verified Badge"}
-                            className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
-                              user.verified
-                                ? "bg-[#e7eefe] border-[#bed7fc] text-[#0058be] hover:bg-[#d5e3fc]"
-                                : "bg-[#f0f3ff] border-[#dae2f3] text-[#534434] hover:text-[#151c27]"
-                            }`}
-                          >
-                            <BadgeCheck className="w-3.5 h-3.5" />
-                          </button>
-                        )}
+                        {/* Authoritative Verification Link */}
+                        <Link
+                          to={`/verifications?search=${encodeURIComponent(user.username || user.full_name || user.id)}`}
+                          title="View Authoritative Verification Records"
+                          className="p-1.5 rounded-lg bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#0058be] border border-[#dae2f3] transition-colors"
+                        >
+                          <BadgeCheck className="w-3.5 h-3.5" />
+                        </Link>
 
                         {/* Status Change (Suspend / Ban / Restore) */}
                         {(canSuspend || canBan) && (

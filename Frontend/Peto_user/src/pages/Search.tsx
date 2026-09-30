@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Search as SearchIcon, Users, FileText, CheckCircle2, UserPlus, UserCheck, X, Loader2, PawPrint } from "lucide-react";
+import { Search as SearchIcon, Users, FileText, UserPlus, UserCheck, X, Loader2, PawPrint } from "lucide-react";
 import api from "../utils/api";
 import Navbar from "../components/layout/Navbar";
 import LeftSidebar from "../components/social/LeftSidebar";
@@ -8,6 +8,7 @@ import RightSidebar from "../components/social/RightSidebar";
 import MobileBottomNav from "../components/social/MobileBottomNav";
 import PostCard from "../components/social/PostCard";
 import { useAuth } from "../context/AuthContext";
+import VerifiedBadge from "../components/common/VerifiedBadge";
 
 export interface UserSearchResult {
   id: string;
@@ -15,6 +16,10 @@ export interface UserSearchResult {
   full_name: string;
   avatar_url?: string;
   verified?: boolean;
+  type?: 'USER' | 'BUSINESS';
+  is_business?: boolean;
+  category?: string;
+  verification_badge_type?: string;
   bio?: string;
   followersCount: number;
   isFollowing: boolean;
@@ -121,8 +126,12 @@ const SearchPage: React.FC = () => {
     }
   };
 
-  const handleUserClick = (userId: string) => {
-    navigate(`/profile/${userId}`);
+  const handleUserClick = (u: UserSearchResult) => {
+    if (u.type === 'BUSINESS' || u.is_business) {
+      navigate(`/business/${u.id}`);
+    } else {
+      navigate(`/profile/${u.id}`);
+    }
   };
 
   return (
@@ -231,72 +240,106 @@ const SearchPage: React.FC = () => {
                     </div>
 
                     <div className="grid grid-cols-1 gap-3">
-                      {users.map((u) => (
-                        <div
-                          key={u.id}
-                          onClick={() => handleUserClick(u.id)}
-                          className="group flex items-center justify-between rounded-2xl bg-slate-50 p-4 transition hover:bg-amber-50/60 hover:shadow-sm cursor-pointer border border-transparent hover:border-amber-200/50"
-                        >
-                          <div className="flex items-center gap-3.5 overflow-hidden">
-                            {/* Avatar */}
-                            <div className="relative shrink-0">
-                              {u.avatar_url && u.avatar_url !== "null" ? (
-                                <img
-                                  src={u.avatar_url}
-                                  alt={u.username}
-                                  className="h-12 w-12 rounded-full object-cover border border-slate-200"
-                                />
-                              ) : (
-                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-700 font-bold text-base">
-                                  {u.username ? u.username[0].toUpperCase() : "U"}
-                                </div>
-                              )}
-                            </div>
-
-                            {/* User Info */}
-                            <div className="truncate">
-                              <div className="flex items-center gap-1.5">
-                                <span className="font-bold text-sm text-slate-900 truncate group-hover:text-amber-600 transition">
-                                  {u.full_name || u.username}
-                                </span>
-                                {u.verified && (
-                                  <CheckCircle2 size={15} className="text-blue-500 shrink-0 fill-blue-50" />
+                      {users.map((u) => {
+                        const isBiz = u.type === 'BUSINESS' || u.is_business;
+                        return (
+                          <div
+                            key={u.id}
+                            onClick={() => handleUserClick(u)}
+                            className="group flex items-center justify-between rounded-2xl bg-slate-50 p-4 transition hover:bg-amber-50/60 hover:shadow-sm cursor-pointer border border-transparent hover:border-amber-200/50"
+                          >
+                            <div className="flex items-center gap-3.5 overflow-hidden">
+                              {/* Avatar */}
+                              <div className="relative shrink-0">
+                                {u.avatar_url && u.avatar_url !== "null" ? (
+                                  <img
+                                    src={u.avatar_url}
+                                    alt={u.username}
+                                    className={`h-12 w-12 rounded-full object-cover border ${
+                                      isBiz ? "border-amber-400 ring-2 ring-amber-100" : "border-slate-200"
+                                    }`}
+                                  />
+                                ) : (
+                                  <div
+                                    className={`flex h-12 w-12 items-center justify-center rounded-full font-bold text-base ${
+                                      isBiz
+                                        ? "bg-amber-100 text-amber-800 border border-amber-300"
+                                        : "bg-slate-100 text-slate-700"
+                                    }`}
+                                  >
+                                    {u.username ? u.username[0].toUpperCase() : "U"}
+                                  </div>
                                 )}
                               </div>
-                              <p className="text-xs text-slate-500 font-medium truncate">@{u.username}</p>
-                              {u.bio && (
-                                <p className="text-xs text-slate-600 mt-0.5 truncate max-w-xs">{u.bio}</p>
-                              )}
-                              <span className="inline-block mt-1 text-[10px] font-semibold text-slate-400">
-                                {u.followersCount} follower{u.followersCount !== 1 ? "s" : ""}
-                              </span>
-                            </div>
-                          </div>
 
-                          {/* Action Button */}
-                          {currentUser?.id !== u.id && (
-                            <button
-                              onClick={(e) => handleToggleFollow(u.id, u.isFollowing, e)}
-                              disabled={followLoadingMap[u.id]}
-                              className="ml-3 shrink-0 rounded-xl bg-blue-600 px-6 py-2 font-semibold text-white hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1.5 text-xs transition"
-                            >
-                              {followLoadingMap[u.id] ? (
-                                <Loader2 size={14} className="animate-spin" />
-                              ) : u.isFollowing ? (
-                                <>
-                                  <UserCheck size={14} />
-                                  Following
-                                </>
-                              ) : (
-                                <>
-                                  <UserPlus size={14} />
-                                  Follow
-                                </>
-                              )}
-                            </button>
-                          )}
-                        </div>
-                      ))}
+                              {/* User Info */}
+                              <div className="truncate">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="font-bold text-sm text-slate-900 truncate group-hover:text-amber-600 transition">
+                                    {u.full_name || u.username}
+                                  </span>
+                                  {isBiz ? (
+                                    <VerifiedBadge verified={true} verificationType="BUSINESS_VERIFIED" size={15} />
+                                  ) : (
+                                    u.verified && (
+                                      <VerifiedBadge verified={true} verificationType="PERSON_VERIFIED" size={15} />
+                                    )
+                                  )}
+                                  {isBiz && (
+                                    <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 border border-amber-200">
+                                      {u.category || "Business"}
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-xs text-slate-500 font-medium truncate">@{u.username}</p>
+                                {u.bio && (
+                                  <p className="text-xs text-slate-600 mt-0.5 truncate max-w-xs">{u.bio}</p>
+                                )}
+                                {!isBiz && (
+                                  <span className="inline-block mt-1 text-[10px] font-semibold text-slate-400">
+                                    {u.followersCount} follower{u.followersCount !== 1 ? "s" : ""}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Action Button */}
+                            {isBiz ? (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/business/${u.id}`);
+                                }}
+                                className="ml-3 shrink-0 rounded-xl bg-amber-500 px-4 py-2 font-semibold text-white hover:bg-amber-600 text-xs transition shadow-sm"
+                              >
+                                View Business
+                              </button>
+                            ) : (
+                              currentUser?.id !== u.id && (
+                                <button
+                                  onClick={(e) => handleToggleFollow(u.id, u.isFollowing, e)}
+                                  disabled={followLoadingMap[u.id]}
+                                  className="ml-3 shrink-0 rounded-xl bg-blue-600 px-6 py-2 font-semibold text-white hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1.5 text-xs transition"
+                                >
+                                  {followLoadingMap[u.id] ? (
+                                    <Loader2 size={14} className="animate-spin" />
+                                  ) : u.isFollowing ? (
+                                    <>
+                                      <UserCheck size={14} />
+                                      Following
+                                    </>
+                                  ) : (
+                                    <>
+                                      <UserPlus size={14} />
+                                      Follow
+                                    </>
+                                  )}
+                                </button>
+                              )
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}

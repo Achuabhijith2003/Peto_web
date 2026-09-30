@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
-import { useParams, Link } from "react-router-dom";
-import { UserPlus, UserCheck, Loader2, Edit3, MapPin, Link as LinkIcon, CheckCircle2, Settings as SettingsIcon } from "lucide-react";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { UserPlus, UserCheck, Loader2, Edit3, MapPin, Link as LinkIcon, Settings as SettingsIcon } from "lucide-react";
 import api from "../utils/api";
 import { useAuth } from "../context/AuthContext";
 
@@ -16,8 +16,10 @@ import WebExternalAdCard from "../components/social/WebExternalAdCard";
 import FollowListModal, { type FollowUserItem } from "../components/social/FollowListModal";
 import { MyPetsSection } from "../components/pets/MyPetsSection";
 import { ProfileSkeleton } from "../components/common/Skeleton";
+import VerifiedBadge from "../components/common/VerifiedBadge";
 
 const ProfileCenter = ({ userId }: { userId?: string }) => {
+  const navigate = useNavigate();
   const { user: currentUser, openAuthModal } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [posts, setPosts] = useState<any[]>([]);
@@ -58,6 +60,12 @@ const ProfileCenter = ({ userId }: { userId?: string }) => {
         return;
       }
 
+      // If this is a business profile, redirect to the business profile view
+      if (profileData.is_business || profileData.type === "BUSINESS") {
+        navigate(`/business/${profileData.id || profileData.business_id}`, { replace: true });
+        return;
+      }
+
       setProfile(profileData);
       const resolvedId = profileData.id;
       const isOwner = !userId || userId === currentUser?.id || currentUser?.id === resolvedId;
@@ -94,13 +102,24 @@ const ProfileCenter = ({ userId }: { userId?: string }) => {
       }
     } catch (error: any) {
       console.error("Failed to fetch profile data:", error);
-      if (error.response?.status === 404 && isOwnProfile) {
-        window.location.href = "/create-profile";
+      if (error.response?.status === 404) {
+        if (isOwnProfile) {
+          window.location.href = "/create-profile";
+          return;
+        }
+        // Fallback: check if fetchId is a business
+        try {
+          const bizRes = await api.get(`/businesses/${fetchId}`);
+          if (bizRes.data?.business?.id) {
+            navigate(`/business/${bizRes.data.business.id}`, { replace: true });
+            return;
+          }
+        } catch (_) {}
       }
     } finally {
       setLoading(false);
     }
-  }, [fetchId, isOwnProfile, userId, currentUser?.id]);
+  }, [fetchId, isOwnProfile, userId, currentUser?.id, navigate]);
 
   useEffect(() => {
     fetchProfileData();
@@ -266,12 +285,11 @@ const ProfileCenter = ({ userId }: { userId?: string }) => {
                 {profile.full_name || profile.username}
               </h2>
               {(profile.verified || profile.is_verified) && (
-                <span title="Verified Account" className="inline-flex items-center">
-                  <CheckCircle2
-                    size={19}
-                    className="text-amber-500 fill-amber-100 shrink-0"
-                  />
-                </span>
+                <VerifiedBadge
+                  verified={true}
+                  verificationType={profile.verification_badge_type === "BUSINESS" ? "BUSINESS_VERIFIED" : "PERSON_VERIFIED"}
+                  size={20}
+                />
               )}
             </div>
             <p className="text-slate-500 text-xs font-mono">@{profile.username}</p>

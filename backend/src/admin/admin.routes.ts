@@ -228,17 +228,30 @@ router.get("/regions", requirePermission("system.view"), getAdminRegionsHandler)
 router.patch("/regions/:code", requirePermission("system.manage"), updateAdminRegionHandler);
 
 import {
+  getAdminVerificationOverviewHandler,
   getAdminVerificationQueueHandler,
   getAdminVerificationDetailHandler,
   getAdminSignedDocumentUrlHandler,
   reviewVerificationApplicationHandler,
+  assignAdminVerificationHandler,
+  approveVerificationHandler,
+  rejectVerificationHandler,
+  requestInformationVerificationHandler,
+  reverificationVerificationHandler,
+  suspendVerificationHandler,
+  revokeVerificationHandler,
 } from "./controllers/adminVerification.controller";
 
 // Payment Administration & Ledger (Phases 2-4)
 router.get("/payments/transactions", requirePermission("ads.view"), getAdminTransactionsHandler);
 router.post("/payments/refund", requirePermission("ads.manage"), refundTransactionHandler);
 
-// Partner & Identity Verification Management (Phase 9)
+// Partner & Identity Verification Management (Phase 9 & 10)
+router.get(
+  "/verifications/overview",
+  requireAnyPermission("verification.view", "ads.view"),
+  getAdminVerificationOverviewHandler
+);
 router.get(
   "/verifications",
   requireAnyPermission("verification.view", "ads.view"),
@@ -255,9 +268,44 @@ router.get(
   getAdminSignedDocumentUrlHandler
 );
 router.post(
+  "/verifications/:id/assign",
+  requireAnyPermission("verification.review", "ads.manage"),
+  assignAdminVerificationHandler
+);
+router.post(
   "/verifications/:id/review",
   requireAnyPermission("verification.review", "ads.manage"),
   reviewVerificationApplicationHandler
+);
+router.post(
+  "/verifications/:id/approve",
+  requireAnyPermission("verification.approve", "ads.manage"),
+  approveVerificationHandler
+);
+router.post(
+  "/verifications/:id/reject",
+  requireAnyPermission("verification.reject", "ads.manage"),
+  rejectVerificationHandler
+);
+router.post(
+  "/verifications/:id/request-information",
+  requireAnyPermission("verification.request_information", "verification.review", "ads.manage"),
+  requestInformationVerificationHandler
+);
+router.post(
+  "/verifications/:id/reverification",
+  requireAnyPermission("verification.reverification", "verification.manage", "ads.manage"),
+  reverificationVerificationHandler
+);
+router.post(
+  "/verifications/:id/suspend",
+  requireAnyPermission("verification.suspend", "verification.manage", "ads.manage"),
+  suspendVerificationHandler
+);
+router.post(
+  "/verifications/:id/revoke",
+  requireAnyPermission("verification.revoke", "verification.manage", "ads.manage"),
+  revokeVerificationHandler
 );
 
 // Admin Notifications & Operational Alerts (Phase 9)

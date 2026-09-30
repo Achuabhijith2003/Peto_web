@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { resolveActingIdentity } from "../businesses/business.rbac";
 
 import {
     likePostService,
@@ -10,11 +11,22 @@ export async function likePost(req: Request, res: Response) {
 
     try {
 
-        const userId = (req as any).user!.id;
-
+        const user = (req as any).user!;
         const postId = (req as any).params.id;
 
-        const data = await likePostService(userId, postId);
+        const actingIdentity = await resolveActingIdentity(
+            user,
+            req.body,
+            req.headers,
+            "business.like"
+        );
+
+        const data = await likePostService(
+            user.id,
+            postId,
+            actingIdentity.type === "BUSINESS" ? actingIdentity.id : undefined,
+            actingIdentity.type
+        );
 
         return res.json({
             success: true,
@@ -23,8 +35,8 @@ export async function likePost(req: Request, res: Response) {
         });
 
     } catch (err: any) {
-
-        return res.status(500).json({
+        const status = err?.status || (err?.message?.includes("Permission denied") ? 403 : 500);
+        return res.status(status).json({
             success: false,
             message: err.message
         });
@@ -37,11 +49,21 @@ export async function unlikePost(req: Request, res: Response) {
 
     try {
 
-        const userId = (req as any).user!.id;
-
+        const user = (req as any).user!;
         const postId = (req as any).params.id;
 
-        await unlikePostService(userId, postId);
+        const actingIdentity = await resolveActingIdentity(
+            user,
+            req.body,
+            req.headers,
+            "business.like"
+        );
+
+        await unlikePostService(
+            user.id,
+            postId,
+            actingIdentity.type === "BUSINESS" ? actingIdentity.id : undefined
+        );
 
         return res.json({
             success: true,
@@ -49,8 +71,8 @@ export async function unlikePost(req: Request, res: Response) {
         });
 
     } catch (err: any) {
-
-        return res.status(500).json({
+        const status = err?.status || (err?.message?.includes("Permission denied") ? 403 : 500);
+        return res.status(status).json({
             success: false,
             message: err.message
         });

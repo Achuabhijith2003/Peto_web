@@ -1,12 +1,21 @@
 import { Request, Response } from "express";
 
 import { createPostSchema } from "./post.validation";
+import { resolveActingIdentity } from "../businesses/business.rbac";
 
 import { createPostService, getPostById, updatePostById, deletePostById, getMyPostsService, getUserPostsService, getGlobalFeedService, searchPostsService, getReelsFeedService } from "./post.service";
 
 export const createPost = async (req: Request, res: Response) => {
     try {
         const user = (req as any).user;
+
+        // Resolve acting identity (e.g. personal vs managed business) with permission check
+        const actingIdentity = await resolveActingIdentity(
+            user,
+            req.body,
+            req.headers,
+            "business.post.create"
+        );
 
         const textContent = req.body.text || req.body.content || "";
         const visibility = req.body.visibility || "public";
@@ -42,15 +51,23 @@ export const createPost = async (req: Request, res: Response) => {
             petId,
             mentionedUserIds,
             taggedPetIds,
+            authorType: actingIdentity.type,
+            businessId: actingIdentity.type === "BUSINESS" ? actingIdentity.id : undefined,
         });
+
+        let responseData = post;
+        try {
+            responseData = await getPostById(post.id, user.id);
+        } catch (_) {}
 
         return res.status(201).json({
             success: true,
-            data: post,
+            data: responseData,
         });
     } catch (err: any) {
         console.error("Create post error:", err);
-        return res.status(500).json({
+        const status = err?.status || (err?.message?.includes("Permission denied") ? 403 : 500);
+        return res.status(status).json({
             success: false,
             message: err?.message || "Failed to create post",
         });

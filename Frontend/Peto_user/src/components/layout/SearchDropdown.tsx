@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Search as SearchIcon, CheckCircle2, Loader2, ArrowRight } from "lucide-react";
+import { Search as SearchIcon, Loader2, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import api from "../../utils/api";
+import VerifiedBadge from "../common/VerifiedBadge";
 
 interface UserResult {
   id: string;
@@ -9,6 +10,10 @@ interface UserResult {
   full_name: string;
   avatar_url?: string;
   verified?: boolean;
+  type?: "USER" | "BUSINESS";
+  is_business?: boolean;
+  category?: string;
+  verification_badge_type?: string;
 }
 
 const SearchDropdown: React.FC = () => {
@@ -56,10 +61,14 @@ const SearchDropdown: React.FC = () => {
     return () => clearTimeout(timer);
   }, [query]);
 
-  const handleSelectUser = (userId: string) => {
+  const handleSelectUser = (user: UserResult) => {
     setIsOpen(false);
     setQuery("");
-    navigate(`/profile/${userId}`);
+    if (user.type === "BUSINESS" || user.is_business) {
+      navigate(`/business/${user.id}`);
+    } else {
+      navigate(`/profile/${user.id}`);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -90,42 +99,66 @@ const SearchDropdown: React.FC = () => {
       {isOpen && (
         <div className="absolute right-0 mt-2 w-80 rounded-2xl bg-white p-3 shadow-xl border border-slate-100 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 py-1">
-            People & Profiles
+            People & Businesses
           </div>
 
           {results.length === 0 ? (
             <div className="p-4 text-center text-xs text-slate-400">
-              No users found for "{query}"
+              No results found for "{query}"
             </div>
           ) : (
             <div className="space-y-1 mt-1">
-              {results.map((user) => (
-                <div
-                  key={user.id}
-                  onClick={() => handleSelectUser(user.id)}
-                  className="flex items-center gap-3 rounded-xl p-2 hover:bg-amber-50/80 transition cursor-pointer"
-                >
-                  {user.avatar_url && user.avatar_url !== "null" ? (
-                    <img
-                      src={user.avatar_url}
-                      alt={user.username}
-                      className="h-9 w-9 rounded-full object-cover border border-slate-200"
-                    />
-                  ) : (
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-100 text-amber-700 font-bold text-xs">
-                      {user.username ? user.username[0].toUpperCase() : "U"}
-                    </div>
-                  )}
+              {results.map((user) => {
+                const isBiz = user.type === "BUSINESS" || user.is_business;
+                return (
+                  <div
+                    key={user.id}
+                    onClick={() => handleSelectUser(user)}
+                    className="flex items-center gap-3 rounded-xl p-2 hover:bg-amber-50/80 transition cursor-pointer"
+                  >
+                    {user.avatar_url && user.avatar_url !== "null" ? (
+                      <img
+                        src={user.avatar_url}
+                        alt={user.username}
+                        className={`h-9 w-9 rounded-full object-cover border ${
+                          isBiz ? "border-amber-400 ring-2 ring-amber-100" : "border-slate-200"
+                        }`}
+                      />
+                    ) : (
+                      <div
+                        className={`flex h-9 w-9 items-center justify-center rounded-full font-bold text-xs ${
+                          isBiz
+                            ? "bg-amber-100 text-amber-800 border border-amber-300"
+                            : "bg-slate-100 text-slate-700"
+                        }`}
+                      >
+                        {user.username ? user.username[0].toUpperCase() : "U"}
+                      </div>
+                    )}
 
-                  <div className="truncate text-xs">
-                    <div className="flex items-center gap-1 font-semibold text-slate-900 truncate">
-                      {user.full_name || user.username}
-                      {user.verified && <CheckCircle2 size={13} className="text-blue-500" />}
+                    <div className="truncate text-xs flex-1">
+                      <div className="flex items-center gap-1 font-semibold text-slate-900 truncate">
+                        <span className="truncate">{user.full_name || user.username}</span>
+                        {isBiz ? (
+                          <VerifiedBadge verified={true} verificationType="BUSINESS_VERIFIED" size={13} />
+                        ) : (
+                          user.verified && (
+                            <VerifiedBadge verified={true} verificationType="PERSON_VERIFIED" size={13} />
+                          )
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
+                        <span>@{user.username}</span>
+                        {isBiz && (
+                          <span className="rounded-full bg-amber-50 px-1.5 py-0.2 text-[9px] font-semibold text-amber-700 border border-amber-200">
+                            {user.category || "Business"}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <p className="text-[11px] text-slate-400">@{user.username}</p>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 

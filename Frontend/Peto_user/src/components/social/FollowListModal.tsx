@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { X, Users, CheckCircle2, UserPlus, UserCheck, Loader2 } from "lucide-react";
+import { X, Users, UserPlus, UserCheck, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import api from "../../utils/api";
 import { useAuth } from "../../context/AuthContext";
+import VerifiedBadge from "../common/VerifiedBadge";
 
 export interface FollowUserItem {
   id: string;
@@ -185,7 +186,9 @@ const FollowListModal: React.FC<ModalProps> = ({
                     <div className="truncate text-xs">
                       <div className="flex items-center gap-1 font-bold text-slate-900 truncate group-hover:text-amber-600 transition">
                         {u.full_name || u.username}
-                        {u.verified && <CheckCircle2 size={13} className="text-blue-500 shrink-0" />}
+                        {u.verified && (
+                          <VerifiedBadge verified={true} verificationType="PERSON_VERIFIED" size={13} />
+                        )}
                       </div>
                       <p className="text-[11px] text-slate-400">@{u.username}</p>
                     </div>

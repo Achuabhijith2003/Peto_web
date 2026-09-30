@@ -6,6 +6,7 @@ import App from "./App";
 import "./index.css";
 
 import { AuthProvider } from "./context/AuthContext";
+import { IdentityProvider } from "./context/IdentityContext";
 import { SystemStatusProvider } from "./context/SystemStatusContext";
 import { ErrorBoundary } from "./components/common/ErrorBoundary";
 
@@ -15,7 +16,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <ErrorBoundary>
         <SystemStatusProvider>
           <AuthProvider>
-            <App />
+            <IdentityProvider>
+              <App />
+            </IdentityProvider>
           </AuthProvider>
         </SystemStatusProvider>
       </ErrorBoundary>

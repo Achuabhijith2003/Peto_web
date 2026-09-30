@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { resolveActingIdentity } from "../businesses/business.rbac";
 
 import {
     createCommentService,
@@ -13,9 +14,16 @@ export async function createComment(
 ) {
     try {
 
-        const userId = (req as any).user!.id;
-
+        const user = (req as any).user!;
         const postId = (req as any).params.id;
+
+        // Resolve acting identity (e.g. personal vs managed business)
+        const actingIdentity = await resolveActingIdentity(
+            user,
+            req.body,
+            req.headers,
+            "business.comment.create"
+        );
 
         const {
             comment,
@@ -36,11 +44,13 @@ export async function createComment(
         const resolvedMentionedUserIds = mentioned_user_ids || mentionedUserIds || [];
 
         const data = await createCommentService(
-            userId,
+            user.id,
             postId,
             commentText,
             parent_comment_id,
-            resolvedMentionedUserIds
+            resolvedMentionedUserIds,
+            actingIdentity.type === "BUSINESS" ? actingIdentity.id : undefined,
+            actingIdentity.type
         );
 
         res.json({
@@ -49,12 +59,11 @@ export async function createComment(
         });
 
     } catch (err: any) {
-
-        res.status(500).json({
+        const status = err?.status || (err?.message?.includes("Permission denied") ? 403 : 500);
+        res.status(status).json({
             success: false,
             message: err.message
         });
-
     }
 }
 

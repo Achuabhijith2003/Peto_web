@@ -7,7 +7,6 @@ import {
   Volume2,
   VolumeX,
   Play,
-  CheckCircle2,
   Disc,
   Send,
   X,
@@ -23,6 +22,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import api from "../../utils/api";
 import { useAuth } from "../../context/AuthContext";
+import VerifiedBadge from "../common/VerifiedBadge";
 import MentionText from "./MentionText";
 import { ReportModal } from "../common/ReportModal";
 
@@ -472,8 +472,12 @@ const ReelItem = ({ post, isActive }: ReelItemProps) => {
               >
                 {authorName}
               </span>
-              {author.verified && (
-                <CheckCircle2 size={14} className="text-amber-400 fill-amber-400/20" />
+              {(author.verified || author.is_verified) && (
+                <VerifiedBadge
+                  verified={true}
+                  verificationType={author?.verification_badge_type === "BUSINESS" ? "BUSINESS_VERIFIED" : "PERSON_VERIFIED"}
+                  size={14}
+                />
               )}
             </div>
             {authorUsername && (

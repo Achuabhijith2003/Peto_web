@@ -10,6 +10,8 @@ import {
   Clapperboard,
   Edit3,
   Building2,
+  Check,
+  Settings as SettingsIcon,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
@@ -17,11 +19,14 @@ import SearchDropdown from "./SearchDropdown";
 
 import Logo from "../common/Logo";
 import { useAuth } from "../../context/AuthContext";
+import { useIdentity } from "../../context/IdentityContext";
 import { useNotifications } from "../../hooks/useNotifications";
 import NotificationPanel from "../social/NotificationPanel";
+import VerifiedBadge from "../common/VerifiedBadge";
 
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
+  const { activeIdentity, managedBusinesses, switchIdentity } = useIdentity();
   const { unreadCount } = useNotifications();
   const location = useLocation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -154,49 +159,181 @@ const Navbar = () => {
               </button>
 
               {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-56 rounded-xl bg-white shadow-popover border border-slate-200/80 py-1.5 z-50">
-                  <div className="px-3.5 py-2 border-b border-slate-100">
-                    <p className="font-semibold text-xs text-slate-900 truncate">
-                      {user?.profile?.full_name || user?.username || "User"}
+                <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-white shadow-xl border border-slate-200 py-1.5 z-50 overflow-hidden">
+                  {/* Current Active Identity Header */}
+                  <div className="px-4 py-2.5 border-b border-slate-100 bg-slate-50/70">
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
+                      Acting Identity
+                    </span>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <p className="font-bold text-xs text-slate-900 truncate">
+                        {activeIdentity.name}
+                      </p>
+                      {activeIdentity.type === "BUSINESS" && (
+                        <VerifiedBadge
+                          verified={activeIdentity.isVerified || false}
+                          verificationType="BUSINESS_VERIFIED"
+                          size={14}
+                        />
+                      )}
+                    </div>
+                    <p className="text-[10px] text-slate-500 capitalize">
+                      {activeIdentity.type === "BUSINESS" ? "Business Identity" : `@${user?.username}`}
                     </p>
-                    <p className="text-[11px] text-slate-500 truncate">@{user?.username}</p>
                   </div>
 
+                  {/* IDENTITY SWITCHER SECTION */}
+                  <div className="px-3 py-2 border-b border-slate-100 bg-white">
+                    <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400 px-1 mb-1.5">
+                      Switch Identity
+                    </p>
+                    <div className="space-y-1">
+                      {/* Personal Identity */}
+                      <button
+                        onClick={() => {
+                          switchIdentity("PERSON");
+                        }}
+                        className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-semibold transition ${
+                          activeIdentity.type === "PERSON"
+                            ? "bg-amber-50 text-amber-900"
+                            : "text-slate-700 hover:bg-slate-50"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 truncate">
+                          <UserCircle size={15} className="text-slate-400 shrink-0" />
+                          <span className="truncate">{user?.profile?.full_name || user?.username || "Personal"}</span>
+                          <span className="text-[10px] text-slate-400 font-normal">Personal</span>
+                        </div>
+                        {activeIdentity.type === "PERSON" && <Check size={14} className="text-amber-600 shrink-0" />}
+                      </button>
+
+                      {/* Managed Businesses */}
+                      {managedBusinesses.map((b) => {
+                        const isSelected = activeIdentity.type === "BUSINESS" && activeIdentity.id === b.id;
+                        return (
+                          <button
+                            key={b.id}
+                            onClick={() => {
+                              switchIdentity("BUSINESS", b.id);
+                            }}
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-semibold transition ${
+                              isSelected
+                                ? "bg-amber-50 text-amber-900"
+                                : "text-slate-700 hover:bg-slate-50"
+                            }`}
+                          >
+                            <div className="flex items-center gap-1.5 truncate">
+                              <Building2 size={15} className="text-amber-500 shrink-0" />
+                              <span className="truncate">{b.name}</span>
+                              <VerifiedBadge
+                                verified={b.is_verified}
+                                verificationType="BUSINESS_VERIFIED"
+                                size={13}
+                              />
+                            </div>
+                            {isSelected && <Check size={14} className="text-amber-600 shrink-0" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* NAVIGATION LINKS */}
                   <div className="py-1">
+                    {activeIdentity.type === "BUSINESS" ? (
+                      <>
+                        <Link
+                          to={`/business/${activeIdentity.id}`}
+                          className="flex items-center gap-2.5 px-3.5 py-1.5 text-xs font-semibold text-amber-900 hover:bg-amber-50 transition-colors"
+                          onClick={() => setDropdownOpen(false)}
+                        >
+                          <Building2 size={15} className="text-amber-600" />
+                          View Business Profile
+                        </Link>
+
+                        <Link
+                          to="/advertiser"
+                          className="flex items-center gap-2.5 px-3.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+                          onClick={() => setDropdownOpen(false)}
+                        >
+                          <Sparkles size={15} className="text-slate-400" />
+                          Advertiser Control Panel
+                        </Link>
+
+                        <Link
+                          to="/profile"
+                          className="flex items-center gap-2.5 px-3.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+                          onClick={() => setDropdownOpen(false)}
+                        >
+                          <UserCircle size={15} className="text-slate-400" />
+                          My Personal Profile
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                        <Link 
+                          to="/profile" 
+                          className="flex items-center gap-2.5 px-3.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+                          onClick={() => setDropdownOpen(false)}
+                        >
+                          <UserCircle size={15} className="text-slate-400" />
+                          Personal Profile
+                        </Link>
+
+                        <Link 
+                          to="/edit-profile" 
+                          className="flex items-center gap-2.5 px-3.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+                          onClick={() => setDropdownOpen(false)}
+                        >
+                          <Edit3 size={15} className="text-slate-400" />
+                          Edit Profile
+                        </Link>
+
+                        {managedBusinesses.length > 0 && (
+                          <Link 
+                            to={`/business/${managedBusinesses[0].id}`} 
+                            className="flex items-center justify-between px-3.5 py-1.5 text-xs font-semibold text-amber-800 bg-amber-50/60 hover:bg-amber-100/70 transition-colors"
+                            onClick={() => setDropdownOpen(false)}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Building2 size={15} className="text-amber-600" />
+                              <span>{managedBusinesses[0].name} Profile</span>
+                            </div>
+                            <VerifiedBadge
+                              verified={managedBusinesses[0].is_verified}
+                              verificationType="BUSINESS_VERIFIED"
+                              size={13}
+                            />
+                          </Link>
+                        )}
+
+                        <Link 
+                          to="/bookmarks" 
+                          className="flex items-center gap-2.5 px-3.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+                          onClick={() => setDropdownOpen(false)}
+                        >
+                          <Bookmark size={15} className="text-slate-400" />
+                          Saved Posts
+                        </Link>
+
+                        <Link 
+                          to="/advertiser" 
+                          className="flex items-center gap-2.5 px-3.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 transition-colors"
+                          onClick={() => setDropdownOpen(false)}
+                        >
+                          <Sparkles size={15} className="text-amber-500" />
+                          Advertiser Portal
+                        </Link>
+                      </>
+                    )}
+
                     <Link 
-                      to="/profile" 
+                      to="/settings" 
                       className="flex items-center gap-2.5 px-3.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
                       onClick={() => setDropdownOpen(false)}
                     >
-                      <UserCircle size={15} className="text-slate-400" />
-                      Profile
-                    </Link>
-
-                    <Link 
-                      to="/edit-profile" 
-                      className="flex items-center gap-2.5 px-3.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
-                      onClick={() => setDropdownOpen(false)}
-                    >
-                      <Edit3 size={15} className="text-slate-400" />
-                      Edit Profile
-                    </Link>
-
-                    <Link 
-                      to="/bookmarks" 
-                      className="flex items-center gap-2.5 px-3.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
-                      onClick={() => setDropdownOpen(false)}
-                    >
-                      <Bookmark size={15} className="text-slate-400" />
-                      Saved Posts
-                    </Link>
-
-                    <Link 
-                      to="/advertiser" 
-                      className="flex items-center gap-2.5 px-3.5 py-1.5 text-xs font-medium text-amber-700 bg-amber-50/50 hover:bg-amber-100/70 transition-colors"
-                      onClick={() => setDropdownOpen(false)}
-                    >
-                      <Building2 size={15} className="text-amber-500" />
-                      Advertiser Portal
+                      <SettingsIcon size={15} className="text-slate-400" />
+                      Settings
                     </Link>
                   </div>
 

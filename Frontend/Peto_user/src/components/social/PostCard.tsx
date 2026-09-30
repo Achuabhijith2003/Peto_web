@@ -7,7 +7,6 @@ import {
   Trash2,
   X,
   Check,
-  CheckCircle2,
   Clock,
   MessageCircle,
   Lock,
@@ -28,6 +27,7 @@ import PostActions from "./PostActions";
 import PostStats from "./PostStats";
 import MentionText from "./MentionText";
 import MentionSuggestions, { type MentionUser } from "./MentionSuggestions";
+import VerifiedBadge from "../common/VerifiedBadge";
 
 interface PostCardProps {
   post: any;
@@ -85,18 +85,27 @@ const PostCard = ({ post }: PostCardProps) => {
 
   const authorId = post.author?.id || post.user_id || post.author_id || post.author?.user_id;
 
+  const isBusinessAuthor = post.author_type === "BUSINESS" || !!post.business_id || post.author?.is_business;
+  const businessId = post.business_id || post.author?.business_id || (isBusinessAuthor ? authorId : null);
+
   const handleProfileClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (authorId) {
+    if (isBusinessAuthor && businessId) {
+      navigate(`/business/${businessId}`);
+    } else if (authorId) {
       navigate(`/profile/${authorId}`);
     }
   };
 
   const handleCommentAuthorClick = (commentUser: any, e: React.MouseEvent) => {
     e.stopPropagation();
-    const commentAuthorId = commentUser?.id || commentUser?.user_id;
-    if (commentAuthorId) {
-      navigate(`/profile/${commentAuthorId}`);
+    if (commentUser?.is_business || commentUser?.badge_type === "BUSINESS_VERIFIED" || commentUser?.business_id) {
+      navigate(`/business/${commentUser.business_id || commentUser.id}`);
+    } else {
+      const commentAuthorId = commentUser?.id || commentUser?.user_id;
+      if (commentAuthorId) {
+        navigate(`/profile/${commentAuthorId}`);
+      }
     }
   };
 
@@ -360,9 +369,11 @@ const PostCard = ({ post }: PostCardProps) => {
               >
                 {authorName}
               </h3>
-              {post.author?.verified && (
-                <CheckCircle2 size={16} className="shrink-0 text-amber-500 fill-amber-100" />
-              )}
+              <VerifiedBadge
+                verified={post.author?.verified || post.author?.is_verified || isBusinessAuthor}
+                verificationType={post.author?.badge_type === "BUSINESS_VERIFIED" || isBusinessAuthor || post.author?.verification_badge_type === "BUSINESS" ? "BUSINESS_VERIFIED" : "PERSON_VERIFIED"}
+                size={16}
+              />
               {post.community && (
                 <button
                   type="button"
@@ -666,10 +677,15 @@ const PostCard = ({ post }: PostCardProps) => {
                             <div className="flex justify-between items-center mb-1">
                               <span
                                 onClick={(e) => handleCommentAuthorClick(author, e)}
-                                className="font-bold text-slate-900 hover:text-amber-600 cursor-pointer transition"
+                                className="font-bold text-slate-900 hover:text-amber-600 cursor-pointer transition inline-flex items-center gap-1"
                                 title={`View ${cAuthorName}'s profile`}
                               >
                                 {cAuthorName}
+                                <VerifiedBadge
+                                  verified={author?.verified || author?.is_verified}
+                                  verificationType={author?.verification_badge_type === "BUSINESS" ? "BUSINESS_VERIFIED" : "PERSON_VERIFIED"}
+                                  size={13}
+                                />
                               </span>
                               <span className="text-[10px] text-slate-400">
                                 {formatTimeAgo(c.created_at)}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useAdminAuth } from "../context/AdminAuthContext";
-import { fetchUserDetail, updateUserStatus, updateUserVerification } from "../api/adminApi";
+import { fetchUserDetail, updateUserStatus } from "../api/adminApi";
 import { PetoUserDetail } from "../types/admin";
 import { StatusBadge } from "../components/ui/StatusBadge";
 import { LoadingSpinner } from "../components/ui/LoadingSpinner";
@@ -41,7 +41,6 @@ export const AdminUserDetail: React.FC = () => {
 
   const canSuspend = hasPermission("users.suspend");
   const canBan = hasPermission("users.ban");
-  const canVerify = hasPermission("users.verify");
 
   const loadDetails = async () => {
     if (!id) return;
@@ -61,19 +60,6 @@ export const AdminUserDetail: React.FC = () => {
   useEffect(() => {
     loadDetails();
   }, [id]);
-
-  const handleToggleVerification = async () => {
-    if (!userDetail || !canVerify) return;
-    try {
-      setError(null);
-      const nextVerified = !userDetail.profile.verified;
-      await updateUserVerification(userDetail.profile.id, nextVerified);
-      setActionSuccess(`Verification badge ${nextVerified ? "granted" : "revoked"}.`);
-      loadDetails();
-    } catch (err: any) {
-      setError(err.message || "Failed to alter verification.");
-    }
-  };
 
   const handleApplyStatusChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -185,19 +171,14 @@ export const AdminUserDetail: React.FC = () => {
 
           {/* Quick Action Buttons */}
           <div className="flex flex-wrap items-center gap-2.5 self-start md:self-auto">
-            {canVerify && (
-              <button
-                onClick={handleToggleVerification}
-                className={`px-3.5 py-2 rounded-xl text-xs font-semibold border flex items-center space-x-1.5 transition-colors cursor-pointer ${
-                  profile.verified
-                    ? "bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#534434] border-[#dae2f3]"
-                    : "bg-[#e7eefe] hover:bg-[#d5e3fc] text-[#0058be] border-[#bed7fc]"
-                }`}
-              >
-                <BadgeCheck className="w-4 h-4 text-[#0058be]" />
-                <span>{profile.verified ? "Revoke Badge" : "Grant Verified"}</span>
-              </button>
-            )}
+            <Link
+              to={`/verifications?search=${encodeURIComponent(profile.username || profile.full_name || profile.id)}`}
+              className="px-3.5 py-2 rounded-xl text-xs font-semibold border flex items-center space-x-1.5 transition-colors bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#0058be] border-[#bed7fc]"
+              title="Manage Verification via Review Workflow"
+            >
+              <BadgeCheck className="w-4 h-4 text-[#0058be]" />
+              <span>Verification Record</span>
+            </Link>
 
             {(canSuspend || canBan) && (
               <button

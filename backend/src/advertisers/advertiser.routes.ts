@@ -15,6 +15,7 @@ import {
   getVerificationGuidelinesHandler,
   submitVerificationHandler,
   uploadVerificationDocumentHandler,
+  getAdvertiserEligibilityHandler,
 } from "./advertiser.controller";
 import { uploadSecureDocumentMiddleware } from "../media/upload.middleware";
 
@@ -23,6 +24,7 @@ const router = Router();
 // All advertiser operations mandate active authentication
 router.use(authenticate);
 
+router.get("/eligibility", getAdvertiserEligibilityHandler);
 router.get("/profile", getAdvertiserMeHandler);
 router.get("/me", getAdvertiserMeHandler);
 router.post("/register", registerAdvertiserHandler);

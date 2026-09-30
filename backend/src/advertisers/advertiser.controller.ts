@@ -257,3 +257,24 @@ export async function uploadVerificationDocumentHandler(req: Request, res: Respo
   }
 }
 
+/**
+ * GET /api/advertisers/eligibility
+ * Authoritative check if user or business can access advertiser platform
+ */
+export async function getAdvertiserEligibilityHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const userId = (req as any).user?.id;
+    if (!userId) {
+      res.status(401).json({ success: false, error: "Unauthorized" });
+      return;
+    }
+    const businessId = req.query.businessId as string | undefined;
+    const { IdentityVerificationService } = await import("./verification/identityVerification.service");
+    const eligibility = await IdentityVerificationService.getEligibility(userId, businessId);
+    res.json({ success: true, eligibility });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+}
+
+

@@ -26,6 +26,18 @@ api.interceptors.request.use(
     if (userState) config.headers["x-user-state"] = userState;
     if (userDistrict) config.headers["x-user-district"] = userDistrict;
 
+    // Attach active acting identity for business / personal social interactions
+    const activeActing = localStorage.getItem("peto_active_acting_identity");
+    if (activeActing) {
+      try {
+        const parsed = JSON.parse(activeActing);
+        if (parsed?.type === "BUSINESS" && parsed?.id) {
+          config.headers["x-acting-identity-type"] = "BUSINESS";
+          config.headers["x-acting-identity-id"] = parsed.id;
+        }
+      } catch (_) {}
+    }
+
     if (config.data instanceof FormData) {
       delete config.headers["Content-Type"];
       delete config.headers["content-type"];

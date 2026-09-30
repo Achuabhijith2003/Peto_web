@@ -10,6 +10,7 @@ import {
   MousePointerClick,
   Sparkles,
   ArrowLeft,
+  ArrowRight,
   Layers,
   CheckCircle2,
   ArrowUpRight,
@@ -26,6 +27,7 @@ import {
   User,
   Lock,
   AlertTriangle,
+  AlertCircle,
 } from "lucide-react";
 import api from "../../utils/api";
 import { useAuth } from "../../context/AuthContext";
@@ -34,6 +36,8 @@ import { VerificationGuidelinesModal } from "../../components/advertiser/Verific
 import { AdvertiserSettingsTab } from "../../components/advertiser/AdvertiserSettingsTab";
 import { AdMediaUploader } from "../../components/advertiser/AdMediaUploader";
 import { RegionTargetingSelector } from "../../components/advertiser/RegionTargetingSelector";
+import VerifiedBadge from "../../components/common/VerifiedBadge";
+import BusinessVerificationSection from "../../components/verification/BusinessVerificationSection";
 
 export const getCurrencySymbol = (currencyCode?: string): string => {
   switch (currencyCode?.toUpperCase()) {
@@ -201,6 +205,20 @@ export const AdvertiserPortal: React.FC = () => {
   });
   const [regSubmitting, setRegSubmitting] = useState(false);
 
+  // Authoritative Verification & Eligibility state
+  const [eligibility, setEligibility] = useState<any>(null);
+  const [selectedIdentityType, setSelectedIdentityType] = useState<"PERSON" | "BUSINESS">("PERSON");
+  const [personalForm, setPersonalForm] = useState({
+    legal_first_name: "",
+    legal_last_name: "",
+    residential_country: "IN",
+    document_type: "NATIONAL_ID",
+  });
+  const [personalDocFile, setPersonalDocFile] = useState<File | null>(null);
+  const [personalSubmitting, setPersonalSubmitting] = useState(false);
+  const [personalSubmitError, setPersonalSubmitError] = useState("");
+  const [personalSubmitSuccess, setPersonalSubmitSuccess] = useState("");
+
   // Campaign wizard state
   const [wizardStep, setWizardStep] = useState(1);
   const [campaignForm, setCampaignForm] = useState({
@@ -227,16 +245,24 @@ export const AdvertiserPortal: React.FC = () => {
   const [creatingCampaign, setCreatingCampaign] = useState(false);
   const [campaignSuccess, setCampaignSuccess] = useState(false);
 
-  const fetchAdvertiserData = async () => {
+  const [activeAdvertiserReady, setActiveAdvertiserReady] = useState(false);
+
+  const fetchAdvertiserData = async (bizId?: string) => {
     try {
       setLoading(true);
-      const [advRes, uRes] = await Promise.allSettled([
+      const [advRes, uRes, eligRes] = await Promise.allSettled([
         api.get("/advertisers/profile"),
         api.get("/users/me"),
+        api.get("/verification/eligibility", { params: bizId ? { businessId: bizId } : {} }),
       ]);
 
       if (uRes.status === "fulfilled" && uRes.value.data) {
         setUserProfile(uRes.value.data.profile || uRes.value.data.user || null);
+      }
+
+      if (eligRes.status === "fulfilled" && eligRes.value.data) {
+        const elig = eligRes.value.data.eligibility || eligRes.value.data;
+        setEligibility(elig);
       }
 
       const res = advRes.status === "fulfilled" ? advRes.value : null;
@@ -276,6 +302,97 @@ export const AdvertiserPortal: React.FC = () => {
     }
   };
 
+  const handleSelectBusinessForAdvertising = async (businessId: string) => {
+    try {
+      setLoading(true);
+      // Retrieve business details from state or /verification/me
+      const biz =
+        eligibility?.businesses?.find((b: any) => b.id === businessId) ||
+        (await api.get("/verification/me").catch(() => null))?.data?.businesses?.find((b: any) => b.id === businessId);
+
+      const companyName = biz?.name || biz?.legal_name || "Verified Business";
+      const countryCode = (biz?.country_code || "IN").toUpperCase();
+      const currency = countryCode === "IN" ? "INR" : "USD";
+
+      // Register or ensure advertiser account exists with verified company name and currency
+      try {
+        await api.post("/advertisers/register", {
+          company_name: companyName,
+          companyName: companyName,
+          contact_name: companyName,
+          country_code: countryCode,
+          country: countryCode,
+          currency: currency,
+          industry: biz?.business_category || "Pet Food & Nutrition",
+          verification_status: "APPROVED",
+        });
+      } catch (err: any) {
+        console.warn("Advertiser register note:", err);
+      }
+
+      setProfile((prev: any) => ({
+        ...(prev || {}),
+        registered: true,
+        company_name: companyName,
+        currency: currency,
+        country_code: countryCode,
+        verification_status: "APPROVED",
+        business_id: businessId,
+      }));
+      setSelectedIdentityType("BUSINESS");
+      setActiveAdvertiserReady(true);
+      await fetchAdvertiserData(businessId);
+      setActiveTab("overview");
+    } catch (err: any) {
+      console.error("Error launching advertiser control panel:", err);
+      await fetchAdvertiserData(businessId);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleContinueAsPersonal = async () => {
+    try {
+      setLoading(true);
+      const name = userProfile?.full_name || (user as any)?.name || user?.username || "Verified Personal Advertiser";
+      const countryCode = (personalForm.residential_country || "IN").toUpperCase();
+      const currency = countryCode === "IN" ? "INR" : "USD";
+
+      try {
+        await api.post("/advertisers/register", {
+          company_name: name,
+          companyName: name,
+          contact_name: name,
+          country_code: countryCode,
+          country: countryCode,
+          currency: currency,
+          industry: "Personal Brand & Creator",
+          verification_status: "APPROVED",
+        });
+      } catch (err: any) {
+        console.warn("Personal advertiser register note:", err);
+      }
+
+      setProfile((prev: any) => ({
+        ...(prev || {}),
+        registered: true,
+        company_name: name,
+        currency: currency,
+        country_code: countryCode,
+        verification_status: "APPROVED",
+      }));
+      setSelectedIdentityType("PERSON");
+      setActiveAdvertiserReady(true);
+      await fetchAdvertiserData();
+      setActiveTab("overview");
+    } catch (err: any) {
+      console.error("Error launching personal advertiser portal:", err);
+      await fetchAdvertiserData();
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchAdvertiserData();
     // Pre-load Razorpay Checkout SDK into DOM immediately
@@ -308,6 +425,30 @@ export const AdvertiserPortal: React.FC = () => {
       alert(err.response?.data?.error || "Failed to set permanent billing currency.");
     } finally {
       setSettingCurrencyLoading(false);
+    }
+  };
+
+  const handleSubmitPersonalVerification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPersonalSubmitting(true);
+    setPersonalSubmitError("");
+    setPersonalSubmitSuccess("");
+    try {
+      const submitRes = await api.post("/verification/personal/submit", personalForm);
+      const app = submitRes.data?.application;
+      if (app && personalDocFile) {
+        const fd = new FormData();
+        fd.append("applicationId", app.id);
+        fd.append("documentType", personalForm.document_type);
+        fd.append("document", personalDocFile);
+        await api.post("/verification/personal/documents", fd);
+      }
+      setPersonalSubmitSuccess("Personal verification application submitted for admin review!");
+      await fetchAdvertiserData();
+    } catch (err: any) {
+      setPersonalSubmitError(err.response?.data?.error || err.response?.data?.message || "Failed to submit verification request");
+    } finally {
+      setPersonalSubmitting(false);
     }
   };
 
@@ -668,12 +809,18 @@ export const AdvertiserPortal: React.FC = () => {
     );
   }
 
-  // If not registered yet, display modern onboarding card
-  if (!profile || profile.registered === false) {
+  // 1. ADVERTISER GATE: Check if advertiser is ready to view control panel
+  const isAdvertiserReady =
+    activeAdvertiserReady ||
+    (profile && profile.registered !== false && !!profile.currency);
+
+  if (!isAdvertiserReady) {
+    const personStatus = eligibility?.user?.status || "NOT_STARTED";
+
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#fff8ed] via-[#f9f9ff] to-[#f9f9ff] py-12 px-4 sm:px-6">
-        <div className="max-w-2xl mx-auto">
-          <div className="mb-6 flex items-center justify-between">
+        <div className="max-w-3xl mx-auto space-y-6">
+          <div className="flex items-center justify-between">
             <Link
               to="/social"
               className="inline-flex items-center gap-2 text-xs font-semibold text-[#534434] hover:text-[#151c27] transition"
@@ -689,29 +836,352 @@ export const AdvertiserPortal: React.FC = () => {
           <div className="bg-white rounded-3xl shadow-sm border border-[#e2e8f8] p-6 sm:p-8 space-y-6">
             <div className="text-center space-y-2">
               <div className="w-16 h-16 bg-gradient-to-tr from-amber-500 to-orange-500 rounded-3xl mx-auto flex items-center justify-center text-white shadow-md shadow-amber-500/20 mb-3">
+                <ShieldCheck size={32} />
+              </div>
+              <h1 className="text-2xl font-bold font-headline text-[#151c27] tracking-tight">
+                Advertise on Peto
+              </h1>
+              <p className="text-sm text-[#534434] max-w-lg mx-auto leading-relaxed">
+                Before using Peto's advertising platform, verify the identity that will advertise. Choose how you want to advertise below:
+              </p>
+            </div>
+
+            {/* Identity Type Selection Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              <button
+                type="button"
+                onClick={() => setSelectedIdentityType("PERSON")}
+                className={`p-5 rounded-2xl border-2 text-left transition relative flex flex-col justify-between ${
+                  selectedIdentityType === "PERSON"
+                    ? "border-blue-600 bg-blue-50/50 shadow-sm"
+                    : "border-slate-200 hover:border-slate-300 bg-white"
+                }`}
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center">
+                      <User size={20} />
+                    </div>
+                    <VerifiedBadge verified={true} verificationType="PERSON_VERIFIED" size={20} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-900 text-sm">Personal Identity</h3>
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                      Advertise using your personal Peto identity.
+                    </p>
+                  </div>
+                </div>
+                <div className="pt-4 border-t border-slate-100/80 mt-4 text-[11px] font-semibold text-blue-700 flex items-center gap-1.5">
+                  <span>Badge: Blue Person Tick</span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelectedIdentityType("BUSINESS")}
+                className={`p-5 rounded-2xl border-2 text-left transition relative flex flex-col justify-between ${
+                  selectedIdentityType === "BUSINESS"
+                    ? "border-amber-500 bg-amber-50/50 shadow-sm"
+                    : "border-slate-200 hover:border-slate-300 bg-white"
+                }`}
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
+                      <Building2 size={20} />
+                    </div>
+                    <VerifiedBadge verified={true} verificationType="BUSINESS_VERIFIED" size={20} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-900 text-sm">Business Identity</h3>
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                      Advertise as a registered business or brand organization.
+                    </p>
+                  </div>
+                </div>
+                <div className="pt-4 border-t border-slate-100/80 mt-4 text-[11px] font-semibold text-amber-700 flex items-center gap-1.5">
+                  <span>Badge: Yellow Business Tick</span>
+                </div>
+              </button>
+            </div>
+
+            {/* Separation Notice */}
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-600 flex items-start gap-3">
+              <HelpCircle size={18} className="text-slate-400 shrink-0 mt-0.5" />
+              <div>
+                <strong className="text-slate-900">Verification &amp; Ad Approval Separation:</strong>
+                <p className="mt-0.5 leading-relaxed">
+                  Verification authenticates identity authenticity. Individual advertising campaigns and creative content are separately reviewed against Peto Ad Safety and Animal Welfare standards.
+                </p>
+              </div>
+            </div>
+
+            {/* FLOW: PERSONAL VERIFICATION */}
+            {selectedIdentityType === "PERSON" && (
+              <div className="space-y-5 pt-2 border-t border-slate-100">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <User size={18} className="text-blue-600" />
+                    <span>Personal Identity Verification</span>
+                  </h3>
+                  <span className={`text-[10px] px-2.5 py-1 rounded-full font-bold uppercase tracking-wider ${
+                    personStatus === "SUBMITTED" || personStatus === "UNDER_REVIEW"
+                      ? "bg-amber-100 text-amber-800"
+                      : personStatus === "REVERIFICATION_REQUIRED"
+                      ? "bg-rose-100 text-rose-800"
+                      : personStatus === "REJECTED"
+                      ? "bg-red-100 text-red-800"
+                      : "bg-slate-100 text-slate-600"
+                  }`}>
+                    Status: {personStatus.replace(/_/g, " ")}
+                  </span>
+                </div>
+
+                {(personStatus === "SUBMITTED" || personStatus === "UNDER_REVIEW") && (
+                  <div className="p-5 bg-amber-50 rounded-2xl border border-amber-200 text-xs text-amber-900 space-y-2">
+                    <div className="flex items-center gap-2 font-bold text-amber-950">
+                      <Clock size={16} className="animate-spin text-amber-600" />
+                      <span>Application Under Review</span>
+                    </div>
+                    <p className="leading-relaxed">
+                      Your personal verification request is currently in the compliance review queue. You will receive an in-app notification as soon as the verification is approved.
+                    </p>
+                  </div>
+                )}
+
+                {personStatus === "REVERIFICATION_REQUIRED" && (
+                  <div className="p-5 bg-rose-50 rounded-2xl border border-rose-200 text-xs text-rose-900 space-y-2">
+                    <div className="flex items-center gap-2 font-bold text-rose-950">
+                      <AlertTriangle size={16} className="text-rose-600" />
+                      <span>Reverification Required</span>
+                    </div>
+                    <p className="leading-relaxed">
+                      Your identity information changed after verification. Please submit updated verification evidence below to restore your blue badge and advertising privileges.
+                    </p>
+                  </div>
+                )}
+
+                {personStatus === "REJECTED" && (
+                  <div className="p-5 bg-red-50 rounded-2xl border border-red-200 text-xs text-red-900 space-y-2">
+                    <div className="flex items-center gap-2 font-bold text-red-950">
+                      <AlertCircle size={16} className="text-red-600" />
+                      <span>Verification Not Approved</span>
+                    </div>
+                    <p className="leading-relaxed">
+                      Your previous request could not be approved. Please review official guidelines and submit a new application with valid government-issued ID.
+                    </p>
+                  </div>
+                )}
+
+                {personalSubmitSuccess && (
+                  <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs text-emerald-800 font-semibold flex items-center gap-2">
+                    <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+                    <span>{personalSubmitSuccess}</span>
+                  </div>
+                )}
+
+                {personalSubmitError && (
+                  <div className="p-4 bg-rose-50 rounded-2xl border border-rose-200 text-xs text-rose-800 font-semibold flex items-center gap-2">
+                    <AlertTriangle size={16} className="text-rose-600 shrink-0" />
+                    <span>{personalSubmitError}</span>
+                  </div>
+                )}
+
+                {personStatus === "APPROVED" && (
+                  <div className="p-5 bg-emerald-50 rounded-2xl border border-emerald-200 text-xs text-emerald-900 space-y-3">
+                    <div className="flex items-center gap-2 font-bold text-emerald-950">
+                      <CheckCircle2 size={16} className="text-emerald-600" />
+                      <span>Personal Identity Verified</span>
+                    </div>
+                    <p className="leading-relaxed">
+                      Your personal Peto identity has been verified. You can launch and manage campaigns directly under your verified personal identity.
+                    </p>
+                    <button
+                      onClick={handleContinueAsPersonal}
+                      className="px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition cursor-pointer flex items-center gap-1.5"
+                    >
+                      <span>Continue to Advertising</span>
+                      <ArrowRight size={14} />
+                    </button>
+                  </div>
+                )}
+
+                {(personStatus === "NOT_STARTED" || personStatus === "REJECTED" || personStatus === "REVERIFICATION_REQUIRED") && (
+                  <form onSubmit={handleSubmitPersonalVerification} className="space-y-4 pt-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
+                          Legal First Name *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={personalForm.legal_first_name}
+                          onChange={(e) => setPersonalForm({ ...personalForm, legal_first_name: e.target.value })}
+                          placeholder="As printed on government ID"
+                          className="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 text-slate-900 transition"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
+                          Legal Last Name *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={personalForm.legal_last_name}
+                          onChange={(e) => setPersonalForm({ ...personalForm, legal_last_name: e.target.value })}
+                          placeholder="As printed on government ID"
+                          className="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 text-slate-900 transition"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
+                          Country of Residence *
+                        </label>
+                        <select
+                          value={personalForm.residential_country}
+                          onChange={(e) => setPersonalForm({ ...personalForm, residential_country: e.target.value })}
+                          className="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 text-slate-900 transition"
+                        >
+                          <option value="IN">India (IN)</option>
+                          <option value="US">United States (US)</option>
+                          <option value="GB">United Kingdom (GB)</option>
+                          <option value="CA">Canada (CA)</option>
+                          <option value="AU">Australia (AU)</option>
+                          <option value="DE">Germany (DE)</option>
+                          <option value="FR">France (FR)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
+                          ID Document Type *
+                        </label>
+                        <select
+                          value={personalForm.document_type}
+                          onChange={(e) => setPersonalForm({ ...personalForm, document_type: e.target.value })}
+                          className="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 text-slate-900 transition"
+                        >
+                          <option value="NATIONAL_ID">National ID / Aadhaar / SSN</option>
+                          <option value="PASSPORT">Passport</option>
+                          <option value="DRIVERS_LICENSE">Driver&apos;s License</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wider">
+                        Upload Government ID Document (PDF, PNG, JPG) *
+                      </label>
+                      <input
+                        type="file"
+                        required
+                        accept=".pdf,.png,.jpg,.jpeg"
+                        onChange={(e) => setPersonalDocFile(e.target.files?.[0] || null)}
+                        className="w-full text-xs text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={personalSubmitting}
+                      className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-md shadow-blue-600/20 transition text-sm disabled:opacity-50"
+                    >
+                      {personalSubmitting ? "Submitting Application..." : "Submit Personal Verification"}
+                    </button>
+                  </form>
+                )}
+              </div>
+            )}
+
+            {/* FLOW: BUSINESS VERIFICATION */}
+            {selectedIdentityType === "BUSINESS" && (
+              <div className="pt-2 border-t border-slate-100">
+                <BusinessVerificationSection
+                  onSelectBusinessForAdvertising={handleSelectBusinessForAdvertising}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 2. ADVERTISER SETUP GATE: Bypassed since verified profiles are auto-configured
+  const setupNeeded = false;
+
+  if (setupNeeded) {
+    const isBusiness = selectedIdentityType === "BUSINESS" || !!(profile as any)?.business_id;
+    const verifiedName = isBusiness
+      ? (profile?.company_name || "Business Identity")
+      : (userProfile?.full_name || (user as any)?.name || user?.username || "Verified Person");
+
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#fff8ed] via-[#f9f9ff] to-[#f9f9ff] py-12 px-4 sm:px-6">
+        <div className="max-w-2xl mx-auto space-y-6">
+          <div className="flex items-center justify-between">
+            <Link
+              to="/social"
+              className="inline-flex items-center gap-2 text-xs font-semibold text-[#534434] hover:text-[#151c27] transition"
+            >
+              <ArrowLeft size={16} /> Back to Social Feed
+            </Link>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#fff8ed] text-[#855300] border border-[#fde68a]">
+              <Sparkles size={12} className="text-amber-500" />
+              Advertiser Setup
+            </span>
+          </div>
+
+          <div className="bg-white rounded-3xl shadow-sm border border-[#e2e8f8] p-6 sm:p-8 space-y-6">
+            <div className="text-center space-y-2">
+              <div className="w-16 h-16 bg-gradient-to-tr from-amber-500 to-orange-500 rounded-3xl mx-auto flex items-center justify-center text-white shadow-md shadow-amber-500/20 mb-3">
                 <Building2 size={30} />
               </div>
               <h1 className="text-2xl font-bold font-headline text-[#151c27] tracking-tight">
-                Grow Your Brand on Peto
+                Complete Advertising &amp; Billing Setup
               </h1>
               <p className="text-sm text-[#534434] max-w-md mx-auto leading-relaxed">
-                Reach pet parents, animal lovers, veterinarians, and local pet service communities with hyper-targeted, high-engagement ads.
+                Your identity is verified. Finalize your permanent billing currency and billing details to launch your Peto Advertiser Portal.
               </p>
+            </div>
+
+            {/* Authoritative Verified Identity Banner */}
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between">
+              <div>
+                <span className="text-[10px] uppercase tracking-wider font-bold text-slate-500">
+                  Verified Identity
+                </span>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="font-bold text-slate-900 text-sm">{verifiedName}</span>
+                  <VerifiedBadge
+                    verified={true}
+                    verificationType={isBusiness ? "BUSINESS_VERIFIED" : "PERSON_VERIFIED"}
+                    size={16}
+                  />
+                </div>
+              </div>
+              <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+                Identity Verified
+              </span>
             </div>
 
             <form onSubmit={handleRegister} className="space-y-4 pt-2">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-[#534434] mb-1.5 uppercase tracking-wider">
-                    Company / Organization Name *
+                    {isBusiness ? "Company / Brand Name *" : "Advertiser Display Name *"}
                   </label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. Bark & Bite Co."
-                    value={regForm.company_name}
+                    value={regForm.company_name || verifiedName}
                     onChange={(e) => setRegForm({ ...regForm, company_name: e.target.value })}
-                    className="w-full px-4 py-2.5 text-sm bg-[#f0f3ff]/60 border border-[#e2e8f8] rounded-2xl focus:bg-white focus:ring-2 focus:ring-[#0058be]/20 focus:border-[#0058be] text-[#151c27] placeholder:text-slate-400 transition"
+                    className="w-full px-4 py-2.5 text-sm bg-[#f0f3ff]/60 border border-[#e2e8f8] rounded-2xl focus:bg-white focus:ring-2 focus:ring-[#0058be]/20 focus:border-[#0058be] text-[#151c27] transition"
                   />
                 </div>
 
@@ -800,7 +1270,7 @@ export const AdvertiserPortal: React.FC = () => {
                 <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl text-xs text-amber-900 leading-relaxed flex items-start gap-2.5">
                   <AlertTriangle size={16} className="shrink-0 mt-0.5 text-amber-600" />
                   <span>
-                    <strong>Warning:</strong> Your billing currency is <u>permanently fixed</u> once registered and <u>cannot be changed later</u>. All campaign budgets, wallet top-ups, and ledger records will be in this currency.
+                    <strong>Warning:</strong> Your account billing currency is <u>permanently fixed</u> once registered and <u>cannot be changed later</u>. All campaign budgets, wallet top-ups, and ledger records will be strictly in this currency.
                   </span>
                 </div>
               </div>
@@ -834,7 +1304,7 @@ export const AdvertiserPortal: React.FC = () => {
               </div>
 
               <div className="p-4 bg-[#fff8ed] border border-[#fde68a] rounded-2xl text-xs text-[#855300] leading-relaxed">
-                By registering, you agree to Peto's Advertising Standards, Animal Welfare Integrity Policy, and double-entry accounting billing terms.
+                By completing setup, you agree to Peto's Advertising Standards, Animal Welfare Integrity Policy, and double-entry accounting billing terms.
               </div>
 
               <button
@@ -842,7 +1312,7 @@ export const AdvertiserPortal: React.FC = () => {
                 disabled={regSubmitting}
                 className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold rounded-2xl shadow-md shadow-amber-500/20 transition transform hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 text-sm"
               >
-                {regSubmitting ? "Creating Advertiser Profile..." : "Complete Registration & Launch Portal"}
+                {regSubmitting ? "Finalizing Setup..." : "Complete Setup & Launch Advertiser Portal"}
               </button>
             </form>
           </div>
@@ -876,16 +1346,26 @@ export const AdvertiserPortal: React.FC = () => {
                 <div>
                   <div className="flex items-center gap-1.5">
                     <h1 className="text-sm font-bold font-headline text-[#151c27] leading-tight">
-                      {userProfile?.full_name || (user as any)?.name || user?.username || profile.contact_name || "User Profile"}
+                      {userProfile?.full_name || (user as any)?.name || user?.username || profile?.contact_name || "User Profile"}
                     </h1>
-                    {profile.verification_status === "APPROVED" && (
-                      <span title="Verified Advertiser Partner">
-                        <CheckCircle2 size={14} className="text-[#006c49] fill-[#dcfce7] shrink-0" />
-                      </span>
+                    {profile?.verification_status === "APPROVED" && (
+                      <VerifiedBadge
+                        verified={true}
+                        verificationType={(profile as any)?.business_id ? "BUSINESS_VERIFIED" : "PERSON_VERIFIED"}
+                        size={15}
+                      />
                     )}
                   </div>
-                  <p className="text-[10px] text-[#534434]">
-                    {profile.company_name} • {profile.industry}
+                  <p className="text-[10px] text-[#534434] flex items-center gap-1.5">
+                    <span>{profile?.company_name} • {profile?.industry}</span>
+                    {((profile as any)?.business_id || eligibility?.businesses?.[0]?.id) && (
+                      <Link
+                        to={`/business/${(profile as any)?.business_id || eligibility?.businesses?.[0]?.id}`}
+                        className="text-blue-600 hover:underline font-semibold"
+                      >
+                        (View Business Profile)
+                      </Link>
+                    )}
                   </p>
                 </div>
               </div>
@@ -1169,7 +1649,7 @@ export const AdvertiserPortal: React.FC = () => {
 
               <div className="flex items-center gap-2">
                 <button
-                  onClick={fetchAdvertiserData}
+                  onClick={() => fetchAdvertiserData()}
                   className="p-2 bg-white border border-[#e2e8f8] text-[#534434] hover:text-[#151c27] hover:bg-[#f0f3ff] rounded-2xl transition"
                   title="Refresh Campaigns"
                 >

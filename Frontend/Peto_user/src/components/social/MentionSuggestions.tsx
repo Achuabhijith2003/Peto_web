@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { CheckCircle2, User, Loader2 } from "lucide-react";
+import { User, Loader2 } from "lucide-react";
 import api from "../../utils/api";
+import VerifiedBadge from "../common/VerifiedBadge";
 
 export interface MentionUser {
   id: string;
@@ -100,7 +101,7 @@ export const MentionSuggestions: React.FC<MentionSuggestionsProps> = ({
                   {user.full_name || user.username}
                 </span>
                 {user.verified && (
-                  <CheckCircle2 size={12} className="text-amber-500 fill-amber-500 text-white shrink-0" />
+                  <VerifiedBadge verified={true} verificationType="PERSON_VERIFIED" size={12} />
                 )}
               </div>
               <p className="text-2xs text-slate-400 truncate">@{user.username}</p>

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { UserPlus, UserCheck, CheckCircle2, Loader2, Users } from "lucide-react";
+import { UserPlus, UserCheck, Loader2, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import api from "../../utils/api";
 import { useAuth } from "../../context/AuthContext";
+import VerifiedBadge from "../common/VerifiedBadge";
 
 export interface SuggestedUser {
   id: string;
@@ -114,7 +115,9 @@ const SuggestedFriends: React.FC = () => {
                   <div className="truncate text-xs">
                     <div className="flex items-center gap-1 font-bold text-slate-900 truncate transition">
                       {item.full_name || item.username}
-                      {item.verified && <CheckCircle2 size={13} className="text-blue-500 shrink-0" />}
+                      {item.verified && (
+                        <VerifiedBadge verified={true} verificationType="PERSON_VERIFIED" size={13} />
+                      )}
                     </div>
                     <p className="text-[11px] text-slate-400">@{item.username}</p>
                   </div>

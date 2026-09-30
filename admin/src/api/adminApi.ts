@@ -827,11 +827,32 @@ export async function refundPaymentTransaction(data: {
 }
 
 // Partner & Identity Verification (Phase 9)
+export async function fetchAdminVerificationOverview(): Promise<{
+  success: boolean;
+  overview: {
+    total: number;
+    pending: number;
+    underReview: number;
+    approved: number;
+    rejected: number;
+    additionalInfoRequired: number;
+    reverificationRequired: number;
+    suspended: number;
+    revoked: number;
+    personCount: number;
+    businessCount: number;
+  };
+}> {
+  const res = await adminApi.get("/admin/verifications/overview");
+  return res.data;
+}
+
 export async function fetchAdminVerifications(params?: {
   status?: string;
   country?: string;
   type?: string;
   search?: string;
+  assignedAdminId?: string;
   page?: number;
   limit?: number;
 }): Promise<{
@@ -854,6 +875,18 @@ export async function fetchAdminVerificationDetail(id: string): Promise<{
   return res.data;
 }
 
+export async function assignAdminVerification(
+  id: string,
+  assignedAdminId: string | null
+): Promise<{
+  success: boolean;
+  message: string;
+  application: any;
+}> {
+  const res = await adminApi.post(`/admin/verifications/${id}/assign`, { assignedAdminId });
+  return res.data;
+}
+
 export async function fetchAdminSignedDocumentUrl(
   id: string,
   docId: string
@@ -870,9 +903,11 @@ export async function fetchAdminSignedDocumentUrl(
 export async function reviewAdminVerification(
   id: string,
   data: {
-    action: "APPROVE" | "REJECT" | "REQUEST_INFORMATION" | "SUSPEND" | "REVOKE";
+    action: "APPROVE" | "REJECT" | "REQUEST_INFORMATION" | "REQUIRE_REVERIFICATION" | "SUSPEND" | "REVOKE";
     notes?: string;
     rejectionReason?: string;
+    userFacingReason?: string;
+    adminInternalNotes?: string;
   }
 ): Promise<{
   success: boolean;

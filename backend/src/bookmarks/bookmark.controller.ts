@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { resolveActingIdentity } from "../businesses/business.rbac";
 
 import {
     bookmarkPostService,
@@ -12,13 +13,21 @@ export async function bookmarkPost(
 ) {
     try {
 
-        const userId = (req as any).user!.id;
-
+        const user = (req as any).user!;
         const postId = (req as any).params.id;
 
+        const actingIdentity = await resolveActingIdentity(
+            user,
+            req.body,
+            req.headers,
+            "business.bookmark"
+        );
+
         const data = await bookmarkPostService(
-            userId,
-            postId
+            user.id,
+            postId,
+            actingIdentity.type === "BUSINESS" ? actingIdentity.id : undefined,
+            actingIdentity.type
         );
 
         res.json({
@@ -28,8 +37,8 @@ export async function bookmarkPost(
         });
 
     } catch (err: any) {
-
-        res.status(500).json({
+        const status = err?.status || (err?.message?.includes("Permission denied") ? 403 : 500);
+        res.status(status).json({
             success: false,
             message: err.message
         });
@@ -44,13 +53,20 @@ export async function removeBookmark(
 
     try {
 
-        const userId = (req as any).user!.id;
-
+        const user = (req as any).user!;
         const postId = (req as any).params.id;
 
+        const actingIdentity = await resolveActingIdentity(
+            user,
+            req.body,
+            req.headers,
+            "business.bookmark"
+        );
+
         await removeBookmarkService(
-            userId,
-            postId
+            user.id,
+            postId,
+            actingIdentity.type === "BUSINESS" ? actingIdentity.id : undefined
         );
 
         res.json({
@@ -59,8 +75,8 @@ export async function removeBookmark(
         });
 
     } catch (err: any) {
-
-        res.status(500).json({
+        const status = err?.status || (err?.message?.includes("Permission denied") ? 403 : 500);
+        res.status(status).json({
             success: false,
             message: err.message
         });
@@ -76,19 +92,22 @@ export async function getBookmarks(
 
     try {
 
-        const userId = (req as any).user!.id;
-
+        const user = (req as any).user!;
         const page = Number(req.query.page) || 1;
-
         const limit = Number(req.query.limit) || 20;
 
-        console.log("Userid: ",userId);
-        
+        const actingIdentity = await resolveActingIdentity(
+            user,
+            req.query,
+            req.headers,
+            "business.bookmark"
+        );
 
         const data = await getBookmarksService(
-            userId,
+            user.id,
             page,
-            limit
+            limit,
+            actingIdentity.type === "BUSINESS" ? actingIdentity.id : undefined
         );
 
         res.json({
@@ -97,8 +116,8 @@ export async function getBookmarks(
         });
 
     } catch (err: any) {
-
-        res.status(500).json({
+        const status = err?.status || (err?.message?.includes("Permission denied") ? 403 : 500);
+        res.status(status).json({
             success: false,
             message: err.message
         });

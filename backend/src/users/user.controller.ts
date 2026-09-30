@@ -176,9 +176,28 @@ export const updateProfile = async (req: Request, res: Response) => {
                     message: "Username is already taken by another account.",
                 });
             }
-
             updateData.username = trimmedUsername;
         }
+
+        // Fetch current profile to check verification status and existing full_name
+        const { data: currentProfile } = await supabase
+            .from("profiles")
+            .select("id, full_name, verified, is_verified, verification_badge_type")
+            .eq("id", user.id)
+            .single();
+
+        const isChangingCriticalName =
+            updateData.full_name !== undefined &&
+            currentProfile &&
+            currentProfile.full_name &&
+            currentProfile.full_name.trim() !== updateData.full_name.trim();
+
+        const wasVerified =
+            currentProfile?.verified === true ||
+            currentProfile?.is_verified === true ||
+            currentProfile?.verification_badge_type === "PERSON";
+
+        const willRequireReverification = isChangingCriticalName && wasVerified;
 
         const { data, error } = await supabase
             .from("profiles")
@@ -196,8 +215,11 @@ export const updateProfile = async (req: Request, res: Response) => {
 
         return res.json({
             success: true,
-            message: "Profile updated successfully",
+            message: willRequireReverification
+                ? "Profile updated. Your verified identity name was modified, so your verification badge has been temporarily removed and reverification is required."
+                : "Profile updated successfully",
             data,
+            reverification_required: willRequireReverification,
         });
     } catch (err: any) {
         console.error("Update profile error:", err);

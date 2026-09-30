@@ -92,6 +92,38 @@ export class AdvertiserService {
       .maybeSingle();
 
     if (error) throw error;
+    if (data && data.verification_status !== "APPROVED") {
+      try {
+        const { data: app } = await supabase
+          .from("verification_applications")
+          .select("id, status")
+          .eq("user_id", userId)
+          .eq("status", "APPROVED")
+          .limit(1);
+
+        let isApproved = app && app.length > 0;
+        if (!isApproved) {
+          const { data: biz } = await supabase
+            .from("businesses")
+            .select("id, is_verified")
+            .eq("owner_id", userId)
+            .eq("is_verified", true)
+            .limit(1);
+          isApproved = !!(biz && biz.length > 0);
+        }
+
+        if (isApproved) {
+          data.verification_status = "APPROVED";
+          data.verified_at = new Date().toISOString();
+          await supabase
+            .from("advertisers")
+            .update({ verification_status: "APPROVED", verified_at: data.verified_at })
+            .eq("id", data.id);
+        }
+      } catch {
+        // Fallback gracefully
+      }
+    }
     return data;
   }
 
@@ -112,6 +144,35 @@ export class AdvertiserService {
     const industry = input.industry || "PET_CARE";
     const country = (input.country || input.country_code || "GLOBAL").toUpperCase().trim();
     const currency = (input.currency || (country === "IN" ? "INR" : "USD")).toUpperCase().trim();
+
+    // Check if user or business is verified
+    let isApproved = (input as any).verification_status === "APPROVED";
+    if (!isApproved) {
+      try {
+        const { data: app } = await supabase
+          .from("verification_applications")
+          .select("id, status")
+          .eq("user_id", userId)
+          .eq("status", "APPROVED")
+          .limit(1);
+
+        if (app && app.length > 0) {
+          isApproved = true;
+        } else {
+          const { data: biz } = await supabase
+            .from("businesses")
+            .select("id, is_verified")
+            .eq("owner_id", userId)
+            .eq("is_verified", true)
+            .limit(1);
+          if (biz && biz.length > 0) {
+            isApproved = true;
+          }
+        }
+      } catch {
+        // Fallback gracefully
+      }
+    }
 
     // If contactName or contactEmail are empty, pull user profile details
     if (!contactName || !contactEmail) {
@@ -160,6 +221,8 @@ export class AdvertiserService {
           industry: industry,
           currency: lockedCurrency,
           is_currency_locked: true,
+          verification_status: isApproved ? "APPROVED" : (existing.verification_status || "NOT_STARTED"),
+          verified_at: isApproved ? (existing.verified_at || new Date().toISOString()) : existing.verified_at,
           updated_at: new Date().toISOString(),
         })
         .eq("id", existing.id)
@@ -182,6 +245,8 @@ export class AdvertiserService {
         industry: industry,
         currency: currency,
         is_currency_locked: true,
+        verification_status: isApproved ? "APPROVED" : "NOT_STARTED",
+        verified_at: isApproved ? new Date().toISOString() : null,
         status: "ACTIVE",
         balance: 0.0,
         total_spend: 0.0,

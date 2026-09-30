@@ -1,27 +1,50 @@
 import { supabase } from "../config/supabase";
 import { createNotification } from "../notifications/notification.service";
 import { syncCommentMentions } from "../posts/mention_tag.service";
+import { hasBusinessPermission } from "../businesses/business.rbac";
 
 export async function createCommentService(
     userId: string,
     postId: string,
     comment: string,
     parent_comment_id?: string,
-    mentionedUserIds?: string[]
+    mentionedUserIds?: string[],
+    businessId?: string,
+    authorType?: "USER" | "BUSINESS"
 ) {
 
-    const { data, error } = await supabase
+    const insertPayload: any = {
+        post_id: postId,
+        user_id: userId,
+        comment,
+        parent_comment_id: parent_comment_id || null
+    };
+
+    if (businessId) {
+        insertPayload.business_id = businessId;
+        insertPayload.author_type = authorType || "BUSINESS";
+    }
+
+    let data: any;
+    const res = await supabase
         .from("comments")
-        .insert({
-            post_id: postId,
-            user_id: userId,
-            comment,
-            parent_comment_id: parent_comment_id || null
-        })
+        .insert(insertPayload)
         .select()
         .single();
 
-    if (error) throw error;
+    if (res.error) {
+        if (res.error.code === "42703" && businessId) {
+            delete insertPayload.business_id;
+            delete insertPayload.author_type;
+            const retry = await supabase.from("comments").insert(insertPayload).select().single();
+            if (retry.error) throw retry.error;
+            data = { ...retry.data, business_id: businessId, author_type: "BUSINESS" };
+        } else {
+            throw res.error;
+        }
+    } else {
+        data = res.data;
+    }
 
     const { data: post } = await supabase
         .from("posts")
@@ -151,10 +174,40 @@ export async function getCommentsService(
         }
     }
 
-    const commentsWithMentions = (data ?? []).map(c => ({
-        ...c,
-        mentions: mentionsByCommentId.get(c.id) || []
-    }));
+    const businessIds = Array.from(new Set((data ?? []).map((c: any) => c.business_id).filter(Boolean)));
+    const businessMap = new Map<string, any>();
+    if (businessIds.length > 0) {
+        try {
+            const { data: businesses } = await supabase
+                .from("business_identities")
+                .select("id, name, username, avatar_url, business_category")
+                .in("id", businessIds);
+            (businesses ?? []).forEach((b: any) => businessMap.set(b.id, b));
+        } catch (_) {}
+    }
+
+    const commentsWithMentions = (data ?? []).map(c => {
+        let profiles = c.profiles;
+        if (c.business_id && businessMap.has(c.business_id)) {
+            const biz = businessMap.get(c.business_id);
+            profiles = {
+                id: biz.id,
+                username: biz.username || biz.name?.toLowerCase().replace(/\s+/g, '_') || "business",
+                full_name: biz.name || "Business",
+                avatar_url: biz.avatar_url,
+                verified: true,
+                badge_type: 'BUSINESS_VERIFIED',
+                is_business: true,
+                business_id: biz.id
+            };
+        }
+        return {
+            ...c,
+            profiles,
+            author: profiles,
+            mentions: mentionsByCommentId.get(c.id) || []
+        };
+    });
 
     return {
         comments: commentsWithMentions,
@@ -174,45 +227,37 @@ export async function updateCommentService(
 ) {
 
     const { data: existing } = await supabase
-
         .from("comments")
-
         .select("*")
-
         .eq("id", commentId)
-
         .single();
 
     if (!existing)
         throw new Error("Comment not found");
 
-    if (existing.user_id !== userId)
+    const isDirectOwner = existing.user_id === userId;
+    let hasBizPermission = false;
+    if (existing.business_id) {
+        hasBizPermission = await hasBusinessPermission(userId, existing.business_id, "business.comment.create");
+    }
+
+    if (!isDirectOwner && !hasBizPermission)
         throw new Error("Unauthorized");
 
     const { data, error } = await supabase
-
         .from("comments")
-
         .update({
-
             comment,
-
             edited: true,
-
             updated_at: new Date()
-
         })
-
         .eq("id", commentId)
-
         .select()
-
         .single();
 
     if (error) throw error;
 
     return data;
-
 }
 
 export async function deleteCommentService(
@@ -221,27 +266,26 @@ export async function deleteCommentService(
 ) {
 
     const { data: comment } = await supabase
-
         .from("comments")
-
         .select("*")
-
         .eq("id", commentId)
-
         .single();
 
     if (!comment)
         throw new Error("Comment not found");
 
-    if (comment.user_id !== userId)
+    const isDirectOwner = comment.user_id === userId;
+    let hasBizPermission = false;
+    if (comment.business_id) {
+        hasBizPermission = await hasBusinessPermission(userId, comment.business_id, "business.comment.create");
+    }
+
+    if (!isDirectOwner && !hasBizPermission)
         throw new Error("Unauthorized");
 
     await supabase
-
         .from("comments")
-
         .delete()
-
         .eq("id", commentId);
 
     const { data: post } = await supabase

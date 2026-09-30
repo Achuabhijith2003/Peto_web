@@ -32,6 +32,8 @@ import LeftSidebar from "../components/social/LeftSidebar";
 import RightSidebar from "../components/social/RightSidebar";
 import SocialLayout from "../components/social/SocialLayout";
 import { GEO_REGIONS } from "../data/geoRegions";
+import BusinessVerificationSection from "../components/verification/BusinessVerificationSection";
+import VerifiedBadge from "../components/common/VerifiedBadge";
 
 type SettingsTab = "password" | "region" | "verification" | "policies" | "advertiser";
 
@@ -312,7 +314,7 @@ export const Settings: React.FC = () => {
     },
     {
       id: "verification" as SettingsTab,
-      label: "Blue Tick",
+      label: "Verification",
       sublabel: isVerified ? "Verified" : isPending ? "In review" : "Get verified",
       icon: BadgeCheck,
       activeColor: "border-blue-600 bg-blue-600 text-white shadow-md shadow-blue-600/10",
@@ -804,9 +806,9 @@ export const Settings: React.FC = () => {
                     </div>
 
                     {isVerified ? (
-                      <div className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold font-heading shadow-xs">
-                        <BadgeCheck size={16} className="text-blue-600" />
-                        <span>Verified Account</span>
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs font-bold font-heading shadow-xs">
+                        <VerifiedBadge verified={true} verificationType="PERSON_VERIFIED" size={16} />
+                        <span>Person Verified</span>
                       </div>
                     ) : isPending ? (
                       <div className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-xs font-semibold shadow-xs">
@@ -1058,6 +1060,9 @@ export const Settings: React.FC = () => {
                     </>
                   )}
                 </div>
+
+                {/* Business Verification Component */}
+                <BusinessVerificationSection />
               </div>
             )}
 

@@ -464,55 +464,16 @@ export async function updateUserStatusService(
 }
 
 /**
- * Toggle verified badge on user profile
+ * Toggle verified badge on user profile - Deprecated: Verification must go through authoritative verification workflow
  */
 export async function updateUserVerificationService(
-  targetUserId: string,
-  verified: boolean,
-  currentAdmin: AdminSessionContext,
-  req?: Request
+  _targetUserId: string,
+  _verified: boolean,
+  _currentAdmin: AdminSessionContext,
+  _req?: Request
 ) {
-  const { data: targetProfile, error: profileErr } = await supabase
-    .from("profiles")
-    .select("id, username, full_name, verified")
-    .eq("id", targetUserId)
-    .single();
-
-  if (profileErr || !targetProfile) {
-    throw new Error("Target user not found.");
-  }
-
-  const { data: updatedProfile, error: updateErr } = await supabase
-    .from("profiles")
-    .update({
-      verified,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", targetUserId)
-    .select("id, username, full_name, verified")
-    .single();
-
-  if (updateErr) {
-    throw updateErr;
-  }
-
-  const action = verified ? "USER_VERIFIED" : "USER_UNVERIFIED";
-
-  await createAuditLog(
-    {
-      adminId: currentAdmin.id,
-      adminUserId: currentAdmin.userId,
-      action,
-      resourceType: "user",
-      resourceId: targetUserId,
-      details: {
-        targetUsername: targetProfile.username,
-        verified,
-        previousState: targetProfile.verified,
-      },
-    },
-    req
+  // Direct manual toggle is strictly prohibited. Verification must be granted through authoritative review.
+  throw new Error(
+    "Direct verification toggling is disabled. Verification badges are server-authoritative and must be processed through the Verification Review Workflow."
   );
-
-  return updatedProfile;
 }

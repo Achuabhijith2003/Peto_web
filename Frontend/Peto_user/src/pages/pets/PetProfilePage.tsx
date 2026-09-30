@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import api from "../../utils/api";
 import { useAuth } from "../../context/AuthContext";
+import VerifiedBadge from "../../components/common/VerifiedBadge";
 import Navbar from "../../components/layout/Navbar";
 import { PetParentModal } from "../../components/pets/PetParentModal";
 import { PetProfileSkeleton } from "../../components/common/Skeleton";
@@ -600,7 +601,7 @@ export default function PetProfilePage() {
                                 {fullName}
                               </span>
                               {(parent.verified || parent.user?.verified) && (
-                                <CheckCircle2 size={12} className="text-amber-500 fill-amber-100" />
+                                <VerifiedBadge verified={true} verificationType="PERSON_VERIFIED" size={12} />
                               )}
                             </div>
                             <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wide block">

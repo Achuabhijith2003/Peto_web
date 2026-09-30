@@ -12,6 +12,7 @@ import {
   ArrowLeft,
   CheckCircle2,
   AlertCircle,
+  AlertTriangle,
   Sparkles,
 } from "lucide-react";
 import api from "../utils/api";
@@ -58,6 +59,10 @@ const EditProfileContent = () => {
     message: string;
   }>({ checking: false, available: null, message: "" });
 
+  const [originalFullName, setOriginalFullName] = useState("");
+  const [isVerified, setIsVerified] = useState(false);
+  const [showCriticalChangeModal, setShowCriticalChangeModal] = useState(false);
+
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
@@ -70,6 +75,8 @@ const EditProfileContent = () => {
         const userData = res.data.user || user;
 
         const rawName = (profile.full_name || userData?.name || "").trim();
+        setOriginalFullName(rawName);
+        setIsVerified(Boolean(profile.verified || profile.is_verified || userData?.verified || userData?.is_verified));
         const parts = rawName ? rawName.split(/\s+/) : [];
         setFirstName(parts[0] || "");
         setLastName(parts.slice(1).join(" ") || "");
@@ -219,7 +226,7 @@ const EditProfileContent = () => {
   };
 
   // Submit Profile Changes
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent, bypassWarning = false) => {
     e.preventDefault();
     setErrorMessage("");
     setSuccessMessage("");
@@ -229,9 +236,17 @@ const EditProfileContent = () => {
       return;
     }
 
+    const combinedFullName = `${firstName.trim()} ${lastName.trim()}`.trim();
+
+    // Check if verified user is changing verification-critical full name
+    if (!bypassWarning && isVerified && originalFullName && combinedFullName !== originalFullName) {
+      setShowCriticalChangeModal(true);
+      return;
+    }
+    setShowCriticalChangeModal(false);
+
     try {
       setSaving(true);
-      const combinedFullName = `${firstName.trim()} ${lastName.trim()}`.trim();
       const payload = {
         full_name: combinedFullName,
         fullName: combinedFullName,
@@ -252,10 +267,16 @@ const EditProfileContent = () => {
       if (res.data.success) {
         updateUserProfile(res.data.data || payload);
         await refreshUser();
-        setSuccessMessage("Profile saved successfully!");
+        if (res.data.reverification_required) {
+          setSuccessMessage(
+            "Profile updated. Your verified identity name changed, so your verification badge has been removed and reverification is required."
+          );
+        } else {
+          setSuccessMessage("Profile saved successfully!");
+        }
         setTimeout(() => {
           navigate("/profile");
-        }, 1200);
+        }, 1500);
       }
     } catch (err: any) {
       console.error("Profile save error:", err);
@@ -641,6 +662,50 @@ const EditProfileContent = () => {
           </div>
         </div>
       </form>
+
+      {/* Critical Identity Change Reverification Warning Modal */}
+      {showCriticalChangeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-slate-200 space-y-5">
+            <div className="flex items-center gap-3 text-amber-600">
+              <div className="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center shrink-0">
+                <AlertTriangle size={24} className="text-amber-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 leading-tight">Verification will be removed</h3>
+                <p className="text-xs text-amber-700 font-medium">Critical Identity Change</p>
+              </div>
+            </div>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              You are changing information that was used to verify your identity.
+            </p>
+            <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200/70 text-xs text-amber-900 space-y-2">
+              <p className="font-semibold">If you continue:</p>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>Your blue verification badge will be removed.</li>
+                <li>Your verification status will change to &quot;Reverification Required&quot;.</li>
+                <li>You will need to submit a new verification request to restore verified status.</li>
+              </ul>
+            </div>
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowCriticalChangeModal(false)}
+                className="flex-1 py-3 px-4 rounded-2xl border border-slate-200 text-slate-700 font-bold text-xs hover:bg-slate-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={(e) => handleSubmit(e, true)}
+                className="flex-1 py-3 px-4 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md shadow-rose-600/20 transition"
+              >
+                Continue &amp; Update
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

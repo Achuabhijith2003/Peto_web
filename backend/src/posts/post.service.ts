@@ -2,6 +2,7 @@ import { supabase } from "../config/supabase";
 import { deleteStorageFile } from "../media/storage.service";
 import { mapPostForFeed } from "./feed.mapper";
 import { syncPostMentionsAndTags, getMentionsAndTagsForPosts } from "./mention_tag.service";
+import { hasBusinessPermission } from "../businesses/business.rbac";
 
 interface CreatePostData {
     userId: string;
@@ -12,6 +13,8 @@ interface CreatePostData {
     petId?: string;
     mentionedUserIds?: string[];
     taggedPetIds?: string[];
+    authorType?: "USER" | "BUSINESS";
+    businessId?: string;
 }
 
 const isUUID = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
@@ -76,21 +79,40 @@ export async function createPostService(
     const mediaList = Array.isArray(media) ? media : [];
 
     // Create Post
-    const { data: post, error } = await supabase
+    const insertPayload: any = {
+        user_id: userId,
+        text: text || "",
+        visibility,
+        community_id: communityId || null,
+        pet_id: petId || null,
+        media_count: mediaList.length
+    };
+
+    if (data.businessId) {
+        insertPayload.business_id = data.businessId;
+        insertPayload.author_type = data.authorType || "BUSINESS";
+    }
+
+    let post: any;
+    const { data: createdPost, error } = await supabase
         .from("posts")
-        .insert({
-            user_id: userId,
-            text: text || "",
-            visibility,
-            community_id: communityId || null,
-            pet_id: petId || null,
-            media_count: mediaList.length
-        })
+        .insert(insertPayload)
         .select()
         .single();
 
     if (error) {
-        throw error;
+        if (error.code === "42703" && data.businessId) {
+            // Graceful fallback if business_id column not yet created in PostgreSQL
+            delete insertPayload.business_id;
+            delete insertPayload.author_type;
+            const retry = await supabase.from("posts").insert(insertPayload).select().single();
+            if (retry.error) throw retry.error;
+            post = { ...retry.data, business_id: data.businessId, author_type: "BUSINESS" };
+        } else {
+            throw error;
+        }
+    } else {
+        post = createdPost;
     }
 
     // If community post, increment post_count
@@ -254,6 +276,17 @@ export async function getPostById(
     post.mentions = mentionsByPostId.get(post.id) || [];
     post.tagged_pets = tagsByPostId.get(post.id) || [];
 
+    if (post.business_id) {
+        try {
+            const { data: biz } = await supabase
+                .from("business_identities")
+                .select("id, name, username, avatar_url, business_category")
+                .eq("id", post.business_id)
+                .maybeSingle();
+            if (biz) post.business = biz;
+        } catch (_) {}
+    }
+
     return mapPostForFeed(
         post,
         currentUserId,
@@ -273,12 +306,12 @@ export async function updatePostById(
 ) {
 
     //--------------------------------------------------
-    // Check ownership
+    // Check ownership or business permission
     //--------------------------------------------------
 
     const { data: existing } = await supabase
         .from("posts")
-        .select("id,user_id")
+        .select("id, user_id, business_id")
         .eq("id", postId)
         .maybeSingle();
 
@@ -286,7 +319,13 @@ export async function updatePostById(
         return null;
     }
 
-    if (existing.user_id !== userId) {
+    const isDirectOwner = existing.user_id === userId;
+    let hasBizPermission = false;
+    if (existing.business_id) {
+        hasBizPermission = await hasBusinessPermission(userId, existing.business_id, "business.post.edit");
+    }
+
+    if (!isDirectOwner && !hasBizPermission) {
         return null;
     }
 
@@ -374,10 +413,16 @@ export async function deletePostById(
     }
 
     //--------------------------------------------------
-    // Ownership
+    // Ownership or Business Permission
     //--------------------------------------------------
 
-    if (post.user_id !== userId) {
+    const isDirectOwner = post.user_id === userId;
+    let hasBizPermission = false;
+    if (post.business_id) {
+        hasBizPermission = await hasBusinessPermission(userId, post.business_id, "business.post.delete");
+    }
+
+    if (!isDirectOwner && !hasBizPermission) {
 
         return {
 
@@ -634,7 +679,8 @@ export async function getUserPostsService(
         .order("created_at", { ascending: false })
         .range(from, to);
 
-    const postIds = (posts ?? []).map(post => post.id);
+    const personalPosts = (posts ?? []).filter(post => !post.business_id && post.author_type !== "BUSINESS");
+    const postIds = personalPosts.map(post => post.id);
 
     let likedPosts = new Set<string>();
     let bookmarkedPosts = new Set<string>();
@@ -658,7 +704,7 @@ export async function getUserPostsService(
 
     const { mentionsByPostId, tagsByPostId } = await getMentionsAndTagsForPosts(postIds);
 
-    const feed = (posts ?? []).map(post => {
+    const feed = personalPosts.map(post => {
         post.mentions = mentionsByPostId.get(post.id) || [];
         post.tagged_pets = tagsByPostId.get(post.id) || [];
         return mapPostForFeed(
@@ -729,9 +775,24 @@ export async function getGlobalFeedService(
 
     const { mentionsByPostId, tagsByPostId } = await getMentionsAndTagsForPosts(postIds);
 
+    const businessIds = Array.from(new Set((posts ?? []).map((p: any) => p.business_id).filter(Boolean)));
+    const businessMap = new Map<string, any>();
+    if (businessIds.length > 0) {
+        try {
+            const { data: businesses } = await supabase
+                .from("business_identities")
+                .select("id, name, username, avatar_url, business_category")
+                .in("id", businessIds);
+            (businesses ?? []).forEach((b: any) => businessMap.set(b.id, b));
+        } catch (_) {}
+    }
+
     const feed = (posts ?? []).map(post => {
         post.mentions = mentionsByPostId.get(post.id) || [];
         post.tagged_pets = tagsByPostId.get(post.id) || [];
+        if (post.business_id && businessMap.has(post.business_id)) {
+            post.business = businessMap.get(post.business_id);
+        }
         return mapPostForFeed(
             post,
             currentUserId,
