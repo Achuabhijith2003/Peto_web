@@ -156,6 +156,8 @@ export async function searchUsers(
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
+    const cleanQuery = query.replace(/^@+/, "").trim();
+
     let q = supabase
         .from("profiles")
         .select(`
@@ -166,7 +168,7 @@ export async function searchUsers(
             verified,
             bio
         `)
-        .or(`username.ilike.%${query}%,full_name.ilike.%${query}%`);
+        .or(`username.ilike.%${cleanQuery}%,full_name.ilike.%${cleanQuery}%`);
 
     if (currentUserId) {
         q = q.neq("id", currentUserId);
@@ -195,50 +197,55 @@ export async function searchUsers(
         }
     }
 
-    const cleanQuery = query.replace(/^@+/, "").trim();
     const results = [];
 
     // Search business identities
-    try {
-        const { data: businesses } = await supabase
-            .from("business_identities")
-            .select("id, name, legal_name, username, avatar_url, business_category, description, country_code, verification_status, status")
-            .or(`name.ilike.%${cleanQuery}%,legal_name.ilike.%${cleanQuery}%,username.ilike.%${cleanQuery}%,business_category.ilike.%${cleanQuery}%`)
-            .limit(limit);
+    if (cleanQuery.length > 0) {
+        try {
+            const { data: businesses, error: bizErr } = await supabase
+                .from("business_identities")
+                .select("id, name, legal_name, username, avatar_url, business_category, description, country_code")
+                .or(`name.ilike.%${cleanQuery}%,legal_name.ilike.%${cleanQuery}%,username.ilike.%${cleanQuery}%,business_category.ilike.%${cleanQuery}%`)
+                .limit(limit);
 
-        if (businesses && businesses.length > 0) {
-            const bizIds = businesses.map(b => b.id);
-            const { data: verifs } = await supabase
-                .from("verification_applications")
-                .select("business_id, status")
-                .eq("verification_type", "BUSINESS_IDENTITY")
-                .eq("status", "APPROVED")
-                .in("business_id", bizIds);
-            const verifiedSet = new Set((verifs ?? []).map(v => v.business_id));
-
-            for (const b of businesses) {
-                const isVerified = b.verification_status === "APPROVED" || b.status === "VERIFIED" || verifiedSet.has(b.id);
-                results.push({
-                    id: b.id,
-                    type: "BUSINESS",
-                    name: b.name,
-                    username: b.username || b.name.toLowerCase().replace(/\s+/g, "_"),
-                    full_name: b.name,
-                    avatar_url: b.avatar_url || null,
-                    category: b.business_category || "Business",
-                    bio: b.description || b.business_category || "",
-                    verified: isVerified,
-                    is_verified: isVerified,
-                    badge_type: isVerified ? "BUSINESS_VERIFIED" : null,
-                    verification_badge_type: isVerified ? "BUSINESS_VERIFIED" : null,
-                    is_business: true,
-                    followersCount: 0,
-                    isFollowing: false
-                });
+            if (bizErr) {
+                console.error("Error querying business_identities in searchUsers:", bizErr);
             }
+
+            if (businesses && businesses.length > 0) {
+                const bizIds = businesses.map(b => b.id);
+                const { data: verifs } = await supabase
+                    .from("verification_applications")
+                    .select("business_id, status")
+                    .eq("verification_type", "BUSINESS_IDENTITY")
+                    .eq("status", "APPROVED")
+                    .in("business_id", bizIds);
+                const verifiedSet = new Set((verifs ?? []).map(v => v.business_id));
+
+                for (const b of businesses) {
+                    const isVerified = verifiedSet.has(b.id);
+                    results.push({
+                        id: b.id,
+                        type: "BUSINESS",
+                        name: b.name,
+                        username: b.username || b.name.toLowerCase().replace(/\s+/g, "_"),
+                        full_name: b.name,
+                        avatar_url: b.avatar_url || null,
+                        category: b.business_category || "Business",
+                        bio: b.description || b.business_category || "",
+                        verified: isVerified,
+                        is_verified: isVerified,
+                        badge_type: isVerified ? "BUSINESS_VERIFIED" : null,
+                        verification_badge_type: isVerified ? "BUSINESS_VERIFIED" : null,
+                        is_business: true,
+                        followersCount: 0,
+                        isFollowing: false
+                    });
+                }
+            }
+        } catch (err) {
+            console.error("Failed to search business identities:", err);
         }
-    } catch (_) {
-        // graceful
     }
 
     for (const user of users ?? []) {

@@ -349,11 +349,11 @@ export const BusinessProfilePage: React.FC = () => {
             )}
           </div>
 
-          <div className="p-6 sm:p-8 relative pt-0">
+          <div className="p-6 sm:p-8 relative pt-2 sm:pt-3">
             {/* Top Row: Avatar overlapping cover on left, Action Buttons on right */}
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 -mt-14 sm:-mt-16 mb-4">
-              {/* Avatar / Logo with Upload Button */}
-              <div className="relative group shrink-0">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-4">
+              {/* Avatar / Logo with Upload Button (alone has negative margin to overlap cover) */}
+              <div className="relative group shrink-0 -mt-16 sm:-mt-20 z-10">
                 <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-3xl bg-gradient-to-tr from-amber-500 to-orange-500 p-1 shadow-xl ring-4 ring-white flex items-center justify-center text-white shrink-0 overflow-hidden bg-white">
                   {business.avatar_url ? (
                     <img
