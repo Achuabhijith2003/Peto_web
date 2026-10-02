@@ -5,7 +5,10 @@ export interface AdSystemControls {
   id: string;
   all_ads_enabled: boolean;
   internal_ads_enabled: boolean;
+  peto_ads_marketplace_enabled: boolean;
   external_ads_enabled: boolean;
+  google_adsense_enabled: boolean;
+  google_admob_enabled: boolean;
   admob_enabled: boolean;
   web_ads_enabled: boolean;
   web_enabled: boolean;
@@ -28,8 +31,11 @@ export interface AdSystemControls {
 export const DEFAULT_AD_CONTROLS: AdSystemControls = {
   id: "GLOBAL_CONTROLS",
   all_ads_enabled: true,
-  internal_ads_enabled: true,
+  internal_ads_enabled: false,
+  peto_ads_marketplace_enabled: false,
   external_ads_enabled: true,
+  google_adsense_enabled: true,
+  google_admob_enabled: true,
   admob_enabled: true,
   web_ads_enabled: true,
   web_enabled: true,
@@ -94,6 +100,26 @@ export class AdControlsService {
     reason?: string
   ): Promise<AdSystemControls> {
     const prev = await this.getControls();
+
+    // Synchronize aliases so marketplace and external flags are completely consistent
+    if (updates.peto_ads_marketplace_enabled !== undefined && updates.internal_ads_enabled === undefined) {
+      updates.internal_ads_enabled = updates.peto_ads_marketplace_enabled;
+    } else if (updates.internal_ads_enabled !== undefined && updates.peto_ads_marketplace_enabled === undefined) {
+      updates.peto_ads_marketplace_enabled = updates.internal_ads_enabled;
+    }
+
+    if (updates.google_adsense_enabled !== undefined && updates.web_ads_enabled === undefined) {
+      updates.web_ads_enabled = updates.google_adsense_enabled;
+    } else if (updates.web_ads_enabled !== undefined && updates.google_adsense_enabled === undefined) {
+      updates.google_adsense_enabled = updates.web_ads_enabled;
+    }
+
+    if (updates.google_admob_enabled !== undefined && updates.admob_enabled === undefined) {
+      updates.admob_enabled = updates.google_admob_enabled;
+    } else if (updates.admob_enabled !== undefined && updates.google_admob_enabled === undefined) {
+      updates.google_admob_enabled = updates.admob_enabled;
+    }
+
     const payload = {
       ...updates,
       updated_by: adminId || null,
@@ -126,14 +152,26 @@ export class AdControlsService {
 
     lastFetchTime = Date.now();
 
-    // Log admin audit trail
+    // Log admin audit trail with specific action names
     if (adminId) {
       try {
+        let action = "AD_SYSTEM_CONTROLS_UPDATED";
+        if (updates.emergency_stop_active) {
+          action = "EMERGENCY_ADS_STOP_TRIGGERED";
+        } else if (updates.peto_ads_marketplace_enabled !== undefined || updates.internal_ads_enabled !== undefined) {
+          const isEnabled = updates.peto_ads_marketplace_enabled ?? updates.internal_ads_enabled;
+          action = isEnabled ? "PETO_ADS_MARKETPLACE_ENABLED" : "PETO_ADS_MARKETPLACE_DISABLED";
+        } else if (updates.google_adsense_enabled !== undefined || updates.web_ads_enabled !== undefined) {
+          const isEnabled = updates.google_adsense_enabled ?? updates.web_ads_enabled;
+          action = isEnabled ? "GOOGLE_ADSENSE_ENABLED" : "GOOGLE_ADSENSE_DISABLED";
+        } else if (updates.google_admob_enabled !== undefined || updates.admob_enabled !== undefined) {
+          const isEnabled = updates.google_admob_enabled ?? updates.admob_enabled;
+          action = isEnabled ? "GOOGLE_ADMOB_ENABLED" : "GOOGLE_ADMOB_DISABLED";
+        }
+
         await createAuditLog({
           adminId,
-          action: updates.emergency_stop_active
-            ? "EMERGENCY_ADS_STOP_TRIGGERED"
-            : "AD_SYSTEM_CONTROLS_UPDATED",
+          action,
           resourceType: "AD_SYSTEM_CONTROLS",
           resourceId: "GLOBAL_CONTROLS",
           details: {
@@ -146,6 +184,19 @@ export class AdControlsService {
     }
 
     return cachedControls;
+  }
+
+  /**
+   * Evaluates if Peto First-Party Ads Marketplace is actively enabled
+   */
+  static isMarketplaceEnabled(controls: AdSystemControls): boolean {
+    if (!controls.all_ads_enabled || controls.emergency_stop_active) {
+      if (controls.emergency_stop_scope === "ALL" || controls.emergency_stop_scope === "INTERNAL") {
+        return false;
+      }
+    }
+    const enabled = controls.peto_ads_marketplace_enabled ?? controls.internal_ads_enabled;
+    return Boolean(enabled);
   }
 
   /**
@@ -168,6 +219,7 @@ export class AdControlsService {
       updates.all_ads_enabled = false;
     } else if (scope === "INTERNAL") {
       updates.internal_ads_enabled = false;
+      updates.peto_ads_marketplace_enabled = false;
     } else if (scope === "EXTERNAL") {
       updates.external_ads_enabled = false;
     }
@@ -188,7 +240,7 @@ export class AdControlsService {
     }
 
     if (source === "PETO") {
-      return controls.internal_ads_enabled;
+      return this.isMarketplaceEnabled(controls);
     }
 
     if (source === "EXTERNAL") {

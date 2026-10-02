@@ -11,20 +11,26 @@ import {
 
 import { useAuth } from "../../context/AuthContext";
 import { Link, useLocation } from "react-router-dom";
+import { useFeature } from "../../hooks/useFeatures";
 
-const menu = [
+const ALL_MENU_ITEMS = [
   { icon: House, label: "Home Feed", path: "/social" },
   { icon: Clapperboard, label: "Pet Reels", path: "/reels" },
   { icon: Search, label: "Explore", path: "/search" },
   { icon: Users, label: "Communities", path: "/community" },
   { icon: Bookmark, label: "Saved Posts", path: "/bookmarks" },
-  { icon: Building2, label: "Advertiser Portal", path: "/advertiser" },
+  { icon: Building2, label: "Advertiser Portal", path: "/advertiser", requiresFeature: "PETO_ADS_MARKETPLACE" as const },
   { icon: SettingsIcon, label: "Settings", path: "/settings" },
 ];
 
 const LeftSidebar = () => {
   const { user } = useAuth();
   const location = useLocation();
+  const isMarketplaceEnabled = useFeature("PETO_ADS_MARKETPLACE");
+
+  const menu = ALL_MENU_ITEMS.filter(
+    (item) => !item.requiresFeature || (item.requiresFeature === "PETO_ADS_MARKETPLACE" && isMarketplaceEnabled)
+  );
 
   const isActive = (path: string) => location.pathname === path;
 

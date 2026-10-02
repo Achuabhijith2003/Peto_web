@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { AdminRequest } from "../admin/middleware/adminAuth.middleware";
 import {
   resolveCountryFromRequest,
+  resolveUserLocationFromRequest,
   getRegionalConfig,
   getAllRegionalConfigs,
   updateRegionalConfigService,
@@ -13,13 +14,15 @@ import {
  */
 export async function getPublicCurrentRegionHandler(req: Request, res: Response): Promise<void> {
   try {
-    const country = resolveCountryFromRequest(req);
+    const location = await resolveUserLocationFromRequest(req);
+    const country = location.country;
     const config = await getRegionalConfig(country);
 
     // Return client-safe configuration
     res.json({
       success: true,
       detected_country: country,
+      detected_location: location,
       config: {
         code: config.code,
         name: config.name,

@@ -206,6 +206,46 @@ let cachedConfigs: Record<string, RegionalConfig> = { ...RUNTIME_REGIONAL_STORE 
 let lastCacheTime = 0;
 const CACHE_TTL_MS = 60 * 1000; // 1 minute cache TTL
 
+// Common timezone to country and state mappings for zero-latency dynamic detection
+const TIMEZONE_TO_GEO: Record<string, { country: string; state: string; region: string }> = {
+  // India
+  "Asia/Kolkata": { country: "IN", state: "KL", region: "Kerala" },
+  "Asia/Calcutta": { country: "IN", state: "MH", region: "Maharashtra" },
+
+  // United States
+  "America/New_York": { country: "US", state: "NY", region: "New York" },
+  "America/Detroit": { country: "US", state: "MI", region: "Michigan" },
+  "America/Chicago": { country: "US", state: "IL", region: "Illinois" },
+  "America/Denver": { country: "US", state: "CO", region: "Colorado" },
+  "America/Phoenix": { country: "US", state: "AZ", region: "Arizona" },
+  "America/Los_Angeles": { country: "US", state: "CA", region: "California" },
+  "America/Anchorage": { country: "US", state: "AK", region: "Alaska" },
+  "Pacific/Honolulu": { country: "US", state: "HI", region: "Hawaii" },
+
+  // United Kingdom
+  "Europe/London": { country: "GB", state: "ENG", region: "England" },
+
+  // Canada
+  "America/Toronto": { country: "CA", state: "ON", region: "Ontario" },
+  "America/Vancouver": { country: "CA", state: "BC", region: "British Columbia" },
+
+  // Australia
+  "Australia/Sydney": { country: "AU", state: "NSW", region: "New South Wales" },
+  "Australia/Melbourne": { country: "AU", state: "VIC", region: "Victoria" },
+
+  // Europe
+  "Europe/Berlin": { country: "DE", state: "BE", region: "Berlin" },
+  "Europe/Paris": { country: "FR", state: "IDF", region: "Île-de-France" },
+
+  // Middle East & Asia
+  "Asia/Dubai": { country: "AE", state: "DU", region: "Dubai" },
+  "Asia/Singapore": { country: "SG", state: "SG", region: "Singapore" },
+  "Asia/Tokyo": { country: "JP", state: "13", region: "Tokyo" },
+
+  // South America
+  "America/Sao_Paulo": { country: "BR", state: "SP", region: "São Paulo" },
+};
+
 /**
  * Resolve country code from incoming request headers or parameters
  */
@@ -224,13 +264,31 @@ export function resolveCountryFromRequest(req: Request): string {
     return xCountry.toUpperCase();
   }
 
-  // 2. Check query parameter override if caller provides explicitly (e.g. client app passing localized country)
+  // 2. Check query parameter override if caller provides explicitly
   const queryCountry = req.query.country || req.query.user_country || req.query.region;
   if (typeof queryCountry === "string" && queryCountry.length === 2) {
     return queryCountry.toUpperCase();
   }
 
-  // 3. Fallback to default
+  // 3. Dynamic Timezone auto-detection check
+  const tz = (req.headers["x-user-timezone"] || req.query.tz || req.query.timezone) as string | undefined;
+  if (tz && TIMEZONE_TO_GEO[tz]) {
+    return TIMEZONE_TO_GEO[tz].country;
+  }
+
+  // 4. Accept-Language header fallback (e.g. "en-IN,en;q=0.9" -> "IN")
+  const acceptLang = req.headers["accept-language"];
+  if (typeof acceptLang === "string") {
+    const match = acceptLang.match(/[-_]([A-Za-z]{2})/);
+    if (match && match[1]) {
+      const code = match[1].toUpperCase();
+      if (RUNTIME_REGIONAL_STORE[code]) {
+        return code;
+      }
+    }
+  }
+
+  // 5. Fallback to default
   return "GLOBAL";
 }
 
@@ -238,7 +296,7 @@ export function resolveCountryFromRequest(req: Request): string {
  * Resolve full user geographical context (country, state/region, district/city)
  */
 export async function resolveUserLocationFromRequest(req: Request): Promise<UserLocationInfo> {
-  const country = resolveCountryFromRequest(req);
+  let country = resolveCountryFromRequest(req);
 
   const queryRegion = (req.query.region || req.query.state) as string | undefined;
   const queryState = req.query.state as string | undefined;
@@ -268,26 +326,61 @@ export async function resolveUserLocationFromRequest(req: Request): Promise<User
   let state = queryState || headerState || queryRegion || headerRegion;
   let district = queryDistrict || queryCity || headerDistrict;
   let city = queryCity || headerDistrict;
+
+  // Auto-detect state from timezone if missing
+  const tz = (req.headers["x-user-timezone"] || req.query.tz || req.query.timezone) as string | undefined;
+  if ((!state || state.length === 0) && tz && TIMEZONE_TO_GEO[tz]) {
+    state = TIMEZONE_TO_GEO[tz].state;
+    if (!country || country === "GLOBAL") {
+      country = TIMEZONE_TO_GEO[tz].country;
+    }
+  }
+
   let locationText = headerLocationText || (state && district ? `${district}, ${state}, ${country}` : state || country);
 
-  // If user is logged in and state/district wasn't passed in query/headers, fetch from profiles.location
+  // If user is logged in, check user profile location and user's registered pets location
   const userId = (req as any).user?.id || (req.query.userId as string | undefined);
-  if (userId && (!state || state.length <= 2)) {
+  if (userId) {
     try {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("location")
-        .eq("id", userId)
-        .maybeSingle();
+      // 1. Check profile location
+      if (!state || state.length <= 2) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("location")
+          .eq("id", userId)
+          .maybeSingle();
 
-      if (profile?.location && typeof profile.location === "string") {
-        locationText = profile.location;
-        const parts = profile.location.split(",").map((p: string) => p.trim());
-        if (parts.length >= 2) {
-          if (!district) district = parts[0];
-          if (!state) state = parts[1];
-        } else if (!state) {
-          state = parts[0];
+        if (profile?.location && typeof profile.location === "string") {
+          locationText = profile.location;
+          const parts = profile.location.split(",").map((p: string) => p.trim());
+          if (parts.length >= 2) {
+            if (!district) district = parts[0];
+            if (!state) state = parts[1];
+            if ((!country || country === "GLOBAL") && parts.length >= 3) {
+              country = parts[2].toUpperCase();
+            }
+          } else if (!state) {
+            state = parts[0];
+          }
+        }
+      }
+
+      // 2. Fallback to user's registered pet location if available
+      if (!city || !state || country === "GLOBAL") {
+        const { data: petRow } = await supabase
+          .from("pet_parents")
+          .select("pets:pet_id(city, state, country)")
+          .eq("user_id", userId)
+          .eq("status", "ACTIVE")
+          .limit(1)
+          .maybeSingle();
+
+        const userPet: any = Array.isArray(petRow?.pets) ? petRow?.pets[0] : petRow?.pets;
+        if (userPet) {
+          if (!city && userPet.city) city = userPet.city;
+          if (!district && userPet.city) district = userPet.city;
+          if (!state && userPet.state) state = userPet.state;
+          if ((!country || country === "GLOBAL") && userPet.country) country = userPet.country.toUpperCase();
         }
       }
     } catch {

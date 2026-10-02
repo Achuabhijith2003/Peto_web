@@ -6,9 +6,8 @@ import SponsoredPostCard from "./SponsoredPostCard";
 import WebExternalAdCard from "./WebExternalAdCard";
 import OnlineFriends from "./OnlineFriends";
 import SuggestedFriends from "./SuggestedFriends";
-import { Loader2, CheckCircle2, RefreshCw, MapPin } from "lucide-react";
-import { Link } from "react-router-dom";
-import { GEO_REGIONS } from "../../data/geoRegions";
+import { Loader2, CheckCircle2, RefreshCw } from "lucide-react";
+import { getAutoDetectedLocation } from "../../utils/geoDetector";
 
 const POSTS_PER_PAGE = 7;
 
@@ -40,20 +39,17 @@ const Feed = () => {
 
     const observerTarget = useRef<HTMLDivElement | null>(null);
 
-    const userCountry = localStorage.getItem("peto_user_country") || "US";
-    const userRegion = localStorage.getItem("peto_user_region") || "CA";
-    const userState = localStorage.getItem("peto_user_state") || "CA";
-    const userDistrict = localStorage.getItem("peto_user_district") || "";
-
     useEffect(() => {
+        const autoLoc = getAutoDetectedLocation();
         const queryParams = new URLSearchParams({
             placement: "FEED",
             device: "WEB",
         });
-        if (userCountry) queryParams.set("country", userCountry);
-        if (userRegion) queryParams.set("region", userRegion);
-        if (userState) queryParams.set("state", userState);
-        if (userDistrict) queryParams.set("district", userDistrict);
+        if (autoLoc.country && autoLoc.country !== "GLOBAL") queryParams.set("country", autoLoc.country);
+        if (autoLoc.region) queryParams.set("region", autoLoc.region);
+        if (autoLoc.state) queryParams.set("state", autoLoc.state);
+        if (autoLoc.district) queryParams.set("district", autoLoc.district);
+        if (autoLoc.city) queryParams.set("city", autoLoc.city);
 
         // Request ad decision via unified Peto Ad Decision Engine
         api.get(`/ads/decision?${queryParams.toString()}`)
@@ -72,7 +68,7 @@ const Feed = () => {
                 }
             })
             .catch(() => {});
-    }, [userCountry, userRegion, userState, userDistrict]);
+    }, []);
 
     const fetchFeedPosts = useCallback(async (pageNum: number, isRefresh: boolean = false) => {
         try {
@@ -157,23 +153,7 @@ const Feed = () => {
         <section className="space-y-6">
             <CreatePost onPostCreated={handlePostCreated} />
 
-            {/* Regional Feed Ad Indicator & Switcher */}
-            <div className="flex items-center justify-between px-4 py-2 bg-white rounded-2xl border border-slate-100 shadow-2xs text-xs">
-                <div className="flex items-center gap-2 text-slate-600 truncate">
-                    <MapPin size={13} className="text-amber-500 shrink-0" />
-                    <span className="text-[11px] text-slate-400">Ad & Feed Region:</span>
-                    <span className="font-bold text-slate-800 text-[11px] truncate">
-                        {GEO_REGIONS[userCountry]?.flag || "🌐"} {GEO_REGIONS[userCountry]?.name || userCountry}
-                        {userState ? ` (${userState})` : ""}
-                    </span>
-                </div>
-                <Link
-                    to="/settings?tab=region"
-                    className="text-[11px] font-bold text-amber-600 hover:text-amber-700 hover:underline transition shrink-0 ml-2"
-                >
-                    Change Region →
-                </Link>
-            </div>
+
 
             {/* Mobile Online Friends */}
             <div className="lg:hidden">

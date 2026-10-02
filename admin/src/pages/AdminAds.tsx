@@ -132,6 +132,10 @@ export const AdminAds: React.FC = () => {
   const [newCampDestination, setNewCampDestination] = useState("");
   const [newCampMediaUrl, setNewCampMediaUrl] = useState("");
 
+  // Peto Ads Marketplace Master Toggle Confirmation Modal
+  const [marketplaceModalOpen, setMarketplaceModalOpen] = useState(false);
+  const [targetMarketplaceState, setTargetMarketplaceState] = useState<boolean>(false);
+
   const showNotification = (type: "success" | "error", message: string) => {
     setNotification({ type, message });
     setTimeout(() => setNotification(null), 4000);
@@ -230,11 +234,57 @@ export const AdminAds: React.FC = () => {
     }
   }, [extDaysFilter, extProviderFilter]);
 
-  const handleToggleControl = async (key: keyof AdSystemControls, value: boolean) => {
+  const isMarketplaceActive = Boolean(
+    controls?.peto_ads_marketplace_enabled ?? controls?.internal_ads_enabled
+  );
+
+  const handleInitiateMarketplaceToggle = (targetState: boolean) => {
+    if (!canManage) return;
+    setTargetMarketplaceState(targetState);
+    setMarketplaceModalOpen(true);
+  };
+
+  const handleConfirmMarketplaceToggle = async () => {
     if (!controls) return;
     setControlsSaving(true);
     try {
-      const res = await updateAdControlCenter({ [key]: value }, `Admin toggled ${String(key)} to ${value}`);
+      const res = await updateAdControlCenter(
+        {
+          peto_ads_marketplace_enabled: targetMarketplaceState,
+          internal_ads_enabled: targetMarketplaceState,
+        },
+        targetMarketplaceState
+          ? "Admin enabled Peto Ads Marketplace"
+          : "Admin disabled Peto Ads Marketplace"
+      );
+      if (res.success) {
+        setControls(res.controls);
+        setMarketplaceModalOpen(false);
+        showNotification(
+          "success",
+          `Peto Ads Marketplace is now ${targetMarketplaceState ? "ENABLED" : "DISABLED"}`
+        );
+      }
+    } catch (err: any) {
+      showNotification("error", err.response?.data?.error || "Failed to update Peto Ads Marketplace setting");
+    } finally {
+      setControlsSaving(false);
+    }
+  };
+
+  const handleToggleControl = async (key: keyof AdSystemControls, value: boolean) => {
+    if (!controls) return;
+    if (key === "internal_ads_enabled" || key === "peto_ads_marketplace_enabled") {
+      handleInitiateMarketplaceToggle(value);
+      return;
+    }
+    setControlsSaving(true);
+    try {
+      const payload: Partial<AdSystemControls> = { [key]: value };
+      if (key === "admob_enabled") payload.google_admob_enabled = value;
+      if (key === "web_ads_enabled") payload.google_adsense_enabled = value;
+
+      const res = await updateAdControlCenter(payload, `Admin toggled ${String(key)} to ${value}`);
       if (res.success) {
         setControls(res.controls);
         showNotification("success", `${String(key).replace(/_/g, " ").toUpperCase()} set to ${value ? "ON" : "OFF"}`);
@@ -1419,6 +1469,56 @@ export const AdminAds: React.FC = () => {
             </div>
           )}
 
+          {/* Master Feature Section: Peto Ads Marketplace */}
+          <div className={`p-6 rounded-2xl border transition-all ${
+            isMarketplaceActive
+              ? "bg-gradient-to-br from-emerald-50/70 via-white to-emerald-50/30 border-emerald-300 shadow-sm"
+              : "bg-gradient-to-br from-amber-50/70 via-white to-amber-50/30 border-amber-300 shadow-sm"
+          }`}>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold tracking-wider uppercase text-[#534434]">Advertising</span>
+                  <span className="text-[#dae2f3]">•</span>
+                  <span className="text-xs font-bold text-[#0058be]">Master Feature Control</span>
+                </div>
+                <h3 className="text-xl font-bold font-heading text-[#151c27]">
+                  Peto Ads Marketplace
+                </h3>
+                <div className="flex items-center gap-2 pt-1">
+                  <span className="text-xs font-semibold text-[#534434]">Current Status:</span>
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase ${
+                    isMarketplaceActive
+                      ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                      : "bg-amber-100 text-amber-900 border border-amber-300"
+                  }`}>
+                    {isMarketplaceActive ? "ENABLED" : "DISABLED"}
+                  </span>
+                </div>
+                <p className="text-xs text-[#534434] max-w-2xl leading-relaxed pt-1">
+                  {isMarketplaceActive
+                    ? "Businesses and eligible users can access Peto's first-party advertising platform according to existing verification, regional and advertiser eligibility rules."
+                    : "Peto's first-party advertiser marketplace is currently unavailable to users and businesses. Existing marketplace data and configuration are preserved."}
+                </p>
+              </div>
+
+              <div>
+                <button
+                  type="button"
+                  disabled={!canManage || controlsSaving}
+                  onClick={() => handleInitiateMarketplaceToggle(!isMarketplaceActive)}
+                  className={`px-6 py-3 rounded-xl font-bold text-xs shadow-sm transition flex items-center gap-2 cursor-pointer ${
+                    isMarketplaceActive
+                      ? "bg-amber-600 hover:bg-amber-700 text-white"
+                      : "bg-[#0058be] hover:bg-[#2170e4] text-white"
+                  }`}
+                >
+                  {isMarketplaceActive ? "Disable Peto Ads Marketplace" : "Enable Peto Ads Marketplace"}
+                </button>
+              </div>
+            </div>
+          </div>
+
           {/* Master Kill Switches Grid */}
           <div className="bg-white rounded-2xl border border-[#e2e8f8] p-6 shadow-level-1 space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#e2e8f8] pb-4">
@@ -1468,20 +1568,20 @@ export const AdminAds: React.FC = () => {
 
               {/* Internal Ads */}
               <div className={`p-4 rounded-xl border transition flex items-center justify-between ${
-                controls?.internal_ads_enabled ? "bg-[#f0fdf4] border-[#bbf7d0]" : "bg-[#fef2f2] border-[#fecaca]"
+                isMarketplaceActive ? "bg-[#f0fdf4] border-[#bbf7d0]" : "bg-[#fef2f2] border-[#fecaca]"
               }`}>
                 <div>
-                  <span className="text-xs font-bold text-[#151c27] block">INTERNAL PETO ADS</span>
+                  <span className="text-xs font-bold text-[#151c27] block">PETO ADS MARKETPLACE</span>
                   <span className="text-[11px] text-[#534434]">
-                    Advertiser marketplace campaigns
+                    First-party advertiser platform ({isMarketplaceActive ? "Active" : "Disabled"})
                   </span>
                 </div>
                 <button
                   type="button"
                   disabled={!canManage || controlsSaving}
-                  onClick={() => handleToggleControl("internal_ads_enabled", !controls?.internal_ads_enabled)}
+                  onClick={() => handleInitiateMarketplaceToggle(!isMarketplaceActive)}
                   className={`w-12 h-6 flex items-center rounded-full p-1 transition cursor-pointer ${
-                    controls?.internal_ads_enabled ? "bg-emerald-600 justify-end" : "bg-slate-300 justify-start"
+                    isMarketplaceActive ? "bg-emerald-600 justify-end" : "bg-slate-300 justify-start"
                   }`}
                 >
                   <div className="w-4 h-4 rounded-full bg-white shadow-md" />
@@ -1495,7 +1595,7 @@ export const AdminAds: React.FC = () => {
                 <div>
                   <span className="text-xs font-bold text-[#151c27] block">EXTERNAL AD NETWORKS</span>
                   <span className="text-[11px] text-[#534434]">
-                    AdMob & Web Ads mediation
+                    Google AdSense & AdMob mediation
                   </span>
                 </div>
                 <button
@@ -1522,26 +1622,10 @@ export const AdminAds: React.FC = () => {
               </h4>
 
               <div className="space-y-3">
+                {/* Google AdSense - Web */}
                 <div className="p-3.5 rounded-xl border border-[#e2e8f8] bg-[#f9f9ff] flex items-center justify-between">
                   <div>
-                    <span className="text-xs font-bold text-[#151c27] block">Google AdMob (Mobile)</span>
-                    <span className="text-[11px] text-[#534434]">Native feed & reels interstitial ads on Android & iOS</span>
-                  </div>
-                  <button
-                    type="button"
-                    disabled={!canManage || controlsSaving}
-                    onClick={() => handleToggleControl("admob_enabled", !controls?.admob_enabled)}
-                    className={`w-11 h-5 flex items-center rounded-full p-0.5 transition cursor-pointer ${
-                      controls?.admob_enabled ? "bg-emerald-600 justify-end" : "bg-slate-300 justify-start"
-                    }`}
-                  >
-                    <div className="w-4 h-4 rounded-full bg-white shadow-md" />
-                  </button>
-                </div>
-
-                <div className="p-3.5 rounded-xl border border-[#e2e8f8] bg-[#f9f9ff] flex items-center justify-between">
-                  <div>
-                    <span className="text-xs font-bold text-[#151c27] block">Google Web Ads (AdSense / Ad Manager)</span>
+                    <span className="text-xs font-bold text-[#151c27] block">Google AdSense — Web</span>
                     <span className="text-[11px] text-[#534434]">Responsive web display slots in desktop & mobile browser</span>
                   </div>
                   <button
@@ -1549,7 +1633,25 @@ export const AdminAds: React.FC = () => {
                     disabled={!canManage || controlsSaving}
                     onClick={() => handleToggleControl("web_ads_enabled", !controls?.web_ads_enabled)}
                     className={`w-11 h-5 flex items-center rounded-full p-0.5 transition cursor-pointer ${
-                      controls?.web_ads_enabled ? "bg-emerald-600 justify-end" : "bg-slate-300 justify-start"
+                      (controls?.google_adsense_enabled ?? controls?.web_ads_enabled) ? "bg-emerald-600 justify-end" : "bg-slate-300 justify-start"
+                    }`}
+                  >
+                    <div className="w-4 h-4 rounded-full bg-white shadow-md" />
+                  </button>
+                </div>
+
+                {/* Google AdMob - Mobile */}
+                <div className="p-3.5 rounded-xl border border-[#e2e8f8] bg-[#f9f9ff] flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-[#151c27] block">Google AdMob — Mobile</span>
+                    <span className="text-[11px] text-[#534434]">Native feed & reels interstitial ads on Android & iOS</span>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={!canManage || controlsSaving}
+                    onClick={() => handleToggleControl("admob_enabled", !controls?.admob_enabled)}
+                    className={`w-11 h-5 flex items-center rounded-full p-0.5 transition cursor-pointer ${
+                      (controls?.google_admob_enabled ?? controls?.admob_enabled) ? "bg-emerald-600 justify-end" : "bg-slate-300 justify-start"
                     }`}
                   >
                     <div className="w-4 h-4 rounded-full bg-white shadow-md" />
@@ -2416,6 +2518,127 @@ export const AdminAds: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Peto Ads Marketplace Confirmation Modal */}
+      {marketplaceModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-level-5 border border-[#e2e8f8] space-y-5 animate-scale-up">
+            {targetMarketplaceState === false ? (
+              /* DISABLE CONFIRMATION */
+              <>
+                <div className="flex items-center gap-3 border-b border-[#e2e8f8] pb-4">
+                  <div className="p-2.5 rounded-2xl bg-amber-100 text-amber-800">
+                    <AlertTriangle size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold font-heading text-[#151c27]">
+                      Disable Peto Ads Marketplace?
+                    </h3>
+                    <p className="text-xs text-[#534434]">
+                      Temporarily pause first-party marketplace access
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3 text-xs text-[#534434] leading-relaxed">
+                  <p>
+                    This will prevent users and businesses from accessing Peto's first-party advertising marketplace.
+                  </p>
+                  <div className="p-3.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] space-y-2">
+                    <p className="font-bold text-[#151c27]">This will NOT:</p>
+                    <ul className="space-y-1 list-disc list-inside text-[11px] text-[#534434]">
+                      <li>Delete advertiser accounts</li>
+                      <li>Delete campaigns</li>
+                      <li>Delete ads</li>
+                      <li>Delete analytics</li>
+                      <li>Delete billing history</li>
+                      <li>Delete verification records</li>
+                      <li>Disable Business Profiles</li>
+                      <li>Disable Person Verification</li>
+                      <li>Disable Business Verification</li>
+                      <li>Disable Google AdSense</li>
+                      <li>Disable Google AdMob</li>
+                    </ul>
+                  </div>
+                  <p className="font-semibold text-emerald-800">
+                    Existing marketplace data will remain preserved.
+                  </p>
+                </div>
+
+                <div className="pt-3 border-t border-[#e2e8f8] flex items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    disabled={controlsSaving}
+                    onClick={() => setMarketplaceModalOpen(false)}
+                    className="px-5 py-2.5 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#534434] text-xs font-semibold border border-[#dae2f3] transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={controlsSaving}
+                    onClick={handleConfirmMarketplaceToggle}
+                    className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-sm transition cursor-pointer"
+                  >
+                    {controlsSaving ? "Updating..." : "Disable Marketplace"}
+                  </button>
+                </div>
+              </>
+            ) : (
+              /* ENABLE CONFIRMATION */
+              <>
+                <div className="flex items-center gap-3 border-b border-[#e2e8f8] pb-4">
+                  <div className="p-2.5 rounded-2xl bg-emerald-100 text-emerald-800">
+                    <CheckCircle2 size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold font-heading text-[#151c27]">
+                      Enable Peto Ads Marketplace?
+                    </h3>
+                    <p className="text-xs text-[#534434]">
+                      Resume first-party marketplace operations
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3 text-xs text-[#534434] leading-relaxed">
+                  <p>
+                    This will make Peto's first-party advertiser marketplace available again, subject to existing:
+                  </p>
+                  <ul className="p-3.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] space-y-1.5 list-disc list-inside text-[11px] text-[#151c27] font-medium">
+                    <li>Verification</li>
+                    <li>Advertiser eligibility</li>
+                    <li>Regional configuration</li>
+                    <li>Advertising policies</li>
+                    <li>Billing/payment availability</li>
+                    <li>Campaign review</li>
+                    <li>Moderation</li>
+                  </ul>
+                </div>
+
+                <div className="pt-3 border-t border-[#e2e8f8] flex items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    disabled={controlsSaving}
+                    onClick={() => setMarketplaceModalOpen(false)}
+                    className="px-5 py-2.5 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#534434] text-xs font-semibold border border-[#dae2f3] transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={controlsSaving}
+                    onClick={handleConfirmMarketplaceToggle}
+                    className="px-5 py-2.5 rounded-xl bg-[#0058be] hover:bg-[#2170e4] text-white text-xs font-bold shadow-sm transition cursor-pointer"
+                  >
+                    {controlsSaving ? "Updating..." : "Enable Marketplace"}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

@@ -1,4 +1,5 @@
 import axios from "axios";
+import { getAutoDetectedLocation } from "./geoDetector";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
@@ -17,14 +18,16 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    const userCountry = localStorage.getItem("peto_user_country");
-    const userRegion = localStorage.getItem("peto_user_region");
-    const userState = localStorage.getItem("peto_user_state");
-    const userDistrict = localStorage.getItem("peto_user_district");
-    if (userCountry) config.headers["x-user-country"] = userCountry;
-    if (userRegion) config.headers["x-user-region"] = userRegion;
-    if (userState) config.headers["x-user-state"] = userState;
-    if (userDistrict) config.headers["x-user-district"] = userDistrict;
+    // Attach dynamically auto-detected location headers for precise ad & content localization
+    const autoLoc = getAutoDetectedLocation();
+    if (autoLoc.country && autoLoc.country !== "GLOBAL") {
+      config.headers["x-user-country"] = autoLoc.country;
+    }
+    if (autoLoc.region) config.headers["x-user-region"] = autoLoc.region;
+    if (autoLoc.state) config.headers["x-user-state"] = autoLoc.state;
+    if (autoLoc.district) config.headers["x-user-district"] = autoLoc.district;
+    if (autoLoc.city) config.headers["x-user-city"] = autoLoc.city;
+    if (autoLoc.timezone) config.headers["x-user-timezone"] = autoLoc.timezone;
 
     // Attach active acting identity for business / personal social interactions
     const activeActing = localStorage.getItem("peto_active_acting_identity");

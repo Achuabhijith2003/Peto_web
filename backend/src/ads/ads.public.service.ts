@@ -3,6 +3,8 @@ import { supabase } from "../config/supabase";
 import { getRegionalConfig, isAdTargetingEligible } from "../regions/regional.service";
 import { UserLocationInfo } from "../regions/regional.types";
 import { CurrencyService } from "../currency/currency.service";
+import { getUserPetProfile, evaluatePetTargeting } from "./engine/petTargetingMatcher";
+import { AdControlsService } from "./adControls.service";
 
 export interface PublicAdItem {
   id: string; // Campaign ID
@@ -37,13 +39,20 @@ export interface PublicAdItem {
 
 
 /**
- * Fetch active, approved ads for user feeds
+ * Fetch active, approved ads for user feeds with Meta-grade selective pet targeting
  */
 export async function getActiveFeedAdsService(
   placement: string = "FEED",
-  locationInput: string | UserLocationInfo = "GLOBAL"
+  locationInput: string | UserLocationInfo = "GLOBAL",
+  userId?: string
 ): Promise<PublicAdItem[]> {
   try {
+    // 0. Enforce global first-party marketplace status
+    const controls = await AdControlsService.getControls();
+    if (!AdControlsService.isMarketplaceEnabled(controls)) {
+      return [];
+    }
+
     const location: UserLocationInfo =
       typeof locationInput === "string" ? { country: locationInput } : locationInput;
     const country = location.country || "GLOBAL";
@@ -80,7 +89,9 @@ export async function getActiveFeedAdsService(
     if (error) throw error;
 
     if (data && data.length > 0) {
-      const publicAds: PublicAdItem[] = [];
+      // Resolve user's active pets for selective targeting
+      const userPetProfile = await getUserPetProfile(userId);
+      const scoredAds: Array<{ ad: PublicAdItem; score: number }> = [];
 
       data.forEach((camp: any) => {
         // 1. Account Balance Check: ADS ONLY SHOW WHEN THERE IS SUFFICIENT BALANCE IN THE ACCOUNT!
@@ -125,37 +136,55 @@ export async function getActiveFeedAdsService(
           return;
         }
 
-        publicAds.push({
-          id: camp.id,
-          name: camp.name,
-          objective: camp.objective,
-          advertiser: {
-            id: camp.advertiser.id,
-            company_name: camp.advertiser.company_name,
-            website_url: camp.advertiser.website_url,
-            industry: camp.advertiser.industry,
+        // Meta-Grade Selective Pet Targeting
+        const petTargetingEval = evaluatePetTargeting(targeting, userPetProfile, {
+          creative: primaryCreative,
+          location,
+        });
+
+        // Strictly exclude mismatched ads (e.g. dog product ads to cat-only owners)
+        if (!petTargetingEval.eligible) {
+          return;
+        }
+
+        const dailyBudget = parseFloat(camp.daily_budget || "10");
+        const score = dailyBudget * petTargetingEval.affinityMultiplier * petTargetingEval.proximityScore;
+
+        scoredAds.push({
+          score,
+          ad: {
+            id: camp.id,
+            name: camp.name,
+            objective: camp.objective,
+            advertiser: {
+              id: camp.advertiser.id,
+              company_name: camp.advertiser.company_name,
+              website_url: camp.advertiser.website_url,
+              industry: camp.advertiser.industry,
+            },
+            creative: {
+              id: primaryCreative.id,
+              name: primaryCreative.name,
+              format: primaryCreative.format,
+              headline: primaryCreative.headline,
+              body_text: primaryCreative.body_text,
+              call_to_action: primaryCreative.call_to_action,
+              destination_url: primaryCreative.destination_url,
+              media_urls: primaryCreative.media_urls || [],
+            },
+            targeting: targeting
+              ? {
+                  pet_interests: targeting.pet_interests || [],
+                  placements: targeting.placements || [],
+                }
+              : undefined,
           },
-          creative: {
-            id: primaryCreative.id,
-            name: primaryCreative.name,
-            format: primaryCreative.format,
-            headline: primaryCreative.headline,
-            body_text: primaryCreative.body_text,
-            call_to_action: primaryCreative.call_to_action,
-            destination_url: primaryCreative.destination_url,
-            media_urls: primaryCreative.media_urls || [],
-          },
-          targeting: targeting
-            ? {
-                pet_interests: targeting.pet_interests || [],
-                placements: targeting.placements || [],
-              }
-            : undefined,
         });
       });
 
-      if (publicAds.length > 0) {
-        return publicAds;
+      if (scoredAds.length > 0) {
+        scoredAds.sort((a, b) => b.score - a.score);
+        return scoredAds.map((s) => s.ad);
       }
     }
   } catch (err: any) {

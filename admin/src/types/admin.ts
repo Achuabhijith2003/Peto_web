@@ -1003,7 +1003,10 @@ export interface AdSystemControls {
   id: string;
   all_ads_enabled: boolean;
   internal_ads_enabled: boolean;
+  peto_ads_marketplace_enabled?: boolean;
   external_ads_enabled: boolean;
+  google_adsense_enabled?: boolean;
+  google_admob_enabled?: boolean;
   admob_enabled: boolean;
   web_ads_enabled: boolean;
   web_enabled: boolean;

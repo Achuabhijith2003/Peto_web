@@ -18,7 +18,7 @@ import Maintenance503 from "../pages/Maintenance503";
 import NotFound404 from "../pages/NotFound404";
 import ServerError500 from "../pages/ServerError500";
 import Forbidden403 from "../pages/Forbidden403";
-import AdvertiserPortal from "../pages/advertiser/AdvertiserPortal";
+import AdvertiserRouteGuard from "../components/advertiser/AdvertiserRouteGuard";
 import PolicyPage from "../pages/PolicyPage";
 import Settings from "../pages/Settings";
 import AuthCallback from "../pages/AuthCallback";
@@ -71,8 +71,8 @@ const AppRoutes = () => {
       <Route path="/pets/:id/edit" element={<EditPetPage />} />
 
       <Route path="/bookmarks" element={<Bookmarks />} />
-      <Route path="/advertiser" element={<AdvertiserPortal />} />
-      <Route path="/advertiser/*" element={<AdvertiserPortal />} />
+      <Route path="/advertiser" element={<AdvertiserRouteGuard />} />
+      <Route path="/advertiser/*" element={<AdvertiserRouteGuard />} />
 
       {/* Business Identity & Profile Routes */}
       <Route path="/business/:id" element={<BusinessProfilePage />} />

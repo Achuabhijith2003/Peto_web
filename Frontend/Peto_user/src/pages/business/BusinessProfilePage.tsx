@@ -28,6 +28,7 @@ import { useIdentity } from "../../context/IdentityContext";
 import Navbar from "../../components/layout/Navbar";
 import VerifiedBadge from "../../components/common/VerifiedBadge";
 import PostCard from "../../components/social/PostCard";
+import { useFeature } from "../../hooks/useFeatures";
 
 interface BusinessDetail {
   id: string;
@@ -64,6 +65,7 @@ export const BusinessProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { activeIdentity, switchIdentity, refreshBusinesses } = useIdentity();
+  const isMarketplaceEnabled = useFeature("PETO_ADS_MARKETPLACE");
 
   const [business, setBusiness] = useState<BusinessDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -430,13 +432,15 @@ export const BusinessProfilePage: React.FC = () => {
                       <span>Edit Business</span>
                     </button>
 
-                    <Link
-                      to="/advertiser"
-                      className="px-3.5 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition flex items-center gap-1.5"
-                    >
-                      <Megaphone size={14} className="text-amber-600" />
-                      <span>Manage Ads</span>
-                    </Link>
+                    {isMarketplaceEnabled && (
+                      <Link
+                        to="/advertiser"
+                        className="px-3.5 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition flex items-center gap-1.5"
+                      >
+                        <Megaphone size={14} className="text-amber-600" />
+                        <span>Manage Ads</span>
+                      </Link>
+                    )}
                   </>
                 ) : (
                   <>
@@ -563,7 +567,7 @@ export const BusinessProfilePage: React.FC = () => {
                   </div>
                   {business.canManage && (
                     <Link
-                      to="/advertiser"
+                      to="/settings?tab=verification"
                       className="px-3 py-1 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs transition"
                     >
                       Verify Now
@@ -579,7 +583,9 @@ export const BusinessProfilePage: React.FC = () => {
             {[
               { id: "posts", label: "Posts & Updates", icon: Layers },
               { id: "about", label: "About & Entity Details", icon: Info },
-              { id: "ads", label: "Advertising", icon: Megaphone },
+              ...(isMarketplaceEnabled
+                ? [{ id: "ads", label: "Advertising", icon: Megaphone }]
+                : []),
             ].map((tab) => {
               const Icon = tab.icon;
               const active = activeTab === tab.id;
@@ -712,7 +718,8 @@ export const BusinessProfilePage: React.FC = () => {
         )}
 
         {/* Tab Content: Advertising */}
-        {activeTab === "ads" && (
+        {/* Tab Content: Advertising */}
+        {activeTab === "ads" && isMarketplaceEnabled && (
           <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm text-center space-y-4">
             <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
               <Megaphone size={20} />

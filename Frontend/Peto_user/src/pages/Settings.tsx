@@ -16,14 +16,12 @@ import {
   Upload,
   Clock,
   Sparkles,
-  MapPin,
   Globe,
   KeyRound,
   Shield,
   FileText,
   Check,
   Layers,
-  Building2,
 } from "lucide-react";
 import api from "../utils/api";
 import { useAuth } from "../context/AuthContext";
@@ -31,16 +29,17 @@ import Navbar from "../components/layout/Navbar";
 import LeftSidebar from "../components/social/LeftSidebar";
 import RightSidebar from "../components/social/RightSidebar";
 import SocialLayout from "../components/social/SocialLayout";
-import { GEO_REGIONS } from "../data/geoRegions";
 import BusinessVerificationSection from "../components/verification/BusinessVerificationSection";
 import VerifiedBadge from "../components/common/VerifiedBadge";
+import { useFeature } from "../hooks/useFeatures";
 
-type SettingsTab = "password" | "region" | "verification" | "policies" | "advertiser";
+type SettingsTab = "password" | "verification" | "policies" | "advertiser";
 
 export const Settings: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const isMarketplaceEnabled = useFeature("PETO_ADS_MARKETPLACE");
   const searchParams = new URLSearchParams(location.search);
   const initialTab = (searchParams.get("tab") as SettingsTab) || "password";
 
@@ -49,48 +48,21 @@ export const Settings: React.FC = () => {
   // Sync tab with URL query parameter if it changes
   useEffect(() => {
     const tabParam = searchParams.get("tab") as SettingsTab;
-    if (tabParam && ["password", "region", "verification", "policies", "advertiser"].includes(tabParam)) {
-      setActiveTab(tabParam);
+    if (tabParam && ["password", "verification", "policies", "advertiser"].includes(tabParam)) {
+      if (tabParam === "advertiser" && !isMarketplaceEnabled) {
+        setActiveTab("password");
+      } else {
+        setActiveTab(tabParam);
+      }
     }
-  }, [location.search]);
+  }, [location.search, isMarketplaceEnabled]);
 
-  // Region & Ad Localization state
-  const [selectedCountry, setSelectedCountry] = useState<string>(() => {
-    return localStorage.getItem("peto_user_country") || "US";
-  });
-  const [selectedState, setSelectedState] = useState<string>(() => {
-    return localStorage.getItem("peto_user_state") || "CA";
-  });
-  const [selectedDistrict, setSelectedDistrict] = useState<string>(() => {
-    return localStorage.getItem("peto_user_district") || "";
-  });
-  const [regionSavedMsg, setRegionSavedMsg] = useState("");
-
-  const handleSaveRegion = async () => {
-    localStorage.setItem("peto_user_country", selectedCountry);
-    localStorage.setItem("peto_user_region", selectedState);
-    localStorage.setItem("peto_user_state", selectedState);
-    localStorage.setItem("peto_user_district", selectedDistrict);
-
-    const countryObj = GEO_REGIONS[selectedCountry];
-    const stateObj = countryObj?.states.find((s) => s.code === selectedState);
-    const locText = [selectedDistrict, stateObj?.name || selectedState, countryObj?.name || selectedCountry]
-      .filter(Boolean)
-      .join(", ");
-
-    try {
-      await api.put("/users/profile", { location: locText });
-    } catch {
-      // Local storage is primary
+  // Ensure active tab falls back if marketplace gets disabled
+  useEffect(() => {
+    if (activeTab === "advertiser" && !isMarketplaceEnabled) {
+      setActiveTab("password");
     }
-
-    setRegionSavedMsg(
-      `Region set to ${countryObj?.flag || ""} ${stateObj?.name || selectedState}, ${
-        countryObj?.name || selectedCountry
-      }! Ads and localized content will now strictly target this region.`
-    );
-    setTimeout(() => setRegionSavedMsg(""), 5000);
-  };
+  }, [activeTab, isMarketplaceEnabled]);
 
   // Change Password state
   const [currentPassword, setCurrentPassword] = useState("");
@@ -297,20 +269,13 @@ export const Settings: React.FC = () => {
 
   const pwdStrength = getPasswordStrength(newPassword);
 
-  const tabsConfig = [
+  const allTabsConfig = [
     {
       id: "password" as SettingsTab,
       label: "Password",
       sublabel: "Security & auth",
       icon: Lock,
       activeColor: "border-slate-900 bg-slate-900 text-white shadow-md shadow-slate-900/10",
-    },
-    {
-      id: "region" as SettingsTab,
-      label: "Region & Ads",
-      sublabel: "Geo targeting",
-      icon: MapPin,
-      activeColor: "border-amber-500 bg-amber-500 text-white shadow-md shadow-amber-500/10",
     },
     {
       id: "verification" as SettingsTab,
@@ -335,6 +300,10 @@ export const Settings: React.FC = () => {
       activeColor: "border-emerald-600 bg-emerald-600 text-white shadow-md shadow-emerald-600/10",
     },
   ];
+
+  const tabsConfig = allTabsConfig.filter(
+    (t) => t.id !== "advertiser" || isMarketplaceEnabled
+  );
 
   const userAvatar = user?.profile?.avatar_url || user?.avatar_url;
   const userFullName = user?.profile?.full_name || user?.username || "Pet Parent";
@@ -408,26 +377,11 @@ export const Settings: React.FC = () => {
                     <p className="text-xs text-slate-500 font-mono mt-0.5">{userHandle}</p>
                   </div>
                 </div>
-
-                {/* Quick location tag */}
-                <div className="flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-slate-50 border border-slate-200/80 self-start sm:self-auto text-xs text-slate-600">
-                  <span className="text-base">{GEO_REGIONS[selectedCountry]?.flag || "🌐"}</span>
-                  <div className="leading-tight">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
-                      Targeted Location
-                    </span>
-                    <span className="font-semibold text-slate-800">
-                      {selectedState
-                        ? `${selectedState}, ${GEO_REGIONS[selectedCountry]?.name || selectedCountry}`
-                        : GEO_REGIONS[selectedCountry]?.name || selectedCountry}
-                    </span>
-                  </div>
-                </div>
               </div>
             </div>
 
             {/* Navigation Tabs Pill Bar */}
-            <div className="bg-white rounded-2xl border border-slate-200/80 p-2 shadow-sm grid grid-cols-2 sm:grid-cols-5 gap-1.5 sm:gap-2">
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-2 shadow-sm grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2">
               {tabsConfig.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -609,176 +563,6 @@ export const Settings: React.FC = () => {
                       Use a unique password not shared with any other pet registry or social platform. Never share
                       your Peto login with unauthorized third parties.
                     </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* ========================================================================= */}
-            {/* TAB: REGION & AD LOCALIZATION */}
-            {/* ========================================================================= */}
-            {activeTab === "region" && (
-              <div className="space-y-6 animate-in fade-in duration-200">
-                <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-sm space-y-6">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
-                          <Globe size={18} />
-                        </div>
-                        <h2 className="text-lg font-bold text-slate-900">
-                          Region & Targeted Ads Localization
-                        </h2>
-                      </div>
-                      <p className="text-xs text-slate-500 mt-1.5 ml-10">
-                        Choose your location to personalize your feed, local veterinary services, and sponsored pet
-                        promotions.
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-2.5 bg-amber-50 border border-amber-200/80 rounded-2xl px-4 py-2 self-start sm:self-auto shadow-xs">
-                      <span className="text-2xl">{GEO_REGIONS[selectedCountry]?.flag || "🌐"}</span>
-                      <div className="text-left">
-                        <div className="text-[10px] uppercase tracking-wider text-amber-700 font-bold">
-                          Active Geo
-                        </div>
-                        <div className="text-xs font-bold text-slate-900">
-                          {GEO_REGIONS[selectedCountry]?.name || selectedCountry}
-                          {selectedState ? ` (${selectedState})` : ""}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {regionSavedMsg && (
-                    <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center gap-3 text-emerald-800 text-xs font-medium animate-in fade-in">
-                      <CheckCircle2 size={18} className="text-emerald-600 shrink-0" />
-                      <span>{regionSavedMsg}</span>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                    {/* Select Country */}
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                        Target Country
-                      </label>
-                      <select
-                        value={selectedCountry}
-                        onChange={(e) => {
-                          const newCountry = e.target.value;
-                          setSelectedCountry(newCountry);
-                          const firstState = GEO_REGIONS[newCountry]?.states[0]?.code || "";
-                          setSelectedState(firstState);
-                          setSelectedDistrict("");
-                        }}
-                        className="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition cursor-pointer font-medium"
-                      >
-                        {Object.values(GEO_REGIONS).map((c) => (
-                          <option key={c.code} value={c.code}>
-                            {c.flag} {c.name} ({c.code})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Select State / Region */}
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                        State / Province / Region
-                      </label>
-                      <select
-                        value={selectedState}
-                        onChange={(e) => {
-                          setSelectedState(e.target.value);
-                          setSelectedDistrict("");
-                        }}
-                        className="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition cursor-pointer font-medium"
-                      >
-                        <option value="">-- All States in Country --</option>
-                        {GEO_REGIONS[selectedCountry]?.states.map((s) => (
-                          <option key={s.code} value={s.code}>
-                            {s.name} ({s.code})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Select District / City */}
-                  {selectedState && (
-                    <div>
-                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                        District / City / County (Optional)
-                      </label>
-                      {GEO_REGIONS[selectedCountry]?.states.find((s) => s.code === selectedState)?.districts.length ? (
-                        <select
-                          value={selectedDistrict}
-                          onChange={(e) => setSelectedDistrict(e.target.value)}
-                          className="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition cursor-pointer font-medium"
-                        >
-                          <option value="">-- Entire State / All Districts --</option>
-                          {GEO_REGIONS[selectedCountry]?.states
-                            .find((s) => s.code === selectedState)
-                            ?.districts.map((d) => (
-                              <option key={d} value={d}>
-                                {d}
-                              </option>
-                            ))}
-                        </select>
-                      ) : (
-                        <input
-                          type="text"
-                          value={selectedDistrict}
-                          onChange={(e) => setSelectedDistrict(e.target.value)}
-                          placeholder="Enter your district or city..."
-                          className="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-500 transition"
-                        />
-                      )}
-                    </div>
-                  )}
-
-                  {/* Visual Info Grid on Localization */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
-                        <MapPin size={14} className="text-amber-500" />
-                        <span>Country Isolation</span>
-                      </div>
-                      <p className="text-[11px] text-slate-500 leading-relaxed">
-                        Campaigns targeted to specific nations will never cross international borders without advertiser consent.
-                      </p>
-                    </div>
-
-                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
-                        <Building2 size={14} className="text-blue-500" />
-                        <span>State Drill-Down</span>
-                      </div>
-                      <p className="text-[11px] text-slate-500 leading-relaxed">
-                        Regional pet events, veterinary emergency notices, and shelters target your exact state.
-                      </p>
-                    </div>
-
-                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900">
-                        <Sparkles size={14} className="text-emerald-500" />
-                        <span>District Precision</span>
-                      </div>
-                      <p className="text-[11px] text-slate-500 leading-relaxed">
-                        Hyper-local precision connects you with immediate neighborhood pet playdates and lost pet alerts.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end pt-3 border-t border-slate-100">
-                    <button
-                      type="button"
-                      onClick={handleSaveRegion}
-                      className="px-7 py-3 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs sm:text-sm shadow-md transition hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
-                    >
-                      Save Location & Ad Preferences
-                    </button>
                   </div>
                 </div>
               </div>

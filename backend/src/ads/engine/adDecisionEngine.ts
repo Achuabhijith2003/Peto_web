@@ -6,6 +6,7 @@ import { FrequencyCapper } from "./frequencyCapper";
 import { AdDemandRouter } from "../external/adDemandRouter";
 import { AdControlsService } from "../adControls.service";
 import { AdEventTrackerService } from "../adEventTracker.service";
+import { getUserPetProfile, evaluatePetTargeting } from "./petTargetingMatcher";
 
 export class AdDecisionEngine {
   /**
@@ -101,6 +102,8 @@ export class AdDecisionEngine {
           .or(`end_date.is.null,end_date.gte.${now}`);
 
         if (campaigns && campaigns.length > 0) {
+          // Resolve requesting user's verified pet ownership profile for precision audience targeting
+          const userPetProfile = await getUserPetProfile(context.userId);
           const scoredCandidates: Array<{ ad: any; score: number }> = [];
 
           for (const camp of campaigns) {
@@ -163,20 +166,23 @@ export class AdDecisionEngine {
               if (!hasDevice) continue;
             }
 
-            // Scoring algorithm
-            const dailyBudget = parseFloat(camp.daily_budget || "10");
-            const bidScore = Math.min(dailyBudget / 25, 3.0);
+            // Meta-Grade Selective Pet Targeting & Audience Matching
+            const petTargetingEval = evaluatePetTargeting(targeting, userPetProfile, {
+              petInterests: context.petInterests,
+              creative,
+              location: userLoc,
+            });
 
-            let relevanceScore = 1.0;
-            if (context.petInterests && targeting.pet_interests) {
-              const hasInterest = context.petInterests.some((pi) =>
-                targeting.pet_interests.includes(pi)
-              );
-              if (hasInterest) relevanceScore = 1.6;
+            // Disqualify ads that fail selective audience targeting (e.g. dog ads to cat-only owners)
+            if (!petTargetingEval.eligible) {
+              continue;
             }
 
+            // Deterministic Auction Scoring: Bid + Pet Affinity + Local Proximity + Budget Pacing
+            const dailyBudget = parseFloat(camp.daily_budget || "10");
+            const bidScore = Math.min(dailyBudget / 25, 3.0);
             const pacingScore = Math.max(0.3, 1.0 - (totalBudget > 0 ? spent / totalBudget : 0));
-            const finalScore = bidScore * relevanceScore * pacingScore;
+            const finalScore = bidScore * petTargetingEval.affinityMultiplier * petTargetingEval.proximityScore * pacingScore;
 
             scoredCandidates.push({
               score: finalScore,

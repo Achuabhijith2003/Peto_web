@@ -268,6 +268,23 @@ export async function getAdvertiserEligibilityHandler(req: Request, res: Respons
       res.status(401).json({ success: false, error: "Unauthorized" });
       return;
     }
+    const { AdControlsService } = await import("../ads/adControls.service");
+    const controls = await AdControlsService.getControls();
+    const marketplaceEnabled = AdControlsService.isMarketplaceEnabled(controls);
+
+    if (!marketplaceEnabled) {
+      res.json({
+        success: true,
+        eligibility: {
+          allowed: false,
+          marketplace_enabled: false,
+          reason: "Peto Ads Marketplace is currently unavailable.",
+          code: "ADS_MARKETPLACE_DISABLED",
+        },
+      });
+      return;
+    }
+
     const businessId = req.query.businessId as string | undefined;
     const { IdentityVerificationService } = await import("./verification/identityVerification.service");
     const eligibility = await IdentityVerificationService.getEligibility(userId, businessId);

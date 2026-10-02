@@ -8,12 +8,14 @@ import {
 import { resolveCountryFromRequest, resolveUserLocationFromRequest } from "../regions/regional.service";
 import { AdDecisionEngine } from "./engine/adDecisionEngine";
 import { AdEventTrackerService } from "./adEventTracker.service";
+import { AdControlsService } from "./adControls.service";
 
 export async function getActiveFeedAdsHandler(req: Request, res: Response): Promise<void> {
   try {
     const { placement } = req.query;
     const location = await resolveUserLocationFromRequest(req);
-    const ads = await getActiveFeedAdsService(placement ? String(placement) : "FEED", location);
+    const userId = (req as any).user?.id || (req.query.userId as string | undefined);
+    const ads = await getActiveFeedAdsService(placement ? String(placement) : "FEED", location, userId);
     res.json({ success: true, count: ads.length, country: location.country, location, ads });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message || "Failed to fetch active feed ads." });
@@ -141,5 +143,32 @@ export async function recordAdEventHandler(req: Request, res: Response): Promise
     res.json({ success: true });
   } catch {
     res.status(200).json({ success: false });
+  }
+}
+
+/**
+ * Public safe ad feature flags for Web and Mobile clients
+ * GET /api/ads/features
+ */
+export async function getPublicAdFeaturesHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const controls = await AdControlsService.getControls();
+    res.json({
+      success: true,
+      features: {
+        petoAdsMarketplace: AdControlsService.isMarketplaceEnabled(controls),
+        googleAdsWeb: Boolean(controls.google_adsense_enabled && controls.web_ads_enabled && controls.external_ads_enabled),
+        googleAdsMobile: Boolean(controls.google_admob_enabled && controls.admob_enabled && controls.external_ads_enabled),
+      },
+    });
+  } catch (err: any) {
+    res.json({
+      success: true,
+      features: {
+        petoAdsMarketplace: false,
+        googleAdsWeb: true,
+        googleAdsMobile: true,
+      },
+    });
   }
 }

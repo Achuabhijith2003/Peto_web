@@ -23,11 +23,13 @@ import { useIdentity } from "../../context/IdentityContext";
 import { useNotifications } from "../../hooks/useNotifications";
 import NotificationPanel from "../social/NotificationPanel";
 import VerifiedBadge from "../common/VerifiedBadge";
+import { useFeature } from "../../hooks/useFeatures";
 
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const { activeIdentity, managedBusinesses, switchIdentity } = useIdentity();
   const { unreadCount } = useNotifications();
+  const isMarketplaceEnabled = useFeature("PETO_ADS_MARKETPLACE");
   const location = useLocation();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -251,14 +253,16 @@ const Navbar = () => {
                           View Business Profile
                         </Link>
 
-                        <Link
-                          to="/advertiser"
-                          className="flex items-center gap-2.5 px-3.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
-                          onClick={() => setDropdownOpen(false)}
-                        >
-                          <Sparkles size={15} className="text-slate-400" />
-                          Advertiser Control Panel
-                        </Link>
+                        {isMarketplaceEnabled && (
+                          <Link
+                            to="/advertiser"
+                            className="flex items-center gap-2.5 px-3.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+                            onClick={() => setDropdownOpen(false)}
+                          >
+                            <Sparkles size={15} className="text-slate-400" />
+                            Advertiser Control Panel
+                          </Link>
+                        )}
 
                         <Link
                           to="/profile"
@@ -316,14 +320,16 @@ const Navbar = () => {
                           Saved Posts
                         </Link>
 
-                        <Link 
-                          to="/advertiser" 
-                          className="flex items-center gap-2.5 px-3.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 transition-colors"
-                          onClick={() => setDropdownOpen(false)}
-                        >
-                          <Sparkles size={15} className="text-amber-500" />
-                          Advertiser Portal
-                        </Link>
+                        {isMarketplaceEnabled && (
+                          <Link 
+                            to="/advertiser" 
+                            className="flex items-center gap-2.5 px-3.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100 transition-colors"
+                            onClick={() => setDropdownOpen(false)}
+                          >
+                            <Sparkles size={15} className="text-amber-500" />
+                            Advertiser Portal
+                          </Link>
+                        )}
                       </>
                     )}
 
