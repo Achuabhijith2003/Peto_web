@@ -138,13 +138,13 @@ const SearchPage: React.FC = () => {
     <div className="min-h-screen bg-slate-50 text-slate-900 pb-20">
       <Navbar />
 
-      <main className="mx-auto max-w-7xl px-4 py-6">
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
+      <main className="mx-auto w-full max-w-7xl xl:max-w-[1440px] 2xl:max-w-[1680px] px-4 sm:px-6 lg:px-8 2xl:px-10 py-6">
+        <div className="grid grid-cols-1 gap-6 xl:gap-8 lg:grid-cols-[260px_1fr] xl:grid-cols-[280px_1fr_340px] 2xl:grid-cols-[300px_1fr_380px]">
           {/* Left Sidebar */}
           <LeftSidebar />
 
           {/* Center Search Workspace */}
-          <section className="space-y-6 lg:col-span-2">
+          <section className="space-y-6">
             {/* Search Input Card */}
             <div className="rounded-3xl bg-white p-6 shadow-sm border border-slate-100">
               <div className="relative flex items-center">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Circle, Loader2, Wifi } from "lucide-react";
+import { Circle, Loader2, Wifi, LogIn } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import api from "../../utils/api";
 import { useAuth } from "../../context/AuthContext";
@@ -14,7 +14,7 @@ export interface OnlineUser {
 }
 
 const OnlineFriends: React.FC = () => {
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, openAuthModal } = useAuth();
   const navigate = useNavigate();
   const [onlineList, setOnlineList] = useState<OnlineUser[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -32,7 +32,10 @@ const OnlineFriends: React.FC = () => {
 
   // Fetch online friends list
   const fetchOnlineFriends = useCallback(async () => {
-    if (!currentUser) return;
+    if (!currentUser) {
+      setLoading(false);
+      return;
+    }
     try {
       const res = await api.get("/presence/online");
       if (res.data?.success) {
@@ -46,7 +49,11 @@ const OnlineFriends: React.FC = () => {
   }, [currentUser]);
 
   useEffect(() => {
-    if (!currentUser) return;
+    if (!currentUser) {
+      setLoading(false);
+      setOnlineList([]);
+      return;
+    }
 
     // Send initial heartbeat and fetch online friends
     sendHeartbeat();
@@ -77,14 +84,31 @@ const OnlineFriends: React.FC = () => {
           <Wifi size={18} className="text-emerald-500" />
           Active Pals
         </h3>
-        {onlineList.length > 0 && (
+        {currentUser && onlineList.length > 0 && (
           <span className="rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-bold text-emerald-800 border border-emerald-200/50">
             {onlineList.length} Online
           </span>
         )}
       </div>
 
-      {loading ? (
+      {!currentUser ? (
+        <div className="rounded-2xl bg-gradient-to-b from-emerald-50/70 to-teal-50/30 border border-emerald-200/60 p-6 text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600 shadow-xs">
+            <Wifi size={22} />
+          </div>
+          <h4 className="text-sm font-bold text-slate-900">First Login Required</h4>
+          <p className="mt-1.5 text-xs text-slate-500 leading-relaxed max-w-xs mx-auto">
+            Please log in to see which pet parents and pals are active online right now.
+          </p>
+          <button
+            onClick={() => openAuthModal("see active pals")}
+            className="mt-4 inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-5 py-2.5 text-xs font-bold text-white shadow-sm hover:from-emerald-600 hover:to-emerald-700 transition cursor-pointer"
+          >
+            <LogIn size={14} />
+            Log In / Sign Up
+          </button>
+        </div>
+      ) : loading ? (
         <div className="flex items-center justify-center py-6 text-slate-400">
           <Loader2 size={20} className="animate-spin text-emerald-500" />
         </div>

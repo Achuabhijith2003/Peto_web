@@ -68,7 +68,10 @@ export const useNotifications = () => {
 
   // Fetch initial notifications via Backend API
   const fetchNotifications = useCallback(async (pageNum = 1) => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const [resNotifs, resUnread, resSettings] = await Promise.all([
@@ -193,7 +196,12 @@ export const useNotifications = () => {
 
   // Polling & Lifecycle (communicates exclusively with Backend Express API)
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      setLoading(false);
+      setNotifications([]);
+      setUnreadCount(0);
+      return;
+    }
 
     fetchNotifications(1);
 

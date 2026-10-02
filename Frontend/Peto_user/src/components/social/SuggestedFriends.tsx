@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { UserPlus, UserCheck, Loader2, Users } from "lucide-react";
+import { UserPlus, UserCheck, Loader2, Users, LogIn } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import api from "../../utils/api";
 import { useAuth } from "../../context/AuthContext";
@@ -24,6 +24,11 @@ const SuggestedFriends: React.FC = () => {
   const [visibleCount, setVisibleCount] = useState<number>(5);
 
   const fetchSuggested = useCallback(async () => {
+    if (!currentUser) {
+      setLoading(false);
+      setSuggestions([]);
+      return;
+    }
     try {
       setLoading(true);
       const res = await api.get("/user/suggested?page=1&limit=20");
@@ -35,7 +40,7 @@ const SuggestedFriends: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentUser]);
 
   useEffect(() => {
     fetchSuggested();
@@ -82,7 +87,24 @@ const SuggestedFriends: React.FC = () => {
         </h3>
       </div>
 
-      {loading ? (
+      {!currentUser ? (
+        <div className="rounded-2xl bg-gradient-to-b from-blue-50/70 to-indigo-50/30 border border-blue-200/60 p-6 text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-blue-600 shadow-xs">
+            <Users size={22} />
+          </div>
+          <h4 className="text-sm font-bold text-slate-900">First Login Required</h4>
+          <p className="mt-1.5 text-xs text-slate-500 leading-relaxed max-w-xs mx-auto">
+            Please log in to discover pet parents, breeds, and suggestions tailored for you.
+          </p>
+          <button
+            onClick={() => openAuthModal("discover suggested pals")}
+            className="mt-4 inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-5 py-2.5 text-xs font-bold text-white shadow-sm hover:from-blue-700 hover:to-blue-800 transition cursor-pointer"
+          >
+            <LogIn size={14} />
+            Log In / Sign Up
+          </button>
+        </div>
+      ) : loading ? (
         <div className="flex items-center justify-center py-6 text-slate-400">
           <Loader2 size={20} className="animate-spin text-amber-500" />
         </div>

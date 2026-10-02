@@ -1003,45 +1003,135 @@ export const AdminVerifications: React.FC = () => {
 
             {/* Modal Bottom Actions */}
             <div className="p-4 bg-slate-50 border-t border-[#e2e8f8] flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setDecisionAction("APPROVE")}
-                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition cursor-pointer flex items-center gap-1.5"
-                >
-                  <CheckCircle2 size={14} /> Approve Verification
-                </button>
-                <button
-                  onClick={() => setDecisionAction("REQUEST_INFORMATION")}
-                  className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-xs transition cursor-pointer flex items-center gap-1.5"
-                >
-                  <HelpCircle size={14} /> Request Information
-                </button>
-                <button
-                  onClick={() => setDecisionAction("REJECT")}
-                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-xs transition cursor-pointer flex items-center gap-1.5"
-                >
-                  <XCircle size={14} /> Reject
-                </button>
+              {/* Left Side: Status / Primary Decisions */}
+              <div className="flex flex-wrap items-center gap-2">
+                {selectedApp.status === "APPROVED" && (
+                  <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-xs font-semibold shadow-xs">
+                    <CheckCircle2 size={16} className="text-emerald-600" />
+                    <span>Status: <strong className="text-emerald-900">Approved & Active</strong></span>
+                  </div>
+                )}
+
+                {(selectedApp.status === "SUBMITTED" ||
+                  selectedApp.status === "UNDER_REVIEW" ||
+                  selectedApp.status === "ADDITIONAL_INFORMATION_REQUIRED" ||
+                  selectedApp.status === "REVERIFICATION_REQUIRED") && (
+                  <>
+                    <button
+                      onClick={() => setDecisionAction("APPROVE")}
+                      className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition cursor-pointer flex items-center gap-1.5"
+                    >
+                      <CheckCircle2 size={14} /> Approve Verification
+                    </button>
+                    <button
+                      onClick={() => setDecisionAction("REQUEST_INFORMATION")}
+                      className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-xs transition cursor-pointer flex items-center gap-1.5"
+                    >
+                      <HelpCircle size={14} /> Request Information
+                    </button>
+                    <button
+                      onClick={() => setDecisionAction("REJECT")}
+                      className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-xs transition cursor-pointer flex items-center gap-1.5"
+                    >
+                      <XCircle size={14} /> Reject
+                    </button>
+                  </>
+                )}
+
+                {selectedApp.status === "SUSPENDED" && (
+                  <>
+                    <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs font-semibold shadow-xs">
+                      <Ban size={15} className="text-red-600" />
+                      <span>Status: <strong className="text-red-900">Suspended</strong></span>
+                    </div>
+                    <button
+                      onClick={() => setDecisionAction("APPROVE")}
+                      className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition cursor-pointer flex items-center gap-1.5"
+                    >
+                      <CheckCircle2 size={14} /> Reactivate (Approve)
+                    </button>
+                  </>
+                )}
+
+                {selectedApp.status === "REJECTED" && (
+                  <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold shadow-xs">
+                    <XCircle size={15} className="text-rose-600" />
+                    <span>Status: <strong className="text-rose-900">Rejected</strong></span>
+                  </div>
+                )}
+
+                {selectedApp.status === "REVOKED" && (
+                  <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-100 border border-slate-300 text-slate-700 text-xs font-semibold shadow-xs">
+                    <Ban size={15} className="text-slate-500" />
+                    <span>Status: <strong className="text-slate-800">Revoked</strong></span>
+                  </div>
+                )}
               </div>
 
-              <div className="flex items-center gap-2">
+              {/* Right Side: Post-Approval Lifecycle or Navigation Actions */}
+              <div className="flex flex-wrap items-center gap-2">
+                {selectedApp.status === "APPROVED" && (
+                  <>
+                    <button
+                      onClick={() => setDecisionAction("REQUIRE_REVERIFICATION")}
+                      className="px-3 py-2 rounded-xl border border-orange-300 text-orange-800 hover:bg-orange-50 font-semibold text-xs transition cursor-pointer flex items-center gap-1.5"
+                    >
+                      <RotateCcw size={13} /> Require Reverification
+                    </button>
+                    <button
+                      onClick={() => setDecisionAction("SUSPEND")}
+                      className="px-3 py-2 rounded-xl border border-red-300 text-red-800 hover:bg-red-50 font-semibold text-xs transition cursor-pointer flex items-center gap-1.5"
+                    >
+                      <Ban size={13} /> Suspend
+                    </button>
+                    <button
+                      onClick={() => setDecisionAction("REVOKE")}
+                      className="px-3 py-2 rounded-xl border border-slate-300 text-slate-800 hover:bg-slate-100 font-semibold text-xs transition cursor-pointer flex items-center gap-1.5"
+                    >
+                      <Ban size={13} /> Revoke
+                    </button>
+                  </>
+                )}
+
+                {selectedApp.status === "REVERIFICATION_REQUIRED" && (
+                  <>
+                    <button
+                      onClick={() => setDecisionAction("SUSPEND")}
+                      className="px-3 py-2 rounded-xl border border-red-300 text-red-800 hover:bg-red-50 font-semibold text-xs transition cursor-pointer flex items-center gap-1.5"
+                    >
+                      <Ban size={13} /> Suspend
+                    </button>
+                    <button
+                      onClick={() => setDecisionAction("REVOKE")}
+                      className="px-3 py-2 rounded-xl border border-slate-300 text-slate-800 hover:bg-slate-100 font-semibold text-xs transition cursor-pointer flex items-center gap-1.5"
+                    >
+                      <Ban size={13} /> Revoke
+                    </button>
+                  </>
+                )}
+
+                {selectedApp.status === "SUSPENDED" && (
+                  <>
+                    <button
+                      onClick={() => setDecisionAction("REQUIRE_REVERIFICATION")}
+                      className="px-3 py-2 rounded-xl border border-orange-300 text-orange-800 hover:bg-orange-50 font-semibold text-xs transition cursor-pointer flex items-center gap-1.5"
+                    >
+                      <RotateCcw size={13} /> Require Reverification
+                    </button>
+                    <button
+                      onClick={() => setDecisionAction("REVOKE")}
+                      className="px-3 py-2 rounded-xl border border-slate-300 text-slate-800 hover:bg-slate-100 font-semibold text-xs transition cursor-pointer flex items-center gap-1.5"
+                    >
+                      <Ban size={13} /> Revoke
+                    </button>
+                  </>
+                )}
+
                 <button
-                  onClick={() => setDecisionAction("REQUIRE_REVERIFICATION")}
-                  className="px-3 py-2 rounded-xl border border-orange-300 text-orange-800 hover:bg-orange-50 font-semibold text-xs transition cursor-pointer flex items-center gap-1.5"
+                  onClick={() => setSelectedApp(null)}
+                  className="px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 font-semibold text-xs transition cursor-pointer"
                 >
-                  <RotateCcw size={13} /> Require Reverification
-                </button>
-                <button
-                  onClick={() => setDecisionAction("SUSPEND")}
-                  className="px-3 py-2 rounded-xl border border-red-300 text-red-800 hover:bg-red-50 font-semibold text-xs transition cursor-pointer flex items-center gap-1.5"
-                >
-                  <Ban size={13} /> Suspend
-                </button>
-                <button
-                  onClick={() => setDecisionAction("REVOKE")}
-                  className="px-3 py-2 rounded-xl border border-slate-300 text-slate-800 hover:bg-slate-100 font-semibold text-xs transition cursor-pointer flex items-center gap-1.5"
-                >
-                  <Ban size={13} /> Revoke
+                  Close
                 </button>
               </div>
             </div>

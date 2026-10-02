@@ -1,9 +1,11 @@
 import React, { useState } from "react";
-import { Bell, Settings, CheckCheck, Trash2, Heart, MessageSquare, UserPlus, AtSign, Loader2 } from "lucide-react";
+import { Bell, Settings, CheckCheck, Trash2, Heart, MessageSquare, UserPlus, AtSign, Loader2, LogIn } from "lucide-react";
 import { useNotifications, type NotificationItem } from "../../hooks/useNotifications";
+import { useAuth } from "../../context/AuthContext";
 import NotificationSettingsModal from "./NotificationSettingsModal";
 
 const NotificationPanel: React.FC = () => {
+  const { user, openAuthModal } = useAuth();
   const {
     notifications,
     unreadCount,
@@ -78,7 +80,7 @@ const NotificationPanel: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          {unreadCount > 0 && (
+          {user && unreadCount > 0 && (
             <button
               onClick={markAllAsRead}
               title="Mark all as read"
@@ -89,18 +91,37 @@ const NotificationPanel: React.FC = () => {
             </button>
           )}
 
-          <button
-            onClick={() => setIsSettingsOpen(true)}
-            title="Notification Settings"
-            className="rounded-xl p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
-          >
-            <Settings size={18} />
-          </button>
+          {user ? (
+            <button
+              onClick={() => setIsSettingsOpen(true)}
+              title="Notification Settings"
+              className="rounded-xl p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+            >
+              <Settings size={18} />
+            </button>
+          ) : null}
         </div>
       </div>
 
       {/* Notifications Body */}
-      {loading && notifications.length === 0 ? (
+      {!user ? (
+        <div className="rounded-2xl bg-gradient-to-b from-amber-50/70 to-orange-50/30 border border-amber-200/60 p-6 text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 shadow-xs">
+            <Bell size={22} />
+          </div>
+          <h4 className="text-sm font-bold text-slate-900">First Login Required</h4>
+          <p className="mt-1.5 text-xs text-slate-500 leading-relaxed max-w-xs mx-auto">
+            Please log in to view your notifications, activity alerts, and updates from your pet pals.
+          </p>
+          <button
+            onClick={() => openAuthModal("view notifications")}
+            className="mt-4 inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-2.5 text-xs font-bold text-white shadow-sm hover:from-amber-600 hover:to-amber-700 transition cursor-pointer"
+          >
+            <LogIn size={14} />
+            Log In / Sign Up
+          </button>
+        </div>
+      ) : loading && notifications.length === 0 ? (
         <div className="flex items-center justify-center py-8 text-slate-400">
           <Loader2 size={24} className="animate-spin text-amber-500" />
         </div>

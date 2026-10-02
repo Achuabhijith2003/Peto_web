@@ -90,7 +90,7 @@ const SearchDropdown: React.FC = () => {
           onKeyDown={handleKeyDown}
           onFocus={() => query.trim() && setIsOpen(true)}
           placeholder="Search Peto..."
-          className="ml-2 bg-transparent text-slate-800 outline-none placeholder:text-slate-400 w-44 focus:w-60 transition-all duration-300"
+          className="ml-2 bg-transparent text-slate-800 outline-none placeholder:text-slate-400 w-44 xl:w-52 2xl:w-64 focus:w-64 2xl:focus:w-80 transition-all duration-300"
         />
         {loading && <Loader2 size={16} className="animate-spin text-amber-500 ml-1" />}
       </div>

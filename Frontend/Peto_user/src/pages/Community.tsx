@@ -129,7 +129,7 @@ const Community = () => {
     <div className="min-h-screen bg-slate-50 text-slate-800 pb-20 md:pb-10 font-sans">
       <Navbar />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+      <main className="w-full max-w-7xl xl:max-w-[1440px] 2xl:max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 2xl:px-10 pt-6">
         {/* Top Header & Search Bar Banner */}
         <div className="relative mb-6 overflow-hidden rounded-xl bg-slate-900 border border-slate-950 p-5 sm:p-8 text-white shadow-micro">
           <div className="relative z-10 max-w-3xl space-y-3">

@@ -19,7 +19,7 @@ const Social = () => {
 
       {!user && (
         <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white py-3 px-4 shadow-sm border-b border-amber-400/30">
-          <div className="mx-auto max-w-7xl flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+          <div className="mx-auto w-full max-w-7xl xl:max-w-[1440px] 2xl:max-w-[1680px] flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left px-4 sm:px-6 lg:px-8 2xl:px-10">
             <div className="flex items-center gap-2 text-xs sm:text-sm font-medium">
               <PawPrint size={18} className="shrink-0 animate-bounce" />
               <span>
