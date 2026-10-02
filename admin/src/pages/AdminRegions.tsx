@@ -7,9 +7,25 @@ import {
   Sliders,
   CreditCard,
   Megaphone,
+  Search,
+  X,
 } from "lucide-react";
 import { fetchAdminRegions, updateAdminRegion } from "../api/adminApi";
 import { useAdminAuth } from "../context/AdminAuthContext";
+import { PageHeader } from "../components/layout/PageHeader";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 export const AdminRegions: React.FC = () => {
   const { hasPermission } = useAdminAuth();
@@ -101,51 +117,51 @@ export const AdminRegions: React.FC = () => {
   );
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Regional Control Center</h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
-              Global Compliance
-            </span>
-          </div>
-          <p className="text-sm text-slate-500 mt-1">
-            Configure country-specific monetization rules, advertising availability, and payment gateway routing.
-          </p>
-        </div>
-
-        <button
-          onClick={loadRegions}
-          disabled={loading}
-          className="inline-flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 text-sm font-medium rounded-xl border border-slate-200 shadow-sm transition"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-indigo-600" : ""}`} />
-          Refresh
-        </button>
-      </div>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <PageHeader
+        title="Regional Control Center"
+        description="Configure country-specific monetization rules, advertising availability, and payment gateway routing."
+        badge={
+          <Badge variant="outline" className="border-primary/30 text-primary bg-primary/10">
+            Global Compliance
+          </Badge>
+        }
+        actions={
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadRegions}
+            disabled={loading}
+            className="gap-2"
+          >
+            <RefreshCw className={cn("size-3.5", loading && "animate-spin text-primary")} />
+            <span>Refresh</span>
+          </Button>
+        }
+      />
 
       {/* Feedback Alert */}
       {feedback && (
         <div
-          className={`p-4 rounded-2xl flex items-center justify-between border ${
+          className={cn(
+            "p-3.5 rounded-xl flex items-center justify-between border text-xs font-medium animate-in fade-in duration-200",
             feedback.type === "success"
-              ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-              : "bg-rose-50 text-rose-800 border-rose-200"
-          }`}
+              ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20"
+              : "bg-destructive/10 text-destructive border-destructive/20"
+          )}
         >
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             {feedback.type === "success" ? (
-              <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+              <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
             ) : (
-              <AlertTriangle className="w-5 h-5 text-rose-600" />
+              <AlertTriangle className="size-4 text-destructive shrink-0" />
             )}
-            <span className="text-sm font-medium">{feedback.message}</span>
+            <span>{feedback.message}</span>
           </div>
           <button
             onClick={() => setFeedback(null)}
-            className="text-xs font-semibold hover:opacity-75 uppercase tracking-wider"
+            className="text-[10px] font-bold uppercase tracking-wider opacity-70 hover:opacity-100 transition-opacity ml-3"
           >
             Dismiss
           </button>
@@ -153,163 +169,192 @@ export const AdminRegions: React.FC = () => {
       )}
 
       {/* Search and Filters */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
-        <input
-          type="text"
-          placeholder="Search country or currency (e.g. India, US, EUR)..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full max-w-sm px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
-        />
-        <span className="text-xs text-slate-400 font-medium">
-          {filtered.length} regions configured
-        </span>
-      </div>
+      <Card className="rounded-2xl border-border bg-card">
+        <CardContent className="p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="relative w-full max-w-sm">
+            <Search className="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search country or currency (e.g. India, US, EUR)..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8 pr-3 h-8 text-xs bg-background border-border"
+            />
+          </div>
+          <span className="text-xs text-muted-foreground font-mono self-end sm:self-center">
+            {filtered.length} regions configured
+          </span>
+        </CardContent>
+      </Card>
 
       {/* Regions Grid / Table */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+      <Card className="rounded-2xl border-border bg-card overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-slate-600">
-            <thead className="bg-slate-50 text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-200">
-              <tr>
-                <th className="px-5 py-3.5">Region / Country</th>
-                <th className="px-5 py-3.5">Ads Enabled</th>
-                <th className="px-5 py-3.5">Payments</th>
-                <th className="px-5 py-3.5">Advertiser Reg</th>
-                <th className="px-5 py-3.5">Default Currency</th>
-                <th className="px-5 py-3.5">Primary Gateway</th>
-                <th className="px-5 py-3.5 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filtered.map((region) => (
-                <tr key={region.code} className="hover:bg-slate-50/50 transition">
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center font-mono font-bold text-xs text-slate-700 border border-slate-200">
-                        {region.code}
+          <Table>
+            <TableHeader>
+              <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+                <TableHead className="text-xs font-semibold">Region / Country</TableHead>
+                <TableHead className="text-xs font-semibold">Ads Enabled</TableHead>
+                <TableHead className="text-xs font-semibold">Payments</TableHead>
+                <TableHead className="text-xs font-semibold">Advertiser Reg</TableHead>
+                <TableHead className="text-xs font-semibold">Default Currency</TableHead>
+                <TableHead className="text-xs font-semibold">Primary Gateway</TableHead>
+                <TableHead className="text-xs font-semibold text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading && regions.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-44 text-center text-muted-foreground">
+                    <RefreshCw className="size-6 animate-spin mx-auto text-primary mb-2" />
+                    <span className="text-xs">Loading regional parameters...</span>
+                  </TableCell>
+                </TableRow>
+              ) : filtered.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-44 text-center text-muted-foreground">
+                    <Globe className="size-8 mx-auto text-muted-foreground/40 mb-2" />
+                    <span className="text-xs font-medium">No regions match your search criteria.</span>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filtered.map((region) => (
+                  <TableRow key={region.code} className="hover:bg-muted/40 transition-colors border-b border-border/60">
+                    <TableCell className="py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="size-8 rounded-lg bg-muted flex items-center justify-center font-mono font-bold text-xs text-foreground border border-border">
+                          {region.code}
+                        </div>
+                        <div>
+                          <div className="font-semibold text-foreground text-xs">{region.name}</div>
+                          <div className="text-[10px] text-muted-foreground font-mono">{region.continent || "GLOBAL"}</div>
+                        </div>
                       </div>
-                      <div>
-                        <div className="font-semibold text-slate-900 text-sm">{region.name}</div>
-                        <div className="text-[11px] text-slate-400">{region.continent || "GLOBAL"}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-5 py-4">
-                    <button
-                      onClick={() => handleToggle(region.code, "ads_enabled", region.ads_enabled)}
-                      disabled={!canManage}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition ${
-                        region.ads_enabled
-                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
-                          : "bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200"
-                      }`}
-                    >
-                      <Megaphone className="w-3 h-3" />
-                      {region.ads_enabled ? "ON" : "OFF"}
-                    </button>
-                  </td>
-                  <td className="px-5 py-4">
-                    <button
-                      onClick={() => handleToggle(region.code, "payments_enabled", region.payments_enabled)}
-                      disabled={!canManage}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition ${
-                        region.payments_enabled
-                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
-                          : "bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200"
-                      }`}
-                    >
-                      <CreditCard className="w-3 h-3" />
-                      {region.payments_enabled ? "ON" : "OFF"}
-                    </button>
-                  </td>
-                  <td className="px-5 py-4">
-                    <button
-                      onClick={() =>
-                        handleToggle(
-                          region.code,
-                          "advertiser_registration_enabled",
-                          region.advertiser_registration_enabled
-                        )
-                      }
-                      disabled={!canManage}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold transition ${
-                        region.advertiser_registration_enabled
-                          ? "bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100"
-                          : "bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200"
-                      }`}
-                    >
-                      {region.advertiser_registration_enabled ? "ALLOWED" : "RESTRICTED"}
-                    </button>
-                  </td>
-                  <td className="px-5 py-4 font-mono text-xs font-bold text-slate-800">
-                    {region.default_currency || "USD"}
-                  </td>
-                  <td className="px-5 py-4">
-                    <span
-                      className={`px-2 py-0.5 rounded text-[11px] font-bold uppercase ${
-                        region.default_payment_provider === "RAZORPAY"
-                          ? "bg-blue-50 text-blue-700 border border-blue-200"
-                          : "bg-indigo-50 text-indigo-700 border border-indigo-200"
-                      }`}
-                    >
-                      {region.default_payment_provider || "STRIPE"}
-                    </span>
-                  </td>
-                  <td className="px-5 py-4 text-right">
-                    {canManage && (
+                    </TableCell>
+                    <TableCell className="py-3">
                       <button
-                        onClick={() => setSelectedRegion({ ...region })}
-                        className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition"
-                        title="Configure Region Details"
+                        onClick={() => handleToggle(region.code, "ads_enabled", region.ads_enabled)}
+                        disabled={!canManage}
+                        className={cn(
+                          "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold transition-colors",
+                          region.ads_enabled
+                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500/20"
+                            : "bg-muted text-muted-foreground border border-border hover:bg-muted/80"
+                        )}
                       >
-                        <Sliders className="w-4 h-4" />
+                        <Megaphone className="size-3" />
+                        <span>{region.ads_enabled ? "ON" : "OFF"}</span>
                       </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    </TableCell>
+                    <TableCell className="py-3">
+                      <button
+                        onClick={() => handleToggle(region.code, "payments_enabled", region.payments_enabled)}
+                        disabled={!canManage}
+                        className={cn(
+                          "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold transition-colors",
+                          region.payments_enabled
+                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 hover:bg-emerald-500/20"
+                            : "bg-muted text-muted-foreground border border-border hover:bg-muted/80"
+                        )}
+                      >
+                        <CreditCard className="size-3" />
+                        <span>{region.payments_enabled ? "ON" : "OFF"}</span>
+                      </button>
+                    </TableCell>
+                    <TableCell className="py-3">
+                      <button
+                        onClick={() =>
+                          handleToggle(
+                            region.code,
+                            "advertiser_registration_enabled",
+                            region.advertiser_registration_enabled
+                          )
+                        }
+                        disabled={!canManage}
+                        className={cn(
+                          "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold transition-colors",
+                          region.advertiser_registration_enabled
+                            ? "bg-primary/10 text-primary border border-primary/25 hover:bg-primary/20"
+                            : "bg-muted text-muted-foreground border border-border hover:bg-muted/80"
+                        )}
+                      >
+                        <span>{region.advertiser_registration_enabled ? "ALLOWED" : "RESTRICTED"}</span>
+                      </button>
+                    </TableCell>
+                    <TableCell className="py-3 font-mono text-xs font-bold text-foreground">
+                      {region.default_currency || "USD"}
+                    </TableCell>
+                    <TableCell className="py-3">
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "text-[10px] font-mono font-bold uppercase",
+                          region.default_payment_provider === "RAZORPAY"
+                            ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/25"
+                            : "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/25"
+                        )}
+                      >
+                        {region.default_payment_provider || "STRIPE"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="py-3 text-right">
+                      {canManage && (
+                        <Button
+                          variant="ghost"
+                          size="icon-xs"
+                          onClick={() => setSelectedRegion({ ...region })}
+                          title="Configure Region Details"
+                        >
+                          <Sliders className="size-3.5 text-muted-foreground" />
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
         </div>
-      </div>
+      </Card>
 
       {/* Edit Region Modal */}
       {selectedRegion && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl border border-slate-100 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2 text-slate-900 font-bold">
-                <Globe className="w-5 h-5 text-indigo-600" />
-                Configure {selectedRegion.name} ({selectedRegion.code})
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <Card className="rounded-3xl p-6 max-w-lg w-full shadow-2xl border-border bg-card space-y-4">
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <div className="flex items-center gap-2 text-foreground font-bold text-sm">
+                <Globe className="size-4 text-primary" />
+                <span>Configure {selectedRegion.name} ({selectedRegion.code})</span>
               </div>
-              <button
+              <Button
+                variant="ghost"
+                size="icon-xs"
                 onClick={() => setSelectedRegion(null)}
-                className="text-slate-400 hover:text-slate-600 p-1"
+                aria-label="Close"
               >
-                ✕
-              </button>
+                <X className="size-4 text-muted-foreground" />
+              </Button>
             </div>
 
             <form onSubmit={handleSaveModal} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-foreground">
                     Default Currency
                   </label>
-                  <input
+                  <Input
                     type="text"
                     value={selectedRegion.default_currency}
                     onChange={(e) =>
                       setSelectedRegion({ ...selectedRegion, default_currency: e.target.value.toUpperCase() })
                     }
-                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm font-semibold uppercase"
+                    className="font-mono text-sm uppercase"
                     required
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-foreground">
                     Default Payment Gateway
                   </label>
                   <select
@@ -317,7 +362,7 @@ export const AdminRegions: React.FC = () => {
                     onChange={(e) =>
                       setSelectedRegion({ ...selectedRegion, default_payment_provider: e.target.value })
                     }
-                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 text-sm font-semibold"
+                    className="h-8 w-full px-2.5 bg-background border border-border text-foreground text-xs font-medium rounded-xl focus:outline-none focus:ring-2 focus:ring-ring/30"
                   >
                     <option value="STRIPE">Stripe</option>
                     <option value="RAZORPAY">Razorpay</option>
@@ -325,32 +370,32 @@ export const AdminRegions: React.FC = () => {
                 </div>
               </div>
 
-              <div className="space-y-2 pt-2 border-t border-slate-100">
-                <label className="flex items-center gap-2 text-xs font-semibold text-slate-800">
+              <div className="space-y-2.5 pt-2 border-t border-border">
+                <label className="flex items-center gap-2.5 text-xs font-medium text-foreground cursor-pointer">
                   <input
                     type="checkbox"
                     checked={selectedRegion.ads_enabled}
                     onChange={(e) =>
                       setSelectedRegion({ ...selectedRegion, ads_enabled: e.target.checked })
                     }
-                    className="rounded border-slate-300 text-indigo-600"
+                    className="rounded border-border text-primary accent-primary"
                   />
-                  Enable Advertising Marketplace in this Region
+                  <span>Enable Advertising Marketplace in this Region</span>
                 </label>
 
-                <label className="flex items-center gap-2 text-xs font-semibold text-slate-800">
+                <label className="flex items-center gap-2.5 text-xs font-medium text-foreground cursor-pointer">
                   <input
                     type="checkbox"
                     checked={selectedRegion.payments_enabled}
                     onChange={(e) =>
                       setSelectedRegion({ ...selectedRegion, payments_enabled: e.target.checked })
                     }
-                    className="rounded border-slate-300 text-indigo-600"
+                    className="rounded border-border text-primary accent-primary"
                   />
-                  Enable Payment Gateways & Budget Top-ups in this Region
+                  <span>Enable Payment Gateways & Budget Top-ups in this Region</span>
                 </label>
 
-                <label className="flex items-center gap-2 text-xs font-semibold text-slate-800">
+                <label className="flex items-center gap-2.5 text-xs font-medium text-foreground cursor-pointer">
                   <input
                     type="checkbox"
                     checked={selectedRegion.advertiser_registration_enabled}
@@ -360,32 +405,36 @@ export const AdminRegions: React.FC = () => {
                         advertiser_registration_enabled: e.target.checked,
                       })
                     }
-                    className="rounded border-slate-300 text-indigo-600"
+                    className="rounded border-border text-primary accent-primary"
                   />
-                  Allow Users in this Region to Register as Advertisers
+                  <span>Allow Users in this Region to Register as Advertisers</span>
                 </label>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3">
-                <button
+              <div className="flex items-center justify-end gap-2.5 pt-3">
+                <Button
                   type="button"
+                  variant="outline"
+                  size="sm"
                   onClick={() => setSelectedRegion(null)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
+                  variant="default"
+                  size="sm"
                   disabled={saving}
-                  className="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition shadow-sm disabled:opacity-50"
                 >
                   {saving ? "Saving Changes..." : "Save Regional Rules"}
-                </button>
+                </Button>
               </div>
             </form>
-          </div>
+          </Card>
         </div>
       )}
     </div>
   );
 };
+
+export default AdminRegions;

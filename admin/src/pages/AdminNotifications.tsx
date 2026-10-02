@@ -160,8 +160,8 @@ export const AdminNotifications: React.FC = () => {
     switch (priority) {
       case "CRITICAL":
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#ffdad6] text-[#ba1a1a] border border-[#ffb4ab] animate-pulse">
-            <AlertTriangle className="w-3 h-3 mr-1 text-[#ba1a1a]" />
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-destructive/10 text-destructive border border-[#ffb4ab] animate-pulse">
+            <AlertTriangle className="w-3 h-3 mr-1 text-destructive" />
             CRITICAL
           </span>
         );
@@ -179,7 +179,7 @@ export const AdminNotifications: React.FC = () => {
         );
       case "LOW":
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#f0f3ff] text-[#534434] border border-[#dae2f3]">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-muted/40 text-muted-foreground border border-border">
             LOW
           </span>
         );
@@ -205,7 +205,7 @@ export const AdminNotifications: React.FC = () => {
               <Bell className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-[#151c27] font-heading flex items-center">
+              <h1 className="text-xl font-bold tracking-tight text-foreground font-heading flex items-center">
                 Admin Notification Center
                 {unreadCount > 0 && (
                   <span className="ml-2.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#fff3d6] text-[#855300] border border-[#fbd988]">
@@ -213,7 +213,7 @@ export const AdminNotifications: React.FC = () => {
                   </span>
                 )}
               </h1>
-              <p className="text-xs text-[#534434] mt-0.5">
+              <p className="text-xs text-muted-foreground mt-0.5">
                 Real-time operational alerts, high-priority moderation, and infrastructure warnings
               </p>
             </div>
@@ -224,17 +224,17 @@ export const AdminNotifications: React.FC = () => {
           <button
             onClick={() => loadNotifications(pagination.page)}
             disabled={loading}
-            className="px-3.5 py-2 rounded-xl bg-white hover:bg-[#f0f3ff] text-[#151c27] text-xs font-semibold border border-[#e2e8f8] shadow-xs transition-colors flex items-center space-x-1.5 cursor-pointer"
+            className="px-3.5 py-2 rounded-xl bg-card hover:bg-muted/40 text-foreground text-xs font-semibold border border-border shadow-xs transition-colors flex items-center space-x-1.5 cursor-pointer"
             title="Refresh alerts"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-[#0058be]" : ""}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin text-primary" : ""}`} />
             <span>Refresh</span>
           </button>
 
           <button
             onClick={handleMarkAllRead}
             disabled={markingAll || unreadCount === 0}
-            className="px-4 py-2 rounded-xl bg-[#0058be] hover:bg-[#2170e4] disabled:opacity-50 text-white text-xs font-semibold shadow-sm transition-all flex items-center space-x-1.5 cursor-pointer"
+            className="px-4 py-2 rounded-xl bg-primary hover:bg-[#2170e4] disabled:opacity-50 text-white text-xs font-semibold shadow-sm transition-all flex items-center space-x-1.5 cursor-pointer"
           >
             <CheckCheck className="w-4 h-4" />
             <span>Mark All as Read</span>
@@ -244,60 +244,60 @@ export const AdminNotifications: React.FC = () => {
 
       {/* KPI Overview Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1 flex items-center space-x-3.5">
-          <div className="w-11 h-11 rounded-xl bg-[#e7eefe] border border-[#bed7fc] flex items-center justify-center text-[#0058be]">
+        <div className="p-4 rounded-2xl bg-card border border-border shadow-xs flex items-center space-x-3.5">
+          <div className="w-11 h-11 rounded-xl bg-[#e7eefe] border border-primary/40 flex items-center justify-center text-primary">
             <Bell className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-2xl font-bold text-[#151c27] font-heading tracking-tight">{pagination.totalCount}</div>
-            <div className="text-xs text-[#534434] font-medium">Total Alerts Tracked</div>
+            <div className="text-2xl font-bold text-foreground font-heading tracking-tight">{pagination.totalCount}</div>
+            <div className="text-xs text-muted-foreground font-medium">Total Alerts Tracked</div>
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1 flex items-center space-x-3.5">
+        <div className="p-4 rounded-2xl bg-card border border-border shadow-xs flex items-center space-x-3.5">
           <div className="w-11 h-11 rounded-xl bg-[#fff3d6] border border-[#fbd988] flex items-center justify-center text-[#855300]">
             <Eye className="w-5 h-5" />
           </div>
           <div>
             <div className="text-2xl font-bold text-[#855300] font-heading tracking-tight">{unreadCount}</div>
-            <div className="text-xs text-[#534434] font-medium">Awaiting Action (Unread)</div>
+            <div className="text-xs text-muted-foreground font-medium">Awaiting Action (Unread)</div>
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1 flex items-center space-x-3.5">
-          <div className="w-11 h-11 rounded-xl bg-[#ffdad6] border border-[#ffb4ab] flex items-center justify-center text-[#ba1a1a]">
+        <div className="p-4 rounded-2xl bg-card border border-border shadow-xs flex items-center space-x-3.5">
+          <div className="w-11 h-11 rounded-xl bg-destructive/10 border border-[#ffb4ab] flex items-center justify-center text-destructive">
             <AlertTriangle className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-2xl font-bold text-[#ba1a1a] font-heading tracking-tight">{criticalCount}</div>
-            <div className="text-xs text-[#534434] font-medium">Critical Priority Alerts</div>
+            <div className="text-2xl font-bold text-destructive font-heading tracking-tight">{criticalCount}</div>
+            <div className="text-xs text-muted-foreground font-medium">Critical Priority Alerts</div>
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1 flex items-center space-x-3.5">
-          <div className="w-11 h-11 rounded-xl bg-[#e8f7f0] border border-[#a3e5c7] flex items-center justify-center text-[#006c49]">
+        <div className="p-4 rounded-2xl bg-card border border-border shadow-xs flex items-center space-x-3.5">
+          <div className="w-11 h-11 rounded-xl bg-[#e8f7f0] border border-[#a3e5c7] flex items-center justify-center text-emerald-600 dark:text-emerald-400">
             <Check className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-2xl font-bold text-[#006c49] font-heading tracking-tight">
+            <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 font-heading tracking-tight">
               {Math.max(0, pagination.totalCount - unreadCount)}
             </div>
-            <div className="text-xs text-[#534434] font-medium">Resolved / Acknowledged</div>
+            <div className="text-xs text-muted-foreground font-medium">Resolved / Acknowledged</div>
           </div>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="p-4 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1 space-y-3.5">
+      <div className="p-4 rounded-2xl bg-card border border-border shadow-xs space-y-3.5">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           {/* Status Tabs */}
-          <div className="flex items-center space-x-1.5 p-1 bg-[#f0f3ff] rounded-xl border border-[#e2e8f8] text-xs font-medium w-fit">
+          <div className="flex items-center space-x-1.5 p-1 bg-muted/40 rounded-xl border border-border text-xs font-medium w-fit">
             <button
               onClick={() => setStatusFilter("all")}
               className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
                 statusFilter === "all"
-                  ? "bg-white text-[#0058be] font-semibold shadow-xs border border-[#bed7fc]"
-                  : "text-[#534434] hover:text-[#151c27]"
+                  ? "bg-card text-primary font-semibold shadow-xs border border-primary/40"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               All Alerts
@@ -306,8 +306,8 @@ export const AdminNotifications: React.FC = () => {
               onClick={() => setStatusFilter("unread")}
               className={`px-3 py-1.5 rounded-lg transition-colors flex items-center space-x-1 cursor-pointer ${
                 statusFilter === "unread"
-                  ? "bg-white text-[#0058be] font-semibold shadow-xs border border-[#bed7fc]"
-                  : "text-[#534434] hover:text-[#151c27]"
+                  ? "bg-card text-primary font-semibold shadow-xs border border-primary/40"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <span>Unread</span>
@@ -319,8 +319,8 @@ export const AdminNotifications: React.FC = () => {
               onClick={() => setStatusFilter("read")}
               className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
                 statusFilter === "read"
-                  ? "bg-white text-[#0058be] font-semibold shadow-xs border border-[#bed7fc]"
-                  : "text-[#534434] hover:text-[#151c27]"
+                  ? "bg-card text-primary font-semibold shadow-xs border border-primary/40"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               Read
@@ -329,20 +329,20 @@ export const AdminNotifications: React.FC = () => {
 
           {/* Search Input */}
           <div className="relative flex-1 max-w-md">
-            <Search className="w-4 h-4 text-[#534434] absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search notifications by title or message..."
-              className="w-full pl-9 pr-4 py-2 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] placeholder-[#534434]/60 focus:outline-none focus:bg-white focus:border-[#0058be] transition-colors"
+              className="w-full pl-9 pr-4 py-2 rounded-xl bg-muted/40 border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:bg-card focus:border-primary transition-colors"
             />
           </div>
         </div>
 
         {/* Dimension Selectors */}
-        <div className="flex flex-wrap items-center gap-2.5 pt-2 border-t border-[#e2e8f8] text-xs">
-          <div className="flex items-center space-x-1 text-[#534434] font-medium mr-1">
+        <div className="flex flex-wrap items-center gap-2.5 pt-2 border-t border-border text-xs">
+          <div className="flex items-center space-x-1 text-muted-foreground font-medium mr-1">
             <Filter className="w-3.5 h-3.5" />
             <span>Filters:</span>
           </div>
@@ -351,7 +351,7 @@ export const AdminNotifications: React.FC = () => {
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="px-2.5 py-1.5 rounded-lg bg-[#f0f3ff] border border-[#dae2f3] text-[#151c27] text-xs focus:outline-none focus:bg-white focus:border-[#0058be]"
+            className="px-2.5 py-1.5 rounded-lg bg-muted/40 border border-border text-foreground text-xs focus:outline-none focus:bg-card focus:border-primary"
           >
             <option value="ALL">All Categories</option>
             <option value="HIGH_PRIORITY_REPORT">High-Priority Reports</option>
@@ -368,7 +368,7 @@ export const AdminNotifications: React.FC = () => {
           <select
             value={priorityFilter}
             onChange={(e) => setPriorityFilter(e.target.value)}
-            className="px-2.5 py-1.5 rounded-lg bg-[#f0f3ff] border border-[#dae2f3] text-[#151c27] text-xs focus:outline-none focus:bg-white focus:border-[#0058be]"
+            className="px-2.5 py-1.5 rounded-lg bg-muted/40 border border-border text-foreground text-xs focus:outline-none focus:bg-card focus:border-primary"
           >
             <option value="ALL">All Priorities</option>
             <option value="CRITICAL">Critical</option>
@@ -384,7 +384,7 @@ export const AdminNotifications: React.FC = () => {
                 setPriorityFilter("ALL");
                 setSearchQuery("");
               }}
-              className="text-xs text-[#0058be] hover:text-[#2170e4] font-semibold ml-auto transition-colors cursor-pointer"
+              className="text-xs text-primary hover:text-[#2170e4] font-semibold ml-auto transition-colors cursor-pointer"
             >
               Reset Filters
             </button>
@@ -395,15 +395,15 @@ export const AdminNotifications: React.FC = () => {
       {/* Notifications List */}
       <div className="space-y-2.5">
         {loading && notifications.length === 0 ? (
-          <div className="py-16 text-center text-[#534434] text-xs">
-            <RefreshCw className="w-8 h-8 mx-auto mb-3 animate-spin text-[#0058be]" />
-            <p className="font-semibold text-[#151c27] font-heading">Loading notifications...</p>
+          <div className="py-16 text-center text-muted-foreground text-xs">
+            <RefreshCw className="w-8 h-8 mx-auto mb-3 animate-spin text-primary" />
+            <p className="font-semibold text-foreground font-heading">Loading notifications...</p>
           </div>
         ) : notifications.length === 0 ? (
-          <div className="p-12 text-center rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1 text-[#534434]">
-            <Bell className="w-12 h-12 mx-auto mb-3 text-[#534434]/40" />
-            <p className="text-sm font-semibold text-[#151c27] font-heading">No alerts match your criteria</p>
-            <p className="text-xs text-[#534434] mt-1 max-w-sm mx-auto">
+          <div className="p-12 text-center rounded-2xl bg-card border border-border shadow-xs text-muted-foreground">
+            <Bell className="w-12 h-12 mx-auto mb-3 text-muted-foreground/40" />
+            <p className="text-sm font-semibold text-foreground font-heading">No alerts match your criteria</p>
+            <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
               Everything is running smoothly or no notifications match the selected category and priority filters.
             </p>
           </div>
@@ -415,8 +415,8 @@ export const AdminNotifications: React.FC = () => {
                 key={n.id}
                 className={`p-4 rounded-2xl border transition-all ${
                   !n.is_read
-                    ? "bg-white border-[#bed7fc] shadow-level-2"
-                    : "bg-white border-[#e2e8f8] shadow-level-1 hover:border-[#dae2f3]"
+                    ? "bg-card border-primary/40 shadow-sm"
+                    : "bg-card border-border shadow-xs hover:border-border"
                 }`}
               >
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
@@ -425,10 +425,10 @@ export const AdminNotifications: React.FC = () => {
                     <div
                       className={`w-10 h-10 rounded-xl shrink-0 flex items-center justify-center border ${
                         n.priority === "CRITICAL"
-                          ? "bg-[#ffdad6] border-[#ffb4ab] text-[#ba1a1a]"
+                          ? "bg-destructive/10 border-[#ffb4ab] text-destructive"
                           : n.priority === "HIGH"
                           ? "bg-[#fff3d6] border-[#fbd988] text-[#855300]"
-                          : "bg-[#f0f3ff] border-[#dae2f3] text-[#0058be]"
+                          : "bg-muted/40 border-border text-primary"
                       }`}
                     >
                       {getCategoryIcon(n.category)}
@@ -439,7 +439,7 @@ export const AdminNotifications: React.FC = () => {
                       <div className="flex flex-wrap items-center gap-2 mb-1">
                         <span
                           className={`text-sm truncate ${
-                            !n.is_read ? "text-[#151c27] font-bold font-heading" : "text-[#151c27] font-medium"
+                            !n.is_read ? "text-foreground font-bold font-heading" : "text-foreground font-medium"
                           }`}
                         >
                           {n.title}
@@ -447,7 +447,7 @@ export const AdminNotifications: React.FC = () => {
 
                         {renderPriorityBadge(n.priority)}
 
-                        <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded-full bg-[#f0f3ff] text-[#534434] border border-[#dae2f3]">
+                        <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded-full bg-muted/40 text-muted-foreground border border-border">
                           {n.category.replaceAll("_", " ")}
                         </span>
 
@@ -458,7 +458,7 @@ export const AdminNotifications: React.FC = () => {
                         )}
                       </div>
 
-                      <p className="text-xs text-[#534434] leading-relaxed max-w-3xl">
+                      <p className="text-xs text-muted-foreground leading-relaxed max-w-3xl">
                         {n.message}
                       </p>
 
@@ -467,14 +467,14 @@ export const AdminNotifications: React.FC = () => {
                         <div className="mt-2.5">
                           <button
                             onClick={() => setExpandedId(isExpanded ? null : n.id)}
-                            className="text-[11px] text-[#0058be] hover:text-[#2170e4] flex items-center space-x-1 font-semibold transition-colors cursor-pointer"
+                            className="text-[11px] text-primary hover:text-[#2170e4] flex items-center space-x-1 font-semibold transition-colors cursor-pointer"
                           >
                             <Info className="w-3 h-3" />
                             <span>{isExpanded ? "Hide Metadata" : "Inspect Metadata Details"}</span>
                           </button>
 
                           {isExpanded && (
-                            <div className="mt-2 p-3 rounded-xl bg-[#f9f9ff] border border-[#e2e8f8] text-[11px] font-mono text-[#151c27] max-w-xl overflow-x-auto">
+                            <div className="mt-2 p-3 rounded-xl bg-muted/20 border border-border text-[11px] font-mono text-foreground max-w-xl overflow-x-auto">
                               <pre>{JSON.stringify(n.metadata, null, 2)}</pre>
                             </div>
                           )}
@@ -484,8 +484,8 @@ export const AdminNotifications: React.FC = () => {
                   </div>
 
                   {/* Actions & Timestamp */}
-                  <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-[#e2e8f8]">
-                    <span className="text-[11px] text-[#534434] font-mono" title={new Date(n.created_at).toLocaleString()}>
+                  <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border">
+                    <span className="text-[11px] text-muted-foreground font-mono" title={new Date(n.created_at).toLocaleString()}>
                       {formatTimeAgo(n.created_at)}
                     </span>
 
@@ -498,7 +498,7 @@ export const AdminNotifications: React.FC = () => {
                             }
                             navigate(n.link!);
                           }}
-                          className="px-2.5 py-1.5 rounded-lg bg-[#e7eefe] hover:bg-[#d5e3fc] text-[#0058be] border border-[#bed7fc] text-xs font-semibold transition-colors flex items-center space-x-1 cursor-pointer"
+                          className="px-2.5 py-1.5 rounded-lg bg-[#e7eefe] hover:bg-[#d5e3fc] text-primary border border-primary/40 text-xs font-semibold transition-colors flex items-center space-x-1 cursor-pointer"
                         >
                           <span>Take Action</span>
                           <ExternalLink className="w-3 h-3" />
@@ -509,8 +509,8 @@ export const AdminNotifications: React.FC = () => {
                         onClick={(e) => handleToggleRead(n, e)}
                         className={`p-1.5 rounded-lg border text-xs font-medium transition-colors flex items-center cursor-pointer ${
                           n.is_read
-                            ? "bg-[#f0f3ff] hover:bg-[#e2e8f8] border-[#dae2f3] text-[#534434]"
-                            : "bg-[#e8f7f0] hover:bg-[#c9f1de] border-[#a3e5c7] text-[#006c49]"
+                            ? "bg-muted/40 hover:bg-[#e2e8f8] border-border text-muted-foreground"
+                            : "bg-[#e8f7f0] hover:bg-[#c9f1de] border-[#a3e5c7] text-emerald-600 dark:text-emerald-400"
                         }`}
                         title={n.is_read ? "Mark as unread" : "Mark as read"}
                       >
@@ -527,7 +527,7 @@ export const AdminNotifications: React.FC = () => {
 
       {/* Pagination Footer */}
       {pagination.totalPages > 1 && (
-        <div className="p-4 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1 flex items-center justify-between text-xs text-[#534434]">
+        <div className="p-4 rounded-2xl bg-card border border-border shadow-xs flex items-center justify-between text-xs text-muted-foreground">
           <div>
             Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
             {Math.min(pagination.page * pagination.limit, pagination.totalCount)} of{" "}
@@ -538,17 +538,17 @@ export const AdminNotifications: React.FC = () => {
             <button
               onClick={() => loadNotifications(pagination.page - 1)}
               disabled={pagination.page <= 1}
-              className="p-1.5 rounded-lg bg-[#f0f3ff] hover:bg-[#e2e8f8] disabled:opacity-40 text-[#151c27] disabled:hover:bg-[#f0f3ff] transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg bg-muted/40 hover:bg-[#e2e8f8] disabled:opacity-40 text-foreground disabled:hover:bg-muted/40 transition-colors cursor-pointer"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <span className="font-mono text-[#151c27] font-semibold px-1">
+            <span className="font-mono text-foreground font-semibold px-1">
               {pagination.page} / {pagination.totalPages}
             </span>
             <button
               onClick={() => loadNotifications(pagination.page + 1)}
               disabled={pagination.page >= pagination.totalPages}
-              className="p-1.5 rounded-lg bg-[#f0f3ff] hover:bg-[#e2e8f8] disabled:opacity-40 text-[#151c27] disabled:hover:bg-[#f0f3ff] transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg bg-muted/40 hover:bg-[#e2e8f8] disabled:opacity-40 text-foreground disabled:hover:bg-muted/40 transition-colors cursor-pointer"
             >
               <ChevronRight className="w-4 h-4" />
             </button>

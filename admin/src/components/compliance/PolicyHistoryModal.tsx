@@ -84,7 +84,7 @@ export const PolicyHistoryModal: React.FC<PolicyHistoryModalProps> = ({
     switch (status) {
       case "PUBLISHED":
         return (
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#bbf7d0]/50 text-[#006c49] border border-[#006c49]/30">
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10/50 text-emerald-600 dark:text-emerald-400 border border-[#006c49]/30">
             ACTIVE
           </span>
         );
@@ -148,23 +148,23 @@ export const PolicyHistoryModal: React.FC<PolicyHistoryModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-[#151c27]/60 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="bg-white border border-[#e2e8f8] rounded-3xl w-full max-w-6xl h-[90vh] flex flex-col shadow-level-3 overflow-hidden">
+      <div className="bg-card border border-border rounded-3xl w-full max-w-6xl h-[90vh] flex flex-col shadow-lg overflow-hidden">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-[#e2e8f8] bg-white flex items-center justify-between flex-shrink-0">
+        <div className="px-6 py-4 border-b border-border bg-card flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#f0f3ff] border border-[#dae2f3] text-[#0058be] flex items-center justify-center font-bold">
+            <div className="w-10 h-10 rounded-2xl bg-muted/40 border border-border text-primary flex items-center justify-center font-bold">
               <History size={20} />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold font-heading text-[#151c27]">
+                <h2 className="text-lg font-bold font-heading text-foreground">
                   Version History & Rollback
                 </h2>
-                <span className="font-mono text-xs text-[#0058be] font-bold">
+                <span className="font-mono text-xs text-primary font-bold">
                   {policy.title}
                 </span>
               </div>
-              <p className="text-xs text-[#534434]">
+              <p className="text-xs text-muted-foreground">
                 Audit trail of all published, superseded, and draft revisions
               </p>
             </div>
@@ -172,7 +172,7 @@ export const PolicyHistoryModal: React.FC<PolicyHistoryModalProps> = ({
 
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-[#534434] hover:text-[#151c27] hover:bg-[#f0f3ff] transition"
+            className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/40 transition"
           >
             <X size={20} />
           </button>
@@ -181,18 +181,18 @@ export const PolicyHistoryModal: React.FC<PolicyHistoryModalProps> = ({
         {/* Content */}
         <div className="flex-1 flex overflow-hidden min-h-0">
           {/* Left Column: Version Timeline */}
-          <div className="w-80 border-r border-[#e2e8f8] bg-[#f9faff] flex flex-col overflow-hidden">
-            <div className="p-4 border-b border-[#e2e8f8] bg-white text-xs font-semibold text-[#534434] flex items-center justify-between">
+          <div className="w-80 border-r border-border bg-[#f9faff] flex flex-col overflow-hidden">
+            <div className="p-4 border-b border-border bg-card text-xs font-semibold text-muted-foreground flex items-center justify-between">
               <span>All Revisions ({versions.length})</span>
             </div>
 
             <div className="flex-1 overflow-y-auto p-3 space-y-2">
               {loading ? (
-                <div className="text-center py-10 text-xs text-[#534434]">
+                <div className="text-center py-10 text-xs text-muted-foreground">
                   Loading timeline...
                 </div>
               ) : versions.length === 0 ? (
-                <div className="text-center py-10 text-xs text-[#534434]">
+                <div className="text-center py-10 text-xs text-muted-foreground">
                   No versions recorded yet.
                 </div>
               ) : (
@@ -206,12 +206,12 @@ export const PolicyHistoryModal: React.FC<PolicyHistoryModalProps> = ({
                       onClick={() => setSelectedVersion(v)}
                       className={`p-3.5 rounded-2xl border transition cursor-pointer text-left ${
                         isSelected
-                          ? "bg-white border-[#0058be] shadow-sm ring-1 ring-[#0058be]/20"
-                          : "bg-white/70 border-[#e2e8f8] hover:bg-white hover:border-[#dae2f3]"
+                          ? "bg-card border-primary shadow-sm ring-1 ring-[#0058be]/20"
+                          : "bg-card/70 border-border hover:bg-card hover:border-border"
                       }`}
                     >
                       <div className="flex items-center justify-between mb-1.5">
-                        <span className="font-mono font-bold text-xs text-[#0058be]">
+                        <span className="font-mono font-bold text-xs text-primary">
                           v{v.version}
                         </span>
                         <div className="flex items-center gap-1.5">
@@ -219,24 +219,24 @@ export const PolicyHistoryModal: React.FC<PolicyHistoryModalProps> = ({
                         </div>
                       </div>
 
-                      <div className="text-xs text-[#151c27] font-semibold line-clamp-1 mb-1">
+                      <div className="text-xs text-foreground font-semibold line-clamp-1 mb-1">
                         {v.title}
                       </div>
 
                       {v.summary_of_changes && (
-                        <p className="text-[11px] text-[#534434] line-clamp-2 mb-2 italic">
+                        <p className="text-[11px] text-muted-foreground line-clamp-2 mb-2 italic">
                           "{v.summary_of_changes}"
                         </p>
                       )}
 
-                      <div className="flex items-center justify-between text-[10px] text-[#534434] pt-2 border-t border-[#e2e8f8]/60">
+                      <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-2 border-t border-border/60">
                         <span>
                           {v.published_at
                             ? new Date(v.published_at).toLocaleDateString()
                             : new Date(v.created_at).toLocaleDateString()}
                         </span>
                         {isCurrentActive && (
-                          <span className="text-[#006c49] font-bold">Currently Live</span>
+                          <span className="text-emerald-600 dark:text-emerald-400 font-bold">Currently Live</span>
                         )}
                       </div>
                     </div>
@@ -247,19 +247,19 @@ export const PolicyHistoryModal: React.FC<PolicyHistoryModalProps> = ({
           </div>
 
           {/* Right Column: Version Inspector / Diff */}
-          <div className="flex-1 flex flex-col bg-white overflow-hidden">
+          <div className="flex-1 flex flex-col bg-card overflow-hidden">
             {selectedVersion ? (
               <>
                 {/* Inspector Header */}
-                <div className="px-6 py-3 border-b border-[#e2e8f8] bg-[#fcfdff] flex flex-wrap items-center justify-between gap-3 flex-shrink-0">
+                <div className="px-6 py-3 border-b border-border bg-[#fcfdff] flex flex-wrap items-center justify-between gap-3 flex-shrink-0">
                   <div className="flex items-center gap-3">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-sm font-bold text-[#0058be]">
+                        <span className="font-mono text-sm font-bold text-primary">
                           v{selectedVersion.version}
                         </span>
                         {renderStatusBadge(selectedVersion.status)}
-                        <span className="text-xs text-[#534434]">
+                        <span className="text-xs text-muted-foreground">
                           Effective:{" "}
                           {selectedVersion.effective_date
                             ? new Date(selectedVersion.effective_date).toLocaleDateString()
@@ -272,14 +272,14 @@ export const PolicyHistoryModal: React.FC<PolicyHistoryModalProps> = ({
                   {/* Inspector Actions */}
                   <div className="flex items-center gap-2">
                     {/* Diff vs Render Tabs */}
-                    <div className="bg-[#f0f3ff] p-1 rounded-xl border border-[#dae2f3] flex items-center gap-1">
+                    <div className="bg-muted/40 p-1 rounded-xl border border-border flex items-center gap-1">
                       <button
                         type="button"
                         onClick={() => setActiveTab("render")}
                         className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
                           activeTab === "render"
-                            ? "bg-white text-[#0058be] shadow-sm"
-                            : "text-[#534434] hover:text-[#151c27]"
+                            ? "bg-card text-primary shadow-sm"
+                            : "text-muted-foreground hover:text-foreground"
                         }`}
                       >
                         Preview
@@ -289,8 +289,8 @@ export const PolicyHistoryModal: React.FC<PolicyHistoryModalProps> = ({
                         onClick={() => setActiveTab("diff")}
                         className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
                           activeTab === "diff"
-                            ? "bg-white text-[#0058be] shadow-sm"
-                            : "text-[#534434] hover:text-[#151c27]"
+                            ? "bg-card text-primary shadow-sm"
+                            : "text-muted-foreground hover:text-foreground"
                         }`}
                       >
                         Diff vs Current
@@ -308,7 +308,7 @@ export const PolicyHistoryModal: React.FC<PolicyHistoryModalProps> = ({
                           window.open(getAdminPolicyPdfUrl(selectedVersion.id), "_blank");
                         }
                       }}
-                      className="px-3 py-1.5 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#0058be] text-xs font-semibold border border-[#dae2f3] transition flex items-center gap-1.5 cursor-pointer"
+                      className="px-3 py-1.5 rounded-xl bg-muted/40 hover:bg-[#e2e8f8] text-primary text-xs font-semibold border border-border transition flex items-center gap-1.5 cursor-pointer"
                     >
                       <Download size={13} />
                       <span>Download PDF</span>
@@ -351,7 +351,7 @@ export const PolicyHistoryModal: React.FC<PolicyHistoryModalProps> = ({
                 </div>
               </>
             ) : (
-              <div className="flex-1 flex items-center justify-center text-xs text-[#534434]">
+              <div className="flex-1 flex items-center justify-center text-xs text-muted-foreground">
                 Select a version to inspect details and diff.
               </div>
             )}
@@ -359,16 +359,16 @@ export const PolicyHistoryModal: React.FC<PolicyHistoryModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3 border-t border-[#e2e8f8] bg-[#fcfdff] flex items-center justify-between text-xs text-[#534434] flex-shrink-0">
+        <div className="px-6 py-3 border-t border-border bg-[#fcfdff] flex items-center justify-between text-xs text-muted-foreground flex-shrink-0">
           <div className="flex items-center gap-1.5">
-            <AlertCircle size={14} className="text-[#0058be]" />
+            <AlertCircle size={14} className="text-primary" />
             <span>
               Rollback creates a fresh draft revision from the chosen historical state; it never deletes historical audit records.
             </span>
           </div>
           <button
             onClick={onClose}
-            className="px-4 py-1.5 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#534434] font-semibold border border-[#dae2f3] cursor-pointer"
+            className="px-4 py-1.5 rounded-xl bg-muted/40 hover:bg-[#e2e8f8] text-muted-foreground font-semibold border border-border cursor-pointer"
           >
             Close
           </button>

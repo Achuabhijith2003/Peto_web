@@ -1,123 +1,175 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-@theme {
-  --color-surface: #f9f9ff;
-  --color-surface-dim: #d3daea;
-  --color-surface-bright: #f9f9ff;
-  --color-surface-container-lowest: #ffffff;
-  --color-surface-container-low: #f0f3ff;
-  --color-surface-container: #e7eefe;
-  --color-surface-container-high: #e2e8f8;
-  --color-surface-container-highest: #dce2f3;
-  --color-on-surface: #151c27;
-  --color-on-surface-variant: #534434;
-  --color-inverse-surface: #2a313d;
-  --color-inverse-on-surface: #ebf1ff;
-  --color-outline: #867461;
-  --color-outline-variant: #d8c3ad;
-  --color-surface-tint: #855300;
-
-  --color-primary: #855300;
-  --color-on-primary: #ffffff;
-  --color-primary-container: #f59e0b;
-  --color-on-primary-container: #613b00;
-  --color-inverse-primary: #ffb95f;
-  --color-primary-fixed: #ffddb8;
-  --color-primary-fixed-dim: #ffb95f;
-  --color-on-primary-fixed: #2a1700;
-  --color-on-primary-fixed-variant: #653e00;
-
-  --color-secondary: #0058be;
-  --color-on-secondary: #ffffff;
-  --color-secondary-container: #2170e4;
-  --color-on-secondary-container: #fefcff;
-  --color-secondary-fixed: #d8e2ff;
-  --color-secondary-fixed-dim: #adc6ff;
-  --color-on-secondary-fixed: #001a42;
-  --color-on-secondary-fixed-variant: #004395;
-
-  --color-tertiary: #006c49;
-  --color-on-tertiary: #ffffff;
-  --color-tertiary-container: #30c88f;
-  --color-on-tertiary-container: #004e34;
-  --color-tertiary-fixed: #6ffbbe;
-  --color-tertiary-fixed-dim: #4edea3;
-  --color-on-tertiary-fixed: #002113;
-  --color-on-tertiary-fixed-variant: #005236;
-
-  --color-error: #ba1a1a;
-  --color-on-error: #ffffff;
-  --color-error-container: #ffdad6;
-  --color-on-error-container: #93000a;
-
-  --color-background: #f9f9ff;
-  --color-on-background: #151c27;
-  --color-surface-variant: #dce2f3;
-
-  --font-heading: 'Quicksand', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-headline: 'Quicksand', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
+@custom-variant dark (&:is(.dark *));
 
 :root {
   color-scheme: light;
+  --background: oklch(0.99 0.003 240);
+  --foreground: oklch(0.18 0.02 260);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.02 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.02 260);
+  --primary: oklch(0.74 0.16 68);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.96 0.008 240);
+  --secondary-foreground: oklch(0.24 0.02 260);
+  --muted: oklch(0.96 0.006 240);
+  --muted-foreground: oklch(0.48 0.02 250);
+  --accent: oklch(0.95 0.02 68 / 0.5);
+  --accent-foreground: oklch(0.32 0.08 65);
+  --destructive: oklch(0.57 0.22 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.91 0.008 240);
+  --input: oklch(0.91 0.008 240);
+  --ring: oklch(0.74 0.16 68 / 0.4);
+  --radius: 0.625rem;
+
+  /* Sidebar Tokens */
+  --sidebar: oklch(0.985 0.004 240);
+  --sidebar-foreground: oklch(0.22 0.02 260);
+  --sidebar-primary: oklch(0.74 0.16 68);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.94 0.01 240);
+  --sidebar-accent-foreground: oklch(0.18 0.02 260);
+  --sidebar-border: oklch(0.91 0.008 240);
+  --sidebar-ring: oklch(0.74 0.16 68 / 0.4);
+
+  /* Charts */
+  --chart-1: oklch(0.74 0.16 68);
+  --chart-2: oklch(0.62 0.18 240);
+  --chart-3: oklch(0.64 0.17 150);
+  --chart-4: oklch(0.65 0.22 25);
+  --chart-5: oklch(0.58 0.19 300);
 }
 
-html, body, #root {
-  width: 100%;
-  min-height: 100%;
+.dark {
+  color-scheme: dark;
+  --background: oklch(0.15 0.012 255);
+  --foreground: oklch(0.96 0.005 240);
+  --card: oklch(0.19 0.014 255);
+  --card-foreground: oklch(0.96 0.005 240);
+  --popover: oklch(0.19 0.014 255);
+  --popover-foreground: oklch(0.96 0.005 240);
+  --primary: oklch(0.76 0.16 68);
+  --primary-foreground: oklch(0.15 0.02 65);
+  --secondary: oklch(0.25 0.015 255);
+  --secondary-foreground: oklch(0.94 0.005 240);
+  --muted: oklch(0.23 0.015 255);
+  --muted-foreground: oklch(0.68 0.015 250);
+  --accent: oklch(0.28 0.03 68 / 0.4);
+  --accent-foreground: oklch(0.94 0.05 68);
+  --destructive: oklch(0.62 0.22 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.27 0.012 255);
+  --input: oklch(0.29 0.012 255);
+  --ring: oklch(0.76 0.16 68 / 0.4);
+
+  /* Sidebar Tokens */
+  --sidebar: oklch(0.17 0.014 255);
+  --sidebar-foreground: oklch(0.92 0.008 240);
+  --sidebar-primary: oklch(0.76 0.16 68);
+  --sidebar-primary-foreground: oklch(0.15 0.02 65);
+  --sidebar-accent: oklch(0.23 0.016 255);
+  --sidebar-accent-foreground: oklch(0.98 0 0);
+  --sidebar-border: oklch(0.25 0.012 255);
+  --sidebar-ring: oklch(0.76 0.16 68 / 0.4);
+
+  /* Charts */
+  --chart-1: oklch(0.76 0.16 68);
+  --chart-2: oklch(0.66 0.18 240);
+  --chart-3: oklch(0.68 0.17 150);
+  --chart-4: oklch(0.68 0.22 25);
+  --chart-5: oklch(0.62 0.19 300);
 }
 
-body {
-  margin: 0;
-  min-height: 100vh;
-  background-color: #f9f9ff;
-  color: #151c27;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@theme inline {
+  --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-headline: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* Quicksand Heading Class Utilities */
-.font-headline,
-.font-heading {
-  font-family: 'Quicksand', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+    margin: 0;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  html {
+    @apply font-sans;
+  }
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Quicksand', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  letter-spacing: -0.015em;
-}
-
-/* Ambient Shadows defined in DESIGN.md */
-.shadow-level-1 {
-  box-shadow: 0 4px 20px -2px rgba(21, 28, 39, 0.05), 0 0 0 1px rgba(218, 226, 243, 0.6);
-}
-
-.shadow-level-2 {
-  box-shadow: 0 12px 28px -4px rgba(21, 28, 39, 0.08), 0 0 0 1px rgba(218, 226, 243, 0.7);
-}
-
-.shadow-level-3 {
-  box-shadow: 0 24px 48px -12px rgba(0, 88, 190, 0.12), 0 0 0 1px rgba(218, 226, 243, 0.8);
-}
-
-/* Custom Soft Scrollbars for Modern Organic Theme */
+/* Subtle operational scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f0f3ff;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: oklch(0.7 0.01 240 / 0.4);
   border-radius: 9999px;
 }
 
+.dark ::-webkit-scrollbar-thumb {
+  background: oklch(0.4 0.01 240 / 0.4);
+}
+
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: oklch(0.5 0.01 240 / 0.6);
 }

@@ -6,6 +6,8 @@ import {
   ReportsTrendPoint,
 } from "../../types/admin";
 import { TrendingUp, Layers, Activity, ShieldAlert } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface DashboardChartsProps {
   userGrowth: UserGrowthPoint[];
@@ -61,8 +63,8 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
       <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto overflow-visible select-none">
         <defs>
           <linearGradient id="userTotalGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#0058be" stopOpacity="0.2" />
-            <stop offset="100%" stopColor="#0058be" stopOpacity="0.0" />
+            <stop offset="0%" stopColor="var(--color-primary)" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="var(--color-primary)" stopOpacity="0.0" />
           </linearGradient>
         </defs>
 
@@ -77,10 +79,11 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
                 y1={y}
                 x2={padding.left + chartWidth}
                 y2={y}
-                stroke="#e2e8f8"
+                stroke="currentColor"
+                className="text-border"
                 strokeDasharray="4 4"
               />
-              <text x={padding.left - 10} y={y + 4} textAnchor="end" className="text-[10px] fill-[#534434] font-mono">
+              <text x={padding.left - 10} y={y + 4} textAnchor="end" className="text-[10px] fill-muted-foreground font-mono">
                 {val}
               </text>
             </g>
@@ -91,7 +94,7 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
         <path d={areaPathTotal} fill="url(#userTotalGrad)" />
 
         {/* Lines */}
-        <path d={linePathTotal} fill="none" stroke="#0058be" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        <path d={linePathTotal} fill="none" stroke="var(--color-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
         <path d={linePathNew} fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="3 3" strokeLinecap="round" />
 
         {/* Interactive points & X labels */}
@@ -101,8 +104,8 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
               cx={p.x}
               cy={p.y}
               r={hoverIndex === idx ? 6 : 3.5}
-              fill="#0058be"
-              stroke="#ffffff"
+              fill="var(--color-primary)"
+              stroke="var(--color-card)"
               strokeWidth="2"
               className="transition-all cursor-pointer"
               onMouseEnter={() => setHoverIndex(idx)}
@@ -113,7 +116,7 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
                 x={p.x}
                 y={padding.top + chartHeight + 20}
                 textAnchor="middle"
-                className="text-[10px] fill-[#534434] font-mono"
+                className="text-[10px] fill-muted-foreground font-mono"
               >
                 {p.label}
               </text>
@@ -129,9 +132,9 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
               y1={-pointsTotal[hoverIndex].y + padding.top}
               x2={0}
               y2={chartHeight - (pointsTotal[hoverIndex].y - padding.top)}
-              stroke="#bed7fc"
+              stroke="currentColor"
+              className="text-primary/60"
               strokeDasharray="2 2"
-              opacity="0.8"
             />
             <rect
               x={pointsTotal[hoverIndex].x > width - 130 ? -125 : 10}
@@ -139,15 +142,13 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
               width={115}
               height={52}
               rx={8}
-              fill="#ffffff"
-              stroke="#e2e8f8"
-              filter="drop-shadow(0 4px 10px rgba(21, 28, 39, 0.12))"
+              className="fill-popover stroke-border shadow-lg"
             />
             <text
               x={pointsTotal[hoverIndex].x > width - 130 ? -68 : 67}
               y={-34}
               textAnchor="middle"
-              className="text-[10px] fill-[#534434] font-medium"
+              className="text-[10px] fill-muted-foreground font-medium"
             >
               {pointsTotal[hoverIndex].label}
             </text>
@@ -155,7 +156,7 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
               x={pointsTotal[hoverIndex].x > width - 130 ? -68 : 67}
               y={-18}
               textAnchor="middle"
-              className="text-[11px] fill-[#0058be] font-bold font-mono"
+              className="text-[11px] fill-primary font-bold font-mono"
             >
               Total: {pointsTotal[hoverIndex].val}
             </text>
@@ -163,7 +164,7 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
               x={pointsTotal[hoverIndex].x > width - 130 ? -68 : 67}
               y={-4}
               textAnchor="middle"
-              className="text-[9px] fill-[#855300] font-mono font-semibold"
+              className="text-[9px] fill-amber-600 dark:text-amber-400 font-mono font-semibold"
             >
               New: +{pointsTotal[hoverIndex].newUsers}
             </text>
@@ -207,15 +208,15 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
           const val = Math.round(maxVal * (1 - p));
           return (
             <g key={idx}>
-              <line x1={padding.left} y1={y} x2={padding.left + chartWidth} y2={y} stroke="#e2e8f8" strokeDasharray="4 4" />
-              <text x={padding.left - 10} y={y + 4} textAnchor="end" className="text-[10px] fill-[#534434] font-mono">
+              <line x1={padding.left} y1={y} x2={padding.left + chartWidth} y2={y} stroke="currentColor" className="text-border" strokeDasharray="4 4" />
+              <text x={padding.left - 10} y={y + 4} textAnchor="end" className="text-[10px] fill-muted-foreground font-mono">
                 {val}
               </text>
             </g>
           );
         })}
 
-        <path d={linePathPosts} fill="none" stroke="#006c49" strokeWidth="2.5" strokeLinecap="round" />
+        <path d={linePathPosts} fill="none" stroke="#10b981" strokeWidth="2.5" strokeLinecap="round" />
         <path d={linePathComments} fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="3 3" strokeLinecap="round" />
 
         {pointsPosts.map((p, idx) => (
@@ -224,10 +225,10 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
               cx={p.x}
               cy={p.y}
               r={hoverIndex === idx ? 6 : 3.5}
-              fill="#006c49"
-              stroke="#ffffff"
+              fill="#10b981"
+              stroke="var(--color-card)"
               strokeWidth="2"
-              className="cursor-pointer transition-all"
+              className="transition-all cursor-pointer"
               onMouseEnter={() => setHoverIndex(idx)}
               onMouseLeave={() => setHoverIndex(null)}
             />
@@ -236,7 +237,7 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
                 x={p.x}
                 y={padding.top + chartHeight + 20}
                 textAnchor="middle"
-                className="text-[10px] fill-[#534434] font-mono"
+                className="text-[10px] fill-muted-foreground font-mono"
               >
                 {p.label}
               </text>
@@ -246,29 +247,36 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
 
         {hoverIndex !== null && pointsPosts[hoverIndex] && (
           <g transform={`translate(${pointsPosts[hoverIndex].x}, ${pointsPosts[hoverIndex].y})`}>
+            <line
+              x1={0}
+              y1={-pointsPosts[hoverIndex].y + padding.top}
+              x2={0}
+              y2={chartHeight - (pointsPosts[hoverIndex].y - padding.top)}
+              stroke="currentColor"
+              className="text-border"
+              strokeDasharray="2 2"
+            />
             <rect
               x={pointsPosts[hoverIndex].x > width - 130 ? -125 : 10}
-              y={-60}
+              y={-58}
               width={115}
-              height={58}
+              height={60}
               rx={8}
-              fill="#ffffff"
-              stroke="#e2e8f8"
-              filter="drop-shadow(0 4px 10px rgba(21, 28, 39, 0.12))"
+              className="fill-popover stroke-border shadow-lg"
             />
             <text
               x={pointsPosts[hoverIndex].x > width - 130 ? -68 : 67}
-              y={-44}
+              y={-42}
               textAnchor="middle"
-              className="text-[10px] fill-[#534434] font-medium"
+              className="text-[10px] fill-muted-foreground font-medium"
             >
               {pointsPosts[hoverIndex].label}
             </text>
             <text
               x={pointsPosts[hoverIndex].x > width - 130 ? -68 : 67}
-              y={-28}
+              y={-26}
               textAnchor="middle"
-              className="text-[11px] fill-[#006c49] font-bold font-mono"
+              className="text-[11px] fill-emerald-600 dark:text-emerald-400 font-bold font-mono"
             >
               Posts: {pointsPosts[hoverIndex].posts}
             </text>
@@ -276,9 +284,9 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
               x={pointsPosts[hoverIndex].x > width - 130 ? -68 : 67}
               y={-12}
               textAnchor="middle"
-              className="text-[10px] fill-[#855300] font-mono font-semibold"
+              className="text-[9px] fill-amber-600 dark:text-amber-400 font-mono font-semibold"
             >
-              Comments: {pointsPosts[hoverIndex].comments}
+              Reels: {pointsPosts[hoverIndex].reels} · Comments: {pointsPosts[hoverIndex].comments}
             </text>
           </g>
         )}
@@ -286,14 +294,14 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
     );
   };
 
-  // Render Engagement Breakdown Bar Chart
+  // Render Engagement Multi-Bar Chart
   const renderEngagementChart = () => {
     const data = engagement || [];
     if (data.length === 0) return <EmptyChart message="No engagement data for this period" />;
 
     const maxVal = Math.max(5, ...data.map((d) => d.totalInteractions));
+    const barWidth = Math.max(4, Math.min(24, (chartWidth / data.length) * 0.6));
     const stepX = chartWidth / data.length;
-    const barWidth = Math.max(6, Math.min(22, stepX * 0.6));
 
     return (
       <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto overflow-visible select-none">
@@ -302,8 +310,8 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
           const val = Math.round(maxVal * (1 - p));
           return (
             <g key={idx}>
-              <line x1={padding.left} y1={y} x2={padding.left + chartWidth} y2={y} stroke="#e2e8f8" strokeDasharray="4 4" />
-              <text x={padding.left - 10} y={y + 4} textAnchor="end" className="text-[10px] fill-[#534434] font-mono">
+              <line x1={padding.left} y1={y} x2={padding.left + chartWidth} y2={y} stroke="currentColor" className="text-border" strokeDasharray="4 4" />
+              <text x={padding.left - 10} y={y + 4} textAnchor="end" className="text-[10px] fill-muted-foreground font-mono">
                 {val}
               </text>
             </g>
@@ -316,28 +324,25 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
           const y = padding.top + chartHeight - barHeight;
 
           return (
-            <g
-              key={i}
-              className="cursor-pointer"
-              onMouseEnter={() => setHoverIndex(i)}
-              onMouseLeave={() => setHoverIndex(null)}
-            >
+            <g key={i}>
               <rect
                 x={x}
                 y={y}
                 width={barWidth}
                 height={Math.max(2, barHeight)}
-                rx={4}
-                className={`transition-colors ${
-                  hoverIndex === i ? "fill-[#0058be]" : "fill-[#0058be]/80 hover:fill-[#0058be]"
-                }`}
+                rx={3}
+                fill={hoverIndex === i ? "var(--color-primary)" : "var(--color-primary)"}
+                opacity={hoverIndex === i ? 1 : 0.8}
+                className="transition-all cursor-pointer"
+                onMouseEnter={() => setHoverIndex(i)}
+                onMouseLeave={() => setHoverIndex(null)}
               />
               {i % Math.ceil(data.length / 8) === 0 && (
                 <text
                   x={x + barWidth / 2}
                   y={padding.top + chartHeight + 20}
                   textAnchor="middle"
-                  className="text-[10px] fill-[#534434] font-mono"
+                  className="text-[10px] fill-muted-foreground font-mono"
                 >
                   {d.date}
                 </text>
@@ -350,23 +355,23 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
           <g
             transform={`translate(${
               padding.left + hoverIndex * stepX + stepX / 2
-            }, ${padding.top + chartHeight - (data[hoverIndex].totalInteractions / maxVal) * chartHeight})`}
+            }, ${
+              padding.top + chartHeight - (data[hoverIndex].totalInteractions / maxVal) * chartHeight
+            })`}
           >
             <rect
               x={hoverIndex > data.length / 2 ? -120 : 10}
-              y={-45}
+              y={-48}
               width={110}
-              height={42}
+              height={46}
               rx={8}
-              fill="#ffffff"
-              stroke="#e2e8f8"
-              filter="drop-shadow(0 4px 10px rgba(21, 28, 39, 0.12))"
+              className="fill-popover stroke-border shadow-lg"
             />
             <text
               x={hoverIndex > data.length / 2 ? -65 : 65}
               y={-30}
               textAnchor="middle"
-              className="text-[10px] fill-[#534434] font-medium"
+              className="text-[10px] fill-muted-foreground font-medium"
             >
               {data[hoverIndex].date}
             </text>
@@ -374,7 +379,7 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
               x={hoverIndex > data.length / 2 ? -65 : 65}
               y={-14}
               textAnchor="middle"
-              className="text-[11px] fill-[#0058be] font-bold font-mono"
+              className="text-[11px] fill-primary font-bold font-mono"
             >
               {data[hoverIndex].totalInteractions} Interactions
             </text>
@@ -384,10 +389,10 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
     );
   };
 
-  // Render Reports & Resolutions Trend Chart
+  // Render Reports / Moderation Trend Chart
   const renderReportsChart = () => {
     const data = reports || [];
-    if (data.length === 0) return <EmptyChart message="No reports filed during this period" />;
+    if (data.length === 0) return <EmptyChart message="No moderation reports filed for this period" />;
 
     const maxVal = Math.max(5, ...data.map((d) => Math.max(d.reports, d.resolved)));
     const stepX = data.length > 1 ? chartWidth / (data.length - 1) : chartWidth / 2;
@@ -395,19 +400,19 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
     const pointsFiled = data.map((d, i) => ({
       x: padding.left + (data.length > 1 ? i * stepX : chartWidth / 2),
       y: padding.top + chartHeight - (d.reports / maxVal) * chartHeight,
-      reports: d.reports,
+      val: d.reports,
       resolved: d.resolved,
       label: d.date,
     }));
 
+    const pointsResolved = data.map((d, i) => ({
+      x: padding.left + (data.length > 1 ? i * stepX : chartWidth / 2),
+      y: padding.top + chartHeight - (d.resolved / maxVal) * chartHeight,
+      val: d.resolved,
+    }));
+
     const linePathFiled = pointsFiled.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
-    const linePathResolved = data
-      .map((d, i) => {
-        const x = padding.left + (data.length > 1 ? i * stepX : chartWidth / 2);
-        const y = padding.top + chartHeight - (d.resolved / maxVal) * chartHeight;
-        return `${i === 0 ? "M" : "L"} ${x} ${y}`;
-      })
-      .join(" ");
+    const linePathResolved = pointsResolved.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
 
     return (
       <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto overflow-visible select-none">
@@ -416,16 +421,16 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
           const val = Math.round(maxVal * (1 - p));
           return (
             <g key={idx}>
-              <line x1={padding.left} y1={y} x2={padding.left + chartWidth} y2={y} stroke="#e2e8f8" strokeDasharray="4 4" />
-              <text x={padding.left - 10} y={y + 4} textAnchor="end" className="text-[10px] fill-[#534434] font-mono">
+              <line x1={padding.left} y1={y} x2={padding.left + chartWidth} y2={y} stroke="currentColor" className="text-border" strokeDasharray="4 4" />
+              <text x={padding.left - 10} y={y + 4} textAnchor="end" className="text-[10px] fill-muted-foreground font-mono">
                 {val}
               </text>
             </g>
           );
         })}
 
-        <path d={linePathFiled} fill="none" stroke="#ba1a1a" strokeWidth="2.5" strokeLinecap="round" />
-        <path d={linePathResolved} fill="none" stroke="#006c49" strokeWidth="2" strokeDasharray="3 3" strokeLinecap="round" />
+        <path d={linePathFiled} fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" />
+        <path d={linePathResolved} fill="none" stroke="#10b981" strokeWidth="2" strokeDasharray="3 3" strokeLinecap="round" />
 
         {pointsFiled.map((p, idx) => (
           <g key={idx}>
@@ -433,10 +438,10 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
               cx={p.x}
               cy={p.y}
               r={hoverIndex === idx ? 6 : 3.5}
-              fill="#ba1a1a"
-              stroke="#ffffff"
+              fill="#ef4444"
+              stroke="var(--color-card)"
               strokeWidth="2"
-              className="cursor-pointer transition-all"
+              className="transition-all cursor-pointer"
               onMouseEnter={() => setHoverIndex(idx)}
               onMouseLeave={() => setHoverIndex(null)}
             />
@@ -445,131 +450,181 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
                 x={p.x}
                 y={padding.top + chartHeight + 20}
                 textAnchor="middle"
-                className="text-[10px] fill-[#534434] font-mono"
+                className="text-[10px] fill-muted-foreground font-mono"
               >
                 {p.label}
               </text>
             )}
           </g>
         ))}
+
+        {hoverIndex !== null && pointsFiled[hoverIndex] && (
+          <g transform={`translate(${pointsFiled[hoverIndex].x}, ${pointsFiled[hoverIndex].y})`}>
+            <rect
+              x={pointsFiled[hoverIndex].x > width - 130 ? -125 : 10}
+              y={-50}
+              width={115}
+              height={50}
+              rx={8}
+              className="fill-popover stroke-border shadow-lg"
+            />
+            <text
+              x={pointsFiled[hoverIndex].x > width - 130 ? -68 : 67}
+              y={-34}
+              textAnchor="middle"
+              className="text-[10px] fill-muted-foreground font-medium"
+            >
+              {pointsFiled[hoverIndex].label}
+            </text>
+            <text
+              x={pointsFiled[hoverIndex].x > width - 130 ? -68 : 67}
+              y={-18}
+              textAnchor="middle"
+              className="text-[11px] fill-destructive font-bold font-mono"
+            >
+              Filed: {pointsFiled[hoverIndex].val}
+            </text>
+            <text
+              x={pointsFiled[hoverIndex].x > width - 130 ? -68 : 67}
+              y={-4}
+              textAnchor="middle"
+              className="text-[9px] fill-emerald-600 dark:text-emerald-400 font-mono font-semibold"
+            >
+              Resolved: {pointsFiled[hoverIndex].resolved}
+            </text>
+          </g>
+        )}
       </svg>
     );
   };
 
   return (
-    <div className="p-6 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1 space-y-6">
-      {/* Chart Header & Tab Selectors */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#e2e8f8] pb-4">
+    <Card className="shadow-xs overflow-hidden">
+      <CardHeader className="border-b border-border pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-base font-bold text-[#151c27] font-heading tracking-tight">Platform Operational Trends</h2>
-          <p className="text-xs text-[#534434] mt-0.5">Time-series data mapped to the active date filter window.</p>
+          <CardTitle className="text-base font-bold font-heading">
+            Platform Operational Trends
+          </CardTitle>
+          <CardDescription className="text-xs mt-0.5">
+            Time-series data mapped to the active date filter window.
+          </CardDescription>
         </div>
 
         {/* Tab Buttons */}
-        <div className="flex items-center space-x-1.5 p-1 rounded-xl bg-[#f0f3ff] border border-[#e2e8f8] overflow-x-auto">
+        <div className="flex items-center gap-1 p-1 rounded-xl bg-muted/60 border border-border overflow-x-auto shrink-0">
           <button
+            type="button"
             onClick={() => setActiveTab("users")}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
-              activeTab === "users" ? "bg-[#0058be] text-white shadow-xs font-semibold" : "text-[#534434] hover:text-[#151c27]"
-            }`}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer",
+              activeTab === "users" ? "bg-card text-foreground shadow-xs font-semibold" : "text-muted-foreground hover:text-foreground"
+            )}
           >
-            <TrendingUp className="w-3.5 h-3.5" />
+            <TrendingUp className="size-3.5 text-primary" />
             <span>User Growth</span>
           </button>
 
           <button
+            type="button"
             onClick={() => setActiveTab("content")}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
-              activeTab === "content" ? "bg-[#0058be] text-white shadow-xs font-semibold" : "text-[#534434] hover:text-[#151c27]"
-            }`}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer",
+              activeTab === "content" ? "bg-card text-foreground shadow-xs font-semibold" : "text-muted-foreground hover:text-foreground"
+            )}
           >
-            <Layers className="w-3.5 h-3.5" />
+            <Layers className="size-3.5 text-emerald-500" />
             <span>Content Velocity</span>
           </button>
 
           <button
+            type="button"
             onClick={() => setActiveTab("engagement")}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
-              activeTab === "engagement"
-                ? "bg-[#0058be] text-white shadow-xs font-semibold"
-                : "text-[#534434] hover:text-[#151c27]"
-            }`}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer",
+              activeTab === "engagement" ? "bg-card text-foreground shadow-xs font-semibold" : "text-muted-foreground hover:text-foreground"
+            )}
           >
-            <Activity className="w-3.5 h-3.5" />
+            <Activity className="size-3.5 text-blue-500" />
             <span>Engagement</span>
           </button>
 
           <button
+            type="button"
             onClick={() => setActiveTab("reports")}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
-              activeTab === "reports" ? "bg-[#0058be] text-white shadow-xs font-semibold" : "text-[#534434] hover:text-[#151c27]"
-            }`}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer",
+              activeTab === "reports" ? "bg-card text-foreground shadow-xs font-semibold" : "text-muted-foreground hover:text-foreground"
+            )}
           >
-            <ShieldAlert className="w-3.5 h-3.5" />
+            <ShieldAlert className="size-3.5 text-destructive" />
             <span>Moderation</span>
           </button>
         </div>
-      </div>
+      </CardHeader>
 
-      {/* Active Chart Legend */}
-      <div className="flex items-center space-x-6 text-xs text-[#534434] px-2">
-        {activeTab === "users" && (
-          <>
-            <div className="flex items-center space-x-2">
-              <span className="w-3 h-3 rounded-full bg-[#0058be]"></span>
-              <span>Cumulative Total Users</span>
+      <CardContent className="p-6 space-y-4">
+        {/* Active Chart Legend */}
+        <div className="flex items-center gap-6 text-xs text-muted-foreground px-1 flex-wrap">
+          {activeTab === "users" && (
+            <>
+              <div className="flex items-center gap-2">
+                <span className="size-2.5 rounded-full bg-primary" />
+                <span>Cumulative Total Users</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-0.5 border-b border-dashed border-amber-500" />
+                <span>New Users in Period</span>
+              </div>
+            </>
+          )}
+          {activeTab === "content" && (
+            <>
+              <div className="flex items-center gap-2">
+                <span className="size-2.5 rounded-full bg-emerald-500" />
+                <span>Posts & Reels Velocity</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-0.5 border-b border-dashed border-amber-500" />
+                <span>Comments</span>
+              </div>
+            </>
+          )}
+          {activeTab === "engagement" && (
+            <div className="flex items-center gap-2">
+              <span className="size-2.5 rounded-sm bg-primary" />
+              <span>Total Interactions (Likes + Comments + Bookmarks)</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="w-3 h-0.5 border-b border-dashed border-[#f59e0b]"></span>
-              <span>New Users in Period</span>
-            </div>
-          </>
-        )}
-        {activeTab === "content" && (
-          <>
-            <div className="flex items-center space-x-2">
-              <span className="w-3 h-3 rounded-full bg-[#006c49]"></span>
-              <span>Posts & Reels Velocity</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="w-3 h-0.5 border-b border-dashed border-[#f59e0b]"></span>
-              <span>Comments</span>
-            </div>
-          </>
-        )}
-        {activeTab === "engagement" && (
-          <div className="flex items-center space-x-2">
-            <span className="w-3 h-3 rounded-sm bg-[#0058be]"></span>
-            <span>Total Interactions (Likes + Comments + Bookmarks)</span>
-          </div>
-        )}
-        {activeTab === "reports" && (
-          <>
-            <div className="flex items-center space-x-2">
-              <span className="w-3 h-3 rounded-full bg-[#ba1a1a]"></span>
-              <span>Reports Filed</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="w-3 h-0.5 border-b border-dashed border-[#006c49]"></span>
-              <span>Resolved</span>
-            </div>
-          </>
-        )}
-      </div>
+          )}
+          {activeTab === "reports" && (
+            <>
+              <div className="flex items-center gap-2">
+                <span className="size-2.5 rounded-full bg-destructive" />
+                <span>Reports Filed</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-0.5 border-b border-dashed border-emerald-500" />
+                <span>Resolved</span>
+              </div>
+            </>
+          )}
+        </div>
 
-      {/* Main SVG Chart Container */}
-      <div className="w-full min-h-[260px] flex items-center justify-center">
-        {activeTab === "users" && renderUserGrowthChart()}
-        {activeTab === "content" && renderContentChart()}
-        {activeTab === "engagement" && renderEngagementChart()}
-        {activeTab === "reports" && renderReportsChart()}
-      </div>
-    </div>
+        {/* Main SVG Chart Container */}
+        <div className="w-full min-h-[260px] flex items-center justify-center">
+          {activeTab === "users" && renderUserGrowthChart()}
+          {activeTab === "content" && renderContentChart()}
+          {activeTab === "engagement" && renderEngagementChart()}
+          {activeTab === "reports" && renderReportsChart()}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
 const EmptyChart: React.FC<{ message: string }> = ({ message }) => (
-  <div className="h-56 flex flex-col items-center justify-center text-[#534434] text-xs italic space-y-2">
+  <div className="h-56 flex flex-col items-center justify-center text-muted-foreground text-xs italic space-y-2">
     <span>{message}</span>
   </div>
 );
+
+export default DashboardCharts;

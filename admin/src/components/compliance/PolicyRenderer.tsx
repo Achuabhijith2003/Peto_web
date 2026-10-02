@@ -61,7 +61,7 @@ function renderInlineMarkdown(text: string): React.ReactNode[] {
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[#0058be] hover:underline font-medium"
+          className="text-primary hover:underline font-medium"
         >
           {label}
         </a>
@@ -71,7 +71,7 @@ function renderInlineMarkdown(text: string): React.ReactNode[] {
     // Bold: **text**
     if (part.startsWith("**") && part.endsWith("**") && part.length >= 4) {
       return (
-        <strong key={index} className="font-bold text-[#151c27]">
+        <strong key={index} className="font-bold text-foreground">
           {part.slice(2, -2)}
         </strong>
       );
@@ -80,7 +80,7 @@ function renderInlineMarkdown(text: string): React.ReactNode[] {
     // Italic: *text*
     if (part.startsWith("*") && part.endsWith("*") && part.length >= 2) {
       return (
-        <em key={index} className="italic text-[#534434]">
+        <em key={index} className="italic text-muted-foreground">
           {part.slice(1, -1)}
         </em>
       );
@@ -91,7 +91,7 @@ function renderInlineMarkdown(text: string): React.ReactNode[] {
       return (
         <code
           key={index}
-          className="px-1.5 py-0.5 rounded bg-[#f0f3ff] text-[#0058be] font-mono text-[11px] border border-[#dae2f3]"
+          className="px-1.5 py-0.5 rounded bg-muted/40 text-primary font-mono text-[11px] border border-border"
         >
           {part.slice(1, -1)}
         </code>
@@ -260,24 +260,24 @@ export const PolicyRenderer: React.FC<PolicyRendererProps> = ({
   };
 
   const renderedBody = (
-    <div className={`space-y-4 text-xs sm:text-sm text-[#151c27] leading-relaxed select-text ${className}`}>
+    <div className={`space-y-4 text-xs sm:text-sm text-foreground leading-relaxed select-text ${className}`}>
       {/* Policy Header Box if metadata provided */}
       {title && (
-        <div className="bg-[#f9faff] border border-[#dae2f3] rounded-2xl p-5 mb-6 space-y-2">
+        <div className="bg-[#f9faff] border border-border rounded-2xl p-5 mb-6 space-y-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h1 className="text-xl sm:text-2xl font-bold font-heading text-[#151c27]">
+            <h1 className="text-xl sm:text-2xl font-bold font-heading text-foreground">
               {title}
             </h1>
             {version && (
-              <span className="px-3 py-1 rounded-full bg-[#f0f3ff] text-[#0058be] font-mono text-xs font-bold border border-[#dae2f3]">
+              <span className="px-3 py-1 rounded-full bg-muted/40 text-primary font-mono text-xs font-bold border border-border">
                 Version {version}
               </span>
             )}
           </div>
           {effectiveDate && (
-            <p className="text-xs text-[#534434]">
+            <p className="text-xs text-muted-foreground">
               Effective Date:{" "}
-              <span className="font-semibold text-[#151c27]">
+              <span className="font-semibold text-foreground">
                 {new Date(effectiveDate).toLocaleDateString(undefined, {
                   year: "numeric",
                   month: "long",
@@ -291,16 +291,16 @@ export const PolicyRenderer: React.FC<PolicyRendererProps> = ({
 
       {/* Table of Contents */}
       {showToc && headings.length > 2 && (
-        <div className="bg-[#fcfdff] border border-[#e2e8f8] rounded-2xl p-4 mb-6 text-xs">
-          <span className="font-bold text-[#534434] uppercase tracking-wider text-[11px] block mb-2 font-heading">
+        <div className="bg-[#fcfdff] border border-border rounded-2xl p-4 mb-6 text-xs">
+          <span className="font-bold text-muted-foreground uppercase tracking-wider text-[11px] block mb-2 font-heading">
             Table of Contents
           </span>
           <ul className="space-y-1">
             {headings.map((h, hIdx) => (
               <li
                 key={hIdx}
-                className={`text-[#0058be] hover:underline cursor-pointer ${
-                  h.type === "h3" ? "pl-4 text-[11px] text-[#534434]" : "font-medium"
+                className={`text-primary hover:underline cursor-pointer ${
+                  h.type === "h3" ? "pl-4 text-[11px] text-muted-foreground" : "font-medium"
                 }`}
               >
                 • {h.text}
@@ -311,7 +311,7 @@ export const PolicyRenderer: React.FC<PolicyRendererProps> = ({
       )}
 
       {blocks.length === 0 ? (
-        <div className="text-center py-12 text-[#534434] italic">
+        <div className="text-center py-12 text-muted-foreground italic">
           No policy content to preview.
         </div>
       ) : (
@@ -322,7 +322,7 @@ export const PolicyRenderer: React.FC<PolicyRendererProps> = ({
               return (
                 <h1
                   key={idx}
-                  className="text-xl sm:text-2xl font-bold font-heading text-[#151c27] tracking-tight pt-4 pb-2 border-b border-[#e2e8f8]"
+                  className="text-xl sm:text-2xl font-bold font-heading text-foreground tracking-tight pt-4 pb-2 border-b border-border"
                 >
                   {renderInlineMarkdown(block.content || "")}
                 </h1>
@@ -332,7 +332,7 @@ export const PolicyRenderer: React.FC<PolicyRendererProps> = ({
               return (
                 <h2
                   key={idx}
-                  className="text-base sm:text-lg font-bold font-heading text-[#0058be] tracking-tight pt-3 pb-1"
+                  className="text-base sm:text-lg font-bold font-heading text-primary tracking-tight pt-3 pb-1"
                 >
                   {renderInlineMarkdown(block.content || "")}
                 </h2>
@@ -342,7 +342,7 @@ export const PolicyRenderer: React.FC<PolicyRendererProps> = ({
               return (
                 <h3
                   key={idx}
-                  className="text-sm sm:text-base font-bold font-heading text-[#151c27] pt-2"
+                  className="text-sm sm:text-base font-bold font-heading text-foreground pt-2"
                 >
                   {renderInlineMarkdown(block.content || "")}
                 </h3>
@@ -350,21 +350,21 @@ export const PolicyRenderer: React.FC<PolicyRendererProps> = ({
 
             case "h4":
               return (
-                <h4 key={idx} className="text-xs sm:text-sm font-bold text-[#534434] pt-1">
+                <h4 key={idx} className="text-xs sm:text-sm font-bold text-muted-foreground pt-1">
                   {renderInlineMarkdown(block.content || "")}
                 </h4>
               );
 
             case "p":
               return (
-                <p key={idx} className="leading-relaxed text-[#151c27]/90 font-normal">
+                <p key={idx} className="leading-relaxed text-foreground/90 font-normal">
                   {renderInlineMarkdown(block.content || "")}
                 </p>
               );
 
             case "ul":
               return (
-                <ul key={idx} className="space-y-1.5 pl-5 list-disc text-[#151c27]/90">
+                <ul key={idx} className="space-y-1.5 pl-5 list-disc text-foreground/90">
                   {block.items?.map((item, itemIdx) => (
                     <li key={itemIdx} className="leading-relaxed">
                       {renderInlineMarkdown(item)}
@@ -375,7 +375,7 @@ export const PolicyRenderer: React.FC<PolicyRendererProps> = ({
 
             case "ol":
               return (
-                <ol key={idx} className="space-y-1.5 pl-5 list-decimal text-[#151c27]/90">
+                <ol key={idx} className="space-y-1.5 pl-5 list-decimal text-foreground/90">
                   {block.items?.map((item, itemIdx) => (
                     <li key={itemIdx} className="leading-relaxed">
                       {renderInlineMarkdown(item)}
@@ -388,20 +388,20 @@ export const PolicyRenderer: React.FC<PolicyRendererProps> = ({
               return (
                 <blockquote
                   key={idx}
-                  className="border-l-4 border-[#0058be] bg-[#f0f3ff]/60 px-4 py-3 rounded-r-xl text-xs text-[#534434] italic"
+                  className="border-l-4 border-primary bg-muted/40/60 px-4 py-3 rounded-r-xl text-xs text-muted-foreground italic"
                 >
                   {renderInlineMarkdown(block.content || "")}
                 </blockquote>
               );
 
             case "hr":
-              return <hr key={idx} className="my-6 border-[#e2e8f8]" />;
+              return <hr key={idx} className="my-6 border-border" />;
 
             case "table":
               return (
-                <div key={idx} className="overflow-x-auto my-4 rounded-xl border border-[#e2e8f8]">
+                <div key={idx} className="overflow-x-auto my-4 rounded-xl border border-border">
                   <table className="w-full text-left text-xs border-collapse">
-                    <thead className="bg-[#f0f3ff] text-[#151c27] font-bold font-heading border-b border-[#e2e8f8]">
+                    <thead className="bg-muted/40 text-foreground font-bold font-heading border-b border-border">
                       <tr>
                         {block.headers?.map((h, hIdx) => (
                           <th key={hIdx} className="p-3">
@@ -412,9 +412,9 @@ export const PolicyRenderer: React.FC<PolicyRendererProps> = ({
                     </thead>
                     <tbody className="divide-y divide-[#e2e8f8]">
                       {block.rows?.map((row, rIdx) => (
-                        <tr key={rIdx} className="hover:bg-[#f9f9ff]">
+                        <tr key={rIdx} className="hover:bg-muted/20">
                           {row.map((cell, cIdx) => (
-                            <td key={cIdx} className="p-3 text-[#151c27]">
+                            <td key={cIdx} className="p-3 text-foreground">
                               {renderInlineMarkdown(cell)}
                             </td>
                           ))}
@@ -436,14 +436,14 @@ export const PolicyRenderer: React.FC<PolicyRendererProps> = ({
   if (showDeviceFrame && viewport !== "desktop") {
     return (
       <div className="py-4 flex flex-col items-center justify-center">
-        <div className="text-[10px] uppercase font-mono text-[#534434] font-bold mb-2 flex items-center gap-1.5">
+        <div className="text-[10px] uppercase font-mono text-muted-foreground font-bold mb-2 flex items-center gap-1.5">
           <span>Simulation Mode:</span>
-          <span className="px-2 py-0.5 rounded-full bg-[#f0f3ff] text-[#0058be] border border-[#dae2f3]">
+          <span className="px-2 py-0.5 rounded-full bg-muted/40 text-primary border border-border">
             {viewport === "mobile" ? "Mobile Viewport (390px)" : "Tablet Viewport (720px)"}
           </span>
         </div>
         <div
-          className={`${viewportStyles[viewport]} w-full bg-white rounded-3xl border-4 border-[#151c27]/20 shadow-2xl p-6 min-h-[500px] transition-all`}
+          className={`${viewportStyles[viewport]} w-full bg-card rounded-3xl border-4 border-[#151c27]/20 shadow-2xl p-6 min-h-[500px] transition-all`}
         >
           {renderedBody}
         </div>

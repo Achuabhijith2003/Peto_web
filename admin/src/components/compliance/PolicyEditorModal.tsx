@@ -188,28 +188,28 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-[#151c27]/60 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="bg-white border border-[#e2e8f8] rounded-3xl w-full max-w-7xl h-[94vh] flex flex-col shadow-level-3 overflow-hidden">
+      <div className="bg-card border border-border rounded-3xl w-full max-w-7xl h-[94vh] flex flex-col shadow-lg overflow-hidden">
         {/* Header Bar */}
-        <div className="px-6 py-4 border-b border-[#e2e8f8] bg-white flex items-center justify-between gap-4 flex-shrink-0">
+        <div className="px-6 py-4 border-b border-border bg-card flex items-center justify-between gap-4 flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#f0f3ff] border border-[#dae2f3] text-[#0058be] flex items-center justify-center font-bold">
+            <div className="w-10 h-10 rounded-2xl bg-muted/40 border border-border text-primary flex items-center justify-center font-bold">
               <Edit3 size={18} />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold font-heading text-[#151c27]">
+                <h2 className="text-lg font-bold font-heading text-foreground">
                   {isEditing ? `Edit Draft — ${title}` : "Create Policy Revision"}
                 </h2>
-                <span className="px-2.5 py-0.5 rounded-full bg-[#f0f3ff] text-[#0058be] font-mono text-xs font-semibold border border-[#dae2f3]">
+                <span className="px-2.5 py-0.5 rounded-full bg-muted/40 text-primary font-mono text-xs font-semibold border border-border">
                   v{version}
                 </span>
                 <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[11px] font-semibold border border-amber-200">
                   DRAFT
                 </span>
               </div>
-              <p className="text-xs text-[#534434]">
+              <p className="text-xs text-muted-foreground">
                 {POLICY_TYPE_LABELS[policyType]} • Slug:{" "}
-                <span className="font-mono text-[#0058be]">
+                <span className="font-mono text-primary">
                   /{policyType.toLowerCase().replace(/_/g, "-")}
                 </span>
               </p>
@@ -219,14 +219,14 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
           {/* View mode switcher & Viewport switcher */}
           <div className="flex items-center gap-3">
             {/* Split / Editor / Preview Selector */}
-            <div className="bg-[#f0f3ff] p-1 rounded-2xl border border-[#dae2f3] flex items-center gap-1">
+            <div className="bg-muted/40 p-1 rounded-2xl border border-border flex items-center gap-1">
               <button
                 type="button"
                 onClick={() => setViewMode("split")}
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition ${
                   viewMode === "split"
-                    ? "bg-white text-[#0058be] shadow-sm"
-                    : "text-[#534434] hover:text-[#151c27]"
+                    ? "bg-card text-primary shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
                 title="Split View (Editor + Live Preview)"
               >
@@ -238,8 +238,8 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
                 onClick={() => setViewMode("editor")}
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition ${
                   viewMode === "editor"
-                    ? "bg-white text-[#0058be] shadow-sm"
-                    : "text-[#534434] hover:text-[#151c27]"
+                    ? "bg-card text-primary shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
                 title="Editor Only"
               >
@@ -251,8 +251,8 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
                 onClick={() => setViewMode("preview")}
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition ${
                   viewMode === "preview"
-                    ? "bg-white text-[#0058be] shadow-sm"
-                    : "text-[#534434] hover:text-[#151c27]"
+                    ? "bg-card text-primary shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
                 title="Preview Only"
               >
@@ -263,14 +263,14 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
 
             {/* Viewport switch (Desktop / Tablet / Mobile) */}
             {(viewMode === "split" || viewMode === "preview") && (
-              <div className="bg-[#f0f3ff] p-1 rounded-2xl border border-[#dae2f3] flex items-center gap-1">
+              <div className="bg-muted/40 p-1 rounded-2xl border border-border flex items-center gap-1">
                 <button
                   type="button"
                   onClick={() => setViewport("desktop")}
                   className={`p-1.5 rounded-xl text-xs transition ${
                     viewport === "desktop"
-                      ? "bg-white text-[#0058be] shadow-sm"
-                      : "text-[#534434] hover:text-[#151c27]"
+                      ? "bg-card text-primary shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                   title="Desktop Preview"
                 >
@@ -281,8 +281,8 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
                   onClick={() => setViewport("tablet")}
                   className={`p-1.5 rounded-xl text-xs transition ${
                     viewport === "tablet"
-                      ? "bg-white text-[#0058be] shadow-sm"
-                      : "text-[#534434] hover:text-[#151c27]"
+                      ? "bg-card text-primary shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                   title="Tablet Preview"
                 >
@@ -293,8 +293,8 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
                   onClick={() => setViewport("mobile")}
                   className={`p-1.5 rounded-xl text-xs transition ${
                     viewport === "mobile"
-                      ? "bg-white text-[#0058be] shadow-sm"
-                      : "text-[#534434] hover:text-[#151c27]"
+                      ? "bg-card text-primary shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                   title="Mobile App Viewport"
                 >
@@ -309,8 +309,8 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
               onClick={() => setShowMetadataDrawer(!showMetadataDrawer)}
               className={`px-3 py-1.5 rounded-2xl border text-xs font-semibold transition flex items-center gap-1.5 ${
                 showMetadataDrawer
-                  ? "bg-[#0058be] text-white border-[#0058be]"
-                  : "bg-[#f0f3ff] text-[#534434] border-[#dae2f3] hover:text-[#151c27]"
+                  ? "bg-primary text-white border-primary"
+                  : "bg-muted/40 text-muted-foreground border-border hover:text-foreground"
               }`}
             >
               <span>Config</span>
@@ -319,7 +319,7 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="p-2 rounded-xl text-[#534434] hover:text-[#151c27] hover:bg-[#f0f3ff] transition"
+              className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/40 transition"
             >
               <X size={20} />
             </button>
@@ -328,9 +328,9 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
 
         {/* Collapsible Metadata Drawer */}
         {showMetadataDrawer && (
-          <div className="bg-[#f9f9ff] border-b border-[#e2e8f8] px-6 py-4 grid grid-cols-1 md:grid-cols-4 gap-4 flex-shrink-0 animate-in slide-in-from-top-2 duration-150">
+          <div className="bg-muted/20 border-b border-border px-6 py-4 grid grid-cols-1 md:grid-cols-4 gap-4 flex-shrink-0 animate-in slide-in-from-top-2 duration-150">
             <div>
-              <label className="block text-xs font-semibold text-[#534434] mb-1">
+              <label className="block text-xs font-semibold text-muted-foreground mb-1">
                 Policy Type
               </label>
               <select
@@ -341,7 +341,7 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
                   setPolicyType(t);
                   setTitle(POLICY_TYPE_LABELS[t]);
                 }}
-                className="w-full bg-white border border-[#dae2f3] rounded-xl px-3 py-2 text-xs text-[#151c27] focus:outline-none focus:border-[#0058be] disabled:opacity-60"
+                className="w-full bg-card border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary disabled:opacity-60"
               >
                 {Object.entries(POLICY_TYPE_LABELS).map(([k, v]) => (
                   <option key={k} value={k}>
@@ -352,19 +352,19 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#534434] mb-1">
+              <label className="block text-xs font-semibold text-muted-foreground mb-1">
                 Document Title
               </label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full bg-white border border-[#dae2f3] rounded-xl px-3 py-2 text-xs text-[#151c27] focus:outline-none focus:border-[#0058be]"
+                className="w-full bg-card border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#534434] mb-1">
+              <label className="block text-xs font-semibold text-muted-foreground mb-1">
                 Version Tag (SemVer)
               </label>
               <input
@@ -372,24 +372,24 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
                 value={version}
                 onChange={(e) => setVersion(e.target.value)}
                 placeholder="1.1.0"
-                className="w-full bg-white border border-[#dae2f3] rounded-xl px-3 py-2 text-xs text-[#151c27] font-mono focus:outline-none focus:border-[#0058be]"
+                className="w-full bg-card border border-border rounded-xl px-3 py-2 text-xs text-foreground font-mono focus:outline-none focus:border-primary"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#534434] mb-1">
+              <label className="block text-xs font-semibold text-muted-foreground mb-1">
                 Effective Date
               </label>
               <input
                 type="date"
                 value={effectiveDate}
                 onChange={(e) => setEffectiveDate(e.target.value)}
-                className="w-full bg-white border border-[#dae2f3] rounded-xl px-3 py-2 text-xs text-[#151c27] focus:outline-none focus:border-[#0058be]"
+                className="w-full bg-card border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary"
               />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-xs font-semibold text-[#534434] mb-1">
+              <label className="block text-xs font-semibold text-muted-foreground mb-1">
                 Summary of Changes (Audit Trail)
               </label>
               <input
@@ -397,18 +397,18 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
                 value={summaryOfChanges}
                 onChange={(e) => setSummaryOfChanges(e.target.value)}
                 placeholder="Brief description of updates made in this version..."
-                className="w-full bg-white border border-[#dae2f3] rounded-xl px-3 py-2 text-xs text-[#151c27] focus:outline-none focus:border-[#0058be]"
+                className="w-full bg-card border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#534434] mb-1">
+              <label className="block text-xs font-semibold text-muted-foreground mb-1">
                 Region Scope
               </label>
               <select
                 value={regionCode}
                 onChange={(e) => setRegionCode(e.target.value)}
-                className="w-full bg-white border border-[#dae2f3] rounded-xl px-3 py-2 text-xs text-[#151c27] focus:outline-none focus:border-[#0058be]"
+                className="w-full bg-card border border-border rounded-xl px-3 py-2 text-xs text-foreground focus:outline-none focus:border-primary"
               >
                 <option value="GLOBAL">Global (All Regions)</option>
                 <option value="IN">India (DPDP Act)</option>
@@ -423,9 +423,9 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
                 id="reqAck"
                 checked={requiresAcknowledgement}
                 onChange={(e) => setRequiresAcknowledgement(e.target.checked)}
-                className="w-4 h-4 rounded text-[#0058be] focus:ring-[#0058be] border-[#dae2f3]"
+                className="w-4 h-4 rounded text-primary focus:ring-[#0058be] border-border"
               />
-              <label htmlFor="reqAck" className="text-xs text-[#151c27] cursor-pointer">
+              <label htmlFor="reqAck" className="text-xs text-foreground cursor-pointer">
                 Require user re-acknowledgement on next app open
               </label>
             </div>
@@ -437,16 +437,16 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
           {/* Left Panel: Markdown Editor */}
           {(viewMode === "split" || viewMode === "editor") && (
             <div
-              className={`flex flex-col border-r border-[#e2e8f8] bg-white ${
+              className={`flex flex-col border-r border-border bg-card ${
                 viewMode === "split" ? "w-1/2" : "w-full"
               }`}
             >
               {/* Markdown Toolbar */}
-              <div className="px-4 py-2 border-b border-[#e2e8f8] bg-[#fcfdff] flex flex-wrap items-center gap-1 text-[#534434]">
+              <div className="px-4 py-2 border-b border-border bg-[#fcfdff] flex flex-wrap items-center gap-1 text-muted-foreground">
                 <button
                   type="button"
                   onClick={() => insertMarkdown("**", "**", "bold text")}
-                  className="p-1.5 rounded-lg hover:bg-[#f0f3ff] hover:text-[#0058be] transition text-xs"
+                  className="p-1.5 rounded-lg hover:bg-muted/40 hover:text-primary transition text-xs"
                   title="Bold"
                 >
                   <Bold size={14} />
@@ -454,7 +454,7 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
                 <button
                   type="button"
                   onClick={() => insertMarkdown("*", "*", "italic text")}
-                  className="p-1.5 rounded-lg hover:bg-[#f0f3ff] hover:text-[#0058be] transition text-xs"
+                  className="p-1.5 rounded-lg hover:bg-muted/40 hover:text-primary transition text-xs"
                   title="Italic"
                 >
                   <Italic size={14} />
@@ -463,7 +463,7 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
                 <button
                   type="button"
                   onClick={() => insertMarkdown("# ", "", "Heading 1")}
-                  className="p-1.5 rounded-lg hover:bg-[#f0f3ff] hover:text-[#0058be] transition text-xs"
+                  className="p-1.5 rounded-lg hover:bg-muted/40 hover:text-primary transition text-xs"
                   title="H1"
                 >
                   <Heading1 size={14} />
@@ -471,7 +471,7 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
                 <button
                   type="button"
                   onClick={() => insertMarkdown("## ", "", "Heading 2")}
-                  className="p-1.5 rounded-lg hover:bg-[#f0f3ff] hover:text-[#0058be] transition text-xs"
+                  className="p-1.5 rounded-lg hover:bg-muted/40 hover:text-primary transition text-xs"
                   title="H2"
                 >
                   <Heading2 size={14} />
@@ -479,7 +479,7 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
                 <button
                   type="button"
                   onClick={() => insertMarkdown("### ", "", "Heading 3")}
-                  className="p-1.5 rounded-lg hover:bg-[#f0f3ff] hover:text-[#0058be] transition text-xs"
+                  className="p-1.5 rounded-lg hover:bg-muted/40 hover:text-primary transition text-xs"
                   title="H3"
                 >
                   <Heading3 size={14} />
@@ -488,7 +488,7 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
                 <button
                   type="button"
                   onClick={() => insertMarkdown("- ", "", "List item")}
-                  className="p-1.5 rounded-lg hover:bg-[#f0f3ff] hover:text-[#0058be] transition text-xs"
+                  className="p-1.5 rounded-lg hover:bg-muted/40 hover:text-primary transition text-xs"
                   title="Bullet List"
                 >
                   <List size={14} />
@@ -496,7 +496,7 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
                 <button
                   type="button"
                   onClick={() => insertMarkdown("1. ", "", "Ordered item")}
-                  className="p-1.5 rounded-lg hover:bg-[#f0f3ff] hover:text-[#0058be] transition text-xs"
+                  className="p-1.5 rounded-lg hover:bg-muted/40 hover:text-primary transition text-xs"
                   title="Numbered List"
                 >
                   <ListOrdered size={14} />
@@ -508,7 +508,7 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
                       "\n| Item | Description |\n| --- | --- |\n| Option A | Details A |\n"
                     )
                   }
-                  className="p-1.5 rounded-lg hover:bg-[#f0f3ff] hover:text-[#0058be] transition text-xs"
+                  className="p-1.5 rounded-lg hover:bg-muted/40 hover:text-primary transition text-xs"
                   title="Insert Table"
                 >
                   <TableIcon size={14} />
@@ -516,7 +516,7 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
                 <button
                   type="button"
                   onClick={() => insertMarkdown("[Link Text](", "https://example.com)")}
-                  className="p-1.5 rounded-lg hover:bg-[#f0f3ff] hover:text-[#0058be] transition text-xs"
+                  className="p-1.5 rounded-lg hover:bg-muted/40 hover:text-primary transition text-xs"
                   title="Link"
                 >
                   <Link2 size={14} />
@@ -526,13 +526,13 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
                   onClick={() =>
                     insertMarkdown("\n> [!NOTE]\n> Important legal clause or notice.\n\n")
                   }
-                  className="p-1.5 rounded-lg hover:bg-[#f0f3ff] hover:text-[#0058be] transition text-xs"
+                  className="p-1.5 rounded-lg hover:bg-muted/40 hover:text-primary transition text-xs"
                   title="Legal Note / Alert"
                 >
                   <AlertCircle size={14} />
                 </button>
 
-                <div className="ml-auto text-[11px] text-[#534434] font-mono">
+                <div className="ml-auto text-[11px] text-muted-foreground font-mono">
                   {content.length} characters • {content.split(/\s+/).filter(Boolean).length} words
                 </div>
               </div>
@@ -543,7 +543,7 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="Enter markdown policy content here..."
-                className="flex-1 w-full p-5 font-mono text-xs text-[#151c27] leading-relaxed resize-none focus:outline-none bg-white select-text"
+                className="flex-1 w-full p-5 font-mono text-xs text-foreground leading-relaxed resize-none focus:outline-none bg-card select-text"
               />
             </div>
           )}
@@ -551,18 +551,18 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
           {/* Right Panel: Live User Web / Mobile Preview */}
           {(viewMode === "split" || viewMode === "preview") && (
             <div
-              className={`flex-1 flex flex-col bg-[#f0f3ff]/40 overflow-hidden ${
+              className={`flex-1 flex flex-col bg-muted/40/40 overflow-hidden ${
                 viewMode === "preview" ? "w-full" : "w-1/2"
               }`}
             >
-              <div className="px-4 py-2 border-b border-[#e2e8f8] bg-[#f8faff] flex items-center justify-between text-xs text-[#534434]">
+              <div className="px-4 py-2 border-b border-border bg-[#f8faff] flex items-center justify-between text-xs text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                   <span className="font-semibold font-heading">
                     Live Rendering Preview ({viewport.toUpperCase()})
                   </span>
                 </div>
-                <span className="text-[11px] text-[#534434]/80">
+                <span className="text-[11px] text-muted-foreground/80">
                   Matches User Web & Mobile CSS
                 </span>
               </div>
@@ -582,8 +582,8 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="px-6 py-4 border-t border-[#e2e8f8] bg-white flex items-center justify-between gap-3 flex-shrink-0">
-          <div className="text-xs text-[#534434] flex items-center gap-1.5">
+        <div className="px-6 py-4 border-t border-border bg-card flex items-center justify-between gap-3 flex-shrink-0">
+          <div className="text-xs text-muted-foreground flex items-center gap-1.5">
             <HelpCircle size={14} />
             <span>
               Drafts are isolated. Publishing makes this document public on Web & Mobile immediately.
@@ -594,7 +594,7 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#534434] text-xs font-semibold border border-[#dae2f3] transition cursor-pointer"
+              className="px-4 py-2 rounded-xl bg-muted/40 hover:bg-[#e2e8f8] text-muted-foreground text-xs font-semibold border border-border transition cursor-pointer"
             >
               Cancel
             </button>
@@ -602,7 +602,7 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
               type="button"
               onClick={() => handleSave(false)}
               disabled={isLoading}
-              className="px-5 py-2 rounded-xl bg-[#0058be] hover:bg-[#2170e4] text-white text-xs font-semibold shadow-sm disabled:opacity-50 transition flex items-center gap-1.5 cursor-pointer"
+              className="px-5 py-2 rounded-xl bg-primary hover:bg-[#2170e4] text-white text-xs font-semibold shadow-sm disabled:opacity-50 transition flex items-center gap-1.5 cursor-pointer"
             >
               <Check size={14} />
               <span>{isLoading ? "Saving..." : "Save Draft"}</span>

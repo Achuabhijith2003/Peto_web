@@ -14,88 +14,149 @@ import {
   Bell,
   CreditCard,
   Globe,
+  PanelLeftClose,
+  PanelLeft,
+  ChevronRight,
+  Sparkles,
 } from "lucide-react";
+import { useAdminAuth } from "../../context/AdminAuthContext";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
+import { cn } from "@/lib/utils";
 
 interface NavItem {
   title: string;
   path: string;
-  icon: React.ReactNode;
+  icon: React.ComponentType<{ className?: string }>;
+  permission?: string;
   badge?: string;
 }
 
-export const AdminSidebar: React.FC = () => {
-  const location = useLocation();
+interface NavGroup {
+  group: string;
+  items: NavItem[];
+}
 
-  const coreNavItems: NavItem[] = [
+interface AdminSidebarProps {
+  collapsed: boolean;
+  onToggleCollapse: () => void;
+  onNavigateMobile?: () => void;
+}
+
+export const AdminSidebar: React.FC<AdminSidebarProps> = ({
+  collapsed,
+  onToggleCollapse,
+  onNavigateMobile,
+}) => {
+  const location = useLocation();
+  const { hasPermission } = useAdminAuth();
+
+  const navigationGroups: NavGroup[] = [
     {
-      title: "Dashboard",
-      path: "/dashboard",
-      icon: <LayoutDashboard className="w-4 h-4 text-[#0058be]" />,
+      group: "Overview",
+      items: [
+        {
+          title: "Dashboard",
+          path: "/dashboard",
+          icon: LayoutDashboard,
+        },
+        {
+          title: "Analytics",
+          path: "/analytics",
+          icon: BarChart3,
+          permission: "analytics.view",
+        },
+      ],
     },
     {
-      title: "Notifications",
-      path: "/notifications",
-      icon: <Bell className="w-4 h-4 text-[#f59e0b]" />,
+      group: "Management",
+      items: [
+        {
+          title: "Users",
+          path: "/users",
+          icon: Users,
+          permission: "users.view",
+        },
+      ],
     },
     {
-      title: "Moderation",
-      path: "/moderation",
-      icon: <ShieldAlert className="w-4 h-4 text-[#ba1a1a]" />,
+      group: "Trust & Safety",
+      items: [
+        {
+          title: "Moderation",
+          path: "/moderation",
+          icon: ShieldAlert,
+          permission: "reports.view",
+        },
+        {
+          title: "Verifications",
+          path: "/verifications",
+          icon: ShieldCheck,
+          permission: "ads.view",
+        },
+      ],
     },
     {
-      title: "Users",
-      path: "/users",
-      icon: <Users className="w-4 h-4 text-[#2170e4]" />,
+      group: "Monetization",
+      items: [
+        {
+          title: "Ads Control Center",
+          path: "/ads",
+          icon: Megaphone,
+          permission: "ads.view",
+        },
+        {
+          title: "Payments & Ledger",
+          path: "/payments",
+          icon: CreditCard,
+          permission: "ads.view",
+        },
+      ],
     },
     {
-      title: "Administrators",
-      path: "/admins",
-      icon: <ShieldCheck className="w-4 h-4 text-[#006c49]" />,
-    },
-    {
-      title: "Roles & Permissions",
-      path: "/roles",
-      icon: <Shield className="w-4 h-4 text-[#7c3aed]" />,
-    },
-    {
-      title: "Audit Logs",
-      path: "/audit-logs",
-      icon: <FileText className="w-4 h-4 text-[#b45309]" />,
-    },
-    {
-      title: "Analytics",
-      path: "/analytics",
-      icon: <BarChart3 className="w-4 h-4 text-[#4f46e5]" />,
-    },
-    {
-      title: "System & Health",
-      path: "/system",
-      icon: <Server className="w-4 h-4 text-[#006c49]" />,
-    },
-    {
-      title: "Compliance & Legal",
-      path: "/compliance",
-      icon: <Scale className="w-4 h-4 text-[#0058be]" />,
-    },
-    {
-      title: "Ads & Campaigns",
-      path: "/ads",
-      icon: <Megaphone className="w-4 h-4 text-[#ea580c]" />,
-    },
-    {
-      title: "Verifications",
-      path: "/verifications",
-      icon: <ShieldCheck className="w-4 h-4 text-[#d97706]" />,
-    },
-    {
-      title: "Payments & Ledger",
-      path: "/payments",
-      icon: <CreditCard className="w-4 h-4 text-[#16a34a]" />,
-    },
-    {
-      title: "Regional Controls",
-      path: "/regions",
-      icon: <Globe className="w-4 h-4 text-[#0058be]" />,
+      group: "Administration",
+      items: [
+        {
+          title: "Notifications",
+          path: "/notifications",
+          icon: Bell,
+        },
+        {
+          title: "Administrators",
+          path: "/admins",
+          icon: Shield,
+          permission: "admins.view",
+        },
+        {
+          title: "Roles & Permissions",
+          path: "/roles",
+          icon: ShieldCheck,
+          permission: "roles.view",
+        },
+        {
+          title: "Audit Logs",
+          path: "/audit-logs",
+          icon: FileText,
+          permission: "audit_logs.view",
+        },
+        {
+          title: "System & Health",
+          path: "/system",
+          icon: Server,
+          permission: "system.view",
+        },
+        {
+          title: "Compliance & Legal",
+          path: "/compliance",
+          icon: Scale,
+          permission: "compliance.view",
+        },
+        {
+          title: "Regional Controls",
+          path: "/regions",
+          icon: Globe,
+          permission: "system.view",
+        },
+      ],
     },
   ];
 
@@ -107,58 +168,129 @@ export const AdminSidebar: React.FC = () => {
   };
 
   return (
-    <aside className="w-64 bg-white border-r border-[#e2e8f8] shadow-level-1 flex flex-col shrink-0 h-screen sticky top-0 overflow-y-auto z-20">
+    <aside
+      className={cn(
+        "bg-sidebar border-r border-sidebar-border flex flex-col shrink-0 h-screen sticky top-0 transition-all duration-200 z-30 select-none",
+        collapsed ? "w-16" : "w-64"
+      )}
+    >
       {/* Brand Header */}
-      <div className="h-16 px-6 border-b border-[#e2e8f8] flex items-center space-x-3 bg-white">
-        <div className="w-10 h-10 rounded-2xl bg-white border border-[#e2e8f8] p-1 flex items-center justify-center shadow-xs overflow-hidden">
-          <img src="/peto_logo.png" alt="Peto Logo" className="w-full h-full object-contain" />
+      <div className="h-14 px-3.5 border-b border-sidebar-border flex items-center justify-between shrink-0 bg-sidebar">
+        <div className="flex items-center gap-2.5 overflow-hidden">
+          <div className="size-8 rounded-xl bg-primary/10 border border-primary/20 p-1 flex items-center justify-center shrink-0">
+            <img src="/peto_logo.png" alt="Peto Logo" className="w-full h-full object-contain" />
+          </div>
+          {!collapsed && (
+            <div className="truncate">
+              <span className="font-heading text-sm font-bold tracking-tight text-sidebar-foreground flex items-center gap-1.5">
+                PETO <span className="text-[10px] font-sans font-bold px-1.5 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30">ADMIN</span>
+              </span>
+              <span className="text-[10px] text-muted-foreground block -mt-0.5 truncate">
+                Operational Control
+              </span>
+            </div>
+          )}
         </div>
-        <div>
-          <span className="font-heading text-base font-bold tracking-tight text-[#151c27] flex items-center">
-            PETO <span className="ml-1.5 text-[10px] font-sans font-bold px-1.5 py-0.5 rounded-full bg-[#fff3d6] text-[#855300] border border-[#ffddb8]">ADMIN</span>
-          </span>
-          <span className="text-[10px] text-[#534434] font-medium block -mt-0.5">Warm Companionship</span>
-        </div>
+
+        <button
+          type="button"
+          onClick={onToggleCollapse}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className="size-7 rounded-lg text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent flex items-center justify-center transition-colors shrink-0"
+        >
+          {collapsed ? <PanelLeft className="size-4" /> : <PanelLeftClose className="size-4" />}
+        </button>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 p-3 space-y-6">
-        {/* Core Operations */}
-        <div className="space-y-1">
-          <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[#867461]">
-            Platform Operations
-          </div>
-          {coreNavItems.map((item) => {
-            const active = isItemActive(item.path);
-            return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all ${
-                  active
-                    ? "text-[#0058be] bg-[#e7eefe] font-semibold border border-[#d8e2ff] shadow-sm"
-                    : "text-[#534434] hover:text-[#151c27] hover:bg-[#f0f3ff]"
-                }`}
-              >
-                <div className="flex items-center space-x-3">
-                  {item.icon}
-                  <span>{item.title}</span>
+      {/* Navigation Groups */}
+      <nav className="flex-1 overflow-y-auto px-2.5 py-3 space-y-4">
+        {navigationGroups.map((group) => {
+          // Filter items by permission
+          const visibleItems = group.items.filter((item) => {
+            if (!item.permission) return true;
+            return hasPermission(item.permission);
+          });
+
+          if (visibleItems.length === 0) return null;
+
+          return (
+            <div key={group.group} className="space-y-1">
+              {!collapsed ? (
+                <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">
+                  {group.group}
                 </div>
-              </NavLink>
-            );
-          })}
-        </div>
+              ) : (
+                <div className="h-2" />
+              )}
+
+              {visibleItems.map((item) => {
+                const active = isItemActive(item.path);
+                const IconComponent = item.icon;
+
+                const linkContent = (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    onClick={onNavigateMobile}
+                    className={cn(
+                      "flex items-center gap-2.5 rounded-lg text-xs font-medium transition-all group relative",
+                      collapsed ? "justify-center p-2" : "px-3 py-2",
+                      active
+                        ? "bg-primary/10 text-primary font-semibold shadow-xs"
+                        : "text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/80"
+                    )}
+                  >
+                    <IconComponent
+                      className={cn(
+                        "size-4 shrink-0 transition-colors",
+                        active ? "text-primary" : "text-muted-foreground group-hover:text-sidebar-foreground"
+                      )}
+                    />
+                    {!collapsed && <span className="truncate">{item.title}</span>}
+                    {active && !collapsed && (
+                      <div className="ml-auto size-1.5 rounded-full bg-primary" />
+                    )}
+                  </NavLink>
+                );
+
+                if (collapsed) {
+                  return (
+                    <Tooltip key={item.path}>
+                      <TooltipTrigger render={linkContent} />
+                      <TooltipContent side="right" className="text-xs font-medium">
+                        {item.title}
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                }
+
+                return linkContent;
+              })}
+            </div>
+          );
+        })}
       </nav>
 
-      {/* Footer Info */}
-      <div className="p-3 border-t border-[#e2e8f8] text-[11px] text-[#534434] bg-[#f9f9ff]">
-        <div className="flex items-center justify-between px-2 py-1">
-          <span className="font-medium">Security Engine</span>
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#e8f7f0] text-[#006c49] border border-[#a3e5c7]">
-            RBAC ACTIVE
-          </span>
-        </div>
+      {/* Footer System Status */}
+      <div className="p-3 border-t border-sidebar-border bg-sidebar/50 shrink-0 text-xs text-muted-foreground">
+        {!collapsed ? (
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-medium flex items-center gap-1.5">
+              <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+              RBAC Guard
+            </span>
+            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+              v1.0
+            </span>
+          </div>
+        ) : (
+          <div className="flex justify-center" title="RBAC Active">
+            <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+          </div>
+        )}
       </div>
     </aside>
   );
 };
+
+export default AdminSidebar;

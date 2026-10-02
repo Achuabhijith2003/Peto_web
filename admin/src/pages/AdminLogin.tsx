@@ -2,6 +2,11 @@ import React, { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAdminAuth } from "../context/AdminAuthContext";
 import { getApiBaseUrl } from "../api/adminApi";
+import { Button } from "../components/ui/button";
+import { Card, CardContent } from "../components/ui/card";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { ThemeSwitcher } from "../components/layout/ThemeSwitcher";
 import { Lock, Mail, AlertCircle, ArrowRight, Settings, Check } from "lucide-react";
 
 export const AdminLogin: React.FC = () => {
@@ -65,146 +70,129 @@ export const AdminLogin: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f9f9ff] text-[#151c27] flex flex-col justify-center items-center p-4 selection:bg-[#0058be] selection:text-white relative overflow-hidden">
-      {/* Background ambient organic shapes */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -left-40 w-96 h-96 bg-[#0058be]/5 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-[#855300]/5 rounded-full blur-3xl"></div>
+    <div className="min-h-screen bg-background text-foreground flex flex-col justify-center items-center p-4 relative overflow-hidden">
+      {/* Top right theme switch */}
+      <div className="absolute top-4 right-4 z-20">
+        <ThemeSwitcher variant="icon" />
       </div>
 
-      <div className="w-full max-w-md relative z-10">
+      {/* Background ambient organic shapes */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl"></div>
+      </div>
+
+      <div className="w-full max-w-md relative z-10 space-y-6">
         {/* Brand Banner */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-white border border-[#e2e8f8] shadow-level-2 mb-4 p-2 overflow-hidden">
+        <div className="text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-card border border-border shadow-md mb-4 p-2 overflow-hidden">
             <img src="/peto_logo.png" alt="Peto Logo" className="w-full h-full object-contain" />
           </div>
-          <h1 className="text-2xl font-bold font-heading tracking-tight text-[#151c27]">
+          <h1 className="text-2xl font-bold font-heading tracking-tight text-foreground">
             Peto Control Center
           </h1>
-          <p className="text-xs text-[#534434] mt-1">
-            Restricted Administrative Access Portal
+          <p className="text-xs text-muted-foreground mt-1">
+            Restricted Operational Admin Portal
           </p>
         </div>
 
         {/* Login Card */}
-        <div className="bg-white border border-[#e2e8f8] rounded-2xl p-8 shadow-level-2 space-y-6">
+        <Card className="p-8 space-y-6 shadow-lg border-border">
           {errorMessage && (
-            <div className="p-3.5 rounded-xl bg-[#ffdad6]/40 border border-[#ffdad6] text-[#ba1a1a] text-xs font-semibold flex items-start space-x-2.5 animate-in fade-in duration-200">
-              <AlertCircle className="w-4 h-4 shrink-0 text-[#ba1a1a] mt-0.5" />
+            <div className="p-3.5 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-semibold flex items-start space-x-2.5 animate-in fade-in duration-200">
+              <AlertCircle className="w-4 h-4 shrink-0 text-destructive mt-0.5" />
               <div className="leading-relaxed">{errorMessage}</div>
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold font-heading uppercase tracking-wider text-[#534434] mb-1.5">
-                Admin Email
-              </label>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Admin Email</Label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#534434]/60">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted-foreground">
                   <Mail className="w-4 h-4" />
                 </div>
-                <input
+                <Input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@peto.com"
                   required
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] placeholder-[#534434]/60 focus:outline-none focus:bg-white focus:border-[#0058be] transition-all"
+                  className="pl-9 text-xs h-10"
                 />
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold font-heading uppercase tracking-wider text-[#534434] mb-1.5">
-                Password
-              </label>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Password</Label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#534434]/60">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted-foreground">
                   <Lock className="w-4 h-4" />
                 </div>
-                <input
+                <Input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••••••"
                   required
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] placeholder-[#534434]/60 focus:outline-none focus:bg-white focus:border-[#0058be] transition-all"
+                  className="pl-9 text-xs h-10"
                 />
               </div>
             </div>
 
-            <button
+            <Button
               type="submit"
               disabled={submitting}
-              className="w-full mt-2 py-3 px-4 rounded-xl bg-[#0058be] hover:bg-[#2170e4] active:bg-[#00479b] text-white font-semibold text-xs transition-all shadow-sm flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="w-full h-10 text-xs font-semibold"
             >
               {submitting ? (
-                <>
-                  <div className="w-4 h-4 rounded-full border-2 border-white/20 border-t-white animate-spin mr-2"></div>
-                  <span>Verifying Credentials...</span>
-                </>
+                <span>Verifying Credentials...</span>
               ) : (
                 <>
-                  <span>Sign In to Admin Panel</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <span>Sign In to Admin</span>
+                  <ArrowRight className="w-4 h-4 ml-2" />
                 </>
               )}
-            </button>
+            </Button>
           </form>
 
-          {/* Collapsible API Endpoint Configuration */}
-          <div className="pt-2 border-t border-[#e2e8f8]">
+          {/* Runtime API Endpoint Configuration Trigger */}
+          <div className="pt-4 border-t border-border text-center">
             <button
               type="button"
               onClick={() => setShowApiConfig(!showApiConfig)}
-              className="w-full flex items-center justify-between text-[11px] text-[#534434] hover:text-[#0058be] transition-colors py-1 cursor-pointer"
+              className="inline-flex items-center space-x-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             >
-              <span className="flex items-center space-x-1.5 font-medium">
-                <Settings className="w-3.5 h-3.5" />
-                <span>Backend API Endpoint</span>
-              </span>
-              <span className="font-mono text-[10px] text-[#534434]/70 truncate max-w-[200px]">
-                {getApiBaseUrl()}
-              </span>
+              <Settings className="w-3.5 h-3.5" />
+              <span>{showApiConfig ? "Hide API Settings" : "Configure Backend URL"}</span>
             </button>
 
             {showApiConfig && (
-              <form onSubmit={handleSaveApiUrl} className="mt-2.5 p-3 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] space-y-2">
-                <div className="text-[11px] text-[#534434] leading-relaxed">
-                  Enter your deployed Peto Backend API URL (e.g. <span className="font-mono text-[10px] text-[#0058be]">https://your-backend.onrender.com/api</span>):
-                </div>
-                <div className="flex space-x-2">
-                  <input
-                    type="url"
+              <form onSubmit={handleSaveApiUrl} className="mt-3 text-left space-y-2 text-xs animate-in fade-in duration-150">
+                <p className="text-[11px] text-muted-foreground">
+                  Active Endpoint: <span className="font-mono text-primary">{getApiBaseUrl()}</span>
+                </p>
+                <div className="flex gap-2">
+                  <Input
+                    type="text"
                     value={customApiUrl}
                     onChange={(e) => setCustomApiUrl(e.target.value)}
-                    placeholder="https://peto-backend.onrender.com/api"
-                    required
-                    className="flex-1 px-3 py-1.5 rounded-lg bg-white border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:border-[#0058be]"
+                    placeholder="https://api.peto.com/api"
+                    className="text-xs h-8 flex-1"
                   />
-                  <button
-                    type="submit"
-                    className="px-3 py-1.5 rounded-lg bg-[#0058be] hover:bg-[#2170e4] text-white text-xs font-semibold flex items-center space-x-1 cursor-pointer"
-                  >
-                    {apiSaved ? <Check className="w-3.5 h-3.5 text-white" /> : <span>Save</span>}
-                  </button>
+                  <Button type="submit" size="sm" className="h-8 text-xs">
+                    {apiSaved ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : "Save"}
+                  </Button>
                 </div>
-                {apiSaved && (
-                  <div className="text-[11px] text-[#006c49] font-medium flex items-center space-x-1">
-                    <Check className="w-3.5 h-3.5" />
-                    <span>API endpoint saved! You can now sign in.</span>
-                  </div>
-                )}
               </form>
             )}
           </div>
+        </Card>
 
-          <div className="text-center text-[11px] text-[#534434] space-y-1">
-            <p>Every login attempt and administrative session is strictly audited.</p>
-            <p className="font-mono text-[#534434]/70">Unauthorized access is strictly prohibited.</p>
-          </div>
-        </div>
+        {/* Security Notice */}
+        <p className="text-center text-[11px] text-muted-foreground">
+          Protected by Peto RBAC · IP &amp; session audited · Zero-knowledge storage
+        </p>
       </div>
     </div>
   );

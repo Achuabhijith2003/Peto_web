@@ -512,7 +512,7 @@ export const AdminAds: React.FC = () => {
     switch (status) {
       case "ACTIVE":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#bbf7d0]/40 text-[#006c49] border border-[#006c49]/30">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10/40 text-emerald-600 dark:text-emerald-400 border border-[#006c49]/30">
             <CheckCircle2 size={12} />
             ACTIVE
           </span>
@@ -526,28 +526,28 @@ export const AdminAds: React.FC = () => {
         );
       case "PAUSED":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#f0f3ff] text-[#534434] border border-[#dae2f3]">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-muted/40 text-muted-foreground border border-border">
             <Pause size={12} />
             PAUSED
           </span>
         );
       case "CHANGES_REQUESTED":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#f0f3ff] text-[#0058be] border border-[#dae2f3]">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-muted/40 text-primary border border-border">
             <Sliders size={12} />
             CHANGES REQUESTED
           </span>
         );
       case "REJECTED":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#ffdad6]/40 text-[#ba1a1a] border border-[#ffdad6]">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-destructive/10/40 text-destructive border border-destructive/30">
             <XCircle size={12} />
             REJECTED
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#f0f3ff] text-[#534434] border border-[#dae2f3]">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-muted/40 text-muted-foreground border border-border">
             {status}
           </span>
         );
@@ -558,7 +558,7 @@ export const AdminAds: React.FC = () => {
     switch (status) {
       case "ACTIVE":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#bbf7d0]/40 text-[#006c49] border border-[#006c49]/30">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10/40 text-emerald-600 dark:text-emerald-400 border border-[#006c49]/30">
             <CheckCircle2 size={12} />
             VERIFIED PARTNER
           </span>
@@ -572,7 +572,7 @@ export const AdminAds: React.FC = () => {
         );
       case "SUSPENDED":
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#ffdad6]/40 text-[#ba1a1a] border border-[#ffdad6]">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-destructive/10/40 text-destructive border border-destructive/30">
             <XCircle size={12} />
             SUSPENDED
           </span>
@@ -603,10 +603,10 @@ export const AdminAds: React.FC = () => {
       {/* Toast Notification */}
       {notification && (
         <div
-          className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl border shadow-level-3 backdrop-blur-md animate-fade-in ${
+          className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl border shadow-lg backdrop-blur-md animate-fade-in ${
             notification.type === "success"
-              ? "bg-white border-[#bbf7d0] text-[#006c49]"
-              : "bg-white border-[#ffdad6] text-[#ba1a1a]"
+              ? "bg-card border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
+              : "bg-card border-destructive/30 text-destructive"
           }`}
         >
           {notification.type === "success" ? <CheckCircle2 size={18} /> : <AlertTriangle size={18} />}
@@ -615,20 +615,20 @@ export const AdminAds: React.FC = () => {
       )}
 
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#e2e8f8] pb-5">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-5">
         <div>
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-2xl bg-[#0058be] text-white shadow-sm">
+            <div className="p-2.5 rounded-2xl bg-primary text-white shadow-sm">
               <Megaphone className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold font-heading tracking-tight text-[#151c27] flex items-center gap-2">
+              <h1 className="text-2xl font-bold font-heading tracking-tight text-foreground flex items-center gap-2">
                 Advertising & Promotions
-                <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#f0f3ff] text-[#0058be] border border-[#dae2f3] font-mono">
+                <span className="text-xs px-2.5 py-0.5 rounded-full bg-muted/40 text-primary border border-border font-mono">
                   PHASE 8
                 </span>
               </h1>
-              <p className="text-xs text-[#534434] mt-0.5">
+              <p className="text-xs text-muted-foreground mt-0.5">
                 Manage commercial pet partners, creative approvals, targeting rules, and platform ad performance.
               </p>
             </div>
@@ -646,9 +646,9 @@ export const AdminAds: React.FC = () => {
               else if (activeTab === "external-analytics") loadExternalAnalytics();
             }}
             disabled={loading}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white hover:bg-[#f9f9ff] text-[#534434] text-xs font-semibold border border-[#e2e8f8] shadow-sm transition"
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-card hover:bg-muted/20 text-muted-foreground text-xs font-semibold border border-border shadow-sm transition"
           >
-            <RefreshCw size={14} className={loading ? "animate-spin text-[#0058be]" : ""} />
+            <RefreshCw size={14} className={loading ? "animate-spin text-primary" : ""} />
             Refresh
           </button>
 
@@ -656,9 +656,9 @@ export const AdminAds: React.FC = () => {
             <>
               <button
                 onClick={() => setIsNewAdvertiserOpen(true)}
-                className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white hover:bg-[#f9f9ff] text-[#151c27] text-xs font-semibold border border-[#e2e8f8] shadow-sm transition"
+                className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-card hover:bg-muted/20 text-foreground text-xs font-semibold border border-border shadow-sm transition"
               >
-                <Building2 size={14} className="text-[#0058be]" />
+                <Building2 size={14} className="text-primary" />
                 Add Advertiser
               </button>
 
@@ -669,7 +669,7 @@ export const AdminAds: React.FC = () => {
                   }
                   setIsNewCampaignOpen(true);
                 }}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0058be] hover:bg-[#2170e4] text-white text-xs font-semibold shadow-sm transition"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary hover:bg-[#2170e4] text-white text-xs font-semibold shadow-sm transition"
               >
                 <Plus size={14} />
                 New Campaign
@@ -681,18 +681,18 @@ export const AdminAds: React.FC = () => {
 
       {/* High-Level Operational Metrics Banner */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3.5">
-        <div className="p-4 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1 flex flex-col justify-between">
-          <span className="text-xs font-semibold font-heading text-[#534434]">Active Campaigns</span>
+        <div className="p-4 rounded-2xl bg-card border border-border shadow-xs flex flex-col justify-between">
+          <span className="text-xs font-semibold font-heading text-muted-foreground">Active Campaigns</span>
           <div className="flex items-baseline justify-between mt-2">
-            <span className="text-2xl font-bold text-[#151c27] font-mono">{totalActiveCampaigns}</span>
-            <span className="text-[11px] font-semibold text-[#006c49] flex items-center gap-0.5">
+            <span className="text-2xl font-bold text-foreground font-mono">{totalActiveCampaigns}</span>
+            <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
               <Play size={10} /> Live
             </span>
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1 flex flex-col justify-between">
-          <span className="text-xs font-semibold font-heading text-[#534434]">Pending Review</span>
+        <div className="p-4 rounded-2xl bg-card border border-border shadow-xs flex flex-col justify-between">
+          <span className="text-xs font-semibold font-heading text-muted-foreground">Pending Review</span>
           <div className="flex items-baseline justify-between mt-2">
             <span className="text-2xl font-bold text-[#855300] font-mono">{totalPendingQueue}</span>
             <span className="text-[11px] font-semibold text-[#855300] flex items-center gap-0.5">
@@ -701,21 +701,21 @@ export const AdminAds: React.FC = () => {
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1 flex flex-col justify-between">
+        <div className="p-4 rounded-2xl bg-card border border-border shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold font-heading text-[#534434]">Total Ad Spend</span>
-            <span className="text-[10px] font-bold text-[#534434] bg-[#f0f3ff] px-1.5 py-0.5 rounded border border-[#dae2f3]">
+            <span className="text-xs font-semibold font-heading text-muted-foreground">Total Ad Spend</span>
+            <span className="text-[10px] font-bold text-muted-foreground bg-muted/40 px-1.5 py-0.5 rounded border border-border">
               USD Base
             </span>
           </div>
           <div className="flex items-baseline justify-between mt-2">
-            <span className="text-2xl font-bold text-[#0058be] font-mono">
+            <span className="text-2xl font-bold text-primary font-mono">
               ${totalSpend.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
-            <span className="text-[11px] font-semibold text-[#534434]">USD Eq.</span>
+            <span className="text-[11px] font-semibold text-muted-foreground">USD Eq.</span>
           </div>
           {analytics?.totals?.currencyBreakdown && Object.keys(analytics.totals.currencyBreakdown).length > 0 && (
-            <div className="text-[10px] text-[#534434] font-mono mt-1.5 pt-1 border-t border-slate-100 flex flex-wrap gap-1">
+            <div className="text-[10px] text-muted-foreground font-mono mt-1.5 pt-1 border-t border-slate-100 flex flex-wrap gap-1">
               {Object.entries(analytics.totals.currencyBreakdown).map(([c, amt]) => (
                 <span key={c} className="bg-slate-100 px-1 rounded">
                   {c}: {amt.toLocaleString()}
@@ -725,35 +725,35 @@ export const AdminAds: React.FC = () => {
           )}
         </div>
 
-        <div className="p-4 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1 flex flex-col justify-between">
-          <span className="text-xs font-semibold font-heading text-[#534434]">Total Impressions</span>
+        <div className="p-4 rounded-2xl bg-card border border-border shadow-xs flex flex-col justify-between">
+          <span className="text-xs font-semibold font-heading text-muted-foreground">Total Impressions</span>
           <div className="flex items-baseline justify-between mt-2">
-            <span className="text-2xl font-bold text-[#151c27] font-mono">
+            <span className="text-2xl font-bold text-foreground font-mono">
               {totalImpressions > 1000 ? `${(totalImpressions / 1000).toFixed(1)}k` : totalImpressions}
             </span>
-            <span className="text-[11px] font-semibold text-[#006c49] flex items-center gap-0.5">
+            <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
               <TrendingUp size={10} /> +18%
             </span>
           </div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1 flex flex-col justify-between">
-          <span className="text-xs font-semibold font-heading text-[#534434]">Average Platform CTR</span>
+        <div className="p-4 rounded-2xl bg-card border border-border shadow-xs flex flex-col justify-between">
+          <span className="text-xs font-semibold font-heading text-muted-foreground">Average Platform CTR</span>
           <div className="flex items-baseline justify-between mt-2">
-            <span className="text-2xl font-bold text-[#0058be] font-mono">{avgCtr.toFixed(2)}%</span>
-            <span className="text-[11px] font-semibold text-[#0058be]">Benchmark 2.1%</span>
+            <span className="text-2xl font-bold text-primary font-mono">{avgCtr.toFixed(2)}%</span>
+            <span className="text-[11px] font-semibold text-primary">Benchmark 2.1%</span>
           </div>
         </div>
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-[#e2e8f8]">
+      <div className="flex items-center gap-2 border-b border-border">
         <button
           onClick={() => setActiveTab("queue")}
           className={`flex items-center gap-2 px-4 py-3 text-xs font-semibold font-heading border-b-2 transition ${
             activeTab === "queue"
               ? "border-[#855300] text-[#855300] bg-[#ffe082]/10"
-              : "border-transparent text-[#534434] hover:text-[#151c27]"
+              : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
           <Clock size={15} />
@@ -769,8 +769,8 @@ export const AdminAds: React.FC = () => {
           onClick={() => setActiveTab("campaigns")}
           className={`flex items-center gap-2 px-4 py-3 text-xs font-semibold font-heading border-b-2 transition ${
             activeTab === "campaigns"
-              ? "border-[#0058be] text-[#0058be] bg-[#f0f3ff]"
-              : "border-transparent text-[#534434] hover:text-[#151c27]"
+              ? "border-primary text-primary bg-muted/40"
+              : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
           <Layers size={15} />
@@ -781,8 +781,8 @@ export const AdminAds: React.FC = () => {
           onClick={() => setActiveTab("advertisers")}
           className={`flex items-center gap-2 px-4 py-3 text-xs font-semibold font-heading border-b-2 transition ${
             activeTab === "advertisers"
-              ? "border-[#0058be] text-[#0058be] bg-[#f0f3ff]"
-              : "border-transparent text-[#534434] hover:text-[#151c27]"
+              ? "border-primary text-primary bg-muted/40"
+              : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
           <Building2 size={15} />
@@ -793,8 +793,8 @@ export const AdminAds: React.FC = () => {
           onClick={() => setActiveTab("analytics")}
           className={`flex items-center gap-2 px-4 py-3 text-xs font-semibold font-heading border-b-2 transition ${
             activeTab === "analytics"
-              ? "border-[#006c49] text-[#006c49] bg-[#bbf7d0]/15"
-              : "border-transparent text-[#534434] hover:text-[#151c27]"
+              ? "border-[#006c49] text-emerald-600 dark:text-emerald-400 bg-emerald-500/10/15"
+              : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
           <BarChart3 size={15} />
@@ -805,14 +805,14 @@ export const AdminAds: React.FC = () => {
           onClick={() => setActiveTab("controls")}
           className={`flex items-center gap-2 px-4 py-3 text-xs font-semibold font-heading border-b-2 transition ${
             activeTab === "controls"
-              ? "border-[#0058be] text-[#0058be] bg-[#f0f3ff]"
-              : "border-transparent text-[#534434] hover:text-[#151c27]"
+              ? "border-primary text-primary bg-muted/40"
+              : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
           <Sliders size={15} />
           Ads Control Center
           {controls?.emergency_stop_active && (
-            <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-[#ffdad6] text-[#ba1a1a] animate-pulse">
+            <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-destructive/10 text-destructive animate-pulse">
               EMERGENCY STOPPED
             </span>
           )}
@@ -823,7 +823,7 @@ export const AdminAds: React.FC = () => {
           className={`flex items-center gap-2 px-4 py-3 text-xs font-semibold font-heading border-b-2 transition ${
             activeTab === "external-analytics"
               ? "border-purple-600 text-purple-700 bg-purple-50"
-              : "border-transparent text-[#534434] hover:text-[#151c27]"
+              : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
           <Globe size={15} />
@@ -834,28 +834,28 @@ export const AdminAds: React.FC = () => {
       {/* TAB 1: APPROVAL REVIEW QUEUE */}
       {activeTab === "queue" && (
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#e2e8f8] shadow-level-1">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card p-4 rounded-2xl border border-border shadow-xs">
             <div className="relative flex-1 max-w-md">
-              <Search size={14} className="absolute left-3 top-3 text-[#534434]/60" />
+              <Search size={14} className="absolute left-3 top-3 text-muted-foreground/60" />
               <input
                 type="text"
                 placeholder="Search pending ads by campaign or company..."
                 value={queueSearch}
                 onChange={(e) => setQueueSearch(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] placeholder-[#534434]/60 focus:outline-none focus:bg-white focus:border-[#0058be]"
+                className="w-full pl-9 pr-3 py-2 rounded-xl bg-muted/40 border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:bg-card focus:border-primary"
               />
             </div>
 
-            <span className="text-xs text-[#534434]">
+            <span className="text-xs text-muted-foreground">
               {reviewQueue.length} campaign{reviewQueue.length === 1 ? "" : "s"} awaiting compliance & safety review
             </span>
           </div>
 
           {reviewQueue.length === 0 ? (
-            <div className="p-12 text-center rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1">
-              <ShieldCheck className="w-12 h-12 text-[#006c49] mx-auto mb-3 opacity-90" />
-              <h3 className="text-base font-bold font-heading text-[#151c27]">Review Queue is Clear!</h3>
-              <p className="text-xs text-[#534434] max-w-sm mx-auto mt-1">
+            <div className="p-12 text-center rounded-2xl bg-card border border-border shadow-xs">
+              <ShieldCheck className="w-12 h-12 text-emerald-600 dark:text-emerald-400 mx-auto mb-3 opacity-90" />
+              <h3 className="text-base font-bold font-heading text-foreground">Review Queue is Clear!</h3>
+              <p className="text-xs text-muted-foreground max-w-sm mx-auto mt-1">
                 All submitted campaigns and creatives have been reviewed and approved according to Peto Advertising Standards.
               </p>
             </div>
@@ -867,38 +867,38 @@ export const AdminAds: React.FC = () => {
                 return (
                   <div
                     key={camp.id}
-                    className="p-5 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1 hover:shadow-level-2 transition flex flex-col justify-between space-y-4"
+                    className="p-5 rounded-2xl bg-card border border-border shadow-xs hover:shadow-sm transition flex flex-col justify-between space-y-4"
                   >
                     <div>
                       {/* Top Header */}
                       <div className="flex items-start justify-between gap-2">
                         <div>
-                          <span className="text-[11px] font-mono font-semibold text-[#0058be] uppercase tracking-wider">
+                          <span className="text-[11px] font-mono font-semibold text-primary uppercase tracking-wider">
                             {camp.advertiser?.company_name || "Commercial Partner"}
                           </span>
-                          <h3 className="text-base font-bold font-heading text-[#151c27] mt-0.5">{camp.name}</h3>
+                          <h3 className="text-base font-bold font-heading text-foreground mt-0.5">{camp.name}</h3>
                         </div>
                         {renderCampaignStatusBadge(camp.status)}
                       </div>
 
                       {/* Creative Preview Box */}
                       {primaryCreative && (
-                        <div className="mt-3.5 p-3.5 rounded-xl bg-[#f9f9ff] border border-[#e2e8f8] space-y-3">
-                          <div className="flex items-center justify-between text-xs text-[#534434]">
-                            <span className="flex items-center gap-1.5 font-semibold text-[#151c27]">
+                        <div className="mt-3.5 p-3.5 rounded-xl bg-muted/20 border border-border space-y-3">
+                          <div className="flex items-center justify-between text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1.5 font-semibold text-foreground">
                               {primaryCreative.format === "VIDEO" ? (
-                                <Video size={13} className="text-[#0058be]" />
+                                <Video size={13} className="text-primary" />
                               ) : (
-                                <ImageIcon size={13} className="text-[#0058be]" />
+                                <ImageIcon size={13} className="text-primary" />
                               )}
                               {primaryCreative.format} FORMAT
                             </span>
-                            <span className="font-mono text-[11px] text-[#534434]/80">{primaryCreative.call_to_action}</span>
+                            <span className="font-mono text-[11px] text-muted-foreground/80">{primaryCreative.call_to_action}</span>
                           </div>
 
                           {/* Media preview render */}
                           {primaryCreative.media_urls?.[0]?.url && (
-                            <div className="relative rounded-xl overflow-hidden border border-[#e2e8f8] aspect-video bg-black/90 max-h-48 flex items-center justify-center">
+                            <div className="relative rounded-xl overflow-hidden border border-border aspect-video bg-black/90 max-h-48 flex items-center justify-center">
                               {primaryCreative.format === "VIDEO" ? (
                                 <video
                                   src={primaryCreative.media_urls[0].url}
@@ -916,20 +916,20 @@ export const AdminAds: React.FC = () => {
                           )}
 
                           <div>
-                            <h4 className="text-sm font-bold font-heading text-[#151c27]">{primaryCreative.headline}</h4>
-                            <p className="text-xs text-[#534434] mt-1 line-clamp-2">{primaryCreative.body_text}</p>
+                            <h4 className="text-sm font-bold font-heading text-foreground">{primaryCreative.headline}</h4>
+                            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{primaryCreative.body_text}</p>
                           </div>
 
-                          <div className="flex items-center justify-between pt-2 border-t border-[#e2e8f8] text-xs">
+                          <div className="flex items-center justify-between pt-2 border-t border-border text-xs">
                             <a
                               href={primaryCreative.destination_url}
                               target="_blank"
                               rel="noreferrer"
-                              className="text-[#0058be] hover:underline flex items-center gap-1 font-mono text-[11px] truncate max-w-xs"
+                              className="text-primary hover:underline flex items-center gap-1 font-mono text-[11px] truncate max-w-xs"
                             >
                               <ExternalLink size={11} /> {primaryCreative.destination_url}
                             </a>
-                            <span className="px-2 py-0.5 rounded-full bg-[#f0f3ff] text-[#0058be] font-bold text-[10px]">
+                            <span className="px-2 py-0.5 rounded-full bg-muted/40 text-primary font-bold text-[10px]">
                               CTA: {primaryCreative.call_to_action}
                             </span>
                           </div>
@@ -939,37 +939,37 @@ export const AdminAds: React.FC = () => {
                       {/* Targeting & Objective Specs */}
                       <div className="mt-3.5 space-y-2">
                         <div className="flex flex-wrap items-center gap-1.5">
-                          <span className="text-[10px] font-semibold uppercase text-[#534434] mr-1 flex items-center gap-1">
+                          <span className="text-[10px] font-semibold uppercase text-muted-foreground mr-1 flex items-center gap-1">
                             <Target size={11} /> Interests:
                           </span>
                           {(targeting?.pet_interests || ["DOGS", "CATS"]).map((interest: string) => (
                             <span
                               key={interest}
-                              className="px-2 py-0.5 rounded-full bg-[#f0f3ff] text-[11px] font-medium text-[#534434] border border-[#dae2f3]"
+                              className="px-2 py-0.5 rounded-full bg-muted/40 text-[11px] font-medium text-muted-foreground border border-border"
                             >
                               {interest}
                             </span>
                           ))}
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-1.5 text-xs text-[#534434]">
+                        <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
                           <span className="text-[11px]">
-                            Budget: <strong className="text-[#151c27] font-mono">${camp.total_budget}</strong> (
+                            Budget: <strong className="text-foreground font-mono">${camp.total_budget}</strong> (
                             {camp.budget_type})
                           </span>
                           <span>•</span>
                           <span className="text-[11px]">
-                            Objective: <strong className="text-[#0058be]">{camp.objective}</strong>
+                            Objective: <strong className="text-primary">{camp.objective}</strong>
                           </span>
                         </div>
                       </div>
                     </div>
 
                     {/* Review Decision Buttons */}
-                    <div className="pt-3 border-t border-[#e2e8f8] flex items-center justify-end gap-2">
+                    <div className="pt-3 border-t border-border flex items-center justify-end gap-2">
                       <button
                         onClick={() => handleOpenReviewModal(camp, primaryCreative)}
-                        className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#0058be] hover:bg-[#2170e4] text-white text-xs font-semibold shadow-sm transition"
+                        className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-primary hover:bg-[#2170e4] text-white text-xs font-semibold shadow-sm transition"
                       >
                         <Eye size={13} />
                         Review & Decide
@@ -986,23 +986,23 @@ export const AdminAds: React.FC = () => {
       {/* TAB 2: CAMPAIGNS DIRECTORY */}
       {activeTab === "campaigns" && (
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#e2e8f8] shadow-level-1">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card p-4 rounded-2xl border border-border shadow-xs">
             <div className="flex flex-wrap items-center gap-3 flex-1">
               <div className="relative flex-1 max-w-sm">
-                <Search size={14} className="absolute left-3 top-3 text-[#534434]/60" />
+                <Search size={14} className="absolute left-3 top-3 text-muted-foreground/60" />
                 <input
                   type="text"
                   placeholder="Search campaigns by name or advertiser..."
                   value={campaignSearch}
                   onChange={(e) => setCampaignSearch(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] placeholder-[#534434]/60 focus:outline-none focus:bg-white focus:border-[#0058be]"
+                  className="w-full pl-9 pr-3 py-2 rounded-xl bg-muted/40 border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:bg-card focus:border-primary"
                 />
               </div>
 
               <select
                 value={campaignStatusFilter}
                 onChange={(e) => setCampaignStatusFilter(e.target.value)}
-                className="px-3 py-2 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
+                className="px-3 py-2 rounded-xl bg-muted/40 border border-border text-xs text-foreground focus:outline-none focus:bg-card focus:border-primary"
               >
                 <option value="ALL">All Statuses</option>
                 <option value="ACTIVE">Active</option>
@@ -1015,7 +1015,7 @@ export const AdminAds: React.FC = () => {
               <select
                 value={campaignObjectiveFilter}
                 onChange={(e) => setCampaignObjectiveFilter(e.target.value)}
-                className="px-3 py-2 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
+                className="px-3 py-2 rounded-xl bg-muted/40 border border-border text-xs text-foreground focus:outline-none focus:bg-card focus:border-primary"
               >
                 <option value="ALL">All Objectives</option>
                 <option value="TRAFFIC">Traffic</option>
@@ -1026,13 +1026,13 @@ export const AdminAds: React.FC = () => {
               </select>
             </div>
 
-            <span className="text-xs text-[#534434] font-mono">{campaigns.length} total campaigns</span>
+            <span className="text-xs text-muted-foreground font-mono">{campaigns.length} total campaigns</span>
           </div>
 
-          <div className="rounded-2xl border border-[#e2e8f8] bg-white overflow-hidden shadow-level-1">
+          <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-xs">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#f0f3ff] text-[#534434] uppercase font-bold font-heading border-b border-[#e2e8f8] tracking-wider text-[11px]">
+                <thead className="bg-muted/40 text-muted-foreground uppercase font-bold font-heading border-b border-border tracking-wider text-[11px]">
                   <tr>
                     <th className="py-3.5 px-4">Campaign & Advertiser</th>
                     <th className="py-3.5 px-4">Objective</th>
@@ -1045,7 +1045,7 @@ export const AdminAds: React.FC = () => {
                 <tbody className="divide-y divide-[#e2e8f8]">
                   {campaigns.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-10 text-center text-[#534434]">
+                      <td colSpan={6} className="py-10 text-center text-muted-foreground">
                         No campaigns found matching criteria.
                       </td>
                     </tr>
@@ -1061,16 +1061,16 @@ export const AdminAds: React.FC = () => {
                       const capReached = camp.total_budget > 0 && camp.spent >= camp.total_budget;
 
                       return (
-                        <tr key={camp.id} className="hover:bg-[#f9f9ff] transition">
+                        <tr key={camp.id} className="hover:bg-muted/20 transition">
                           <td className="py-3.5 px-4">
-                            <div className="font-bold text-[#151c27] text-sm">{camp.name}</div>
-                            <div className="text-[11px] text-[#534434]">
+                            <div className="font-bold text-foreground text-sm">{camp.name}</div>
+                            <div className="text-[11px] text-muted-foreground">
                               {camp.advertiser?.company_name || "Unknown Advertiser"}
                             </div>
                           </td>
 
                           <td className="py-3.5 px-4">
-                            <span className="px-2.5 py-0.5 rounded-full bg-[#f0f3ff] text-[#0058be] font-semibold font-mono text-[10px] border border-[#dae2f3]">
+                            <span className="px-2.5 py-0.5 rounded-full bg-muted/40 text-primary font-semibold font-mono text-[10px] border border-border">
                               {camp.objective}
                             </span>
                           </td>
@@ -1079,17 +1079,17 @@ export const AdminAds: React.FC = () => {
                             <div className="space-y-1.5 min-w-[210px]">
                               <div className="flex items-center justify-between text-xs font-mono">
                                 <div>
-                                  <span className="text-[10px] text-[#534434] uppercase font-bold block">Allocated Fund:</span>
-                                  <strong className="text-[#151c27]">
+                                  <span className="text-[10px] text-muted-foreground uppercase font-bold block">Allocated Fund:</span>
+                                  <strong className="text-foreground">
                                     {formatCurrency(camp.total_budget, camp.currency || "USD")}
                                   </strong>
-                                  <span className="text-[10px] text-[#534434] ml-1">
+                                  <span className="text-[10px] text-muted-foreground ml-1">
                                     ({formatCurrency(camp.daily_budget, camp.currency || "USD")}/d)
                                   </span>
                                 </div>
                                 <div className="text-right">
-                                  <span className="text-[10px] text-[#534434] uppercase font-bold block">Fund Used:</span>
-                                  <strong className="text-[#0058be]">
+                                  <span className="text-[10px] text-muted-foreground uppercase font-bold block">Fund Used:</span>
+                                  <strong className="text-primary">
                                     {formatCurrency(camp.spent, camp.currency || "USD")}
                                   </strong>
                                 </div>
@@ -1098,7 +1098,7 @@ export const AdminAds: React.FC = () => {
                               <div className="w-full bg-[#e2e8f8] h-1.5 rounded-full overflow-hidden">
                                 <div
                                   className={`h-full rounded-full transition-all ${
-                                    pctSpent >= 100 ? "bg-amber-500" : "bg-[#0058be]"
+                                    pctSpent >= 100 ? "bg-amber-500" : "bg-primary"
                                   }`}
                                   style={{ width: `${pctSpent}%` }}
                                 />
@@ -1106,14 +1106,14 @@ export const AdminAds: React.FC = () => {
 
                               <div className="flex items-center justify-between text-[11px] font-mono pt-1 border-t border-slate-100">
                                 <div>
-                                  <span className="text-[#534434]">Rem. Fund: </span>
-                                  <strong className="text-[#151c27]">
+                                  <span className="text-muted-foreground">Rem. Fund: </span>
+                                  <strong className="text-foreground">
                                     {formatCurrency(Math.max(0, camp.total_budget - camp.spent), camp.currency || "USD")}
                                   </strong>
                                 </div>
                                 <div>
-                                  <span className="text-[#534434]">Account Bal: </span>
-                                  <strong className={hasZeroBalance ? "text-red-600 font-bold" : "text-[#006c49] font-bold"}>
+                                  <span className="text-muted-foreground">Account Bal: </span>
+                                  <strong className={hasZeroBalance ? "text-red-600 font-bold" : "text-emerald-600 dark:text-emerald-400 font-bold"}>
                                     {formatCurrency(advBal, camp.currency || "USD")}
                                   </strong>
                                 </div>
@@ -1140,9 +1140,9 @@ export const AdminAds: React.FC = () => {
                             </div>
                           </td>
 
-                          <td className="py-3.5 px-4 text-[#534434] font-mono text-[11px]">
-                            <div className="text-[#151c27] font-medium">{new Date(camp.start_date).toLocaleDateString()}</div>
-                            <div className="text-[#534434]/70">
+                          <td className="py-3.5 px-4 text-muted-foreground font-mono text-[11px]">
+                            <div className="text-foreground font-medium">{new Date(camp.start_date).toLocaleDateString()}</div>
+                            <div className="text-muted-foreground/70">
                               {camp.end_date ? new Date(camp.end_date).toLocaleDateString() : "Ongoing"}
                             </div>
                           </td>
@@ -1156,19 +1156,19 @@ export const AdminAds: React.FC = () => {
                                   onClick={() => handleToggleCampaignStatus(camp)}
                                   disabled={actionLoading}
                                   title={camp.status === "ACTIVE" ? "Pause Campaign" : "Resume Campaign"}
-                                  className="p-1.5 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#534434] border border-[#dae2f3] transition cursor-pointer"
+                                  className="p-1.5 rounded-xl bg-muted/40 hover:bg-[#e2e8f8] text-muted-foreground border border-border transition cursor-pointer"
                                 >
                                   {camp.status === "ACTIVE" ? (
                                     <Pause size={13} className="text-[#855300]" />
                                   ) : (
-                                    <Play size={13} className="text-[#006c49]" />
+                                    <Play size={13} className="text-emerald-600 dark:text-emerald-400" />
                                   )}
                                 </button>
                               )}
 
                               <button
                                 onClick={() => handleOpenReviewModal(camp)}
-                                className="p-1.5 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#534434] border border-[#dae2f3] transition cursor-pointer"
+                                className="p-1.5 rounded-xl bg-muted/40 hover:bg-[#e2e8f8] text-muted-foreground border border-border transition cursor-pointer"
                                 title="Inspect Details"
                               >
                                 <Eye size={13} />
@@ -1189,23 +1189,23 @@ export const AdminAds: React.FC = () => {
       {/* TAB 3: ADVERTISER PARTNERS */}
       {activeTab === "advertisers" && (
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#e2e8f8] shadow-level-1">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card p-4 rounded-2xl border border-border shadow-xs">
             <div className="flex items-center gap-3 flex-1">
               <div className="relative flex-1 max-w-sm">
-                <Search size={14} className="absolute left-3 top-3 text-[#534434]/60" />
+                <Search size={14} className="absolute left-3 top-3 text-muted-foreground/60" />
                 <input
                   type="text"
                   placeholder="Search advertisers by company or email..."
                   value={advertiserSearch}
                   onChange={(e) => setAdvertiserSearch(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] placeholder-[#534434]/60 focus:outline-none focus:bg-white focus:border-[#0058be]"
+                  className="w-full pl-9 pr-3 py-2 rounded-xl bg-muted/40 border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:bg-card focus:border-primary"
                 />
               </div>
 
               <select
                 value={advertiserStatusFilter}
                 onChange={(e) => setAdvertiserStatusFilter(e.target.value)}
-                className="px-3 py-2 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
+                className="px-3 py-2 rounded-xl bg-muted/40 border border-border text-xs text-foreground focus:outline-none focus:bg-card focus:border-primary"
               >
                 <option value="ALL">All Partner Statuses</option>
                 <option value="ACTIVE">Verified Active</option>
@@ -1214,40 +1214,40 @@ export const AdminAds: React.FC = () => {
               </select>
             </div>
 
-            <span className="text-xs text-[#534434] font-mono">{advertisers.length} commercial partners</span>
+            <span className="text-xs text-muted-foreground font-mono">{advertisers.length} commercial partners</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {advertisers.map((adv) => (
               <div
                 key={adv.id}
-                className="p-5 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1 hover:shadow-level-2 transition flex flex-col justify-between space-y-4"
+                className="p-5 rounded-2xl bg-card border border-border shadow-xs hover:shadow-sm transition flex flex-col justify-between space-y-4"
               >
                 <div>
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <h4 className="text-base font-bold font-heading text-[#151c27]">{adv.company_name}</h4>
-                      <p className="text-xs text-[#534434]">{adv.contact_name}</p>
+                      <h4 className="text-base font-bold font-heading text-foreground">{adv.company_name}</h4>
+                      <p className="text-xs text-muted-foreground">{adv.contact_name}</p>
                     </div>
                     {renderAdvertiserStatusBadge(adv.status)}
                   </div>
 
-                  <div className="mt-3.5 space-y-1.5 text-xs text-[#534434]">
+                  <div className="mt-3.5 space-y-1.5 text-xs text-muted-foreground">
                     <div className="flex items-center gap-2">
-                      <span className="text-[#534434]/70">Email:</span>
-                      <a href={`mailto:${adv.contact_email}`} className="text-[#0058be] hover:underline">
+                      <span className="text-muted-foreground/70">Email:</span>
+                      <a href={`mailto:${adv.contact_email}`} className="text-primary hover:underline">
                         {adv.contact_email}
                       </a>
                     </div>
 
                     {adv.website_url && (
                       <div className="flex items-center gap-2">
-                        <span className="text-[#534434]/70">Website:</span>
+                        <span className="text-muted-foreground/70">Website:</span>
                         <a
                           href={adv.website_url}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-[#151c27] hover:underline flex items-center gap-1 font-mono text-[11px]"
+                          className="text-foreground hover:underline flex items-center gap-1 font-mono text-[11px]"
                         >
                           <Globe size={11} /> {adv.website_url}
                         </a>
@@ -1255,18 +1255,18 @@ export const AdminAds: React.FC = () => {
                     )}
 
                     <div className="flex items-center gap-2">
-                      <span className="text-[#534434]/70">Industry:</span>
-                      <span className="px-2 py-0.5 rounded-full bg-[#f0f3ff] text-[10px] font-mono text-[#534434] border border-[#dae2f3]">
+                      <span className="text-muted-foreground/70">Industry:</span>
+                      <span className="px-2 py-0.5 rounded-full bg-muted/40 text-[10px] font-mono text-muted-foreground border border-border">
                         {adv.industry || "PET_CARE"}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-[#e2e8f8] flex items-center justify-between">
+                <div className="pt-3 border-t border-border flex items-center justify-between">
                   <div className="text-xs">
-                    <span className="text-[#534434]/70 block text-[10px]">Total Platform Spend</span>
-                    <span className="font-bold text-[#151c27] font-mono">
+                    <span className="text-muted-foreground/70 block text-[10px]">Total Platform Spend</span>
+                    <span className="font-bold text-foreground font-mono">
                       {formatCurrency(adv.total_spend, adv.currency || "USD")}
                     </span>
                   </div>
@@ -1278,8 +1278,8 @@ export const AdminAds: React.FC = () => {
                         disabled={actionLoading}
                         className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition cursor-pointer ${
                           adv.status === "ACTIVE"
-                            ? "bg-[#ffdad6]/40 text-[#ba1a1a] border-[#ffdad6] hover:bg-[#ffdad6]/70"
-                            : "bg-[#bbf7d0]/40 text-[#006c49] border-[#006c49]/30 hover:bg-[#bbf7d0]/70"
+                            ? "bg-destructive/10/40 text-destructive border-destructive/30 hover:bg-destructive/10/70"
+                            : "bg-emerald-500/10/40 text-emerald-600 dark:text-emerald-400 border-[#006c49]/30 hover:bg-emerald-500/10/70"
                         }`}
                       >
                         {adv.status === "ACTIVE" ? "Suspend" : "Activate"}
@@ -1296,10 +1296,10 @@ export const AdminAds: React.FC = () => {
       {/* TAB 4: PERFORMANCE & TARGETING ANALYTICS */}
       {activeTab === "analytics" && (
         <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-[#e2e8f8] shadow-level-1">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card p-4 rounded-2xl border border-border shadow-xs">
             <div className="flex items-center gap-2">
-              <BarChart3 className="text-[#0058be] w-4 h-4" />
-              <span className="text-xs font-bold font-heading text-[#151c27]">Aggregated Platform Ad Performance</span>
+              <BarChart3 className="text-primary w-4 h-4" />
+              <span className="text-xs font-bold font-heading text-foreground">Aggregated Platform Ad Performance</span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -1309,8 +1309,8 @@ export const AdminAds: React.FC = () => {
                   onClick={() => setAnalyticsTimeframe(tf)}
                   className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
                     analyticsTimeframe === tf
-                      ? "bg-[#0058be] text-white shadow-sm"
-                      : "bg-[#f0f3ff] text-[#534434] hover:bg-[#e2e8f8]"
+                      ? "bg-primary text-white shadow-sm"
+                      : "bg-muted/40 text-muted-foreground hover:bg-[#e2e8f8]"
                   }`}
                 >
                   Last {tf}
@@ -1321,53 +1321,53 @@ export const AdminAds: React.FC = () => {
 
           {/* Performance KPI Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="p-4 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1">
-              <span className="text-xs font-semibold font-heading text-[#534434]">Total Ad Impressions</span>
-              <div className="text-2xl font-bold text-[#151c27] font-mono mt-1">
+            <div className="p-4 rounded-2xl bg-card border border-border shadow-xs">
+              <span className="text-xs font-semibold font-heading text-muted-foreground">Total Ad Impressions</span>
+              <div className="text-2xl font-bold text-foreground font-mono mt-1">
                 {(analytics?.totals?.impressions ?? 0).toLocaleString()}
               </div>
-              <span className="text-[11px] text-[#534434]/80 mt-1 block">
+              <span className="text-[11px] text-muted-foreground/80 mt-1 block">
                 Reach: {(analytics?.totals?.reach ?? 0).toLocaleString()} unique users
               </span>
             </div>
 
-            <div className="p-4 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1">
-              <span className="text-xs font-semibold font-heading text-[#534434]">Verified Clicks</span>
-              <div className="text-2xl font-bold text-[#0058be] font-mono mt-1">
+            <div className="p-4 rounded-2xl bg-card border border-border shadow-xs">
+              <span className="text-xs font-semibold font-heading text-muted-foreground">Verified Clicks</span>
+              <div className="text-2xl font-bold text-primary font-mono mt-1">
                 {(analytics?.totals?.clicks ?? 0).toLocaleString()}
               </div>
-              <span className="text-[11px] text-[#534434]/80 mt-1 block">
+              <span className="text-[11px] text-muted-foreground/80 mt-1 block">
                 Avg CPC: ${analytics?.totals?.avgCpc ?? 0}
               </span>
             </div>
 
-            <div className="p-4 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1">
-              <span className="text-xs font-semibold font-heading text-[#534434]">Click-Through Rate (CTR)</span>
-              <div className="text-2xl font-bold text-[#006c49] font-mono mt-1">
+            <div className="p-4 rounded-2xl bg-card border border-border shadow-xs">
+              <span className="text-xs font-semibold font-heading text-muted-foreground">Click-Through Rate (CTR)</span>
+              <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 font-mono mt-1">
                 {analytics?.totals?.avgCtr ?? 0}%
               </div>
-              <span className="text-[11px] text-[#006c49] mt-1 block font-medium">
+              <span className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1 block font-medium">
                 Formula: (Clicks / Impressions) * 100
               </span>
             </div>
 
-            <div className="p-4 rounded-2xl bg-white border border-[#e2e8f8] shadow-level-1">
+            <div className="p-4 rounded-2xl bg-card border border-border shadow-xs">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold font-heading text-[#534434]">Total Revenue / Spend</span>
-                <span className="text-[10px] font-bold text-[#534434] bg-[#f0f3ff] px-1.5 py-0.5 rounded border border-[#dae2f3]">
+                <span className="text-xs font-semibold font-heading text-muted-foreground">Total Revenue / Spend</span>
+                <span className="text-[10px] font-bold text-muted-foreground bg-muted/40 px-1.5 py-0.5 rounded border border-border">
                   USD Base
                 </span>
               </div>
               <div className="text-2xl font-bold text-[#855300] font-mono mt-1">
                 ${(analytics?.totals?.spend ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
-              <span className="text-[11px] text-[#534434]/80 mt-1 block">
+              <span className="text-[11px] text-muted-foreground/80 mt-1 block">
                 Avg CPM: ${(analytics?.totals?.avgCpm ?? 0).toFixed(2)} USD
               </span>
               {analytics?.totals?.currencyBreakdown && Object.keys(analytics.totals.currencyBreakdown).length > 0 && (
-                <div className="mt-2 pt-1.5 border-t border-slate-100 flex flex-wrap gap-1 text-[10px] font-mono text-[#534434]">
+                <div className="mt-2 pt-1.5 border-t border-slate-100 flex flex-wrap gap-1 text-[10px] font-mono text-muted-foreground">
                   {Object.entries(analytics.totals.currencyBreakdown).map(([c, val]) => (
-                    <span key={c} className="px-1.5 py-0.5 bg-[#f0f3ff] rounded border border-[#dae2f3]">
+                    <span key={c} className="px-1.5 py-0.5 bg-muted/40 rounded border border-border">
                       {c}: {val.toLocaleString()}
                     </span>
                   ))}
@@ -1377,17 +1377,17 @@ export const AdminAds: React.FC = () => {
           </div>
 
           {/* Daily Trends Table */}
-          <div className="rounded-2xl border border-[#e2e8f8] bg-white overflow-hidden shadow-level-1">
-            <div className="p-4 border-b border-[#e2e8f8] flex items-center justify-between">
-              <h4 className="text-xs font-bold font-heading uppercase tracking-wider text-[#151c27]">
+          <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-xs">
+            <div className="p-4 border-b border-border flex items-center justify-between">
+              <h4 className="text-xs font-bold font-heading uppercase tracking-wider text-foreground">
                 Daily Performance Progression
               </h4>
-              <span className="text-xs text-[#534434] font-mono">Actual Metrics Logged</span>
+              <span className="text-xs text-muted-foreground font-mono">Actual Metrics Logged</span>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-[#f0f3ff] text-[#534434] uppercase font-bold font-heading border-b border-[#e2e8f8] tracking-wider text-[11px]">
+                <thead className="bg-muted/40 text-muted-foreground uppercase font-bold font-heading border-b border-border tracking-wider text-[11px]">
                   <tr>
                     <th className="py-3 px-4">Date</th>
                     <th className="py-3 px-4">Impressions</th>
@@ -1403,13 +1403,13 @@ export const AdminAds: React.FC = () => {
                       const dailyCtr =
                         trend.impressions > 0 ? ((trend.clicks / trend.impressions) * 100).toFixed(2) : "0.00";
                       return (
-                        <tr key={trend.date} className="hover:bg-[#f9f9ff] transition">
-                          <td className="py-3 px-4 text-[#151c27] font-semibold">{trend.date}</td>
-                          <td className="py-3 px-4 text-[#534434]">{trend.impressions.toLocaleString()}</td>
-                          <td className="py-3 px-4 text-[#0058be] font-semibold">{trend.clicks.toLocaleString()}</td>
-                          <td className="py-3 px-4 text-[#006c49] font-semibold">{dailyCtr}%</td>
-                          <td className="py-3 px-4 text-[#534434]">{trend.conversions}</td>
-                          <td className="py-3 px-4 text-right text-[#151c27] font-bold">
+                        <tr key={trend.date} className="hover:bg-muted/20 transition">
+                          <td className="py-3 px-4 text-foreground font-semibold">{trend.date}</td>
+                          <td className="py-3 px-4 text-muted-foreground">{trend.impressions.toLocaleString()}</td>
+                          <td className="py-3 px-4 text-primary font-semibold">{trend.clicks.toLocaleString()}</td>
+                          <td className="py-3 px-4 text-emerald-600 dark:text-emerald-400 font-semibold">{dailyCtr}%</td>
+                          <td className="py-3 px-4 text-muted-foreground">{trend.conversions}</td>
+                          <td className="py-3 px-4 text-right text-foreground font-bold">
                             ${Number(trend.spend).toFixed(2)}
                           </td>
                         </tr>
@@ -1417,7 +1417,7 @@ export const AdminAds: React.FC = () => {
                     })
                   ) : (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-[#534434]">
+                      <td colSpan={6} className="py-8 text-center text-muted-foreground">
                         No performance telemetry logged for this interval.
                       </td>
                     </tr>
@@ -1434,14 +1434,14 @@ export const AdminAds: React.FC = () => {
         <div className="space-y-6">
           {/* Emergency Stop Banner if active */}
           {controls?.emergency_stop_active && (
-            <div className="p-5 rounded-2xl bg-[#ffdad6]/60 border-2 border-[#ba1a1a] shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fade-in">
+            <div className="p-5 rounded-2xl bg-destructive/10/60 border-2 border-[#ba1a1a] shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fade-in">
               <div className="flex items-start gap-3.5">
                 <div className="p-2.5 rounded-xl bg-[#ba1a1a] text-white shrink-0 mt-0.5">
                   <AlertTriangle size={22} />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-bold font-heading text-[#ba1a1a] uppercase tracking-wide">
+                    <h3 className="text-sm font-bold font-heading text-destructive uppercase tracking-wide">
                       Emergency Ads Stop Active — Scope: {controls.emergency_stop_scope}
                     </h3>
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#ba1a1a] text-white">
@@ -1478,15 +1478,15 @@ export const AdminAds: React.FC = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold tracking-wider uppercase text-[#534434]">Advertising</span>
+                  <span className="text-xs font-bold tracking-wider uppercase text-muted-foreground">Advertising</span>
                   <span className="text-[#dae2f3]">•</span>
-                  <span className="text-xs font-bold text-[#0058be]">Master Feature Control</span>
+                  <span className="text-xs font-bold text-primary">Master Feature Control</span>
                 </div>
-                <h3 className="text-xl font-bold font-heading text-[#151c27]">
+                <h3 className="text-xl font-bold font-heading text-foreground">
                   Peto Ads Marketplace
                 </h3>
                 <div className="flex items-center gap-2 pt-1">
-                  <span className="text-xs font-semibold text-[#534434]">Current Status:</span>
+                  <span className="text-xs font-semibold text-muted-foreground">Current Status:</span>
                   <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase ${
                     isMarketplaceActive
                       ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
@@ -1495,7 +1495,7 @@ export const AdminAds: React.FC = () => {
                     {isMarketplaceActive ? "ENABLED" : "DISABLED"}
                   </span>
                 </div>
-                <p className="text-xs text-[#534434] max-w-2xl leading-relaxed pt-1">
+                <p className="text-xs text-muted-foreground max-w-2xl leading-relaxed pt-1">
                   {isMarketplaceActive
                     ? "Businesses and eligible users can access Peto's first-party advertising platform according to existing verification, regional and advertiser eligibility rules."
                     : "Peto's first-party advertiser marketplace is currently unavailable to users and businesses. Existing marketplace data and configuration are preserved."}
@@ -1510,7 +1510,7 @@ export const AdminAds: React.FC = () => {
                   className={`px-6 py-3 rounded-xl font-bold text-xs shadow-sm transition flex items-center gap-2 cursor-pointer ${
                     isMarketplaceActive
                       ? "bg-amber-600 hover:bg-amber-700 text-white"
-                      : "bg-[#0058be] hover:bg-[#2170e4] text-white"
+                      : "bg-primary hover:bg-[#2170e4] text-white"
                   }`}
                 >
                   {isMarketplaceActive ? "Disable Peto Ads Marketplace" : "Enable Peto Ads Marketplace"}
@@ -1520,14 +1520,14 @@ export const AdminAds: React.FC = () => {
           </div>
 
           {/* Master Kill Switches Grid */}
-          <div className="bg-white rounded-2xl border border-[#e2e8f8] p-6 shadow-level-1 space-y-5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#e2e8f8] pb-4">
+          <div className="bg-card rounded-2xl border border-border p-6 shadow-xs space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-4">
               <div>
-                <h3 className="text-base font-bold font-heading text-[#151c27] flex items-center gap-2">
-                  <Shield size={18} className="text-[#0058be]" />
+                <h3 className="text-base font-bold font-heading text-foreground flex items-center gap-2">
+                  <Shield size={18} className="text-primary" />
                   Global Master Kill Switches
                 </h3>
-                <p className="text-xs text-[#534434]">
+                <p className="text-xs text-muted-foreground">
                   Authoritative controls to immediately halt advertising delivery platform-wide
                 </p>
               </div>
@@ -1546,11 +1546,11 @@ export const AdminAds: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {/* All Ads Master */}
               <div className={`p-4 rounded-xl border transition flex items-center justify-between ${
-                controls?.all_ads_enabled ? "bg-[#f0fdf4] border-[#bbf7d0]" : "bg-[#fef2f2] border-[#fecaca]"
+                controls?.all_ads_enabled ? "bg-[#f0fdf4] border-emerald-500/30" : "bg-[#fef2f2] border-[#fecaca]"
               }`}>
                 <div>
-                  <span className="text-xs font-bold text-[#151c27] block">ALL ADVERTISING</span>
-                  <span className="text-[11px] text-[#534434]">
+                  <span className="text-xs font-bold text-foreground block">ALL ADVERTISING</span>
+                  <span className="text-[11px] text-muted-foreground">
                     Master platform-wide switch
                   </span>
                 </div>
@@ -1562,17 +1562,17 @@ export const AdminAds: React.FC = () => {
                     controls?.all_ads_enabled ? "bg-emerald-600 justify-end" : "bg-slate-300 justify-start"
                   }`}
                 >
-                  <div className="w-4 h-4 rounded-full bg-white shadow-md" />
+                  <div className="w-4 h-4 rounded-full bg-card shadow-md" />
                 </button>
               </div>
 
               {/* Internal Ads */}
               <div className={`p-4 rounded-xl border transition flex items-center justify-between ${
-                isMarketplaceActive ? "bg-[#f0fdf4] border-[#bbf7d0]" : "bg-[#fef2f2] border-[#fecaca]"
+                isMarketplaceActive ? "bg-[#f0fdf4] border-emerald-500/30" : "bg-[#fef2f2] border-[#fecaca]"
               }`}>
                 <div>
-                  <span className="text-xs font-bold text-[#151c27] block">PETO ADS MARKETPLACE</span>
-                  <span className="text-[11px] text-[#534434]">
+                  <span className="text-xs font-bold text-foreground block">PETO ADS MARKETPLACE</span>
+                  <span className="text-[11px] text-muted-foreground">
                     First-party advertiser platform ({isMarketplaceActive ? "Active" : "Disabled"})
                   </span>
                 </div>
@@ -1584,17 +1584,17 @@ export const AdminAds: React.FC = () => {
                     isMarketplaceActive ? "bg-emerald-600 justify-end" : "bg-slate-300 justify-start"
                   }`}
                 >
-                  <div className="w-4 h-4 rounded-full bg-white shadow-md" />
+                  <div className="w-4 h-4 rounded-full bg-card shadow-md" />
                 </button>
               </div>
 
               {/* External Ads */}
               <div className={`p-4 rounded-xl border transition flex items-center justify-between ${
-                controls?.external_ads_enabled ? "bg-[#f0fdf4] border-[#bbf7d0]" : "bg-[#fef2f2] border-[#fecaca]"
+                controls?.external_ads_enabled ? "bg-[#f0fdf4] border-emerald-500/30" : "bg-[#fef2f2] border-[#fecaca]"
               }`}>
                 <div>
-                  <span className="text-xs font-bold text-[#151c27] block">EXTERNAL AD NETWORKS</span>
-                  <span className="text-[11px] text-[#534434]">
+                  <span className="text-xs font-bold text-foreground block">EXTERNAL AD NETWORKS</span>
+                  <span className="text-[11px] text-muted-foreground">
                     Google AdSense & AdMob mediation
                   </span>
                 </div>
@@ -1606,7 +1606,7 @@ export const AdminAds: React.FC = () => {
                     controls?.external_ads_enabled ? "bg-emerald-600 justify-end" : "bg-slate-300 justify-start"
                   }`}
                 >
-                  <div className="w-4 h-4 rounded-full bg-white shadow-md" />
+                  <div className="w-4 h-4 rounded-full bg-card shadow-md" />
                 </button>
               </div>
             </div>
@@ -1615,18 +1615,18 @@ export const AdminAds: React.FC = () => {
           {/* Granular Provider & Platform Controls */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* External Provider Toggles */}
-            <div className="bg-white rounded-2xl border border-[#e2e8f8] p-5 shadow-level-1 space-y-4">
-              <h4 className="text-sm font-bold font-heading text-[#151c27] flex items-center gap-2 border-b border-[#e2e8f8] pb-3">
-                <Radio size={16} className="text-[#0058be]" />
+            <div className="bg-card rounded-2xl border border-border p-5 shadow-xs space-y-4">
+              <h4 className="text-sm font-bold font-heading text-foreground flex items-center gap-2 border-b border-border pb-3">
+                <Radio size={16} className="text-primary" />
                 External Provider Toggles
               </h4>
 
               <div className="space-y-3">
                 {/* Google AdSense - Web */}
-                <div className="p-3.5 rounded-xl border border-[#e2e8f8] bg-[#f9f9ff] flex items-center justify-between">
+                <div className="p-3.5 rounded-xl border border-border bg-muted/20 flex items-center justify-between">
                   <div>
-                    <span className="text-xs font-bold text-[#151c27] block">Google AdSense — Web</span>
-                    <span className="text-[11px] text-[#534434]">Responsive web display slots in desktop & mobile browser</span>
+                    <span className="text-xs font-bold text-foreground block">Google AdSense — Web</span>
+                    <span className="text-[11px] text-muted-foreground">Responsive web display slots in desktop & mobile browser</span>
                   </div>
                   <button
                     type="button"
@@ -1636,15 +1636,15 @@ export const AdminAds: React.FC = () => {
                       (controls?.google_adsense_enabled ?? controls?.web_ads_enabled) ? "bg-emerald-600 justify-end" : "bg-slate-300 justify-start"
                     }`}
                   >
-                    <div className="w-4 h-4 rounded-full bg-white shadow-md" />
+                    <div className="w-4 h-4 rounded-full bg-card shadow-md" />
                   </button>
                 </div>
 
                 {/* Google AdMob - Mobile */}
-                <div className="p-3.5 rounded-xl border border-[#e2e8f8] bg-[#f9f9ff] flex items-center justify-between">
+                <div className="p-3.5 rounded-xl border border-border bg-muted/20 flex items-center justify-between">
                   <div>
-                    <span className="text-xs font-bold text-[#151c27] block">Google AdMob — Mobile</span>
-                    <span className="text-[11px] text-[#534434]">Native feed & reels interstitial ads on Android & iOS</span>
+                    <span className="text-xs font-bold text-foreground block">Google AdMob — Mobile</span>
+                    <span className="text-[11px] text-muted-foreground">Native feed & reels interstitial ads on Android & iOS</span>
                   </div>
                   <button
                     type="button"
@@ -1654,23 +1654,23 @@ export const AdminAds: React.FC = () => {
                       (controls?.google_admob_enabled ?? controls?.admob_enabled) ? "bg-emerald-600 justify-end" : "bg-slate-300 justify-start"
                     }`}
                   >
-                    <div className="w-4 h-4 rounded-full bg-white shadow-md" />
+                    <div className="w-4 h-4 rounded-full bg-card shadow-md" />
                   </button>
                 </div>
               </div>
             </div>
 
             {/* Platform Controls */}
-            <div className="bg-white rounded-2xl border border-[#e2e8f8] p-5 shadow-level-1 space-y-4">
-              <h4 className="text-sm font-bold font-heading text-[#151c27] flex items-center gap-2 border-b border-[#e2e8f8] pb-3">
-                <Laptop size={16} className="text-[#0058be]" />
+            <div className="bg-card rounded-2xl border border-border p-5 shadow-xs space-y-4">
+              <h4 className="text-sm font-bold font-heading text-foreground flex items-center gap-2 border-b border-border pb-3">
+                <Laptop size={16} className="text-primary" />
                 Client Platform Matrix
               </h4>
 
               <div className="grid grid-cols-3 gap-3">
-                <div className="p-3 rounded-xl border border-[#e2e8f8] bg-[#f9f9ff] text-center space-y-2">
+                <div className="p-3 rounded-xl border border-border bg-muted/20 text-center space-y-2">
                   <Laptop size={16} className="mx-auto text-slate-500" />
-                  <span className="text-xs font-bold text-[#151c27] block">Web</span>
+                  <span className="text-xs font-bold text-foreground block">Web</span>
                   <button
                     type="button"
                     disabled={!canManage || controlsSaving}
@@ -1679,13 +1679,13 @@ export const AdminAds: React.FC = () => {
                       controls?.web_enabled ? "bg-emerald-600 justify-end" : "bg-slate-300 justify-start"
                     }`}
                   >
-                    <div className="w-4 h-4 rounded-full bg-white shadow-md" />
+                    <div className="w-4 h-4 rounded-full bg-card shadow-md" />
                   </button>
                 </div>
 
-                <div className="p-3 rounded-xl border border-[#e2e8f8] bg-[#f9f9ff] text-center space-y-2">
+                <div className="p-3 rounded-xl border border-border bg-muted/20 text-center space-y-2">
                   <Smartphone size={16} className="mx-auto text-slate-500" />
-                  <span className="text-xs font-bold text-[#151c27] block">Android</span>
+                  <span className="text-xs font-bold text-foreground block">Android</span>
                   <button
                     type="button"
                     disabled={!canManage || controlsSaving}
@@ -1694,13 +1694,13 @@ export const AdminAds: React.FC = () => {
                       controls?.android_enabled ? "bg-emerald-600 justify-end" : "bg-slate-300 justify-start"
                     }`}
                   >
-                    <div className="w-4 h-4 rounded-full bg-white shadow-md" />
+                    <div className="w-4 h-4 rounded-full bg-card shadow-md" />
                   </button>
                 </div>
 
-                <div className="p-3 rounded-xl border border-[#e2e8f8] bg-[#f9f9ff] text-center space-y-2">
+                <div className="p-3 rounded-xl border border-border bg-muted/20 text-center space-y-2">
                   <Smartphone size={16} className="mx-auto text-slate-500" />
-                  <span className="text-xs font-bold text-[#151c27] block">iOS</span>
+                  <span className="text-xs font-bold text-foreground block">iOS</span>
                   <button
                     type="button"
                     disabled={!canManage || controlsSaving}
@@ -1709,7 +1709,7 @@ export const AdminAds: React.FC = () => {
                       controls?.ios_enabled ? "bg-emerald-600 justify-end" : "bg-slate-300 justify-start"
                     }`}
                   >
-                    <div className="w-4 h-4 rounded-full bg-white shadow-md" />
+                    <div className="w-4 h-4 rounded-full bg-card shadow-md" />
                   </button>
                 </div>
               </div>
@@ -1717,9 +1717,9 @@ export const AdminAds: React.FC = () => {
           </div>
 
           {/* Placement Toggles */}
-          <div className="bg-white rounded-2xl border border-[#e2e8f8] p-5 shadow-level-1 space-y-4">
-            <h4 className="text-sm font-bold font-heading text-[#151c27] flex items-center gap-2 border-b border-[#e2e8f8] pb-3">
-              <Target size={16} className="text-[#0058be]" />
+          <div className="bg-card rounded-2xl border border-border p-5 shadow-xs space-y-4">
+            <h4 className="text-sm font-bold font-heading text-foreground flex items-center gap-2 border-b border-border pb-3">
+              <Target size={16} className="text-primary" />
               Placement Specific Toggles
             </h4>
 
@@ -1730,10 +1730,10 @@ export const AdminAds: React.FC = () => {
                 { key: "community_enabled", label: "Communities", desc: "Community discussion feed" },
                 { key: "explore_enabled", label: "Explore & Search", desc: "Discovery page placements" },
               ].map(({ key, label, desc }) => (
-                <div key={key} className="p-3.5 rounded-xl border border-[#e2e8f8] bg-[#f9f9ff] flex flex-col justify-between space-y-2">
+                <div key={key} className="p-3.5 rounded-xl border border-border bg-muted/20 flex flex-col justify-between space-y-2">
                   <div>
-                    <span className="text-xs font-bold text-[#151c27] block">{label}</span>
-                    <span className="text-[10px] text-[#534434]">{desc}</span>
+                    <span className="text-xs font-bold text-foreground block">{label}</span>
+                    <span className="text-[10px] text-muted-foreground">{desc}</span>
                   </div>
                   <div className="pt-2 flex justify-end">
                     <button
@@ -1744,7 +1744,7 @@ export const AdminAds: React.FC = () => {
                         (controls as any)?.[key] ? "bg-emerald-600 justify-end" : "bg-slate-300 justify-start"
                       }`}
                     >
-                      <div className="w-4 h-4 rounded-full bg-white shadow-md" />
+                      <div className="w-4 h-4 rounded-full bg-card shadow-md" />
                     </button>
                   </div>
                 </div>
@@ -1753,23 +1753,23 @@ export const AdminAds: React.FC = () => {
           </div>
 
           {/* Provider Health Monitoring Dashboard */}
-          <div className="bg-white rounded-2xl border border-[#e2e8f8] p-6 shadow-level-1 space-y-4">
-            <div className="flex items-center justify-between border-b border-[#e2e8f8] pb-4">
+          <div className="bg-card rounded-2xl border border-border p-6 shadow-xs space-y-4">
+            <div className="flex items-center justify-between border-b border-border pb-4">
               <div>
-                <h4 className="text-base font-bold font-heading text-[#151c27] flex items-center gap-2">
-                  <Activity size={18} className="text-[#0058be]" />
+                <h4 className="text-base font-bold font-heading text-foreground flex items-center gap-2">
+                  <Activity size={18} className="text-primary" />
                   External Demand Provider Health Monitoring
                 </h4>
-                <p className="text-xs text-[#534434]">Real-time latency, failure rates, and circuit breaker status</p>
+                <p className="text-xs text-muted-foreground">Real-time latency, failure rates, and circuit breaker status</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {providerHealth.map((p) => (
-                <div key={p.provider} className="p-4 rounded-xl border border-[#e2e8f8] bg-[#f9f9ff] space-y-3">
+                <div key={p.provider} className="p-4 rounded-xl border border-border bg-muted/20 space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-[#151c27]">{p.provider}</span>
+                      <span className="text-sm font-bold text-foreground">{p.provider}</span>
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
                         p.status === "HEALTHY"
                           ? "bg-emerald-100 text-emerald-800"
@@ -1780,25 +1780,25 @@ export const AdminAds: React.FC = () => {
                         {p.status}
                       </span>
                     </div>
-                    <span className="text-xs font-mono text-[#534434]">
-                      Avg Latency: <strong className="text-[#151c27]">{p.avg_latency_ms}ms</strong>
+                    <span className="text-xs font-mono text-muted-foreground">
+                      Avg Latency: <strong className="text-foreground">{p.avg_latency_ms}ms</strong>
                     </span>
                   </div>
 
                   <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                    <div className="bg-white p-2 rounded-lg border border-[#e2e8f8]">
-                      <span className="text-[10px] text-[#534434] block">Total Requests</span>
+                    <div className="bg-card p-2 rounded-lg border border-border">
+                      <span className="text-[10px] text-muted-foreground block">Total Requests</span>
                       <strong className="font-mono">{p.total_requests}</strong>
                     </div>
-                    <div className="bg-white p-2 rounded-lg border border-[#e2e8f8]">
-                      <span className="text-[10px] text-[#534434] block">Failure Rate</span>
-                      <strong className={`font-mono ${p.failure_rate_pct > 10 ? "text-red-600" : "text-[#006c49]"}`}>
+                    <div className="bg-card p-2 rounded-lg border border-border">
+                      <span className="text-[10px] text-muted-foreground block">Failure Rate</span>
+                      <strong className={`font-mono ${p.failure_rate_pct > 10 ? "text-red-600" : "text-emerald-600 dark:text-emerald-400"}`}>
                         {p.failure_rate_pct}%
                       </strong>
                     </div>
-                    <div className="bg-white p-2 rounded-lg border border-[#e2e8f8]">
-                      <span className="text-[10px] text-[#534434] block">Timeout Rate</span>
-                      <strong className={`font-mono ${p.timeout_rate_pct > 5 ? "text-red-600" : "text-[#006c49]"}`}>
+                    <div className="bg-card p-2 rounded-lg border border-border">
+                      <span className="text-[10px] text-muted-foreground block">Timeout Rate</span>
+                      <strong className={`font-mono ${p.timeout_rate_pct > 5 ? "text-red-600" : "text-emerald-600 dark:text-emerald-400"}`}>
                         {p.timeout_rate_pct}%
                       </strong>
                     </div>
@@ -1821,11 +1821,11 @@ export const AdminAds: React.FC = () => {
         <div className="space-y-6">
           {/* Combined Comparison Table */}
           {combinedAnalytics?.comparison && (
-            <div className="bg-white rounded-2xl border border-[#e2e8f8] p-6 shadow-level-1 space-y-4">
-              <div className="flex items-center justify-between border-b border-[#e2e8f8] pb-3">
+            <div className="bg-card rounded-2xl border border-border p-6 shadow-xs space-y-4">
+              <div className="flex items-center justify-between border-b border-border pb-3">
                 <div>
-                  <h3 className="text-base font-bold font-heading text-[#151c27]">Unified Advertising Comparison</h3>
-                  <p className="text-xs text-[#534434]">
+                  <h3 className="text-base font-bold font-heading text-foreground">Unified Advertising Comparison</h3>
+                  <p className="text-xs text-muted-foreground">
                     Side-by-side volume comparison of Peto Internal vs External Networks (revenues strictly segregated)
                   </p>
                 </div>
@@ -1833,42 +1833,42 @@ export const AdminAds: React.FC = () => {
 
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-[#f0f3ff] text-[#534434] uppercase font-bold tracking-wider">
+                  <thead className="bg-muted/40 text-muted-foreground uppercase font-bold tracking-wider">
                     <tr>
                       <th className="py-3 px-4">Metric Dimension</th>
-                      <th className="py-3 px-4 text-[#0058be]">Peto Internal Marketplace</th>
+                      <th className="py-3 px-4 text-primary">Peto Internal Marketplace</th>
                       <th className="py-3 px-4 text-purple-700">External Networks (AdMob/Web)</th>
-                      <th className="py-3 px-4 text-[#151c27]">Combined Platform Total</th>
+                      <th className="py-3 px-4 text-foreground">Combined Platform Total</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#e2e8f8] font-mono">
                     <tr>
-                      <td className="py-3 px-4 font-sans font-semibold text-[#151c27]">Delivered Impressions</td>
-                      <td className="py-3 px-4 text-[#0058be] font-bold">{combinedAnalytics.comparison.internal.impressions.toLocaleString()}</td>
+                      <td className="py-3 px-4 font-sans font-semibold text-foreground">Delivered Impressions</td>
+                      <td className="py-3 px-4 text-primary font-bold">{combinedAnalytics.comparison.internal.impressions.toLocaleString()}</td>
                       <td className="py-3 px-4 text-purple-700 font-bold">{combinedAnalytics.comparison.external.impressions.toLocaleString()}</td>
-                      <td className="py-3 px-4 text-[#151c27] font-extrabold">{combinedAnalytics.comparison.total.impressions.toLocaleString()}</td>
+                      <td className="py-3 px-4 text-foreground font-extrabold">{combinedAnalytics.comparison.total.impressions.toLocaleString()}</td>
                     </tr>
                     <tr>
-                      <td className="py-3 px-4 font-sans font-semibold text-[#151c27]">Clicks Captured</td>
-                      <td className="py-3 px-4 text-[#0058be] font-bold">{combinedAnalytics.comparison.internal.clicks.toLocaleString()}</td>
+                      <td className="py-3 px-4 font-sans font-semibold text-foreground">Clicks Captured</td>
+                      <td className="py-3 px-4 text-primary font-bold">{combinedAnalytics.comparison.internal.clicks.toLocaleString()}</td>
                       <td className="py-3 px-4 text-purple-700 font-bold">{combinedAnalytics.comparison.external.clicks.toLocaleString()}</td>
-                      <td className="py-3 px-4 text-[#151c27] font-extrabold">{combinedAnalytics.comparison.total.clicks.toLocaleString()}</td>
+                      <td className="py-3 px-4 text-foreground font-extrabold">{combinedAnalytics.comparison.total.clicks.toLocaleString()}</td>
                     </tr>
                     <tr>
-                      <td className="py-3 px-4 font-sans font-semibold text-[#151c27]">Click-Through Rate (CTR)</td>
-                      <td className="py-3 px-4 text-[#0058be]">{combinedAnalytics.comparison.internal.ctr.toFixed(2)}%</td>
+                      <td className="py-3 px-4 font-sans font-semibold text-foreground">Click-Through Rate (CTR)</td>
+                      <td className="py-3 px-4 text-primary">{combinedAnalytics.comparison.internal.ctr.toFixed(2)}%</td>
                       <td className="py-3 px-4 text-purple-700">{combinedAnalytics.comparison.external.ctr.toFixed(2)}%</td>
-                      <td className="py-3 px-4 text-[#151c27] font-bold">{combinedAnalytics.comparison.total.combinedCtr.toFixed(2)}%</td>
+                      <td className="py-3 px-4 text-foreground font-bold">{combinedAnalytics.comparison.total.combinedCtr.toFixed(2)}%</td>
                     </tr>
                     <tr className="bg-slate-50 font-sans">
-                      <td className="py-3 px-4 font-bold text-[#151c27]">Financial Accounting Category</td>
-                      <td className="py-3 px-4 text-[#0058be] font-semibold">
+                      <td className="py-3 px-4 font-bold text-foreground">Financial Accounting Category</td>
+                      <td className="py-3 px-4 text-primary font-semibold">
                         Advertiser Spend: ${combinedAnalytics.comparison.internal.advertiserSpend.toFixed(2)}
                       </td>
                       <td className="py-3 px-4 text-purple-700 font-semibold">
                         Network Revenue: ${combinedAnalytics.comparison.external.networkRevenue.toFixed(2)}
                       </td>
-                      <td className="py-3 px-4 text-[#534434] text-[11px] italic">
+                      <td className="py-3 px-4 text-muted-foreground text-[11px] italic">
                         Independent ledgers (never mixed)
                       </td>
                     </tr>
@@ -1879,18 +1879,18 @@ export const AdminAds: React.FC = () => {
           )}
 
           {/* External Network Metrics Section */}
-          <div className="bg-white rounded-2xl border border-[#e2e8f8] p-6 shadow-level-1 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#e2e8f8] pb-4">
+          <div className="bg-card rounded-2xl border border-border p-6 shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-4">
               <div>
-                <h3 className="text-base font-bold font-heading text-[#151c27]">External Ad Networks Performance</h3>
-                <p className="text-xs text-[#534434]">AdMob & Web Ads requests, fills, impressions, and error metrics</p>
+                <h3 className="text-base font-bold font-heading text-foreground">External Ad Networks Performance</h3>
+                <p className="text-xs text-muted-foreground">AdMob & Web Ads requests, fills, impressions, and error metrics</p>
               </div>
 
               <div className="flex items-center gap-2">
                 <select
                   value={extProviderFilter}
                   onChange={(e) => setExtProviderFilter(e.target.value)}
-                  className="px-3 py-1.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs font-semibold text-[#151c27]"
+                  className="px-3 py-1.5 rounded-xl bg-muted/40 border border-border text-xs font-semibold text-foreground"
                 >
                   <option value="ALL">All External Providers</option>
                   <option value="ADMOB">Google AdMob</option>
@@ -1900,7 +1900,7 @@ export const AdminAds: React.FC = () => {
                 <select
                   value={extDaysFilter}
                   onChange={(e) => setExtDaysFilter(Number(e.target.value))}
-                  className="px-3 py-1.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs font-semibold text-[#151c27]"
+                  className="px-3 py-1.5 rounded-xl bg-muted/40 border border-border text-xs font-semibold text-foreground"
                 >
                   <option value={7}>Last 7 Days</option>
                   <option value={30}>Last 30 Days</option>
@@ -1911,32 +1911,32 @@ export const AdminAds: React.FC = () => {
 
             {/* External KPI Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
-              <div className="p-4 rounded-xl border border-[#e2e8f8] bg-[#f9f9ff]">
-                <span className="text-xs font-bold text-[#534434] block">External Requests</span>
-                <span className="text-2xl font-bold font-mono text-[#151c27] mt-1 block">
+              <div className="p-4 rounded-xl border border-border bg-muted/20">
+                <span className="text-xs font-bold text-muted-foreground block">External Requests</span>
+                <span className="text-2xl font-bold font-mono text-foreground mt-1 block">
                   {(externalAnalytics?.totals?.requests || 0).toLocaleString()}
                 </span>
                 <span className="text-[11px] text-slate-500">From web & mobile feeds</span>
               </div>
 
-              <div className="p-4 rounded-xl border border-[#e2e8f8] bg-[#f9f9ff]">
-                <span className="text-xs font-bold text-[#534434] block">Fill Rate</span>
-                <span className="text-2xl font-bold font-mono text-[#006c49] mt-1 block">
+              <div className="p-4 rounded-xl border border-border bg-muted/20">
+                <span className="text-xs font-bold text-muted-foreground block">Fill Rate</span>
+                <span className="text-2xl font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-1 block">
                   {externalAnalytics?.totals?.fillRate || 0}%
                 </span>
                 <span className="text-[11px] text-slate-500">{(externalAnalytics?.totals?.filled || 0).toLocaleString()} filled</span>
               </div>
 
-              <div className="p-4 rounded-xl border border-[#e2e8f8] bg-[#f9f9ff]">
-                <span className="text-xs font-bold text-[#534434] block">External Impressions</span>
+              <div className="p-4 rounded-xl border border-border bg-muted/20">
+                <span className="text-xs font-bold text-muted-foreground block">External Impressions</span>
                 <span className="text-2xl font-bold font-mono text-purple-700 mt-1 block">
                   {(externalAnalytics?.totals?.impressions || 0).toLocaleString()}
                 </span>
                 <span className="text-[11px] text-slate-500">CTR: {externalAnalytics?.totals?.ctr || 0}%</span>
               </div>
 
-              <div className="p-4 rounded-xl border border-[#e2e8f8] bg-[#f9f9ff]">
-                <span className="text-xs font-bold text-[#534434] block">Errors / Timeouts</span>
+              <div className="p-4 rounded-xl border border-border bg-muted/20">
+                <span className="text-xs font-bold text-muted-foreground block">Errors / Timeouts</span>
                 <span className="text-2xl font-bold font-mono text-red-600 mt-1 block">
                   {((externalAnalytics?.totals?.errors || 0) + (externalAnalytics?.totals?.timeouts || 0)).toLocaleString()}
                 </span>
@@ -1952,7 +1952,7 @@ export const AdminAds: React.FC = () => {
       {/* MODAL: EMERGENCY ADS STOP CONFIRMATION */}
       {emergencyModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#151c27]/60 backdrop-blur-xs animate-fade-in">
-          <div className="w-full max-w-md rounded-2xl bg-white border border-red-200 shadow-level-3 p-6 space-y-4">
+          <div className="w-full max-w-md rounded-2xl bg-card border border-red-200 shadow-lg p-6 space-y-4">
             <div className="flex items-center gap-3 text-red-600 border-b border-red-100 pb-3">
               <AlertTriangle size={24} />
               <h3 className="text-base font-bold font-heading">Emergency Ads Kill Switch</h3>
@@ -2021,15 +2021,15 @@ export const AdminAds: React.FC = () => {
       {/* MODAL: REVIEW & APPROVAL DECISION */}
       {isReviewModalOpen && selectedCampaignForReview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#151c27]/40 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-2xl rounded-2xl bg-white border border-[#e2e8f8] shadow-level-3 overflow-hidden">
-            <div className="p-5 border-b border-[#e2e8f8] flex items-center justify-between">
+          <div className="w-full max-w-2xl rounded-2xl bg-card border border-border shadow-lg overflow-hidden">
+            <div className="p-5 border-b border-border flex items-center justify-between">
               <div>
-                <h3 className="text-base font-bold font-heading text-[#151c27]">Campaign Compliance Decision</h3>
-                <p className="text-xs text-[#534434] mt-0.5">{selectedCampaignForReview.name}</p>
+                <h3 className="text-base font-bold font-heading text-foreground">Campaign Compliance Decision</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">{selectedCampaignForReview.name}</p>
               </div>
               <button
                 onClick={() => setIsReviewModalOpen(false)}
-                className="p-1.5 rounded-xl text-[#534434] hover:text-[#151c27] cursor-pointer"
+                className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground cursor-pointer"
               >
                 ✕
               </button>
@@ -2038,18 +2038,18 @@ export const AdminAds: React.FC = () => {
             <div className="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
               {/* Creative Inspection Card */}
               {selectedCreativeForReview && (
-                <div className="p-4 rounded-xl bg-[#f9f9ff] border border-[#e2e8f8] space-y-3">
+                <div className="p-4 rounded-xl bg-muted/20 border border-border space-y-3">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-[#0058be]">
+                    <span className="font-semibold text-primary">
                       {selectedCreativeForReview.format} Creative
                     </span>
-                    <span className="font-mono text-[#534434]">
+                    <span className="font-mono text-muted-foreground">
                       CTA: {selectedCreativeForReview.call_to_action}
                     </span>
                   </div>
 
                   {selectedCreativeForReview.media_urls?.[0]?.url && (
-                    <div className="relative rounded-xl overflow-hidden border border-[#e2e8f8] aspect-video max-h-56 bg-black/90 flex items-center justify-center">
+                    <div className="relative rounded-xl overflow-hidden border border-border aspect-video max-h-56 bg-black/90 flex items-center justify-center">
                       <img
                         src={selectedCreativeForReview.media_urls[0].url}
                         alt="Creative Preview"
@@ -2059,17 +2059,17 @@ export const AdminAds: React.FC = () => {
                   )}
 
                   <div>
-                    <h4 className="text-sm font-bold font-heading text-[#151c27]">{selectedCreativeForReview.headline}</h4>
-                    <p className="text-xs text-[#534434] mt-1">{selectedCreativeForReview.body_text}</p>
+                    <h4 className="text-sm font-bold font-heading text-foreground">{selectedCreativeForReview.headline}</h4>
+                    <p className="text-xs text-muted-foreground mt-1">{selectedCreativeForReview.body_text}</p>
                   </div>
                 </div>
               )}
 
               {/* Campaign Financials & Wallet Balance Breakdown Card */}
-              <div className="p-4 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] space-y-3">
+              <div className="p-4 rounded-xl bg-muted/40 border border-border space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold font-heading text-[#151c27] uppercase tracking-wider flex items-center gap-1.5">
-                    <BarChart3 size={14} className="text-[#0058be]" />
+                  <span className="text-xs font-bold font-heading text-foreground uppercase tracking-wider flex items-center gap-1.5">
+                    <BarChart3 size={14} className="text-primary" />
                     Campaign Funds & Account Balance
                   </span>
                   {(selectedCampaignForReview.advertiser?.balance ?? 0) <= 0 ? (
@@ -2084,54 +2084,54 @@ export const AdminAds: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                  <div className="bg-white p-2.5 rounded-xl border border-[#e2e8f8]">
-                    <span className="text-[10px] text-[#534434] uppercase font-semibold block">Total Allocated</span>
-                    <strong className="text-xs font-bold font-mono text-[#151c27]">
+                  <div className="bg-card p-2.5 rounded-xl border border-border">
+                    <span className="text-[10px] text-muted-foreground uppercase font-semibold block">Total Allocated</span>
+                    <strong className="text-xs font-bold font-mono text-foreground">
                       {formatCurrency(selectedCampaignForReview.total_budget, selectedCampaignForReview.currency || "USD")}
                     </strong>
-                    <span className="text-[9px] text-[#534434] block">
+                    <span className="text-[9px] text-muted-foreground block">
                       ({formatCurrency(selectedCampaignForReview.daily_budget, selectedCampaignForReview.currency || "USD")}/day)
                     </span>
                   </div>
 
-                  <div className="bg-white p-2.5 rounded-xl border border-[#e2e8f8]">
-                    <span className="text-[10px] text-[#534434] uppercase font-semibold block">Funds Used (Spent)</span>
-                    <strong className="text-xs font-bold font-mono text-[#0058be]">
+                  <div className="bg-card p-2.5 rounded-xl border border-border">
+                    <span className="text-[10px] text-muted-foreground uppercase font-semibold block">Funds Used (Spent)</span>
+                    <strong className="text-xs font-bold font-mono text-primary">
                       {formatCurrency(selectedCampaignForReview.spent, selectedCampaignForReview.currency || "USD")}
                     </strong>
-                    <span className="text-[9px] text-[#534434] block">
+                    <span className="text-[9px] text-muted-foreground block">
                       {selectedCampaignForReview.total_budget > 0
                         ? `${Math.round((selectedCampaignForReview.spent / selectedCampaignForReview.total_budget) * 100)}% utilized`
                         : "0%"}
                     </span>
                   </div>
 
-                  <div className="bg-white p-2.5 rounded-xl border border-[#e2e8f8]">
-                    <span className="text-[10px] text-[#534434] uppercase font-semibold block">Remaining Budget</span>
-                    <strong className="text-xs font-bold font-mono text-[#151c27]">
+                  <div className="bg-card p-2.5 rounded-xl border border-border">
+                    <span className="text-[10px] text-muted-foreground uppercase font-semibold block">Remaining Budget</span>
+                    <strong className="text-xs font-bold font-mono text-foreground">
                       {formatCurrency(
                         Math.max(0, selectedCampaignForReview.total_budget - selectedCampaignForReview.spent),
                         selectedCampaignForReview.currency || "USD"
                       )}
                     </strong>
-                    <span className="text-[9px] text-[#534434] block">Available to spend</span>
+                    <span className="text-[9px] text-muted-foreground block">Available to spend</span>
                   </div>
 
-                  <div className="bg-white p-2.5 rounded-xl border border-[#e2e8f8]">
-                    <span className="text-[10px] text-[#534434] uppercase font-semibold block">Advertiser Balance</span>
+                  <div className="bg-card p-2.5 rounded-xl border border-border">
+                    <span className="text-[10px] text-muted-foreground uppercase font-semibold block">Advertiser Balance</span>
                     <strong className={`text-xs font-bold font-mono ${
-                      (selectedCampaignForReview.advertiser?.balance ?? 0) <= 0 ? "text-red-600" : "text-[#006c49]"
+                      (selectedCampaignForReview.advertiser?.balance ?? 0) <= 0 ? "text-red-600" : "text-emerald-600 dark:text-emerald-400"
                     }`}>
                       {formatCurrency(selectedCampaignForReview.advertiser?.balance ?? 0, selectedCampaignForReview.currency || "USD")}
                     </strong>
-                    <span className="text-[9px] text-[#534434] block">Prepaid wallet</span>
+                    <span className="text-[9px] text-muted-foreground block">Prepaid wallet</span>
                   </div>
                 </div>
               </div>
 
               {/* Decision Action Selector */}
               <div className="space-y-2">
-                <label className="text-xs font-semibold font-heading uppercase text-[#534434] tracking-wider">
+                <label className="text-xs font-semibold font-heading uppercase text-muted-foreground tracking-wider">
                   Administrative Action
                 </label>
                 <div className="grid grid-cols-3 gap-2.5">
@@ -2140,11 +2140,11 @@ export const AdminAds: React.FC = () => {
                     onClick={() => setReviewDecisionAction("APPROVE")}
                     className={`p-3 rounded-xl text-xs font-bold border transition flex flex-col items-center gap-1.5 cursor-pointer ${
                       reviewDecisionAction === "APPROVE"
-                        ? "bg-[#bbf7d0]/40 text-[#006c49] border-[#006c49]/40 shadow-sm"
-                        : "bg-[#f0f3ff] text-[#534434] border-[#dae2f3] hover:bg-[#e2e8f8]"
+                        ? "bg-emerald-500/10/40 text-emerald-600 dark:text-emerald-400 border-[#006c49]/40 shadow-sm"
+                        : "bg-muted/40 text-muted-foreground border-border hover:bg-[#e2e8f8]"
                     }`}
                   >
-                    <CheckCircle2 size={18} className="text-[#006c49]" />
+                    <CheckCircle2 size={18} className="text-emerald-600 dark:text-emerald-400" />
                     Approve Campaign
                   </button>
 
@@ -2153,11 +2153,11 @@ export const AdminAds: React.FC = () => {
                     onClick={() => setReviewDecisionAction("REQUEST_CHANGES")}
                     className={`p-3 rounded-xl text-xs font-bold border transition flex flex-col items-center gap-1.5 cursor-pointer ${
                       reviewDecisionAction === "REQUEST_CHANGES"
-                        ? "bg-[#f0f3ff] text-[#0058be] border-[#0058be]/40 shadow-sm"
-                        : "bg-[#f0f3ff] text-[#534434] border-[#dae2f3] hover:bg-[#e2e8f8]"
+                        ? "bg-muted/40 text-primary border-primary/40 shadow-sm"
+                        : "bg-muted/40 text-muted-foreground border-border hover:bg-[#e2e8f8]"
                     }`}
                   >
-                    <Sliders size={18} className="text-[#0058be]" />
+                    <Sliders size={18} className="text-primary" />
                     Request Changes
                   </button>
 
@@ -2166,11 +2166,11 @@ export const AdminAds: React.FC = () => {
                     onClick={() => setReviewDecisionAction("REJECT")}
                     className={`p-3 rounded-xl text-xs font-bold border transition flex flex-col items-center gap-1.5 cursor-pointer ${
                       reviewDecisionAction === "REJECT"
-                        ? "bg-[#ffdad6]/40 text-[#ba1a1a] border-[#ffdad6] shadow-sm"
-                        : "bg-[#f0f3ff] text-[#534434] border-[#dae2f3] hover:bg-[#e2e8f8]"
+                        ? "bg-destructive/10/40 text-destructive border-destructive/30 shadow-sm"
+                        : "bg-muted/40 text-muted-foreground border-border hover:bg-[#e2e8f8]"
                     }`}
                   >
-                    <XCircle size={18} className="text-[#ba1a1a]" />
+                    <XCircle size={18} className="text-destructive" />
                     Reject Campaign
                   </button>
                 </div>
@@ -2179,7 +2179,7 @@ export const AdminAds: React.FC = () => {
               {/* Mandatory Reason/Feedback if not Approve */}
               {(reviewDecisionAction === "REJECT" || reviewDecisionAction === "REQUEST_CHANGES") && (
                 <div className="space-y-1.5 animate-fade-in">
-                  <label className="text-xs font-semibold text-[#ba1a1a] flex items-center gap-1">
+                  <label className="text-xs font-semibold text-destructive flex items-center gap-1">
                     <AlertTriangle size={13} />
                     {reviewDecisionAction === "REJECT"
                       ? "Mandatory Rejection Reason"
@@ -2194,17 +2194,17 @@ export const AdminAds: React.FC = () => {
                         ? "Provide explicit standard policy violation reasons (e.g. Unverified veterinary health claims, non-compliant imagery)..."
                         : "Describe the exact modifications the advertiser must make to obtain approval..."
                     }
-                    className="w-full p-3 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] placeholder-[#534434]/60 focus:outline-none focus:bg-white focus:border-[#ba1a1a]"
+                    className="w-full p-3 rounded-xl bg-muted/40 border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:bg-card focus:border-[#ba1a1a]"
                   />
                 </div>
               )}
             </div>
 
-            <div className="p-4 border-t border-[#e2e8f8] flex items-center justify-end gap-2 bg-[#f9f9ff]">
+            <div className="p-4 border-t border-border flex items-center justify-end gap-2 bg-muted/20">
               <button
                 type="button"
                 onClick={() => setIsReviewModalOpen(false)}
-                className="px-4 py-2 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#534434] text-xs font-semibold border border-[#dae2f3] transition cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-muted/40 hover:bg-[#e2e8f8] text-muted-foreground text-xs font-semibold border border-border transition cursor-pointer"
               >
                 Cancel
               </button>
@@ -2212,7 +2212,7 @@ export const AdminAds: React.FC = () => {
                 type="button"
                 onClick={handleExecuteReviewDecision}
                 disabled={actionLoading}
-                className="px-4 py-2 rounded-xl bg-[#0058be] hover:bg-[#2170e4] text-white text-xs font-bold shadow-sm transition disabled:opacity-50 cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-primary hover:bg-[#2170e4] text-white text-xs font-bold shadow-sm transition disabled:opacity-50 cursor-pointer"
               >
                 {actionLoading ? "Submitting..." : "Confirm Review Decision"}
               </button>
@@ -2224,12 +2224,12 @@ export const AdminAds: React.FC = () => {
       {/* MODAL: NEW ADVERTISER */}
       {isNewAdvertiserOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#151c27]/40 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-lg rounded-2xl bg-white border border-[#e2e8f8] shadow-level-3 overflow-hidden">
-            <div className="p-5 border-b border-[#e2e8f8] flex items-center justify-between">
-              <h3 className="text-base font-bold font-heading text-[#151c27]">Register Commercial Partner</h3>
+          <div className="w-full max-w-lg rounded-2xl bg-card border border-border shadow-lg overflow-hidden">
+            <div className="p-5 border-b border-border flex items-center justify-between">
+              <h3 className="text-base font-bold font-heading text-foreground">Register Commercial Partner</h3>
               <button
                 onClick={() => setIsNewAdvertiserOpen(false)}
-                className="p-1.5 rounded-xl text-[#534434] hover:text-[#151c27] cursor-pointer"
+                className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground cursor-pointer"
               >
                 ✕
               </button>
@@ -2237,61 +2237,61 @@ export const AdminAds: React.FC = () => {
 
             <form onSubmit={handleCreateAdvertiser} className="p-5 space-y-4">
               <div className="space-y-1">
-                <label className="text-xs font-semibold font-heading text-[#534434]">Company Name *</label>
+                <label className="text-xs font-semibold font-heading text-muted-foreground">Company Name *</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. PurrPerfect Organic Treats"
                   value={newAdvCompany}
                   onChange={(e) => setNewAdvCompany(e.target.value)}
-                  className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
+                  className="w-full p-2.5 rounded-xl bg-muted/40 border border-border text-xs text-foreground focus:outline-none focus:bg-card focus:border-primary"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold font-heading text-[#534434]">Contact Representative *</label>
+                  <label className="text-xs font-semibold font-heading text-muted-foreground">Contact Representative *</label>
                   <input
                     type="text"
                     required
                     placeholder="e.g. Jane Foster"
                     value={newAdvContact}
                     onChange={(e) => setNewAdvContact(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
+                    className="w-full p-2.5 rounded-xl bg-muted/40 border border-border text-xs text-foreground focus:outline-none focus:bg-card focus:border-primary"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold font-heading text-[#534434]">Contact Email *</label>
+                  <label className="text-xs font-semibold font-heading text-muted-foreground">Contact Email *</label>
                   <input
                     type="email"
                     required
                     placeholder="partner@company.com"
                     value={newAdvEmail}
                     onChange={(e) => setNewAdvEmail(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
+                    className="w-full p-2.5 rounded-xl bg-muted/40 border border-border text-xs text-foreground focus:outline-none focus:bg-card focus:border-primary"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold font-heading text-[#534434]">Website URL</label>
+                  <label className="text-xs font-semibold font-heading text-muted-foreground">Website URL</label>
                   <input
                     type="url"
                     placeholder="https://company.pet"
                     value={newAdvWebsite}
                     onChange={(e) => setNewAdvWebsite(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
+                    className="w-full p-2.5 rounded-xl bg-muted/40 border border-border text-xs text-foreground focus:outline-none focus:bg-card focus:border-primary"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold font-heading text-[#534434]">Industry Category</label>
+                  <label className="text-xs font-semibold font-heading text-muted-foreground">Industry Category</label>
                   <select
                     value={newAdvIndustry}
                     onChange={(e) => setNewAdvIndustry(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
+                    className="w-full p-2.5 rounded-xl bg-muted/40 border border-border text-xs text-foreground focus:outline-none focus:bg-card focus:border-primary"
                   >
                     <option value="PET_FOOD">Pet Food & Nutrition</option>
                     <option value="VET_HEALTH">Veterinary & Health</option>
@@ -2303,28 +2303,28 @@ export const AdminAds: React.FC = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold font-heading text-[#534434]">Initial Account Budget Credit ($)</label>
+                <label className="text-xs font-semibold font-heading text-muted-foreground">Initial Account Budget Credit ($)</label>
                 <input
                   type="number"
                   min="0"
                   value={newAdvBalance}
                   onChange={(e) => setNewAdvBalance(e.target.value)}
-                  className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] font-mono focus:outline-none focus:bg-white focus:border-[#0058be]"
+                  className="w-full p-2.5 rounded-xl bg-muted/40 border border-border text-xs text-foreground font-mono focus:outline-none focus:bg-card focus:border-primary"
                 />
               </div>
 
-              <div className="pt-3 border-t border-[#e2e8f8] flex items-center justify-end gap-2">
+              <div className="pt-3 border-t border-border flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsNewAdvertiserOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#534434] text-xs font-semibold border border-[#dae2f3] transition cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-muted/40 hover:bg-[#e2e8f8] text-muted-foreground text-xs font-semibold border border-border transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="px-4 py-2 rounded-xl bg-[#0058be] hover:bg-[#2170e4] text-white text-xs font-bold transition disabled:opacity-50 cursor-pointer shadow-sm"
+                  className="px-4 py-2 rounded-xl bg-primary hover:bg-[#2170e4] text-white text-xs font-bold transition disabled:opacity-50 cursor-pointer shadow-sm"
                 >
                   {actionLoading ? "Registering..." : "Save Partner"}
                 </button>
@@ -2337,12 +2337,12 @@ export const AdminAds: React.FC = () => {
       {/* MODAL: NEW CAMPAIGN */}
       {isNewCampaignOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#151c27]/40 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-xl rounded-2xl bg-white border border-[#e2e8f8] shadow-level-3 overflow-hidden">
-            <div className="p-5 border-b border-[#e2e8f8] flex items-center justify-between">
-              <h3 className="text-base font-bold font-heading text-[#151c27]">Create Advertising Campaign</h3>
+          <div className="w-full max-w-xl rounded-2xl bg-card border border-border shadow-lg overflow-hidden">
+            <div className="p-5 border-b border-border flex items-center justify-between">
+              <h3 className="text-base font-bold font-heading text-foreground">Create Advertising Campaign</h3>
               <button
                 onClick={() => setIsNewCampaignOpen(false)}
-                className="p-1.5 rounded-xl text-[#534434] hover:text-[#151c27] cursor-pointer"
+                className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground cursor-pointer"
               >
                 ✕
               </button>
@@ -2350,12 +2350,12 @@ export const AdminAds: React.FC = () => {
 
             <form onSubmit={handleCreateCampaign} className="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
               <div className="space-y-1">
-                <label className="text-xs font-semibold font-heading text-[#534434]">Advertiser Partner *</label>
+                <label className="text-xs font-semibold font-heading text-muted-foreground">Advertiser Partner *</label>
                 <select
                   required
                   value={newCampAdvertiserId}
                   onChange={(e) => setNewCampAdvertiserId(e.target.value)}
-                  className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
+                  className="w-full p-2.5 rounded-xl bg-muted/40 border border-border text-xs text-foreground focus:outline-none focus:bg-card focus:border-primary"
                 >
                   {advertisers.map((a) => (
                     <option key={a.id} value={a.id}>
@@ -2366,24 +2366,24 @@ export const AdminAds: React.FC = () => {
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs font-semibold font-heading text-[#534434]">Campaign Name *</label>
+                <label className="text-xs font-semibold font-heading text-muted-foreground">Campaign Name *</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Winter Coat & Harness Collection 2026"
                   value={newCampName}
                   onChange={(e) => setNewCampName(e.target.value)}
-                  className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
+                  className="w-full p-2.5 rounded-xl bg-muted/40 border border-border text-xs text-foreground focus:outline-none focus:bg-card focus:border-primary"
                 />
               </div>
 
               <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold font-heading text-[#534434]">Objective *</label>
+                  <label className="text-xs font-semibold font-heading text-muted-foreground">Objective *</label>
                   <select
                     value={newCampObjective}
                     onChange={(e) => setNewCampObjective(e.target.value as any)}
-                    className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
+                    className="w-full p-2.5 rounded-xl bg-muted/40 border border-border text-xs text-foreground focus:outline-none focus:bg-card focus:border-primary"
                   >
                     <option value="TRAFFIC">Traffic</option>
                     <option value="CONVERSIONS">Conversions</option>
@@ -2394,41 +2394,41 @@ export const AdminAds: React.FC = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold font-heading text-[#534434]">Total Budget ($) *</label>
+                  <label className="text-xs font-semibold font-heading text-muted-foreground">Total Budget ($) *</label>
                   <input
                     type="number"
                     required
                     min="10"
                     value={newCampBudget}
                     onChange={(e) => setNewCampBudget(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] font-mono focus:outline-none focus:bg-white focus:border-[#0058be]"
+                    className="w-full p-2.5 rounded-xl bg-muted/40 border border-border text-xs text-foreground font-mono focus:outline-none focus:bg-card focus:border-primary"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold font-heading text-[#534434]">Daily Budget ($)</label>
+                  <label className="text-xs font-semibold font-heading text-muted-foreground">Daily Budget ($)</label>
                   <input
                     type="number"
                     min="1"
                     value={newCampDailyBudget}
                     onChange={(e) => setNewCampDailyBudget(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] font-mono focus:outline-none focus:bg-white focus:border-[#0058be]"
+                    className="w-full p-2.5 rounded-xl bg-muted/40 border border-border text-xs text-foreground font-mono focus:outline-none focus:bg-card focus:border-primary"
                   />
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-[#e2e8f8] space-y-3">
-                <span className="text-xs font-bold font-heading uppercase tracking-wider text-[#0058be]">
+              <div className="pt-2 border-t border-border space-y-3">
+                <span className="text-xs font-bold font-heading uppercase tracking-wider text-primary">
                   Primary Ad Creative
                 </span>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold font-heading text-[#534434]">Format</label>
+                    <label className="text-xs font-semibold font-heading text-muted-foreground">Format</label>
                     <select
                       value={newCampFormat}
                       onChange={(e) => setNewCampFormat(e.target.value as any)}
-                      className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
+                      className="w-full p-2.5 rounded-xl bg-muted/40 border border-border text-xs text-foreground focus:outline-none focus:bg-card focus:border-primary"
                     >
                       <option value="IMAGE">Single Image</option>
                       <option value="VIDEO">Video Ad</option>
@@ -2437,11 +2437,11 @@ export const AdminAds: React.FC = () => {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold font-heading text-[#534434]">Call to Action (CTA)</label>
+                    <label className="text-xs font-semibold font-heading text-muted-foreground">Call to Action (CTA)</label>
                     <select
                       value={newCampCta}
                       onChange={(e) => setNewCampCta(e.target.value)}
-                      className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
+                      className="w-full p-2.5 rounded-xl bg-muted/40 border border-border text-xs text-foreground focus:outline-none focus:bg-card focus:border-primary"
                     >
                       <option value="LEARN_MORE">Learn More</option>
                       <option value="SHOP_NOW">Shop Now</option>
@@ -2453,66 +2453,66 @@ export const AdminAds: React.FC = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold font-heading text-[#534434]">Headline *</label>
+                  <label className="text-xs font-semibold font-heading text-muted-foreground">Headline *</label>
                   <input
                     type="text"
                     required
                     placeholder="Short catching title"
                     value={newCampHeadline}
                     onChange={(e) => setNewCampHeadline(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
+                    className="w-full p-2.5 rounded-xl bg-muted/40 border border-border text-xs text-foreground focus:outline-none focus:bg-card focus:border-primary"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold font-heading text-[#534434]">Body Copy / Description</label>
+                  <label className="text-xs font-semibold font-heading text-muted-foreground">Body Copy / Description</label>
                   <textarea
                     rows={2}
                     placeholder="Engaging caption or promotion details..."
                     value={newCampBody}
                     onChange={(e) => setNewCampBody(e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
+                    className="w-full p-2.5 rounded-xl bg-muted/40 border border-border text-xs text-foreground focus:outline-none focus:bg-card focus:border-primary"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold font-heading text-[#534434]">Destination URL *</label>
+                    <label className="text-xs font-semibold font-heading text-muted-foreground">Destination URL *</label>
                     <input
                       type="url"
                       required
                       placeholder="https://..."
                       value={newCampDestination}
                       onChange={(e) => setNewCampDestination(e.target.value)}
-                      className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
+                      className="w-full p-2.5 rounded-xl bg-muted/40 border border-border text-xs text-foreground focus:outline-none focus:bg-card focus:border-primary"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold font-heading text-[#534434]">Media URL (Image / Video)</label>
+                    <label className="text-xs font-semibold font-heading text-muted-foreground">Media URL (Image / Video)</label>
                     <input
                       type="url"
                       placeholder="https://images.unsplash..."
                       value={newCampMediaUrl}
                       onChange={(e) => setNewCampMediaUrl(e.target.value)}
-                      className="w-full p-2.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs text-[#151c27] focus:outline-none focus:bg-white focus:border-[#0058be]"
+                      className="w-full p-2.5 rounded-xl bg-muted/40 border border-border text-xs text-foreground focus:outline-none focus:bg-card focus:border-primary"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-[#e2e8f8] flex items-center justify-end gap-2">
+              <div className="pt-3 border-t border-border flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsNewCampaignOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#534434] text-xs font-semibold border border-[#dae2f3] transition cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-muted/40 hover:bg-[#e2e8f8] text-muted-foreground text-xs font-semibold border border-border transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="px-4 py-2 rounded-xl bg-[#0058be] hover:bg-[#2170e4] text-white text-xs font-bold shadow-sm transition disabled:opacity-50 cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-primary hover:bg-[#2170e4] text-white text-xs font-bold shadow-sm transition disabled:opacity-50 cursor-pointer"
                 >
                   {actionLoading ? "Submitting..." : "Submit for Review"}
                 </button>
@@ -2525,31 +2525,31 @@ export const AdminAds: React.FC = () => {
       {/* Peto Ads Marketplace Confirmation Modal */}
       {marketplaceModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-level-5 border border-[#e2e8f8] space-y-5 animate-scale-up">
+          <div className="bg-card rounded-3xl max-w-lg w-full p-6 shadow-level-5 border border-border space-y-5 animate-scale-up">
             {targetMarketplaceState === false ? (
               /* DISABLE CONFIRMATION */
               <>
-                <div className="flex items-center gap-3 border-b border-[#e2e8f8] pb-4">
+                <div className="flex items-center gap-3 border-b border-border pb-4">
                   <div className="p-2.5 rounded-2xl bg-amber-100 text-amber-800">
                     <AlertTriangle size={24} />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold font-heading text-[#151c27]">
+                    <h3 className="text-lg font-bold font-heading text-foreground">
                       Disable Peto Ads Marketplace?
                     </h3>
-                    <p className="text-xs text-[#534434]">
+                    <p className="text-xs text-muted-foreground">
                       Temporarily pause first-party marketplace access
                     </p>
                   </div>
                 </div>
 
-                <div className="space-y-3 text-xs text-[#534434] leading-relaxed">
+                <div className="space-y-3 text-xs text-muted-foreground leading-relaxed">
                   <p>
                     This will prevent users and businesses from accessing Peto's first-party advertising marketplace.
                   </p>
-                  <div className="p-3.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] space-y-2">
-                    <p className="font-bold text-[#151c27]">This will NOT:</p>
-                    <ul className="space-y-1 list-disc list-inside text-[11px] text-[#534434]">
+                  <div className="p-3.5 rounded-xl bg-muted/40 border border-border space-y-2">
+                    <p className="font-bold text-foreground">This will NOT:</p>
+                    <ul className="space-y-1 list-disc list-inside text-[11px] text-muted-foreground">
                       <li>Delete advertiser accounts</li>
                       <li>Delete campaigns</li>
                       <li>Delete ads</li>
@@ -2568,12 +2568,12 @@ export const AdminAds: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="pt-3 border-t border-[#e2e8f8] flex items-center justify-end gap-3">
+                <div className="pt-3 border-t border-border flex items-center justify-end gap-3">
                   <button
                     type="button"
                     disabled={controlsSaving}
                     onClick={() => setMarketplaceModalOpen(false)}
-                    className="px-5 py-2.5 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#534434] text-xs font-semibold border border-[#dae2f3] transition cursor-pointer"
+                    className="px-5 py-2.5 rounded-xl bg-muted/40 hover:bg-[#e2e8f8] text-muted-foreground text-xs font-semibold border border-border transition cursor-pointer"
                   >
                     Cancel
                   </button>
@@ -2590,25 +2590,25 @@ export const AdminAds: React.FC = () => {
             ) : (
               /* ENABLE CONFIRMATION */
               <>
-                <div className="flex items-center gap-3 border-b border-[#e2e8f8] pb-4">
+                <div className="flex items-center gap-3 border-b border-border pb-4">
                   <div className="p-2.5 rounded-2xl bg-emerald-100 text-emerald-800">
                     <CheckCircle2 size={24} />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold font-heading text-[#151c27]">
+                    <h3 className="text-lg font-bold font-heading text-foreground">
                       Enable Peto Ads Marketplace?
                     </h3>
-                    <p className="text-xs text-[#534434]">
+                    <p className="text-xs text-muted-foreground">
                       Resume first-party marketplace operations
                     </p>
                   </div>
                 </div>
 
-                <div className="space-y-3 text-xs text-[#534434] leading-relaxed">
+                <div className="space-y-3 text-xs text-muted-foreground leading-relaxed">
                   <p>
                     This will make Peto's first-party advertiser marketplace available again, subject to existing:
                   </p>
-                  <ul className="p-3.5 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] space-y-1.5 list-disc list-inside text-[11px] text-[#151c27] font-medium">
+                  <ul className="p-3.5 rounded-xl bg-muted/40 border border-border space-y-1.5 list-disc list-inside text-[11px] text-foreground font-medium">
                     <li>Verification</li>
                     <li>Advertiser eligibility</li>
                     <li>Regional configuration</li>
@@ -2619,12 +2619,12 @@ export const AdminAds: React.FC = () => {
                   </ul>
                 </div>
 
-                <div className="pt-3 border-t border-[#e2e8f8] flex items-center justify-end gap-3">
+                <div className="pt-3 border-t border-border flex items-center justify-end gap-3">
                   <button
                     type="button"
                     disabled={controlsSaving}
                     onClick={() => setMarketplaceModalOpen(false)}
-                    className="px-5 py-2.5 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#534434] text-xs font-semibold border border-[#dae2f3] transition cursor-pointer"
+                    className="px-5 py-2.5 rounded-xl bg-muted/40 hover:bg-[#e2e8f8] text-muted-foreground text-xs font-semibold border border-border transition cursor-pointer"
                   >
                     Cancel
                   </button>
@@ -2632,7 +2632,7 @@ export const AdminAds: React.FC = () => {
                     type="button"
                     disabled={controlsSaving}
                     onClick={handleConfirmMarketplaceToggle}
-                    className="px-5 py-2.5 rounded-xl bg-[#0058be] hover:bg-[#2170e4] text-white text-xs font-bold shadow-sm transition cursor-pointer"
+                    className="px-5 py-2.5 rounded-xl bg-primary hover:bg-[#2170e4] text-white text-xs font-bold shadow-sm transition cursor-pointer"
                   >
                     {controlsSaving ? "Updating..." : "Enable Marketplace"}
                   </button>
