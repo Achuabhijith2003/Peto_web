@@ -21,6 +21,7 @@ const CreatePost = ({ onPostCreated, communityId, communityName, petId }: Create
   const [selectedPetId, setSelectedPetId] = useState<string>(petId || "");
   const [taggedPets, setTaggedPets] = useState<TaggablePet[]>([]);
   const [isPetPickerOpen, setIsPetPickerOpen] = useState(false);
+  const [isMobileModalOpen, setIsMobileModalOpen] = useState(false);
   const [mentionedUsers, setMentionedUsers] = useState<MentionUser[]>([]);
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [mentionCursorPos, setMentionCursorPos] = useState<number>(0);
@@ -28,6 +29,18 @@ const CreatePost = ({ onPostCreated, communityId, communityName, petId }: Create
   const photoInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const handleOpenModal = () => {
+      if (!user) {
+        openAuthModal("create posts with pet lovers");
+        return;
+      }
+      setIsMobileModalOpen(true);
+    };
+    window.addEventListener("open-create-post-modal", handleOpenModal);
+    return () => window.removeEventListener("open-create-post-modal", handleOpenModal);
+  }, [user, openAuthModal]);
 
   useEffect(() => {
     if (petId) {
@@ -184,6 +197,7 @@ const CreatePost = ({ onPostCreated, communityId, communityName, petId }: Create
       setTaggedPets([]);
       setMentionedUsers([]);
       if (!petId) setSelectedPetId("");
+      setIsMobileModalOpen(false);
       if (onPostCreated) onPostCreated();
     } catch (error) {
       console.error("Error creating post:", error);
@@ -193,190 +207,258 @@ const CreatePost = ({ onPostCreated, communityId, communityName, petId }: Create
     }
   };
 
-  return (
-    <div className="rounded-3xl bg-white p-6 shadow-sm border border-slate-100/80 transition hover:shadow-md">
-      <div className="flex items-center gap-2 mb-4">
-        <Sparkles size={18} className="text-amber-500" />
-        <h3 className="font-headline font-bold text-base text-slate-900">
-          {communityName ? `Create Discussion in ${communityName}` : "Create Post"}
-        </h3>
-      </div>
+  const renderComposerForm = () => (
+    <form onSubmit={handleSubmit}>
+      <div className="flex gap-4">
+        {user?.profile?.avatar_url && user.profile.avatar_url !== "null" ? (
+          <img
+            src={user.profile.avatar_url}
+            alt={user.username || "Profile"}
+            className="h-11 w-11 rounded-2xl object-cover border border-slate-200 shrink-0"
+          />
+        ) : (
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 font-bold shrink-0">
+            <PawPrint size={20} />
+          </div>
+        )}
 
-      <form onSubmit={handleSubmit}>
-        <div className="flex gap-4">
-          {user?.profile?.avatar_url && user.profile.avatar_url !== "null" ? (
-            <img
-              src={user.profile.avatar_url}
-              alt={user.username}
-              className="h-11 w-11 rounded-2xl object-cover border border-slate-200 shrink-0"
+        <div className="flex-1 space-y-3 relative">
+          <textarea
+            ref={textareaRef}
+            rows={3}
+            placeholder={
+              communityName
+                ? `Share your thoughts with members of ${communityName}... Type @ to mention`
+                : user
+                ? "Share something wonderful... Type @ to mention someone"
+                : "Log in to share a post with the community..."
+            }
+            value={text}
+            onFocus={() => {
+              if (!user) openAuthModal("share posts with pet lovers");
+            }}
+            onChange={handleTextChange}
+            className="w-full resize-none rounded-2xl bg-slate-50 p-4 text-sm text-slate-900 placeholder-slate-400 outline-none border-2 border-transparent focus:border-amber-500 focus:bg-white focus:ring-4 focus:ring-amber-100/50 transition duration-200"
+          />
+
+          {/* Mention Suggestions Popover */}
+          {mentionQuery !== null && (
+            <MentionSuggestions
+              query={mentionQuery}
+              onSelect={handleSelectMention}
             />
-          ) : (
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 font-bold shrink-0">
-              <PawPrint size={20} />
+          )}
+
+          {/* Tagged Pets Attribution Chips */}
+          {taggedPets.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+              <span className="text-xs font-semibold text-slate-500 mr-1 flex items-center gap-1">
+                <PawPrint size={13} className="text-emerald-600" />
+                About pet:
+              </span>
+              {taggedPets.map((pet) => (
+                <span
+                  key={pet.id}
+                  className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-900 border border-emerald-200 shadow-2xs"
+                >
+                  <span>{pet.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveTaggedPet(pet.id)}
+                    className="rounded-full hover:bg-emerald-200/80 p-0.5 text-emerald-700 transition cursor-pointer"
+                    title="Remove tagged pet"
+                  >
+                    <X size={12} />
+                  </button>
+                </span>
+              ))}
             </div>
           )}
 
-          <div className="flex-1 space-y-3 relative">
-            <textarea
-              ref={textareaRef}
-              rows={3}
-              placeholder={
-                communityName
-                  ? `Share your thoughts with members of ${communityName}... Type @ to mention`
-                  : user
-                  ? "Share something wonderful... Type @ to mention someone"
-                  : "Log in to share a post with the community..."
-              }
-              value={text}
-              onFocus={() => {
-                if (!user) openAuthModal("share posts with pet lovers");
-              }}
-              onChange={handleTextChange}
-              className="w-full resize-none rounded-2xl bg-slate-50 p-4 text-sm text-slate-900 placeholder-slate-400 outline-none border-2 border-transparent focus:border-amber-500 focus:bg-white focus:ring-4 focus:ring-amber-100/50 transition duration-200"
-            />
-
-            {/* Mention Suggestions Popover */}
-            {mentionQuery !== null && (
-              <MentionSuggestions
-                query={mentionQuery}
-                onSelect={handleSelectMention}
-              />
-            )}
-
-            {/* Tagged Pets Chips */}
-            {taggedPets.length > 0 && (
-              <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                <span className="text-xs font-semibold text-slate-500 mr-1 flex items-center gap-1">
-                  <PawPrint size={13} className="text-emerald-600" />
-                  Tagged:
-                </span>
-                {taggedPets.map((pet) => (
-                  <span
-                    key={pet.id}
-                    className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-900 border border-emerald-200 shadow-2xs"
+          {mediaFiles.length > 0 && (
+            <div className="flex flex-wrap gap-3 pt-1">
+              {mediaFiles.map((item, idx) => (
+                <div key={idx} className="relative h-24 w-24 rounded-2xl overflow-hidden border border-slate-200 group shadow-xs bg-slate-900 flex items-center justify-center">
+                  {item.type === "video" ? (
+                    <div className="relative w-full h-full flex items-center justify-center bg-slate-950">
+                      <video src={item.preview} className="h-full w-full object-cover opacity-80" />
+                      <Play size={20} className="absolute text-white drop-shadow-md fill-white" />
+                    </div>
+                  ) : (
+                    <img src={item.preview} alt="Upload preview" className="h-full w-full object-cover" />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removeMedia(idx)}
+                    className="absolute top-1 right-1 rounded-full bg-slate-900/80 p-1 text-white hover:bg-slate-900 transition"
                   >
-                    <span>{pet.name}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveTaggedPet(pet.id)}
-                      className="rounded-full hover:bg-emerald-200/80 p-0.5 text-emerald-700 transition"
-                      title="Remove tagged pet"
-                    >
-                      <X size={12} />
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {mediaFiles.length > 0 && (
-              <div className="flex flex-wrap gap-3 pt-1">
-                {mediaFiles.map((item, idx) => (
-                  <div key={idx} className="relative h-24 w-24 rounded-2xl overflow-hidden border border-slate-200 group shadow-xs bg-slate-900 flex items-center justify-center">
-                    {item.type === "video" ? (
-                      <div className="relative w-full h-full flex items-center justify-center bg-slate-950">
-                        <video src={item.preview} className="h-full w-full object-cover opacity-80" />
-                        <Play size={20} className="absolute text-white drop-shadow-md fill-white" />
-                      </div>
-                    ) : (
-                      <img src={item.preview} alt="Upload preview" className="h-full w-full object-cover" />
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => removeMedia(idx)}
-                      className="absolute top-1 right-1 rounded-full bg-slate-900/80 p-1 text-white hover:bg-slate-900 transition"
-                    >
-                      <X size={12} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+                    <X size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
+      </div>
 
-        <input
-          type="file"
-          ref={photoInputRef}
-          onChange={(e) => handleFileChange(e, "image")}
-          multiple
-          accept="image/*"
-          className="hidden"
-        />
+      <input
+        type="file"
+        ref={photoInputRef}
+        onChange={(e) => handleFileChange(e, "image")}
+        multiple
+        accept="image/*"
+        className="hidden"
+      />
 
-        <input
-          type="file"
-          ref={videoInputRef}
-          onChange={(e) => handleFileChange(e, "video")}
-          multiple
-          accept="video/*"
-          className="hidden"
-        />
+      <input
+        type="file"
+        ref={videoInputRef}
+        onChange={(e) => handleFileChange(e, "video")}
+        multiple
+        accept="video/*"
+        className="hidden"
+      />
 
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <button 
-              type="button"
-              onClick={handlePhotoClick}
-              disabled={uploadingMedia || mediaFiles.length >= MAX_MEDIA}
-              className="flex items-center gap-1.5 rounded-xl bg-amber-50 px-3.5 py-2 text-xs font-bold text-amber-700 hover:bg-amber-100 transition border border-amber-200/50 disabled:opacity-50 disabled:cursor-not-allowed"
-              title={mediaFiles.length >= MAX_MEDIA ? "Maximum 5 media items reached" : "Add photo"}
-            >
-              <Image size={15} className="text-amber-600" />
-              <span>Photo</span>
-            </button>
-
-            <button 
-              type="button"
-              onClick={handleVideoClick}
-              disabled={uploadingMedia || mediaFiles.length >= MAX_MEDIA}
-              className="flex items-center gap-1.5 rounded-xl bg-rose-50 px-3.5 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100 transition border border-rose-200/50 disabled:opacity-50 disabled:cursor-not-allowed"
-              title={mediaFiles.length >= MAX_MEDIA ? "Maximum 5 media items reached" : "Add video"}
-            >
-              <Video size={15} className="text-rose-600" />
-              <span>Video</span>
-            </button>
-
-            {/* Dedicated Tag Pet Button */}
-            <button
-              type="button"
-              onClick={() => {
-                if (!user) {
-                  openAuthModal("tag pets in your posts");
-                  return;
-                }
-                setIsPetPickerOpen(true);
-              }}
-              className="flex items-center gap-1.5 rounded-xl bg-emerald-50 px-3.5 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-100 transition border border-emerald-200/60"
-              title="Tag pets in this post"
-            >
-              <PawPrint size={15} className="text-emerald-600" />
-              <span>Tag Pet {taggedPets.length > 0 ? `(${taggedPets.length})` : ""}</span>
-            </button>
-
-            {mediaFiles.length > 0 && (
-              <span className="text-xs font-medium text-slate-400 ml-1">
-                {mediaFiles.length}/{MAX_MEDIA} items
-              </span>
-            )}
-          </div>
-
-          <button
-            type="submit"
-            disabled={submitting || (!text.trim() && mediaFiles.length === 0)}
-            className="flex items-center gap-2 rounded-xl bg-amber-500 px-6 py-2.5 text-xs font-bold text-white shadow-sm shadow-amber-500/25 hover:bg-amber-600 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 transition duration-200 ml-auto"
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <button 
+            type="button"
+            onClick={handlePhotoClick}
+            disabled={uploadingMedia || mediaFiles.length >= MAX_MEDIA}
+            className="flex items-center gap-1.5 rounded-xl bg-amber-50 px-3.5 py-2 text-xs font-bold text-amber-700 hover:bg-amber-100 transition border border-amber-200/50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            title={mediaFiles.length >= MAX_MEDIA ? "Maximum 5 media items reached" : "Add photo"}
           >
-            {submitting ? (
-              <>
-                <Loader2 size={14} className="animate-spin" />
-                <span>{uploadingMedia ? "Uploading..." : "Posting..."}</span>
-              </>
-            ) : (
-              <span>Post</span>
-            )}
+            <Image size={15} className="text-amber-600" />
+            <span>Photo</span>
           </button>
+
+          <button 
+            type="button"
+            onClick={handleVideoClick}
+            disabled={uploadingMedia || mediaFiles.length >= MAX_MEDIA}
+            className="flex items-center gap-1.5 rounded-xl bg-rose-50 px-3.5 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100 transition border border-rose-200/50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            title={mediaFiles.length >= MAX_MEDIA ? "Maximum 5 media items reached" : "Add video"}
+          >
+            <Video size={15} className="text-rose-600" />
+            <span>Video</span>
+          </button>
+
+          {/* Dedicated Tag Pet Button */}
+          <button
+            type="button"
+            onClick={() => {
+              if (!user) {
+                openAuthModal("tag pets in your posts");
+                return;
+              }
+              setIsPetPickerOpen(true);
+            }}
+            className="flex items-center gap-1.5 rounded-xl bg-emerald-50 px-3.5 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-100 transition border border-emerald-200/60 cursor-pointer"
+            title="Tag pets in this post"
+          >
+            <PawPrint size={15} className="text-emerald-600" />
+            <span>Tag Pet {taggedPets.length > 0 ? `(${taggedPets.length})` : ""}</span>
+          </button>
+
+          {mediaFiles.length > 0 && (
+            <span className="text-xs font-medium text-slate-400 ml-1">
+              {mediaFiles.length}/{MAX_MEDIA} items
+            </span>
+          )}
         </div>
-      </form>
+
+        <button
+          type="submit"
+          disabled={submitting || (!text.trim() && mediaFiles.length === 0)}
+          className="flex items-center gap-2 rounded-xl bg-amber-500 px-6 py-2.5 text-xs font-bold text-white shadow-sm shadow-amber-500/25 hover:bg-amber-600 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 transition duration-200 ml-auto cursor-pointer"
+        >
+          {submitting ? (
+            <>
+              <Loader2 size={14} className="animate-spin" />
+              <span>{uploadingMedia ? "Uploading..." : "Posting..."}</span>
+            </>
+          ) : (
+            <span>Post</span>
+          )}
+        </button>
+      </div>
+    </form>
+  );
+
+  return (
+    <>
+      {/* Mobile Compact Trigger: ~50px height instead of 400px inline box to ensure feed is visible above the fold */}
+      <div
+        onClick={() => {
+          if (!user) {
+            openAuthModal("share posts with pet lovers");
+            return;
+          }
+          setIsMobileModalOpen(true);
+        }}
+        className="sm:hidden flex items-center justify-between gap-3 p-3.5 bg-white rounded-2xl border border-slate-100/90 shadow-xs cursor-pointer active:scale-[0.99] transition hover:border-amber-200"
+      >
+        <div className="flex items-center gap-3 overflow-hidden flex-1">
+          {user?.profile?.avatar_url && user.profile.avatar_url !== "null" ? (
+            <img
+              src={user.profile.avatar_url}
+              alt={user.username || "Profile"}
+              className="h-9 w-9 rounded-full object-cover border border-slate-200 shrink-0"
+            />
+          ) : (
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-100 text-amber-700 font-bold shrink-0">
+              <PawPrint size={16} />
+            </div>
+          )}
+          <span className="text-xs text-slate-400 font-medium truncate">
+            {communityName ? `Discuss in ${communityName}...` : "What's your pet doing today? 🐾"}
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5 text-slate-400 shrink-0">
+          <div className="p-1.5 rounded-xl bg-amber-50 text-amber-700 border border-amber-200/50">
+            <Image size={15} />
+          </div>
+          <div className="p-1.5 rounded-xl bg-rose-50 text-rose-700 border border-rose-200/50">
+            <Video size={15} />
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Full Modal Composer */}
+      {isMobileModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="relative w-full max-w-lg rounded-t-3xl sm:rounded-3xl bg-white p-5 sm:p-6 shadow-2xl border border-slate-100 flex flex-col max-h-[90vh] overflow-y-auto pb-[max(1rem,env(safe-area-inset-bottom))]">
+            <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <Sparkles size={18} className="text-amber-500" />
+                <h3 className="font-headline font-bold text-base text-slate-900">
+                  {communityName ? `Create Discussion in ${communityName}` : "Create Post"}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsMobileModalOpen(false)}
+                className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition cursor-pointer"
+                aria-label="Close composer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            {renderComposerForm()}
+          </div>
+        </div>
+      )}
+
+      {/* Desktop Expanded Composer */}
+      <div className="hidden sm:block rounded-3xl bg-white p-6 shadow-sm border border-slate-100/80 transition hover:shadow-md">
+        <div className="flex items-center gap-2 mb-4">
+          <Sparkles size={18} className="text-amber-500" />
+          <h3 className="font-headline font-bold text-base text-slate-900">
+            {communityName ? `Create Discussion in ${communityName}` : "Create Post"}
+          </h3>
+        </div>
+        {renderComposerForm()}
+      </div>
 
       {/* Pet Picker Modal */}
       <PetPickerModal
@@ -386,7 +468,7 @@ const CreatePost = ({ onPostCreated, communityId, communityName, petId }: Create
         onSelectPets={(pets) => setTaggedPets(pets)}
         maxPets={5}
       />
-    </div>
+    </>
   );
 };
 

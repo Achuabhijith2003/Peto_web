@@ -135,7 +135,7 @@ const Community = () => {
           <div className="relative z-10 max-w-3xl space-y-3">
             <div className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/10 px-2.5 py-0.5 text-xs font-semibold text-slate-200">
               <Compass size={13} className="text-amber-400" />
-              <span>Explore Circles</span>
+              <span>Explore Communities</span>
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
@@ -152,7 +152,7 @@ const Community = () => {
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <input
                   type="text"
-                  placeholder="Search circles by name, topic, or breed..."
+                  placeholder="Search communities by name, topic, or breed..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full rounded-lg bg-white pl-9 pr-3.5 py-2 text-xs sm:text-sm text-slate-900 placeholder-slate-400 shadow-micro outline-none border border-slate-200 focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition"
@@ -171,7 +171,7 @@ const Community = () => {
                 className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-white px-4 py-2 text-xs sm:text-sm font-semibold text-slate-900 shadow-micro hover:bg-slate-100 transition cursor-pointer shrink-0 border border-slate-200/80 active:scale-[0.98]"
               >
                 <Plus size={16} />
-                <span>Create Circle</span>
+                <span>Create Community</span>
               </button>
             </div>
           </div>
@@ -228,9 +228,9 @@ const Community = () => {
                 {[1, 2, 3, 4, 5, 6].map((n) => (
                   <div
                     key={n}
-                    className="h-56 rounded-xl border border-slate-200/80 bg-white p-4 shadow-card animate-pulse space-y-3"
+                    className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-card animate-pulse space-y-3"
                   >
-                    <div className="h-24 w-full rounded-lg bg-slate-100" />
+                    <div className="aspect-[16/9] w-full rounded-lg bg-slate-100" />
                     <div className="h-4 w-3/4 rounded bg-slate-100" />
                     <div className="h-3 w-1/2 rounded bg-slate-100" />
                   </div>
@@ -277,7 +277,7 @@ const Community = () => {
                       ) : (
                         <RefreshCw size={14} />
                       )}
-                      <span>Load More Circles</span>
+                      <span>Load More Communities</span>
                     </button>
                   </div>
                 )}
@@ -291,14 +291,14 @@ const Community = () => {
                 <div className="max-w-md space-y-1">
                   <h3 className="font-semibold text-sm text-slate-900 tracking-tight">
                     {debouncedSearch
-                      ? `No circles matching "${debouncedSearch}"`
+                      ? `No communities matching "${debouncedSearch}"`
                       : activeTab === "joined"
-                      ? "You haven't joined any circles yet."
+                      ? "You haven't joined any communities yet."
                       : "No communities found in this category."}
                   </h3>
                   <p className="text-xs text-slate-500">
                     {debouncedSearch
-                      ? "Try searching with different keywords or create a new circle for this topic!"
+                      ? "Try searching with different keywords or create a new community for this topic!"
                       : activeTab === "joined"
                       ? "Explore trending groups or find companions tailored to your pet breed."
                       : "Be the leader! Create the very first community for this category."}
@@ -330,7 +330,7 @@ const Community = () => {
                     className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-1.5 text-xs font-semibold text-white shadow-micro hover:bg-slate-800 transition cursor-pointer border border-slate-950/20 active:scale-[0.98]"
                   >
                     <Plus size={14} />
-                    <span>Create Circle</span>
+                    <span>Create Community</span>
                   </button>
                 </div>
               </div>

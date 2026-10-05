@@ -1,16 +1,14 @@
 import {
   User,
+  UserPlus,
   LogOut,
   Bookmark,
   UserCircle,
   Bell,
   Sparkles,
-  Users,
-  Search,
-  Clapperboard,
-  Edit3,
   Building2,
   Check,
+  Edit3,
   Settings as SettingsIcon,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
@@ -50,67 +48,15 @@ const Navbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const isActive = (path: string) => location.pathname === path;
-
   return (
     <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200/80 shadow-micro">
       <div className="mx-auto flex h-16 w-full max-w-7xl xl:max-w-[1440px] 2xl:max-w-[1680px] items-center justify-between px-4 sm:px-6 lg:px-8 2xl:px-10">
         <Logo />
 
-        {/* Desktop Navigation Links */}
-        <nav className="hidden items-center gap-1 lg:flex bg-slate-100/70 p-1 rounded-lg border border-slate-200/60">
-          <Link
-            to="/social"
-            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all duration-150 ${
-              isActive("/social") || isActive("/")
-                ? "bg-white text-slate-900 shadow-micro border border-slate-200/80 font-semibold"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"
-            }`}
-          >
-            <Sparkles size={14} className={isActive("/social") || isActive("/") ? "text-amber-600" : "text-slate-400"} />
-            <span>Feed</span>
-          </Link>
-
-          <Link
-            to="/reels"
-            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all duration-150 ${
-              isActive("/reels")
-                ? "bg-white text-slate-900 shadow-micro border border-slate-200/80 font-semibold"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"
-            }`}
-          >
-            <Clapperboard size={14} className={isActive("/reels") ? "text-amber-600" : "text-slate-400"} />
-            <span>Reels</span>
-          </Link>
-
-          <Link
-            to="/community"
-            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all duration-150 ${
-              isActive("/community")
-                ? "bg-white text-slate-900 shadow-micro border border-slate-200/80 font-semibold"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"
-            }`}
-          >
-            <Users size={14} className={isActive("/community") ? "text-amber-600" : "text-slate-400"} />
-            <span>Circles</span>
-          </Link>
-
-          <Link
-            to="/search"
-            className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold transition-all duration-150 ${
-              isActive("/search")
-                ? "bg-white text-slate-900 shadow-micro border border-slate-200/80 font-semibold"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/50"
-            }`}
-          >
-            <Search size={14} className={isActive("/search") ? "text-amber-600" : "text-slate-400"} />
-            <span>Discover</span>
-          </Link>
-        </nav>
-
-        {/* Right Action Icons */}
+        {/* Right Action Utilities (Top Navbar = Global Utilities) */}
         <div className="flex items-center gap-2.5">
-          <SearchDropdown />
+          {/* Hide Navbar Search on /search to prevent dual search confusion */}
+          {location.pathname !== "/search" && <SearchDropdown />}
 
           {/* Notifications Icon & Dropdown */}
           {isAuthenticated && (
@@ -358,6 +304,14 @@ const Navbar = () => {
                 </div>
               )}
             </div>
+          ) : location.pathname === "/login" ? (
+            <Link 
+              to="/register"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-3.5 py-1.5 text-xs font-semibold text-white shadow-micro hover:bg-amber-600 transition-all border border-amber-600/20 active:scale-[0.98]"
+            >
+              <UserPlus size={14} />
+              <span>Create Account</span>
+            </Link>
           ) : (
             <Link 
               to="/login"

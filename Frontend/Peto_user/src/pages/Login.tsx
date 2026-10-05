@@ -106,7 +106,7 @@ const Login = () => {
           </Link>
         </div>
 
-        <Button type="submit">
+        <Button type="submit" fullWidth variant="amber" size="lg" className="w-full py-3 text-sm font-bold shadow-md cursor-pointer">
           Login
         </Button>
 

@@ -68,7 +68,7 @@ export const Forbidden403: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Link
               to="/login"
-              className="py-2.5 px-4 rounded-xl bg-[#0058be] hover:bg-[#2170e4] active:bg-[#00479b] text-white font-semibold text-xs transition-all shadow-sm flex items-center justify-center space-x-2"
+              className="py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-semibold text-xs transition-all shadow-sm flex items-center justify-center space-x-2"
             >
               <LogIn className="w-4 h-4" />
               <span>Sign In Again</span>
@@ -76,17 +76,17 @@ export const Forbidden403: React.FC = () => {
 
             <Link
               to="/"
-              className="py-2.5 px-4 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#151c27] font-semibold text-xs border border-[#dae2f3] transition-all flex items-center justify-center space-x-2"
+              className="py-2.5 px-4 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 font-semibold text-xs border border-slate-200 transition-all flex items-center justify-center space-x-2"
             >
-              <Home className="w-4 h-4 text-[#0058be]" />
+              <Home className="w-4 h-4 text-amber-600" />
               <span>Return Home</span>
             </Link>
           </div>
 
-          <div className="pt-2 border-t border-[#e2e8f8] text-center">
+          <div className="pt-2 border-t border-slate-200 text-center">
             <a
               href="mailto:appeals@peto.com"
-              className="inline-flex items-center space-x-1.5 text-xs text-[#0058be] hover:underline font-semibold"
+              className="inline-flex items-center space-x-1.5 text-xs text-amber-600 hover:underline font-semibold"
             >
               <Mail className="w-3.5 h-3.5" />
               <span>Contact Moderation Appeals</span>

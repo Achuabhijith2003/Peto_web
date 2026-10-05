@@ -104,10 +104,10 @@ const Reels = () => {
           <div
             ref={containerRef}
             onScroll={handleScroll}
-            className="w-full max-w-[480px] h-[calc(100vh-5rem)] snap-y snap-mandatory overflow-y-scroll scrollbar-none relative"
+            className="w-full max-w-[480px] lg:max-w-5xl xl:max-w-6xl h-[calc(100vh-5rem)] snap-y snap-mandatory overflow-y-scroll scrollbar-none relative px-0 lg:px-4 py-0 lg:py-4 flex flex-col items-center"
           >
             {reels.map((post, idx) => (
-              <div key={post.id || idx} className="h-full w-full snap-start">
+              <div key={post.id || idx} className="h-full w-full snap-start flex items-center justify-center pb-0 lg:pb-6">
                 <ReelItem post={post} isActive={idx === activeIndex} />
               </div>
             ))}

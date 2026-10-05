@@ -99,7 +99,7 @@ export const ServerError500: React.FC<ServerError500Props> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
               onClick={handleRetry}
-              className="py-2.5 px-4 rounded-xl bg-[#0058be] hover:bg-[#2170e4] active:bg-[#00479b] text-white font-semibold text-xs transition-all shadow-sm flex items-center justify-center space-x-2 cursor-pointer"
+              className="py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-semibold text-xs transition-all shadow-sm flex items-center justify-center space-x-2 cursor-pointer"
             >
               <RefreshCw className="w-4 h-4" />
               <span>Try Again</span>
@@ -107,9 +107,9 @@ export const ServerError500: React.FC<ServerError500Props> = ({
 
             <a
               href="/"
-              className="py-2.5 px-4 rounded-xl bg-[#f0f3ff] hover:bg-[#e2e8f8] text-[#151c27] font-semibold text-xs border border-[#dae2f3] transition-all flex items-center justify-center space-x-2"
+              className="py-2.5 px-4 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-800 font-semibold text-xs border border-slate-200 transition-all flex items-center justify-center space-x-2"
             >
-              <Home className="w-4 h-4 text-[#0058be]" />
+              <Home className="w-4 h-4 text-amber-600" />
               <span>Go to Home</span>
             </a>
           </div>
@@ -149,9 +149,9 @@ export const ServerError500: React.FC<ServerError500Props> = ({
         </motion.div>
 
         {/* Footer Support */}
-        <p className="text-xs text-[#534434]/70">
+        <p className="text-xs text-slate-500">
           Persistent issue? Contact our site reliability team at{" "}
-          <a href="mailto:support@peto.com" className="text-[#0058be] font-semibold hover:underline">
+          <a href="mailto:support@peto.com" className="text-amber-600 font-semibold hover:underline">
             support@peto.com
           </a>
         </p>

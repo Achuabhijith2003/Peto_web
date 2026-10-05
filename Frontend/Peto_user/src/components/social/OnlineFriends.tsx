@@ -13,7 +13,11 @@ export interface OnlineUser {
   is_online?: boolean;
 }
 
-const OnlineFriends: React.FC = () => {
+export interface OnlineFriendsProps {
+  variant?: "vertical" | "horizontal";
+}
+
+const OnlineFriends: React.FC<OnlineFriendsProps> = ({ variant = "vertical" }) => {
   const { user: currentUser, openAuthModal } = useAuth();
   const navigate = useNavigate();
   const [onlineList, setOnlineList] = useState<OnlineUser[]>([]);
@@ -76,6 +80,55 @@ const OnlineFriends: React.FC = () => {
 
   const visibleFriends = onlineList.slice(0, visibleCount);
   const hasMoreVisible = onlineList.length > visibleCount;
+
+  // Horizontal compact tray for mobile feed
+  if (variant === "horizontal") {
+    if (!currentUser || onlineList.length === 0) {
+      return null;
+    }
+
+    return (
+      <div className="rounded-2xl bg-white p-3 shadow-xs border border-slate-100/90">
+        <div className="flex items-center gap-3 overflow-x-auto no-scrollbar py-0.5">
+          <div className="shrink-0 flex items-center gap-1.5 pr-2.5 border-r border-slate-100 text-xs font-bold text-slate-800">
+            <Wifi size={14} className="text-emerald-500" />
+            <span className="text-[11px] font-headline font-bold">Active</span>
+            <span className="rounded-full bg-emerald-100 px-1.5 py-0.2 text-[9px] font-bold text-emerald-800">
+              {onlineList.length}
+            </span>
+          </div>
+
+          {onlineList.map((friend) => (
+            <button
+              key={friend.id}
+              type="button"
+              onClick={() => handleProfileClick(friend.id)}
+              className="shrink-0 flex flex-col items-center gap-1 group cursor-pointer focus:outline-none"
+              title={friend.full_name || friend.username}
+            >
+              <div className="relative">
+                {friend.avatar_url && friend.avatar_url !== "null" ? (
+                  <img
+                    src={friend.avatar_url}
+                    alt=""
+                    className="h-10 w-10 rounded-full object-cover border-2 border-emerald-400 group-hover:scale-105 transition-transform"
+                  />
+                ) : (
+                  <div className="h-10 w-10 rounded-full bg-amber-100 text-amber-700 font-bold text-xs flex items-center justify-center border-2 border-emerald-400">
+                    {friend.username ? friend.username[0].toUpperCase() : "U"}
+                  </div>
+                )}
+                <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-white" />
+              </div>
+              <span className="text-[10px] text-slate-600 font-medium truncate max-w-[54px] text-center">
+                {friend.full_name?.split(" ")[0] || friend.username}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-3xl bg-white p-6 shadow-sm border border-slate-100">

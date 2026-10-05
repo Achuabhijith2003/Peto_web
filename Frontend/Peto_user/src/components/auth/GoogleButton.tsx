@@ -43,10 +43,10 @@ const GoogleButton: React.FC<GoogleButtonProps> = ({ className, redirectTo }) =>
     <div className="w-full space-y-1.5">
       <Button
         type="button"
-        variant="secondary"
+        variant="outline"
         onClick={handleGoogleSignIn}
         disabled={loading}
-        className={`flex items-center justify-center gap-3 w-full cursor-pointer ${className || ""}`}
+        className={`flex items-center justify-center gap-3 w-full cursor-pointer py-2.5 border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold ${className || ""}`}
       >
         <img
           src="https://www.svgrepo.com/show/475656/google-color.svg"

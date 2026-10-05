@@ -155,9 +155,9 @@ const Feed = () => {
 
 
 
-            {/* Mobile Online Friends */}
+            {/* Mobile Online Friends (Horizontal Presence Tray) */}
             <div className="lg:hidden">
-                <OnlineFriends />
+                <OnlineFriends variant="horizontal" />
             </div>
 
             {/* Initial Loading Skeleton */}

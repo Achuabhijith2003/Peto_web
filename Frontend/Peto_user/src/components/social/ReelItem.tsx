@@ -122,6 +122,23 @@ const ReelItem = ({ post, isActive }: ReelItemProps) => {
     };
   }, [isActive, videoUrl]);
 
+  useEffect(() => {
+    if (isActive && comments.length === 0) {
+      const loadInitialComments = async () => {
+        try {
+          setLoadingComments(true);
+          const res = await api.get(`/posts/${post.id}/comments`);
+          setComments(res.data.comments || []);
+        } catch (err) {
+          console.error("Failed to load reel comments:", err);
+        } finally {
+          setLoadingComments(false);
+        }
+      };
+      loadInitialComments();
+    }
+  }, [isActive, post.id]);
+
   const handleLoadedMetadata = (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
     const video = e.currentTarget;
     setLoading(false);
@@ -273,426 +290,623 @@ const ReelItem = ({ post, isActive }: ReelItemProps) => {
     }
   };
 
-  return (
-    <div className="relative h-full w-full bg-slate-950 flex items-center justify-center snap-start overflow-hidden">
-      {/* Aspect Ratio Toggle for Landscape Video */}
-      {isLandscape && !hasError && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setFitMode(fitMode === "contain" ? "cover" : "contain");
-          }}
-          className="absolute top-6 left-6 z-30 flex items-center gap-1.5 rounded-full bg-slate-900/80 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-md hover:bg-slate-900 transition border border-white/10 shadow-sm"
-          title={fitMode === "contain" ? "Zoom to fill screen" : "Show original uncropped size"}
-        >
-          {fitMode === "contain" ? (
-            <>
-              <Maximize2 size={13} className="text-amber-400" />
-              <span>Original Size</span>
-            </>
-          ) : (
-            <>
-              <Minimize2 size={13} className="text-amber-400" />
-              <span>Filled</span>
-            </>
-          )}
-        </button>
-      )}
-
-      {/* Video Element: uses direct src for reliable React reloads & object-contain for landscape */}
-      {videoUrl ? (
-        <video
-          ref={videoRef}
-          src={videoUrl}
-          loop
-          playsInline
-          muted={muted}
-          onClick={togglePlay}
-          onLoadedMetadata={handleLoadedMetadata}
-          onWaiting={() => setLoading(true)}
-          onPlaying={() => {
-            setLoading(false);
-            setPlaying(true);
-          }}
-          onError={() => {
-            setLoading(false);
-            setHasError(true);
-          }}
-          className={`w-full cursor-pointer transition-all duration-200 ${
-            fitMode === "contain"
-              ? "h-auto max-h-full max-w-[480px] object-contain my-auto"
-              : "h-full w-full max-w-[480px] object-cover"
-          }`}
-        />
-      ) : (
-        <div className="flex flex-col items-center justify-center gap-2 text-slate-400">
-          <VideoOff size={36} />
-          <span className="text-xs">No video URL found</span>
+  const renderCommentList = (isDark = false) => {
+    if (loadingComments) {
+      return (
+        <div className="py-8 flex flex-col items-center justify-center gap-2 text-slate-400">
+          <Loader2 size={20} className="animate-spin text-amber-500" />
+          <span className="text-xs">Loading comments...</span>
         </div>
-      )}
+      );
+    }
 
-      {/* Loading Indicator */}
-      {loading && !hasError && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-          <Loader2 size={36} className="animate-spin text-amber-500" />
+    if (comments.length === 0) {
+      return (
+        <div className="py-8 text-center text-slate-400 space-y-1">
+          <MessageCircle size={24} className={`mx-auto mb-2 ${isDark ? "text-slate-600" : "text-slate-300"}`} />
+          <p className="text-xs font-medium">No comments yet.</p>
+          <p className="text-[11px] text-slate-500">Be the first to share your thoughts!</p>
         </div>
-      )}
+      );
+    }
 
-      {/* Error / Unavailable fallback */}
-      {hasError && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/90 text-white z-20 gap-3 p-6 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-800 text-slate-400">
-            <VideoOff size={32} />
-          </div>
-          <p className="font-headline font-bold text-sm text-slate-200">Video temporarily unavailable</p>
-          <button
-            onClick={handleRetry}
-            className="flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-white hover:bg-amber-600 transition"
-          >
-            <RefreshCw size={14} /> Retry
-          </button>
-        </div>
-      )}
+    const topLevel = comments.filter((c: any) => !c.parent_comment_id);
+    const repliesMap: Record<string, any[]> = {};
+    comments.forEach((c: any) => {
+      if (c.parent_comment_id) {
+        if (!repliesMap[c.parent_comment_id]) {
+          repliesMap[c.parent_comment_id] = [];
+        }
+        repliesMap[c.parent_comment_id].push(c);
+      }
+    });
 
-      {/* Play / Pause Indicator overlay */}
-      {!playing && !loading && !hasError && (
-        <div
-          onClick={togglePlay}
-          className="absolute inset-0 flex items-center justify-center bg-black/20 cursor-pointer pointer-events-auto"
-        >
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-900/60 text-white backdrop-blur-md">
-            <Play size={32} className="fill-white translate-x-0.5" />
-          </div>
-        </div>
-      )}
+    return (
+      <div className="space-y-3">
+        {topLevel.map((c: any) => {
+          const cAuthor = c.profiles || c.author || c.user;
+          const cAuthorName = cAuthor?.full_name || cAuthor?.username || "Pet Lover";
+          const cAuthorUsername = cAuthor?.username || cAuthorName;
+          const cAvatar =
+            cAuthor?.avatar_url && cAuthor.avatar_url !== "null"
+              ? cAuthor.avatar_url
+              : `https://ui-avatars.com/api/?name=${encodeURIComponent(cAuthorName)}&background=f59e0b&color=fff`;
+          const replies = repliesMap[c.id] || [];
+          const isExpanded = expandedReplies[c.id];
 
-      {/* Sound Mute Toggle Button */}
-      <button
-        onClick={() => setMuted(!muted)}
-        className="absolute top-6 right-6 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-slate-900/60 text-white backdrop-blur-md hover:bg-slate-900 transition"
-      >
-        {muted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-      </button>
-
-      {/* Right Interaction Sidebar */}
-      <div className="absolute right-4 bottom-24 z-20 flex flex-col items-center gap-6 text-white">
-        {/* Like */}
-        <button
-          onClick={handleLike}
-          className="group flex flex-col items-center gap-1 focus:outline-none"
-        >
-          <div
-            className={`flex h-12 w-12 items-center justify-center rounded-full backdrop-blur-md transition ${
-              isLiked ? "bg-rose-500 text-white scale-110 shadow-lg shadow-rose-500/30" : "bg-slate-900/60 hover:bg-slate-900"
-            }`}
-          >
-            <Heart size={24} className={isLiked ? "fill-white text-white" : "text-white"} />
-          </div>
-          <span className="text-xs font-bold drop-shadow-sm">{likesCount}</span>
-        </button>
-
-        {/* Comment */}
-        <button
-          onClick={openComments}
-          className="group flex flex-col items-center gap-1 focus:outline-none"
-        >
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-900/60 backdrop-blur-md hover:bg-slate-900 transition">
-            <MessageCircle size={24} className="text-white" />
-          </div>
-          <span className="text-xs font-bold drop-shadow-sm">{post.stats?.comments || 0}</span>
-        </button>
-
-        {/* Bookmark */}
-        <button
-          onClick={handleBookmark}
-          className="group flex flex-col items-center gap-1 focus:outline-none"
-        >
-          <div
-            className={`flex h-12 w-12 items-center justify-center rounded-full backdrop-blur-md transition ${
-              isBookmarked ? "bg-amber-500 text-white" : "bg-slate-900/60 hover:bg-slate-900"
-            }`}
-          >
-            <Bookmark size={24} className={isBookmarked ? "fill-white text-white" : "text-white"} />
-          </div>
-          <span className="text-[10px] font-medium drop-shadow-sm">Save</span>
-        </button>
-
-        {/* Share */}
-        <button
-          onClick={handleShare}
-          className="group flex flex-col items-center gap-1 focus:outline-none"
-        >
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-900/60 backdrop-blur-md hover:bg-slate-900 transition">
-            <Share2 size={22} className="text-white" />
-          </div>
-          <span className="text-[10px] font-medium drop-shadow-sm">{copied ? "Copied!" : "Share"}</span>
-        </button>
-
-        {/* Report Reel */}
-        <button
-          onClick={() => {
-            if (!user) {
-              openAuthModal("report content");
-              return;
-            }
-            setShowReportModal(true);
-          }}
-          className="group flex flex-col items-center gap-1 focus:outline-none"
-          title="Report Reel"
-        >
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-900/60 backdrop-blur-md hover:bg-rose-900/60 transition">
-            <Flag size={20} className="text-white group-hover:text-rose-400 transition" />
-          </div>
-          <span className="text-[10px] font-medium drop-shadow-sm">Report</span>
-        </button>
-
-        {/* Vinyl Disc Icon */}
-        <div className="mt-2 animate-spin duration-[4000ms]">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900/80 border-2 border-slate-700 text-amber-400">
-            <Disc size={20} />
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom Content Overlay */}
-      <div className="absolute left-4 bottom-6 right-20 z-20 space-y-3 text-white max-w-[380px]">
-        {/* Creator Info */}
-        <div className="flex items-center gap-3">
-          <img
-            onClick={() => navigate(`/profile/${author.id}`)}
-            src={avatarUrl}
-            alt={authorName}
-            className="h-10 w-10 rounded-full object-cover border-2 border-amber-400 cursor-pointer"
-          />
-          <div className="flex flex-col">
-            <div className="flex items-center gap-1.5">
-              <span
-                onClick={() => navigate(`/profile/${author.id}`)}
-                className="font-headline font-bold text-sm hover:underline cursor-pointer drop-shadow-sm"
-              >
-                {authorName}
-              </span>
-              {(author.verified || author.is_verified) && (
-                <VerifiedBadge
-                  verified={true}
-                  verificationType={author?.verification_badge_type === "BUSINESS" ? "BUSINESS_VERIFIED" : "PERSON_VERIFIED"}
-                  size={14}
+          return (
+            <div key={c.id} className="space-y-2 group/comment">
+              {/* Parent Comment */}
+              <div className="flex gap-2.5 text-xs">
+                <img
+                  src={cAvatar}
+                  alt={cAuthorName}
+                  className={`h-8 w-8 rounded-full object-cover shrink-0 mt-0.5 border ${
+                    isDark ? "border-slate-700" : "border-slate-200"
+                  }`}
                 />
+                <div
+                  className={`flex-1 rounded-2xl p-2.5 border ${
+                    isDark
+                      ? "bg-slate-800/80 border-slate-700/60 text-slate-200"
+                      : "bg-slate-50 border-slate-100 text-slate-700"
+                  }`}
+                >
+                  <div className="flex justify-between items-center mb-0.5">
+                    <span className={`font-bold ${isDark ? "text-slate-100" : "text-slate-900"}`}>
+                      {cAuthorName}
+                    </span>
+                    <span className="text-[10px] text-slate-400">
+                      {formatTimeAgo(c.created_at)}
+                    </span>
+                  </div>
+                  <MentionText
+                    text={c.comment || c.text}
+                    mentions={c.mentions}
+                    showPetChips={false}
+                    className={`${isDark ? "text-slate-200" : "text-slate-700"} leading-relaxed font-normal`}
+                  />
+                  <div className={`flex items-center gap-3 mt-1 pt-1 border-t ${isDark ? "border-slate-700/50" : "border-slate-200/40"}`}>
+                    <button
+                      type="button"
+                      onClick={() => handleReplyClick(c.id, cAuthorUsername)}
+                      className="text-[11px] font-semibold text-slate-400 hover:text-amber-400 transition flex items-center gap-1 cursor-pointer"
+                    >
+                      <Reply size={11} />
+                      <span>Reply</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* View Replies Toggle */}
+              {replies.length > 0 && (
+                <div className="ml-10">
+                  <button
+                    type="button"
+                    onClick={() => toggleReplies(c.id)}
+                    className="text-[11px] font-bold text-amber-500 hover:text-amber-400 flex items-center gap-1.5 py-0.5 cursor-pointer"
+                  >
+                    <CornerDownRight size={12} />
+                    <span>
+                      {isExpanded
+                        ? "Hide replies"
+                        : `View ${replies.length} ${replies.length === 1 ? "reply" : "replies"}`}
+                    </span>
+                  </button>
+                </div>
               )}
-            </div>
-            {authorUsername && (
-              <span className="text-xs text-slate-300 font-medium">{authorUsername}</span>
-            )}
-          </div>
-        </div>
 
-        {/* Caption */}
-        {post.text && (
-          <MentionText
-            text={post.text}
-            mentions={post.mentions}
-            taggedPets={post.tagged_pets}
-            className="text-xs sm:text-sm text-slate-100 font-normal leading-relaxed line-clamp-3 drop-shadow-sm"
-          />
-        )}
-      </div>
+              {/* Nested Replies */}
+              {replies.length > 0 && isExpanded && (
+                <div className="ml-8 border-l-2 border-amber-500/40 pl-3 space-y-2 pt-1">
+                  {replies.map((reply: any) => {
+                    const rAuthor = reply.profiles || reply.author || reply.user;
+                    const rAuthorName = rAuthor?.full_name || rAuthor?.username || "Pet Lover";
+                    const rAuthorUsername = rAuthor?.username || rAuthorName;
+                    const rAvatar =
+                      rAuthor?.avatar_url && rAuthor.avatar_url !== "null"
+                        ? rAuthor.avatar_url
+                        : `https://ui-avatars.com/api/?name=${encodeURIComponent(rAuthorName)}&background=f59e0b&color=fff`;
 
-      {/* Slide-over Comments Drawer */}
-      {showComments && (
-        <div className="absolute inset-x-0 bottom-0 z-40 max-h-[65%] rounded-t-3xl bg-white p-5 shadow-2xl animate-in slide-in-from-bottom duration-300 text-slate-900 flex flex-col">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-            <h3 className="font-headline font-bold text-base">Comments</h3>
-            <button
-              onClick={() => setShowComments(false)}
-              className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 transition"
-            >
-              <X size={18} />
-            </button>
-          </div>
-
-          <div className="flex-1 overflow-y-auto py-3 space-y-3">
-            {loadingComments ? (
-              <p className="text-center py-6 text-xs text-slate-400">Loading comments...</p>
-            ) : comments.length > 0 ? (
-              (() => {
-                const topLevel = comments.filter((c: any) => !c.parent_comment_id);
-                const repliesMap: Record<string, any[]> = {};
-                comments.forEach((c: any) => {
-                  if (c.parent_comment_id) {
-                    if (!repliesMap[c.parent_comment_id]) {
-                      repliesMap[c.parent_comment_id] = [];
-                    }
-                    repliesMap[c.parent_comment_id].push(c);
-                  }
-                });
-
-                return topLevel.map((c: any) => {
-                  const author = c.profiles || c.author || c.user;
-                  const cAuthorName = author?.full_name || author?.username || "Pet Lover";
-                  const cAuthorUsername = author?.username || cAuthorName;
-                  const cAvatar =
-                    author?.avatar_url && author.avatar_url !== "null"
-                      ? author.avatar_url
-                      : `https://ui-avatars.com/api/?name=${encodeURIComponent(cAuthorName)}&background=f59e0b&color=fff`;
-                  const replies = repliesMap[c.id] || [];
-                  const isExpanded = expandedReplies[c.id];
-
-                  return (
-                    <div key={c.id} className="space-y-2 group/comment">
-                      {/* Parent Comment */}
-                      <div className="flex gap-3 text-xs">
+                    return (
+                      <div key={reply.id} className="flex gap-2 text-xs">
                         <img
-                          src={cAvatar}
-                          alt={cAuthorName}
-                          className="h-8 w-8 rounded-full object-cover border border-slate-200 shrink-0 mt-0.5"
+                          src={rAvatar}
+                          alt={rAuthorName}
+                          className={`h-7 w-7 rounded-full object-cover shrink-0 mt-0.5 border ${
+                            isDark ? "border-slate-700" : "border-slate-200"
+                          }`}
                         />
-                        <div className="flex-1 rounded-2xl bg-slate-50 p-2.5 border border-slate-100">
+                        <div
+                          className={`flex-1 rounded-2xl p-2 border ${
+                            isDark
+                              ? "bg-slate-800/50 border-slate-700/40 text-slate-200"
+                              : "bg-slate-100/70 border-slate-200/60 text-slate-700"
+                          }`}
+                        >
                           <div className="flex justify-between items-center mb-0.5">
-                            <span className="font-bold text-slate-900">
-                              {cAuthorName}
+                            <span className={`font-bold ${isDark ? "text-slate-100" : "text-slate-900"}`}>
+                              {rAuthorName}
                             </span>
                             <span className="text-[10px] text-slate-400">
-                              {formatTimeAgo(c.created_at)}
+                              {formatTimeAgo(reply.created_at)}
                             </span>
                           </div>
                           <MentionText
-                            text={c.comment || c.text}
-                            mentions={c.mentions}
+                            text={reply.comment || reply.text}
+                            mentions={reply.mentions}
                             showPetChips={false}
-                            className="text-slate-700 leading-relaxed font-normal"
+                            className={`${isDark ? "text-slate-200" : "text-slate-700"} leading-relaxed font-normal`}
                           />
-                          <div className="flex items-center gap-3 mt-1 pt-1 border-t border-slate-200/40">
+                          <div className={`flex items-center gap-3 mt-1 pt-1 border-t ${isDark ? "border-slate-700/50" : "border-slate-200/40"}`}>
                             <button
                               type="button"
-                              onClick={() => handleReplyClick(c.id, cAuthorUsername)}
-                              className="text-[11px] font-semibold text-slate-500 hover:text-amber-600 transition flex items-center gap-1 cursor-pointer"
+                              onClick={() => handleReplyClick(c.id, rAuthorUsername)}
+                              className="text-[10px] font-semibold text-slate-400 hover:text-amber-400 transition flex items-center gap-1 cursor-pointer"
                             >
-                              <Reply size={11} />
+                              <Reply size={10} />
                               <span>Reply</span>
                             </button>
                           </div>
                         </div>
                       </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
 
-                      {/* View Replies Toggle */}
-                      {replies.length > 0 && (
-                        <div className="ml-11">
-                          <button
-                            type="button"
-                            onClick={() => toggleReplies(c.id)}
-                            className="text-[11px] font-bold text-amber-600 hover:text-amber-700 flex items-center gap-1.5 py-0.5 cursor-pointer"
-                          >
-                            <CornerDownRight size={12} />
-                            <span>
-                              {isExpanded
-                                ? "Hide replies"
-                                : `View ${replies.length} ${replies.length === 1 ? "reply" : "replies"}`}
-                            </span>
-                          </button>
-                        </div>
-                      )}
-
-                      {/* Nested Replies List */}
-                      {replies.length > 0 && isExpanded && (
-                        <div className="ml-8 sm:ml-11 border-l-2 border-amber-200/80 pl-3 space-y-2 pt-1">
-                          {replies.map((reply: any) => {
-                            const rAuthor = reply.profiles || reply.author || reply.user;
-                            const rAuthorName = rAuthor?.full_name || rAuthor?.username || "Pet Lover";
-                            const rAuthorUsername = rAuthor?.username || rAuthorName;
-                            const rAvatar =
-                              rAuthor?.avatar_url && rAuthor.avatar_url !== "null"
-                                ? rAuthor.avatar_url
-                                : `https://ui-avatars.com/api/?name=${encodeURIComponent(rAuthorName)}&background=f59e0b&color=fff`;
-
-                            return (
-                              <div key={reply.id} className="flex gap-2 text-xs">
-                                <img
-                                  src={rAvatar}
-                                  alt={rAuthorName}
-                                  className="h-7 w-7 rounded-full object-cover border border-slate-200 shrink-0 mt-0.5"
-                                />
-                                <div className="flex-1 rounded-2xl bg-slate-100/70 p-2 border border-slate-200/60">
-                                  <div className="flex justify-between items-center mb-0.5">
-                                    <span className="font-bold text-slate-900">
-                                      {rAuthorName}
-                                    </span>
-                                    <span className="text-[10px] text-slate-400">
-                                      {formatTimeAgo(reply.created_at)}
-                                    </span>
-                                  </div>
-                                  <MentionText
-                                    text={reply.comment || reply.text}
-                                    mentions={reply.mentions}
-                                    showPetChips={false}
-                                    className="text-slate-700 leading-relaxed font-normal"
-                                  />
-                                  <div className="flex items-center gap-3 mt-1 pt-1 border-t border-slate-200/40">
-                                    <button
-                                      type="button"
-                                      onClick={() => handleReplyClick(c.id, rAuthorUsername)}
-                                      className="text-[10px] font-semibold text-slate-500 hover:text-amber-600 transition flex items-center gap-1 cursor-pointer"
-                                    >
-                                      <Reply size={10} />
-                                      <span>Reply</span>
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  );
-                });
-              })()
+  return (
+    <div className="relative h-full w-full max-w-[480px] lg:max-w-4xl xl:max-w-5xl lg:max-h-[820px] bg-slate-950 flex flex-col lg:flex-row items-center justify-center snap-start overflow-hidden lg:rounded-3xl lg:border lg:border-slate-800/80 shadow-2xl">
+      {/* Video Viewport: Left Column on Desktop, Full Viewport on Mobile */}
+      <div className="relative h-full w-full lg:flex-1 lg:max-w-[480px] flex items-center justify-center bg-black overflow-hidden">
+        {/* Aspect Ratio Toggle for Landscape Video */}
+        {isLandscape && !hasError && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setFitMode(fitMode === "contain" ? "cover" : "contain");
+            }}
+            className="absolute top-6 left-6 z-30 flex items-center gap-1.5 rounded-full bg-slate-900/80 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-md hover:bg-slate-900 transition border border-white/10 shadow-sm"
+            title={fitMode === "contain" ? "Zoom to fill screen" : "Show original uncropped size"}
+          >
+            {fitMode === "contain" ? (
+              <>
+                <Maximize2 size={13} className="text-amber-400" />
+                <span>Original Size</span>
+              </>
             ) : (
-              <p className="text-center py-6 text-xs text-slate-400">
-                No comments yet. Be the first!
-              </p>
+              <>
+                <Minimize2 size={13} className="text-amber-400" />
+                <span>Filled</span>
+              </>
+            )}
+          </button>
+        )}
+
+        {/* Video Element */}
+        {videoUrl ? (
+          <video
+            ref={videoRef}
+            src={videoUrl}
+            loop
+            playsInline
+            muted={muted}
+            onClick={togglePlay}
+            onLoadedMetadata={handleLoadedMetadata}
+            onWaiting={() => setLoading(true)}
+            onPlaying={() => {
+              setLoading(false);
+              setPlaying(true);
+            }}
+            onError={() => {
+              setLoading(false);
+              setHasError(true);
+            }}
+            className={`w-full cursor-pointer transition-all duration-200 ${
+              fitMode === "contain"
+                ? "h-auto max-h-full max-w-[480px] object-contain my-auto"
+                : "h-full w-full max-w-[480px] object-cover"
+            }`}
+          />
+        ) : (
+          <div className="flex flex-col items-center justify-center gap-2 text-slate-400">
+            <VideoOff size={36} />
+            <span className="text-xs">No video URL found</span>
+          </div>
+        )}
+
+        {/* Loading Indicator */}
+        {loading && !hasError && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+            <Loader2 size={36} className="animate-spin text-amber-500" />
+          </div>
+        )}
+
+        {/* Error / Unavailable fallback */}
+        {hasError && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/90 text-white z-20 gap-3 p-6 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-800 text-slate-400">
+              <VideoOff size={32} />
+            </div>
+            <p className="font-headline font-bold text-sm text-slate-200">Video temporarily unavailable</p>
+            <button
+              onClick={handleRetry}
+              className="flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-white hover:bg-amber-600 transition"
+            >
+              <RefreshCw size={14} /> Retry
+            </button>
+          </div>
+        )}
+
+        {/* Play / Pause Indicator overlay */}
+        {!playing && !loading && !hasError && (
+          <div
+            onClick={togglePlay}
+            className="absolute inset-0 flex items-center justify-center bg-black/20 cursor-pointer pointer-events-auto"
+          >
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-900/60 text-white backdrop-blur-md">
+              <Play size={32} className="fill-white translate-x-0.5" />
+            </div>
+          </div>
+        )}
+
+        {/* Sound Mute Toggle Button */}
+        <button
+          onClick={() => setMuted(!muted)}
+          className="absolute top-6 right-6 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-slate-900/60 text-white backdrop-blur-md hover:bg-slate-900 transition"
+        >
+          {muted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+        </button>
+
+        {/* Mobile-Only Overlays */}
+        <div className="lg:hidden">
+          {/* Right Interaction Sidebar */}
+          <div className="absolute right-4 bottom-24 z-20 flex flex-col items-center gap-6 text-white">
+            {/* Like */}
+            <button
+              onClick={handleLike}
+              className="group flex flex-col items-center gap-1 focus:outline-none"
+            >
+              <div
+                className={`flex h-12 w-12 items-center justify-center rounded-full backdrop-blur-md transition ${
+                  isLiked ? "bg-rose-500 text-white scale-110 shadow-lg shadow-rose-500/30" : "bg-slate-900/60 hover:bg-slate-900"
+                }`}
+              >
+                <Heart size={24} className={isLiked ? "fill-white text-white" : "text-white"} />
+              </div>
+              <span className="text-xs font-bold drop-shadow-sm">{likesCount}</span>
+            </button>
+
+            {/* Comment */}
+            <button
+              onClick={openComments}
+              className="group flex flex-col items-center gap-1 focus:outline-none"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-900/60 backdrop-blur-md hover:bg-slate-900 transition">
+                <MessageCircle size={24} className="text-white" />
+              </div>
+              <span className="text-xs font-bold drop-shadow-sm">{comments.length || post.stats?.comments || 0}</span>
+            </button>
+
+            {/* Bookmark */}
+            <button
+              onClick={handleBookmark}
+              className="group flex flex-col items-center gap-1 focus:outline-none"
+            >
+              <div
+                className={`flex h-12 w-12 items-center justify-center rounded-full backdrop-blur-md transition ${
+                  isBookmarked ? "bg-amber-500 text-white" : "bg-slate-900/60 hover:bg-slate-900"
+                }`}
+              >
+                <Bookmark size={24} className={isBookmarked ? "fill-white text-white" : "text-white"} />
+              </div>
+              <span className="text-[10px] font-medium drop-shadow-sm">Save</span>
+            </button>
+
+            {/* Share */}
+            <button
+              onClick={handleShare}
+              className="group flex flex-col items-center gap-1 focus:outline-none"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-900/60 backdrop-blur-md hover:bg-slate-900 transition">
+                <Share2 size={22} className="text-white" />
+              </div>
+              <span className="text-[10px] font-medium drop-shadow-sm">{copied ? "Copied!" : "Share"}</span>
+            </button>
+
+            {/* Report Reel */}
+            <button
+              onClick={() => {
+                if (!user) {
+                  openAuthModal("report content");
+                  return;
+                }
+                setShowReportModal(true);
+              }}
+              className="group flex flex-col items-center gap-1 focus:outline-none"
+              title="Report Reel"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-900/60 backdrop-blur-md hover:bg-rose-900/60 transition">
+                <Flag size={20} className="text-white group-hover:text-rose-400 transition" />
+              </div>
+              <span className="text-[10px] font-medium drop-shadow-sm">Report</span>
+            </button>
+
+            {/* Vinyl Disc Icon */}
+            <div className="mt-2 animate-spin duration-[4000ms]">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900/80 border-2 border-slate-700 text-amber-400">
+                <Disc size={20} />
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Content Overlay */}
+          <div className="absolute left-4 bottom-6 right-20 z-20 space-y-3 text-white max-w-[380px]">
+            {/* Creator Info */}
+            <div className="flex items-center gap-3">
+              <img
+                onClick={() => navigate(`/profile/${author.id}`)}
+                src={avatarUrl}
+                alt={authorName}
+                className="h-10 w-10 rounded-full object-cover border-2 border-amber-400 cursor-pointer"
+              />
+              <div className="flex flex-col">
+                <div className="flex items-center gap-1.5">
+                  <span
+                    onClick={() => navigate(`/profile/${author.id}`)}
+                    className="font-headline font-bold text-sm hover:underline cursor-pointer drop-shadow-sm"
+                  >
+                    {authorName}
+                  </span>
+                  {(author.verified || author.is_verified) && (
+                    <VerifiedBadge
+                      verified={true}
+                      verificationType={author?.verification_badge_type === "BUSINESS" ? "BUSINESS_VERIFIED" : "PERSON_VERIFIED"}
+                      size={14}
+                    />
+                  )}
+                </div>
+                {authorUsername && (
+                  <span className="text-xs text-slate-300 font-medium">{authorUsername}</span>
+                )}
+              </div>
+            </div>
+
+            {/* Caption */}
+            {post.text && (
+              <MentionText
+                text={post.text}
+                mentions={post.mentions}
+                taggedPets={post.tagged_pets}
+                className="text-xs sm:text-sm text-slate-100 font-normal leading-relaxed line-clamp-3 drop-shadow-sm"
+              />
             )}
           </div>
 
-          {/* Replying Banner */}
+          {/* Slide-over Comments Drawer */}
+          {showComments && (
+            <div className="absolute inset-x-0 bottom-0 z-40 max-h-[65%] rounded-t-3xl bg-white p-5 shadow-2xl animate-in slide-in-from-bottom duration-300 text-slate-900 flex flex-col">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 className="font-headline font-bold text-base">Comments</h3>
+                <button
+                  onClick={() => setShowComments(false)}
+                  className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 transition cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto py-3">
+                {renderCommentList(false)}
+              </div>
+
+              {/* Replying Banner */}
+              {replyingTo && (
+                <div className="flex items-center justify-between bg-amber-50 border border-amber-200/60 rounded-xl px-3 py-1.5 mb-2 text-xs text-amber-900 animate-in fade-in duration-200">
+                  <span className="flex items-center gap-1.5 font-medium">
+                    <Reply size={12} className="text-amber-600" />
+                    Replying to <span className="font-bold">@{replyingTo.username}</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={cancelReply}
+                    className="text-slate-400 hover:text-slate-600 p-0.5 rounded-full hover:bg-amber-100 transition"
+                    title="Cancel reply"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              )}
+
+              <form
+                onSubmit={handleAddComment}
+                className="flex gap-2 pt-2 border-t border-slate-100"
+              >
+                <input
+                  ref={commentInputRef}
+                  type="text"
+                  placeholder={replyingTo ? `Reply to @${replyingTo.username}...` : "Add a comment..."}
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  className="flex-1 rounded-2xl bg-slate-100 px-4 py-2 text-xs text-slate-900 outline-none focus:ring-2 focus:ring-amber-400"
+                />
+                <button
+                  type="submit"
+                  disabled={submittingComment || !commentText.trim()}
+                  className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500 text-white hover:bg-amber-600 disabled:opacity-40"
+                >
+                  <Send size={14} />
+                </button>
+              </form>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Desktop Context & Comments Panel (Right Column) */}
+      <div className="hidden lg:flex lg:w-[380px] xl:w-[420px] lg:h-full flex-col bg-slate-900 border-l border-slate-800 text-white select-text">
+        {/* Author Header */}
+        <div className="p-4 border-b border-slate-800/80 flex items-center justify-between">
+          <div className="flex items-center gap-3 min-w-0">
+            <img
+              onClick={() => navigate(`/profile/${author.id}`)}
+              src={avatarUrl}
+              alt={authorName}
+              className="h-10 w-10 rounded-full object-cover border-2 border-amber-400 cursor-pointer shrink-0"
+            />
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span
+                  onClick={() => navigate(`/profile/${author.id}`)}
+                  className="font-headline font-bold text-sm hover:underline cursor-pointer truncate"
+                >
+                  {authorName}
+                </span>
+                {(author.verified || author.is_verified) && (
+                  <VerifiedBadge
+                    verified={true}
+                    verificationType={author?.verification_badge_type === "BUSINESS" ? "BUSINESS_VERIFIED" : "PERSON_VERIFIED"}
+                    size={14}
+                  />
+                )}
+              </div>
+              {authorUsername && (
+                <span className="text-xs text-slate-400 font-medium block truncate">{authorUsername}</span>
+              )}
+            </div>
+          </div>
+          <span className="text-[11px] text-slate-400 shrink-0">{formatTimeAgo(post.created_at)}</span>
+        </div>
+
+        {/* Caption & Tagged Pets */}
+        <div className="p-4 border-b border-slate-800/60 space-y-2">
+          {post.text && (
+            <MentionText
+              text={post.text}
+              mentions={post.mentions}
+              taggedPets={post.tagged_pets}
+              className="text-xs sm:text-sm text-slate-200 font-normal leading-relaxed"
+            />
+          )}
+          {post.tagged_pets && post.tagged_pets.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+              <span className="text-[11px] font-medium text-slate-400">Featuring:</span>
+              {post.tagged_pets.map((p: any) => (
+                <button
+                  key={p.id}
+                  onClick={() => navigate(`/pets/${p.id}`)}
+                  className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 border border-amber-500/30 px-2.5 py-0.5 text-[11px] font-semibold text-amber-300 hover:bg-amber-500/25 transition cursor-pointer"
+                >
+                  <span>🐾</span>
+                  <span>{p.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Comments Section */}
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex items-center justify-between pb-3">
+            <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
+              Comments ({comments.length || post.stats?.comments || 0})
+            </span>
+          </div>
+          {renderCommentList(true)}
+        </div>
+
+        {/* Desktop Actions Bar */}
+        <div className="p-3 border-t border-slate-800/80 bg-slate-950/40 flex items-center justify-between text-slate-300">
+          <div className="flex items-center gap-2">
+            {/* Like */}
+            <button
+              onClick={handleLike}
+              className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition cursor-pointer ${
+                isLiked ? "text-rose-500 bg-rose-500/10" : "hover:text-white hover:bg-slate-800"
+              }`}
+            >
+              <Heart size={16} className={isLiked ? "fill-rose-500 text-rose-500" : ""} />
+              <span>{likesCount}</span>
+            </button>
+
+            {/* Bookmark */}
+            <button
+              onClick={handleBookmark}
+              className={`flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition cursor-pointer ${
+                isBookmarked ? "text-amber-400 bg-amber-400/10" : "hover:text-white hover:bg-slate-800"
+              }`}
+            >
+              <Bookmark size={16} className={isBookmarked ? "fill-amber-400 text-amber-400" : ""} />
+              <span>Save</span>
+            </button>
+
+            {/* Share */}
+            <button
+              onClick={handleShare}
+              className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-lg hover:text-white hover:bg-slate-800 transition cursor-pointer"
+            >
+              <Share2 size={16} />
+              <span>{copied ? "Copied!" : "Share"}</span>
+            </button>
+          </div>
+
+          <button
+            onClick={() => {
+              if (!user) {
+                openAuthModal("report content");
+                return;
+              }
+              setShowReportModal(true);
+            }}
+            className="text-slate-500 hover:text-rose-400 p-1.5 rounded-lg hover:bg-slate-800 transition cursor-pointer"
+            title="Report Reel"
+          >
+            <Flag size={15} />
+          </button>
+        </div>
+
+        {/* Comment Input */}
+        <div className="p-3 border-t border-slate-800 bg-slate-950/60">
           {replyingTo && (
-            <div className="flex items-center justify-between bg-amber-50 border border-amber-200/60 rounded-xl px-3 py-1.5 mb-2 text-xs text-amber-900 animate-in fade-in duration-200">
+            <div className="flex items-center justify-between bg-amber-500/10 border border-amber-500/30 rounded-xl px-3 py-1 mb-2 text-xs text-amber-300">
               <span className="flex items-center gap-1.5 font-medium">
-                <Reply size={12} className="text-amber-600" />
+                <Reply size={12} className="text-amber-400" />
                 Replying to <span className="font-bold">@{replyingTo.username}</span>
               </span>
               <button
                 type="button"
                 onClick={cancelReply}
-                className="text-slate-400 hover:text-slate-600 p-0.5 rounded-full hover:bg-amber-100 transition"
-                title="Cancel reply"
+                className="text-slate-400 hover:text-white p-0.5 cursor-pointer"
               >
-                <X size={14} />
+                <X size={13} />
               </button>
             </div>
           )}
-
-          <form
-            onSubmit={handleAddComment}
-            className="flex gap-2 pt-2 border-t border-slate-100"
-          >
+          <form onSubmit={handleAddComment} className="flex gap-2">
             <input
-              ref={commentInputRef}
               type="text"
-              placeholder={replyingTo ? `Reply to @${replyingTo.username}...` : "Add a comment..."}
+              placeholder={replyingTo ? `Reply to @${replyingTo.username}...` : "Write a comment..."}
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
-              className="flex-1 rounded-2xl bg-slate-100 px-4 py-2 text-xs text-slate-900 outline-none focus:ring-2 focus:ring-amber-400"
+              className="flex-1 rounded-xl bg-slate-800 border border-slate-700/60 px-3.5 py-2 text-xs text-white placeholder-slate-400 outline-none focus:ring-1 focus:ring-amber-400"
             />
             <button
               type="submit"
               disabled={submittingComment || !commentText.trim()}
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500 text-white hover:bg-amber-600 disabled:opacity-40"
+              className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500 text-white hover:bg-amber-600 disabled:opacity-40 transition cursor-pointer"
             >
-              <Send size={14} />
+              <Send size={13} />
             </button>
           </form>
         </div>
-      )}
+      </div>
 
       {/* Report Modal */}
       <ReportModal

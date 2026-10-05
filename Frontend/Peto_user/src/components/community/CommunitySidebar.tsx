@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Compass, Sparkles, Plus, ArrowRight, Shield } from "lucide-react";
+import { Compass, ArrowRight, Shield } from "lucide-react";
 import api from "../../utils/api";
 import { useAuth } from "../../context/AuthContext";
 
@@ -27,10 +27,9 @@ const CATEGORIES = [
 const CommunitySidebar = ({
   activeCategory = "All",
   onSelectCategory,
-  onCreateClick,
 }: CommunitySidebarProps) => {
   const navigate = useNavigate();
-  const { user, openAuthModal } = useAuth();
+  const { user } = useAuth();
 
   const [joinedCommunities, setJoinedCommunities] = useState<any[]>([]);
   const [suggestedCommunities, setSuggestedCommunities] = useState<any[]>([]);
@@ -70,40 +69,13 @@ const CommunitySidebar = ({
 
   return (
     <div className="space-y-4">
-      {/* Create Community CTA Card */}
-      <div className="relative overflow-hidden rounded-xl bg-slate-900 border border-slate-950 p-4 text-white shadow-micro">
-        <div className="relative z-10">
-          <div className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-white/10 mb-2 border border-white/10">
-            <Sparkles size={16} className="text-amber-400" />
-          </div>
-          <h3 className="text-sm font-semibold tracking-tight">Create a Circle</h3>
-          <p className="mt-1 text-xs text-slate-300 leading-relaxed">
-            Build a dedicated community for your favorite breed, city, or pet specialty.
-          </p>
-          <button
-            type="button"
-            onClick={() => {
-              if (!user) {
-                openAuthModal("create and lead a pet community");
-                return;
-              }
-              if (onCreateClick) onCreateClick();
-            }}
-            className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-white px-3 py-2 text-xs font-semibold text-slate-900 transition-all hover:bg-slate-100 shadow-micro cursor-pointer active:scale-[0.98]"
-          >
-            <Plus size={14} />
-            <span>Create Circle</span>
-          </button>
-        </div>
-      </div>
-
       {/* Your Communities Section */}
       {user && (
         <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-card">
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Shield size={16} className="text-slate-500" />
-              <h4 className="font-semibold text-xs text-slate-900 uppercase tracking-wider">Your Circles</h4>
+              <h4 className="font-semibold text-xs text-slate-900 uppercase tracking-wider">Your Communities</h4>
             </div>
             {joinedCommunities.length > 0 && (
               <span className="rounded border border-slate-200/60 bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600">
@@ -155,7 +127,7 @@ const CommunitySidebar = ({
             </div>
           ) : (
             <div className="py-3 text-center">
-              <p className="text-xs text-slate-400">You haven't joined any circles yet.</p>
+              <p className="text-xs text-slate-400">You haven't joined any communities yet.</p>
             </div>
           )}
         </div>
@@ -166,7 +138,7 @@ const CommunitySidebar = ({
         <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-card">
           <div className="mb-3 flex items-center gap-2">
             <Compass size={16} className="text-slate-500" />
-            <h4 className="font-semibold text-xs text-slate-900 uppercase tracking-wider">Suggested Circles</h4>
+            <h4 className="font-semibold text-xs text-slate-900 uppercase tracking-wider">Suggested Communities</h4>
           </div>
 
           <div className="space-y-1.5">

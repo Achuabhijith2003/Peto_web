@@ -147,7 +147,7 @@ export default function AddPetPage() {
       </div>
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 pt-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6 pb-28 sm:pb-8">
           {error && (
             <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold">
               {error}
@@ -487,8 +487,8 @@ export default function AddPetPage() {
             </div>
           </div>
 
-          {/* Submit Button */}
-          <div className="flex items-center justify-end gap-3 pt-2">
+          {/* Desktop Actions */}
+          <div className="hidden sm:flex items-center justify-end gap-3 pt-2">
             <button
               type="button"
               onClick={() => navigate(-1)}
@@ -510,6 +510,34 @@ export default function AddPetPage() {
                 <>
                   <PawPrint size={16} />
                   <span>Complete & Add Pet</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Mobile Sticky Action Bar */}
+          <div className="sm:hidden fixed bottom-0 left-0 right-0 p-3.5 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-[0_-4px_16px_rgba(0,0,0,0.08)] z-40 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="flex-1 py-3 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="flex-[2] flex items-center justify-center gap-2 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold shadow-md transition-all disabled:opacity-50"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 size={15} className="animate-spin" />
+                  <span>Adding Pet...</span>
+                </>
+              ) : (
+                <>
+                  <PawPrint size={15} />
+                  <span>Save Pet</span>
                 </>
               )}
             </button>

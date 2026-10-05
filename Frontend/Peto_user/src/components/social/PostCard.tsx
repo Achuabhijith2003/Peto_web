@@ -395,13 +395,28 @@ const PostCard = ({ post }: PostCardProps) => {
                     e.stopPropagation();
                     navigate(`/pets/${post.pet.id}`);
                   }}
-                  className="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2.5 py-0.5 text-[11px] font-semibold text-orange-800 hover:bg-orange-100 transition border border-orange-200/70"
-                  title={`Showcasing ${post.pet.name}`}
+                  className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold text-amber-900 hover:bg-amber-100 transition border border-amber-200/80"
+                  title={`About ${post.pet.name}`}
                 >
-                  <PawPrint size={11} className="shrink-0 text-orange-600" />
-                  <span>{post.pet.name}</span>
+                  <PawPrint size={11} className="shrink-0 text-amber-600" />
+                  <span>About: {post.pet.name}</span>
                 </button>
               )}
+              {Array.isArray(post.tagged_pets) && post.tagged_pets.filter((p: any) => p.id !== post.pet?.id).map((tp: any) => (
+                <button
+                  key={tp.id}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/pets/${tp.id}`);
+                  }}
+                  className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-semibold text-amber-900 hover:bg-amber-100 transition border border-amber-200/80"
+                  title={`About ${tp.name}`}
+                >
+                  <PawPrint size={11} className="shrink-0 text-amber-600" />
+                  <span>About: {tp.name}</span>
+                </button>
+              ))}
               {post.is_locked && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600 border border-slate-200" title="Discussion is locked">
                   <Lock size={10} className="shrink-0" />

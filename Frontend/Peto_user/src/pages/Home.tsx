@@ -5,7 +5,6 @@ import ProductSection from "../components/home/ProductSection";
 import CommunitySection from "../components/home/CommunitySection";
 import Newsletter from "../components/home/Newsletter";
 import Footer from "../components/layout/Footer";
-import FloatingChat from "../components/home/FloatingChat";
 
 const Home = () => {
   return (
@@ -23,8 +22,6 @@ const Home = () => {
       <Newsletter />
 
       <Footer />
-
-      <FloatingChat />
     </main>
   );
 };
