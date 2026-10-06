@@ -15,6 +15,18 @@ export interface RateLimiterOptions {
 }
 
 /**
+ * Safely extracts client IP address without trusting spoofed X-Forwarded-For headers
+ * unless Express proxy trust is explicitly configured.
+ */
+export function getClientIp(req: Request): string {
+  const trustProxyConfig = req.app?.get?.("trust proxy");
+  if (trustProxyConfig || process.env.TRUST_PROXY === "true" || process.env.TRUST_PROXY === "1") {
+    return req.ip || (req.socket?.remoteAddress ?? "unknown-client");
+  }
+  return req.socket?.remoteAddress || req.ip || "unknown-client";
+}
+
+/**
  * High-performance, zero-dependency sliding-window rate limiter for sensitive endpoints.
  */
 export function createRateLimiter(options: RateLimiterOptions = {}) {
@@ -43,10 +55,7 @@ export function createRateLimiter(options: RateLimiterOptions = {}) {
   const limiter = (req: Request, res: Response, next: NextFunction) => {
     const clientKey = options.keyGenerator
       ? options.keyGenerator(req)
-      : (req.ip ||
-        (req.headers["x-forwarded-for"] as string) ||
-        req.socket.remoteAddress ||
-        "unknown-client");
+      : getClientIp(req);
 
     const key = `${keyPrefix}:${String(clientKey)}`;
     const now = Date.now();
@@ -92,7 +101,7 @@ export function createRateLimiter(options: RateLimiterOptions = {}) {
 }
 
 /**
- * Dedicated strict rate limiter for Google OAuth sync code exchange:
+ * Dedicated strict rate limiter for Google OAuth sync code exchange (Phase 2A):
  * 10 attempts per 60 seconds per IP
  */
 export const oauthExchangeRateLimiter = createRateLimiter({
@@ -101,4 +110,52 @@ export const oauthExchangeRateLimiter = createRateLimiter({
   message: "Too many code exchange attempts. Please try again later.",
   code: "OAUTH_EXCHANGE_RATE_LIMITED",
   keyPrefix: "oauth_exchange",
+});
+
+/**
+ * Login rate limiter: 10 attempts per 15 minutes per IP
+ * Protects against credential stuffing and password brute forcing
+ */
+export const loginRateLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000,
+  maxRequests: 10,
+  message: "Too many login attempts. Please try again in 15 minutes.",
+  code: "LOGIN_RATE_LIMITED",
+  keyPrefix: "rl_login",
+});
+
+/**
+ * Signup rate limiter: 10 attempts per 15 minutes per IP
+ * Protects against automated account spam / bot registrations
+ */
+export const signupRateLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000,
+  maxRequests: 10,
+  message: "Too many registration attempts. Please try again in 15 minutes.",
+  code: "SIGNUP_RATE_LIMITED",
+  keyPrefix: "rl_signup",
+});
+
+/**
+ * Forgot password rate limiter: 5 attempts per 15 minutes per IP
+ * Protects against password reset flooding and email enumeration abuse
+ */
+export const forgotPasswordRateLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000,
+  maxRequests: 5,
+  message: "Too many password reset requests. Please try again in 15 minutes.",
+  code: "FORGOT_PASSWORD_RATE_LIMITED",
+  keyPrefix: "rl_forgot_pw",
+});
+
+/**
+ * Username check rate limiter: 30 attempts per 1 minute per IP
+ * Prevents mass username harvesting while accommodating normal typing debounce during registration
+ */
+export const usernameCheckRateLimiter = createRateLimiter({
+  windowMs: 60 * 1000,
+  maxRequests: 30,
+  message: "Too many username availability checks. Please slow down.",
+  code: "USERNAME_CHECK_RATE_LIMITED",
+  keyPrefix: "rl_check_username",
 });

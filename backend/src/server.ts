@@ -35,6 +35,8 @@ import businessRoutes from "./businesses/business.routes";
 import { ensurePublicBuckets } from "./media/storage.service";
 import { telemetryMiddleware } from "./middleware/telemetry.middleware";
 import { maintenanceMiddleware, getCachedMaintenanceState } from "./middleware/maintenance.middleware";
+import { globalErrorHandler } from "./middleware/errorHandler";
+import { corsOptions } from "./config/cors";
 
 
 
@@ -112,30 +114,10 @@ app.use(
 );
 
 // ----------------------
-// CORS
+// CORS (PETO-SEC-09)
 // ----------------------
 
-const allowedOrigins = [
-  process.env.CLIENT_URL || "http://localhost:5173",
-  process.env.ADMIN_CLIENT_URL || "http://localhost:5174",
-  "http://localhost:5173",
-  "http://localhost:5174",
-  "http://localhost:5175",
-];
-
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (mobile apps, curl, etc.)
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin) || process.env.NODE_ENV !== "production") {
-        return callback(null, true);
-      }
-      return callback(new Error(`Origin ${origin} not allowed by CORS`));
-    },
-    credentials: true,
-  })
-);
+app.use(cors(corsOptions));
 
 // ----------------------
 // Middlewares
@@ -260,39 +242,10 @@ app.use((req, res) => {
 });
 
 // ----------------------
-// Global Error Handler
+// Global Error Handler (PETO-SEC-08)
 // ----------------------
 
-app.use(
-  (
-    err: any,
-    req: express.Request,
-    res: express.Response,
-    next: express.NextFunction
-  ) => {
-    if (err?.code === "LIMIT_FILE_SIZE") {
-      return res.status(413).json({
-        success: false,
-        message: "File is too large. Maximum size is 30MB for images and 200MB for videos.",
-      });
-    }
-
-    if (err?.message === "Request aborted" || err?.code === "ECONNRESET") {
-      console.warn("Upload connection was interrupted/aborted by client:", err.message);
-      return res.status(499).json({
-        success: false,
-        message: "Upload connection was interrupted.",
-      });
-    }
-
-    console.error(err);
-
-    res.status(500).json({
-      success: false,
-      message: err?.message || "Internal Server Error",
-    });
-  }
-);
+app.use(globalErrorHandler);
 
 // ----------------------
 // Start Server 

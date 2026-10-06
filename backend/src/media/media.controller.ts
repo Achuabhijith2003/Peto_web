@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { processMedia } from "./media.service";
 import { processImage } from "./image.service";
+import { validateUploadedFile, cleanupFile } from "./fileValidator";
 
 const getFilesFromReq = (req: Request): Express.Multer.File[] => {
     if (Array.isArray(req.files) && req.files.length > 0) {
@@ -20,6 +21,20 @@ export const uploadImages = async (req: Request, res: Response) => {
                 success: false,
                 message: "No images uploaded."
             });
+        }
+
+        // Validate each file with magic bytes / file signatures before processing
+        for (const file of files) {
+            const validation = await validateUploadedFile(file, "image");
+            if (!validation.valid) {
+                for (const f of files) {
+                    await cleanupFile(f);
+                }
+                return res.status(400).json({
+                    success: false,
+                    message: validation.error || "Image validation failed."
+                });
+            }
         }
 
         const uploaded = [];
@@ -60,6 +75,16 @@ export const uploadVideoController = async (req: Request, res: Response) => {
             });
         }
 
+        // Validate video file with magic bytes / file signatures before processing
+        const validation = await validateUploadedFile(file, "video");
+        if (!validation.valid) {
+            await cleanupFile(file);
+            return res.status(400).json({
+                success: false,
+                message: validation.error || "Video validation failed."
+            });
+        }
+
         const user = (req as any).user;
         const uploaded = await processMedia(user.id, file);
         const mediaUrl = typeof uploaded === "string" ? uploaded : (uploaded as any)?.url || (uploaded as any)?.path || null;
@@ -91,6 +116,20 @@ export const uploadMedia = async (req: Request, res: Response) => {
                 success: false,
                 message: "No media files uploaded."
             });
+        }
+
+        // Validate all files with magic bytes
+        for (const file of files) {
+            const validation = await validateUploadedFile(file, "any");
+            if (!validation.valid) {
+                for (const f of files) {
+                    await cleanupFile(f);
+                }
+                return res.status(400).json({
+                    success: false,
+                    message: validation.error || "Media validation failed."
+                });
+            }
         }
 
         const uploaded = [];

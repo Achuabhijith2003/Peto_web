@@ -4,6 +4,7 @@ import sharp from "sharp";
 import { supabase } from "../config/supabase";
 import { getUserProfile, searchUsers } from "./user.service";
 import { uploadAvatarToStorage, uploadCoverToStorage } from "../media/storage.service";
+import { validateUploadedFile, cleanupFile } from "../media/fileValidator";
 
 export const getCurrentUser = async (
     req: Request,
@@ -250,6 +251,15 @@ export const updateAvatar = async (req: Request, res: Response) => {
             });
         }
 
+        const validation = await validateUploadedFile(file, "image");
+        if (!validation.valid) {
+            await cleanupFile(file);
+            return res.status(400).json({
+                success: false,
+                message: validation.error || "Avatar image validation failed.",
+            });
+        }
+
         let fileBuffer = file.buffer;
         if (!fileBuffer && file.path) {
             fileBuffer = await fs.readFile(file.path);
@@ -330,6 +340,15 @@ export const updateCover = async (req: Request, res: Response) => {
             return res.status(400).json({
                 success: false,
                 message: "No image file provided for cover photo.",
+            });
+        }
+
+        const validation = await validateUploadedFile(file, "image");
+        if (!validation.valid) {
+            await cleanupFile(file);
+            return res.status(400).json({
+                success: false,
+                message: validation.error || "Cover image validation failed.",
             });
         }
 
@@ -493,9 +512,10 @@ export const checkUsername = async (
             .maybeSingle();
 
         if (error) {
+            console.error("Check Username Supabase Error:", error);
             return res.status(500).json({
                 success: false,
-                message: error.message,
+                message: "Internal Server Error",
             });
         }
 

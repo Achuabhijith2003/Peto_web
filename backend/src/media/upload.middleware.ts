@@ -3,6 +3,13 @@ import path from "path";
 import fs from "fs";
 import crypto from "crypto";
 
+import {
+  ALLOWED_IMAGE_MIMES,
+  ALLOWED_VIDEO_MIMES,
+  ALLOWED_MEDIA_MIMES,
+  MIME_TO_CANONICAL_EXT,
+} from "./fileValidator";
+
 const tempDir = path.join(process.cwd(), "temp");
 if (!fs.existsSync(tempDir)) {
   fs.mkdirSync(tempDir, { recursive: true });
@@ -13,35 +20,35 @@ const storage = multer.diskStorage({
     cb(null, tempDir);
   },
   filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname || "") || (file.mimetype.startsWith("video/") ? ".mp4" : ".jpg");
-    const uniqueName = `${crypto.randomUUID()}${ext}`;
+    const lowerMime = (file.mimetype || "").toLowerCase();
+    const canonicalExt = MIME_TO_CANONICAL_EXT[lowerMime] || (lowerMime.startsWith("video/") ? ".mp4" : ".jpg");
+    const uniqueName = `${crypto.randomUUID()}${canonicalExt}`;
     cb(null, uniqueName);
   },
 });
 
-const imageFilter: multer.Options["fileFilter"] = (req, file, cb) => {
-  if (file.mimetype.startsWith("image/") || file.mimetype === "application/octet-stream") {
+const imageFilter: multer.Options["fileFilter"] = (_req, file, cb) => {
+  const mime = (file.mimetype || "").toLowerCase();
+  if (ALLOWED_IMAGE_MIMES.includes(mime)) {
     return cb(null, true);
   }
-  cb(new Error("Unsupported image format"));
+  cb(new Error("Unsupported image format. Allowed formats: JPEG, PNG, WebP"));
 };
 
-const videoFilter: multer.Options["fileFilter"] = (req, file, cb) => {
-  if (file.mimetype.startsWith("video/") || file.mimetype === "application/octet-stream") {
+const videoFilter: multer.Options["fileFilter"] = (_req, file, cb) => {
+  const mime = (file.mimetype || "").toLowerCase();
+  if (ALLOWED_VIDEO_MIMES.includes(mime)) {
     return cb(null, true);
   }
-  cb(new Error("Invalid video format"));
+  cb(new Error("Invalid video format. Allowed formats: MP4, WebM, MOV"));
 };
 
-const mediaFilter: multer.Options["fileFilter"] = (req, file, cb) => {
-  if (
-    file.mimetype.startsWith("image/") ||
-    file.mimetype.startsWith("video/") ||
-    file.mimetype === "application/octet-stream"
-  ) {
+const mediaFilter: multer.Options["fileFilter"] = (_req, file, cb) => {
+  const mime = (file.mimetype || "").toLowerCase();
+  if (ALLOWED_MEDIA_MIMES.includes(mime)) {
     return cb(null, true);
   }
-  cb(new Error("Unsupported file format. Please upload an image or video."));
+  cb(new Error("Unsupported file format. Please upload a supported image or video."));
 };
 
 export const uploadImage = multer({

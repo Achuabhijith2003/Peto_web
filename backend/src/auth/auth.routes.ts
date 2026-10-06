@@ -4,7 +4,19 @@ import { signup } from "./signup";
 import { login } from "./login";
 import { authenticate } from "./auth.middleware";
 import { supabase } from "../config/supabase";
-import { oauthExchangeRateLimiter } from "../middleware/rateLimiter";
+import {
+  oauthExchangeRateLimiter,
+  loginRateLimiter,
+  signupRateLimiter,
+  forgotPasswordRateLimiter,
+} from "../middleware/rateLimiter";
+import {
+  saveSyncSession,
+  consumeSyncSession,
+  PendingGoogleSession,
+  inMemoryHashedSyncCodes,
+  hashToken,
+} from "./oauthSyncStore";
 
 console.log("✅ Auth routes loaded");
 
@@ -17,8 +29,8 @@ router.get("/test", (req, res) => {
     });
 });
 
-router.post("/signup", signup);
-router.post("/login", login);
+router.post("/signup", signupRateLimiter, signup);
+router.post("/login", loginRateLimiter, login);
 
 router.post("/refresh", async (req, res) => {
   try {
@@ -57,14 +69,16 @@ router.post("/refresh", async (req, res) => {
 });
 
 // Request password reset link (Supabase sends email with reset link)
-router.post("/forgot-password", async (req, res) => {
+// PETO-SEC-06: Rate limited to prevent reset flooding
+// PETO-SEC-07: Enumeration-resistant uniform response
+router.post("/forgot-password", forgotPasswordRateLimiter, async (req, res) => {
   try {
     const { email, redirectTo } = req.body;
 
     if (!email || typeof email !== "string" || !email.includes("@")) {
       return res.status(400).json({
         success: false,
-        message: "A valid email address is required",
+        message: "A valid email address is required.",
       });
     }
 
@@ -76,22 +90,19 @@ router.post("/forgot-password", async (req, res) => {
     });
 
     if (error) {
-      console.error("Supabase resetPasswordForEmail error:", error);
-      return res.status(400).json({
-        success: false,
-        message: error.message || "Failed to send password reset email",
-      });
+      // Server-side diagnostic log; never disclose account existence or internal error to client
+      console.warn("Supabase resetPasswordForEmail notice:", error.message);
     }
 
-    return res.json({
+    return res.status(200).json({
       success: true,
-      message: "Password reset link has been sent to your email address.",
+      message: "If an account exists for that email, a password reset link has been sent.",
     });
   } catch (err: any) {
     console.error("Forgot password route error:", err);
-    return res.status(500).json({
-      success: false,
-      message: err.message || "Internal server error",
+    return res.status(200).json({
+      success: true,
+      message: "If an account exists for that email, a password reset link has been sent.",
     });
   }
 });
@@ -222,28 +233,35 @@ router.post("/change-password", authenticate, async (req, res) => {
 // GOOGLE OAUTH & PROFILE AUTO-SIGNUP ENDPOINTS
 // ----------------------------------------------------
 
-interface PendingGoogleSession {
-  token: string;
-  refreshToken: string;
-  user: any;
-  profile: any;
-  expiresAt: number;
-}
-
-export const googleSyncCodes = new Map<string, PendingGoogleSession>();
-
-// Cleanup expired codes periodically
-const cleanupInterval = setInterval(() => {
-  const now = Date.now();
-  for (const [code, item] of googleSyncCodes.entries()) {
-    if (item.expiresAt < now) {
-      googleSyncCodes.delete(code);
-    }
+// PETO-SEC-12: Backward-compatible adapter for tests maintaining Map-like API over hashed sync store
+class GoogleSyncCodesStore {
+  set(token: string, session: PendingGoogleSession) {
+    saveSyncSession(token, session, session.expiresAt ? session.expiresAt - Date.now() : 60000);
+    return this;
   }
-}, 60 * 1000);
-if (cleanupInterval.unref) {
-  cleanupInterval.unref();
+  get(token: string): PendingGoogleSession | undefined {
+    const codeHash = hashToken(token);
+    const item = inMemoryHashedSyncCodes.get(codeHash);
+    if (!item) return undefined;
+    if (item.expiresAt < Date.now()) {
+      inMemoryHashedSyncCodes.delete(codeHash);
+      return undefined;
+    }
+    return item.payload;
+  }
+  delete(token: string): boolean {
+    const codeHash = hashToken(token);
+    return inMemoryHashedSyncCodes.delete(codeHash);
+  }
+  entries() {
+    return inMemoryHashedSyncCodes.entries();
+  }
+  clear() {
+    inMemoryHashedSyncCodes.clear();
+  }
 }
+
+export const googleSyncCodes = new GoogleSyncCodesStore();
 
 /**
  * GET /api/auth/google/url
@@ -355,15 +373,18 @@ router.post("/google", async (req, res) => {
       }
     }
 
-    // PETO-SEC-01: Generate cryptographically secure high-entropy random token (256-bit entropy via 32 random bytes)
+    // PETO-SEC-01 & PETO-SEC-12: Generate cryptographically secure 256-bit token & store hashed in shared state
     const syncCode = crypto.randomBytes(32).toString("hex");
-    googleSyncCodes.set(syncCode, {
-      token,
-      refreshToken: refreshToken || "",
-      user,
-      profile,
-      expiresAt: Date.now() + 60 * 1000, // Short-lived (60 seconds)
-    });
+    await saveSyncSession(
+      syncCode,
+      {
+        token,
+        refreshToken: refreshToken || "",
+        user,
+        profile,
+      },
+      60 * 1000
+    );
 
     return res.json({
       success: true,
@@ -400,21 +421,16 @@ router.post("/google/exchange-code", oauthExchangeRateLimiter, async (req, res) 
     }
 
     const cleanCode = code.trim();
-    const session = googleSyncCodes.get(cleanCode);
+    // PETO-SEC-12: Atomically consume single-use code from shared hashed store
+    const session = await consumeSyncSession(cleanCode);
 
     if (!session || session.expiresAt < Date.now()) {
-      if (cleanCode) {
-        googleSyncCodes.delete(cleanCode);
-      }
       return res.status(400).json({
         success: false,
         message: "Invalid or expired sync code. Please sign in again.",
         code: "INVALID_SYNC_CODE",
       });
     }
-
-    // PETO-SEC-01: Consume single-use code immediately (Replay prevention)
-    googleSyncCodes.delete(cleanCode);
 
     return res.json({
       success: true,

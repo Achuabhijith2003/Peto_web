@@ -2,6 +2,7 @@ import { Router } from "express";
 import * as userController from "./user.controller";
 import { authenticate, optionalAuthenticate } from "../auth/auth.middleware";
 import { uploadImage } from "../media/upload.middleware";
+import { usernameCheckRateLimiter } from "../middleware/rateLimiter";
 
 const router = Router();
 
@@ -13,7 +14,7 @@ router.get(
     userController.getProfile
 );
 
-router.get("/check-username", userController.checkUsername);
+router.get("/check-username", usernameCheckRateLimiter, userController.checkUsername);
 
 router.get("/:id", optionalAuthenticate, userController.getUserById);
 
