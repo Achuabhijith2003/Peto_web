@@ -247,6 +247,8 @@ export async function createRazorpayOrderHandler(req: Request, res: Response): P
 /**
  * Verify Razorpay Payment Signature and Credit Funds
  * POST /api/payments/razorpay/verify
+ * PETO-SEC-02: Fail-closed verification, no client simulation bypasses, server-authoritative amount/currency.
+ * PETO-SEC-03: Strict idempotency, replay prevention, and atomic wallet crediting.
  */
 export async function verifyRazorpayPaymentHandler(req: Request, res: Response): Promise<void> {
   try {
@@ -260,49 +262,107 @@ export async function verifyRazorpayPaymentHandler(req: Request, res: Response):
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
-      amount,
-      currency = "INR",
-      isSimulated,
     } = req.body;
-
-    const numAmount = parseFloat(amount);
-    if (!numAmount || numAmount <= 0) {
-      res.status(400).json({ success: false, error: "Invalid payment amount." });
-      return;
-    }
-
-    const keySecret = (process.env.RAZORPAY_KEY_SECRET || "").trim();
-    const keyId = (process.env.RAZORPAY_KEY_ID || "").trim();
-    const isConfigured = Boolean(keyId && keySecret && keyId.startsWith("rzp_"));
-    const isTestMode = keyId.startsWith("rzp_test_") || process.env.NODE_ENV !== "production";
 
     const orderId = (razorpay_order_id || "").trim();
     const paymentId = (razorpay_payment_id || "").trim();
     const signature = (razorpay_signature || "").trim();
 
-    let signatureValid = false;
-
-    // A. If simulated fast test deposit is requested in test/dev mode
-    if ((isSimulated || signature === "sandbox_signature") && isTestMode) {
-      signatureValid = true;
-    } else if (isConfigured && signature && orderId && paymentId) {
-      // B. Primary: Real cryptographic HMAC-SHA256 signature verification
-      const generatedSignature = crypto
-        .createHmac("sha256", keySecret)
-        .update(`${orderId}|${paymentId}`)
-        .digest("hex");
-
-      if (generatedSignature === signature) {
-        signatureValid = true;
-      } else {
-        console.warn(`[Razorpay] Signature mismatch for order ${orderId}: expected ${generatedSignature}, received ${signature}. Checking directly with Razorpay API...`);
-      }
-    } else if (!isConfigured) {
-      signatureValid = true; // sandbox fallback
+    if (!orderId || !paymentId || !signature) {
+      res.status(400).json({
+        success: false,
+        error: "Missing required payment parameters: orderId, paymentId, and signature are required.",
+        code: "INVALID_PARAMETERS",
+      });
+      return;
     }
 
-    // C. Secondary Fallback: Query Razorpay official API to verify payment state
-    if (!signatureValid && isConfigured && paymentId && !paymentId.startsWith("pay_sim_")) {
+    // PETO-SEC-02 A: Production payment verification must FAIL CLOSED.
+    // If Razorpay configuration is missing or invalid: NEVER mark valid.
+    const keySecret = (process.env.RAZORPAY_KEY_SECRET || "").trim();
+    const keyId = (process.env.RAZORPAY_KEY_ID || "").trim();
+    const isConfigured = Boolean(keyId && keySecret && keyId.startsWith("rzp_"));
+
+    if (!isConfigured) {
+      res.status(503).json({
+        success: false,
+        error: "Razorpay payment gateway is not configured or unavailable.",
+        code: "GATEWAY_UNAVAILABLE",
+      });
+      return;
+    }
+
+    // PETO-SEC-02 D: Server-authoritative amount & currency lookup.
+    // Do NOT trust amount or currency from client payload.
+    const { data: orderTx, error: txFetchErr } = await supabase
+      .from("payment_transactions")
+      .select("*")
+      .eq("provider_order_id", orderId)
+      .maybeSingle();
+
+    if (txFetchErr || !orderTx) {
+      res.status(404).json({
+        success: false,
+        error: "Associated payment order transaction record not found.",
+        code: "TRANSACTION_NOT_FOUND",
+      });
+      return;
+    }
+
+    // Assert ownership: user who initiated order must match current caller
+    if (orderTx.user_id && orderTx.user_id !== userId) {
+      res.status(403).json({
+        success: false,
+        error: "Unauthorized: You do not have permission to verify this transaction.",
+        code: "FORBIDDEN",
+      });
+      return;
+    }
+
+    const authorAmount = parseFloat(orderTx.amount);
+    const authorCurrency = (orderTx.currency || "INR").toUpperCase();
+
+    // PETO-SEC-03 A: Replay Prevention & Fast Idempotency Return
+    // If order has already been captured or this exact payment was already recorded
+    if (orderTx.status === "CAPTURED" || orderTx.provider_transaction_id === paymentId) {
+      const advertiser = await AdvertiserService.getAdvertiserByUserId(userId);
+      res.status(200).json({
+        success: true,
+        idempotent: true,
+        balance: advertiser?.balance ? parseFloat(advertiser.balance) : 0,
+        amount: authorAmount,
+        currency: authorCurrency,
+        message: "Payment has already been verified and credited.",
+      });
+      return;
+    }
+
+    // PETO-SEC-03: Check if provider_transaction_id has already been credited to any other order
+    const { data: duplicatePayTx } = await supabase
+      .from("payment_transactions")
+      .select("id, status")
+      .eq("provider_transaction_id", paymentId)
+      .maybeSingle();
+
+    if (duplicatePayTx && duplicatePayTx.id !== orderTx.id) {
+      res.status(409).json({
+        success: false,
+        error: "This Razorpay payment ID has already been credited to another transaction.",
+        code: "DUPLICATE_PAYMENT_ID",
+      });
+      return;
+    }
+
+    // PETO-SEC-02 B: Cryptographic verification ONLY (no simulation flags accepted)
+    const generatedSignature = crypto
+      .createHmac("sha256", keySecret)
+      .update(`${orderId}|${paymentId}`)
+      .digest("hex");
+
+    let signatureValid = generatedSignature === signature;
+
+    // Official Razorpay API verification check if HMAC signature didn't match directly
+    if (!signatureValid && !paymentId.startsWith("pay_sim_")) {
       try {
         const authHeader = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
         const checkRes = await fetch(`https://api.razorpay.com/v1/payments/${paymentId}`, {
@@ -310,11 +370,10 @@ export async function verifyRazorpayPaymentHandler(req: Request, res: Response):
         });
         const payData: any = await checkRes.json();
 
-        if (payData && payData.id === paymentId) {
+        if (payData && payData.id === paymentId && payData.order_id === orderId) {
           if (payData.status === "captured") {
             signatureValid = true;
           } else if (payData.status === "authorized") {
-            // Auto-capture authorized payment if not yet captured
             const capRes = await fetch(`https://api.razorpay.com/v1/payments/${paymentId}/capture`, {
               method: "POST",
               headers: {
@@ -341,41 +400,117 @@ export async function verifyRazorpayPaymentHandler(req: Request, res: Response):
       res.status(400).json({
         success: false,
         error: "Payment verification failed: Invalid transaction signature or unverified payment.",
+        code: "INVALID_SIGNATURE",
       });
       return;
     }
 
-    // Credit Advertiser Balance using centralized depositFunds
-    const paymentRef = paymentId || `pay_sim_${Date.now()}`;
-    const result = await AdvertiserService.depositFunds(
-      userId,
-      numAmount,
-      currency,
-      `Razorpay (${paymentRef})`
-    );
+    // PETO-SEC-03 D: Atomic Wallet Crediting
+    let finalBalance: number;
+    let alreadyProcessed = false;
 
-    // Update transaction to CAPTURED in DB
-    if (orderId) {
-      try {
-        await supabase
+    try {
+      const { data: rpcData, error: rpcErr } = await supabase.rpc(
+        "credit_ad_wallet_atomic",
+        {
+          p_order_id: orderId,
+          p_payment_id: paymentId,
+          p_amount: authorAmount,
+          p_currency: authorCurrency,
+          p_description: `Ad Wallet Deposit via Razorpay (${paymentId})`,
+        }
+      );
+
+      if (!rpcErr && rpcData && rpcData.length > 0) {
+        const rpcRow = rpcData[0];
+        if (!rpcRow.success) {
+          res.status(400).json({
+            success: false,
+            error: rpcRow.error_message || "Failed to process atomic wallet credit.",
+            code: "WALLET_CREDIT_FAILED",
+          });
+          return;
+        }
+        finalBalance = parseFloat(rpcRow.balance_after);
+        alreadyProcessed = Boolean(rpcRow.already_processed);
+      } else {
+        // Concurrency-safe atomic conditional state transition fallback:
+        const { data: updatedTx, error: updateTxErr } = await supabase
           .from("payment_transactions")
           .update({
             status: "CAPTURED",
-            provider_transaction_id: paymentRef,
+            provider_transaction_id: paymentId,
             completed_at: new Date().toISOString(),
           })
-          .eq("provider_order_id", orderId);
-      } catch {
-        // Non-blocking
+          .eq("id", orderTx.id)
+          .neq("status", "CAPTURED")
+          .select();
+
+        if (updateTxErr || !updatedTx || updatedTx.length === 0) {
+          // Another concurrent request already captured this transaction
+          const advertiser = await AdvertiserService.getAdvertiserByUserId(userId);
+          res.status(200).json({
+            success: true,
+            idempotent: true,
+            balance: advertiser?.balance ? parseFloat(advertiser.balance) : 0,
+            amount: authorAmount,
+            currency: authorCurrency,
+            message: "Payment has already been verified and credited.",
+          });
+          return;
+        }
+
+        // Single winning thread proceeds with ledger credit
+        const advertiser = await AdvertiserService.getAdvertiserByUserId(userId);
+        if (!advertiser) {
+          throw new Error("Advertiser profile not found for user.");
+        }
+
+        const currentBalance = parseFloat(advertiser.balance || "0");
+        finalBalance = parseFloat((currentBalance + authorAmount).toFixed(2));
+
+        await supabase
+          .from("advertisers")
+          .update({
+            balance: finalBalance,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", advertiser.id);
+
+        try {
+          await supabase.from("payment_ledger").insert({
+            advertiser_id: advertiser.id,
+            transaction_id: orderTx.id,
+            entry_type: "DEPOSIT",
+            amount: authorAmount,
+            currency: authorCurrency,
+            balance_before: currentBalance,
+            balance_after: finalBalance,
+            reference_id: paymentId,
+            description: `Ad Wallet Deposit via Razorpay (${paymentId})`,
+          });
+        } catch {
+          // Non-blocking
+        }
       }
+    } catch (creditErr: any) {
+      res.status(500).json({
+        success: false,
+        error: creditErr.message || "Failed to finalize payment credit.",
+        code: "CREDIT_ERROR",
+      });
+      return;
     }
 
     res.status(200).json({
       success: true,
-      balance: result.balance,
-      amount: numAmount,
-      currency: (currency || "INR").toUpperCase(),
-      message: "Razorpay payment verified and credited to advertising wallet.",
+      idempotent: alreadyProcessed,
+      balance: finalBalance,
+      amount: authorAmount,
+      currency: authorCurrency,
+      message: alreadyProcessed
+        ? "Payment has already been verified and credited."
+        : "Razorpay payment verified and credited to advertising wallet.",
     });
   } catch (err: any) {
     res.status(500).json({

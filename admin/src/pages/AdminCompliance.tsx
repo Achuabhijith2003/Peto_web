@@ -40,6 +40,7 @@ import {
   updatePolicyDraft,
   getAdminPolicyPdfUrl,
   downloadAdminPolicyPdf,
+  viewAdminPolicyPdf,
   fetchDataRequests,
   updateDataRequestStatus,
   createDataRequest,
@@ -270,8 +271,12 @@ export const AdminCompliance: React.FC = () => {
       const filename = `peto-${policy.slug || policy.policy_type.toLowerCase().replace(/_/g, "-")}-v${policy.version}.pdf`;
       await downloadAdminPolicyPdf(policy.id, filename);
     } catch (err) {
-      console.warn("Direct blob download failed, falling back to authenticated URL", err);
-      window.open(getAdminPolicyPdfUrl(policy.id), "_blank");
+      console.warn("Direct blob download failed, attempting authenticated viewer", err);
+      try {
+        await viewAdminPolicyPdf(policy.id);
+      } catch (viewErr) {
+        console.error("Authenticated PDF view failed:", viewErr);
+      }
     }
   };
 

@@ -1,8 +1,10 @@
 import { Router } from "express";
+import crypto from "crypto";
 import { signup } from "./signup";
 import { login } from "./login";
 import { authenticate } from "./auth.middleware";
 import { supabase } from "../config/supabase";
+import { oauthExchangeRateLimiter } from "../middleware/rateLimiter";
 
 console.log("✅ Auth routes loaded");
 
@@ -228,10 +230,10 @@ interface PendingGoogleSession {
   expiresAt: number;
 }
 
-const googleSyncCodes = new Map<string, PendingGoogleSession>();
+export const googleSyncCodes = new Map<string, PendingGoogleSession>();
 
 // Cleanup expired codes periodically
-setInterval(() => {
+const cleanupInterval = setInterval(() => {
   const now = Date.now();
   for (const [code, item] of googleSyncCodes.entries()) {
     if (item.expiresAt < now) {
@@ -239,6 +241,9 @@ setInterval(() => {
     }
   }
 }, 60 * 1000);
+if (cleanupInterval.unref) {
+  cleanupInterval.unref();
+}
 
 /**
  * GET /api/auth/google/url
@@ -350,14 +355,14 @@ router.post("/google", async (req, res) => {
       }
     }
 
-    // Generate a 6-digit sync code for mobile handoff fallback
-    const syncCode = Math.floor(100000 + Math.random() * 900000).toString();
+    // PETO-SEC-01: Generate cryptographically secure high-entropy random token (256-bit entropy via 32 random bytes)
+    const syncCode = crypto.randomBytes(32).toString("hex");
     googleSyncCodes.set(syncCode, {
       token,
       refreshToken: refreshToken || "",
       user,
       profile,
-      expiresAt: Date.now() + 5 * 60 * 1000,
+      expiresAt: Date.now() + 60 * 1000, // Short-lived (60 seconds)
     });
 
     return res.json({
@@ -380,30 +385,35 @@ router.post("/google", async (req, res) => {
 
 /**
  * POST /api/auth/google/exchange-code
- * Exchanges temporary 6-digit sync code for session tokens and user profile
+ * PETO-SEC-01: Exchanges temporary high-entropy single-use sync code for session tokens.
+ * Protected by dedicated strict rate limiting and returns uniform failure responses.
  */
-router.post("/google/exchange-code", async (req, res) => {
+router.post("/google/exchange-code", oauthExchangeRateLimiter, async (req, res) => {
   try {
     const { code } = req.body;
-    if (!code) {
-      return res.status(400).json({
-        success: false,
-        message: "A 6-digit sync code is required.",
-      });
-    }
-
-    const cleanCode = code.toString().trim();
-    const session = googleSyncCodes.get(cleanCode);
-
-    if (!session || session.expiresAt < Date.now()) {
-      googleSyncCodes.delete(cleanCode);
+    if (!code || typeof code !== "string") {
       return res.status(400).json({
         success: false,
         message: "Invalid or expired sync code. Please sign in again.",
+        code: "INVALID_SYNC_CODE",
       });
     }
 
-    // Consume single-use code
+    const cleanCode = code.trim();
+    const session = googleSyncCodes.get(cleanCode);
+
+    if (!session || session.expiresAt < Date.now()) {
+      if (cleanCode) {
+        googleSyncCodes.delete(cleanCode);
+      }
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired sync code. Please sign in again.",
+        code: "INVALID_SYNC_CODE",
+      });
+    }
+
+    // PETO-SEC-01: Consume single-use code immediately (Replay prevention)
     googleSyncCodes.delete(cleanCode);
 
     return res.json({
@@ -416,7 +426,7 @@ router.post("/google/exchange-code", async (req, res) => {
   } catch (err: any) {
     return res.status(500).json({
       success: false,
-      message: err.message || "Failed to exchange sync code.",
+      message: "Failed to exchange sync code.",
     });
   }
 });

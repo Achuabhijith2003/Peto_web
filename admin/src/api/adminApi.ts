@@ -476,12 +476,16 @@ export async function rollbackPolicy(
 
 export function getAdminPolicyPdfUrl(id: string): string {
   const baseURL = adminApi.defaults.baseURL || "http://localhost:5000/api";
-  const token =
-    localStorage.getItem("peto_admin_token") ||
-    localStorage.getItem("peto_token") ||
-    "";
-  const query = token ? `?token=${encodeURIComponent(token)}` : "";
-  return `${baseURL}/admin/compliance/policies/${id}/pdf${query}`;
+  return `${baseURL}/admin/compliance/policies/${id}/pdf`;
+}
+
+export async function viewAdminPolicyPdf(id: string): Promise<void> {
+  const res = await adminApi.get(`/admin/compliance/policies/${id}/pdf`, {
+    responseType: "blob",
+  });
+  const blob = new Blob([res.data], { type: "application/pdf" });
+  const url = window.URL.createObjectURL(blob);
+  window.open(url, "_blank");
 }
 
 export async function downloadAdminPolicyPdf(id: string, filename?: string): Promise<void> {
