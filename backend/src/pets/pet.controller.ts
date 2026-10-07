@@ -15,6 +15,7 @@ import {
   removePetParentService,
   getPetPostsService,
   searchTaggablePetsService,
+  getPetMediaAccessService,
 } from "./pet.service";
 
 export async function createPetHandler(req: Request, res: Response): Promise<void> {
@@ -251,5 +252,20 @@ export async function searchTaggablePetsHandler(req: Request, res: Response): Pr
     res.json({ success: true, data: pets });
   } catch (err: any) {
     res.status(err.status || 500).json({ success: false, message: err.message || "Failed to search taggable pets" });
+  }
+}
+
+export async function getPetMediaAccessHandler(req: Request, res: Response): Promise<void> {
+  try {
+    const petId = req.params.id as string;
+    const mediaId = req.params.mediaId as string;
+    const requesterId = (req as any).user?.id || null;
+
+    const access = await getPetMediaAccessService(petId, mediaId, requesterId);
+    res.set("Cache-Control", "private, no-cache, no-store, must-revalidate");
+    res.set("Pragma", "no-cache");
+    res.json({ success: true, data: access });
+  } catch (err: any) {
+    res.status(err.status || 500).json({ success: false, message: err.message || "Access denied" });
   }
 }

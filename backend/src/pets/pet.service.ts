@@ -16,6 +16,49 @@ import {
   sanitizePetForRequester,
 } from "./pet.permission";
 import { createNotification } from "../notifications/notification.service";
+import {
+  ensurePetMediaPrivateBucket,
+  generateSignedPetMediaUrl,
+  moveMediaToPrivate,
+  moveMediaToPublic,
+  deletePrivatePetMedia,
+  deletePetPrivateStorageFolder,
+  parseStorageUrl,
+  PROTECTED_SIGNED_URL_TTL_SECONDS,
+  PET_MEDIA_PRIVATE_BUCKET,
+} from "../media/petStorage.service";
+import { deleteStorageFile } from "../media/storage.service";
+
+/**
+ * Resolves authorized deliverable URL: permanent public URL for public pets,
+ * or short-lived signed URL for protected (PRIVATE/CONNECTIONS) pets.
+ */
+async function resolveDeliverablePetMediaUrl(
+  rawUrl: string | null,
+  petVisibility: string,
+  petId?: string,
+  mediaId?: string
+): Promise<string | null> {
+  if (!rawUrl) return null;
+
+  const parsed = parseStorageUrl(rawUrl);
+  const isPrivateStorage = parsed?.bucket === PET_MEDIA_PRIVATE_BUCKET;
+  const isProtected = petVisibility === "PRIVATE" || petVisibility === "CONNECTIONS" || isPrivateStorage;
+
+  if (isProtected) {
+    const storagePath = parsed?.path || (petId && mediaId ? `pets/${petId}/${mediaId}.webp` : null);
+    if (storagePath) {
+      try {
+        return await generateSignedPetMediaUrl(storagePath, PROTECTED_SIGNED_URL_TTL_SECONDS);
+      } catch (err) {
+        console.warn("Failed to generate signed URL for protected pet media:", err);
+      }
+    }
+  }
+
+  // If public or fallback
+  return rawUrl.startsWith("private://") ? null : rawUrl;
+}
 
 /**
  * 1. Create a new pet and establish caller as primary OWNER
@@ -147,6 +190,22 @@ export async function createPetService(
     });
   }
 
+  // If created pet is protected, secure initial media files in private storage
+  if (visibility === "PRIVATE" || visibility === "CONNECTIONS") {
+    const initialMediaIds = [profileMediaId, input.cover_media_id].filter(Boolean) as string[];
+    for (const mId of initialMediaIds) {
+      const { data: mRow } = await supabase.from("media").select("id, url").eq("id", mId).maybeSingle();
+      if (mRow?.url && !mRow.url.startsWith("private://")) {
+        try {
+          const moved = await moveMediaToPrivate(mRow.url, pet.id, mId);
+          await supabase.from("media").update({ url: `private://${moved.storageBucket}/${moved.storagePath}` }).eq("id", mId);
+        } catch (privErr) {
+          console.warn(`Failed to privatize media ${mId} on pet creation:`, privErr);
+        }
+      }
+    }
+  }
+
   return await getPetByIdService(pet.id, userId);
 }
 
@@ -238,9 +297,11 @@ export async function getPetByIdService(
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: false });
 
-  const mediaList: PetMediaItem[] = (mediaRaw || []).map((m: any) => {
-    const mediaObj = m.media;
-    const mediaUrl = mediaObj?.url || null;
+  const mediaList: PetMediaItem[] = [];
+  for (const m of (mediaRaw || [])) {
+    const mediaObj: any = Array.isArray(m.media) ? m.media[0] : m.media;
+    let mediaUrl = mediaObj?.url || null;
+    mediaUrl = await resolveDeliverablePetMediaUrl(mediaUrl, pet.profile_visibility, pet.id, m.media_id);
     const isVideo =
       mediaObj?.type === "video" ||
       mediaUrl?.toLowerCase().endsWith(".mp4") ||
@@ -249,7 +310,7 @@ export async function getPetByIdService(
       mediaUrl?.toLowerCase().endsWith(".webm");
     const mediaType = isVideo ? "VIDEO" : "IMAGE";
 
-    return {
+    mediaList.push({
       id: m.id,
       pet_id: m.pet_id,
       media_id: m.media_id,
@@ -268,8 +329,8 @@ export async function getPetByIdService(
       thumbnail_url: mediaObj?.thumbnail_url || null,
       is_profile: m.role === "PROFILE" || Boolean(m.is_primary),
       is_cover: m.role === "COVER",
-    };
-  });
+    });
+  }
 
   // Resolve Profile and Cover URLs
   let profileUrl: string | null = null;
@@ -284,7 +345,7 @@ export async function getPetByIdService(
         .select("url")
         .eq("id", pet.profile_media_id)
         .maybeSingle();
-      if (m?.url) profileUrl = m.url;
+      if (m?.url) profileUrl = await resolveDeliverablePetMediaUrl(m.url, pet.profile_visibility, pet.id, pet.profile_media_id);
     }
   }
 
@@ -297,7 +358,7 @@ export async function getPetByIdService(
         .select("url")
         .eq("id", pet.cover_media_id)
         .maybeSingle();
-      if (m?.url) coverUrl = m.url;
+      if (m?.url) coverUrl = await resolveDeliverablePetMediaUrl(m.url, pet.profile_visibility, pet.id, pet.cover_media_id);
     }
   }
 
@@ -449,12 +510,16 @@ export async function deletePetService(petId: string, userId: string): Promise<v
     throw error;
   }
 
+  // Clean up private storage folder for this pet
+  await deletePetPrivateStorageFolder(petId);
+
   const { error } = await supabase.from("pets").delete().eq("id", petId);
   if (error) throw error;
 }
 
 /**
  * 5. Update Pet Visibility (Requires MANAGE_PRIVACY permission)
+ * Atomically transitions media storage between public and private buckets.
  */
 export async function updatePetVisibilityService(
   petId: string,
@@ -466,6 +531,90 @@ export async function updatePetVisibilityService(
     const error: any = new Error("You do not have permission to modify this pet's visibility settings.");
     error.status = 403;
     throw error;
+  }
+
+  // Load current pet
+  const { data: pet } = await supabase
+    .from("pets")
+    .select("id, profile_visibility, profile_media_id, cover_media_id")
+    .eq("id", petId)
+    .single();
+
+  if (!pet) {
+    const error: any = new Error("Pet not found.");
+    error.status = 404;
+    throw error;
+  }
+
+  const oldVisibility = pet.profile_visibility;
+  const newVisibility = visibility;
+
+  if (oldVisibility !== newVisibility) {
+    const wasPublic = oldVisibility === "PUBLIC";
+    const isNowProtected = newVisibility === "PRIVATE" || newVisibility === "CONNECTIONS";
+    const wasProtected = oldVisibility === "PRIVATE" || oldVisibility === "CONNECTIONS";
+    const isNowPublic = newVisibility === "PUBLIC";
+
+    // Collect all media linked to this pet
+    const { data: petMediaRows } = await supabase
+      .from("pet_media")
+      .select("media_id")
+      .eq("pet_id", petId);
+
+    const mediaIds = new Set<string>();
+    if (pet.profile_media_id) mediaIds.add(pet.profile_media_id);
+    if (pet.cover_media_id) mediaIds.add(pet.cover_media_id);
+    (petMediaRows || []).forEach((pm: any) => {
+      if (pm.media_id) mediaIds.add(pm.media_id);
+    });
+
+    const mediaIdList = Array.from(mediaIds);
+
+    // 1. Restrictive transitions: PUBLIC -> PRIVATE or PUBLIC -> CONNECTIONS
+    if (wasPublic && isNowProtected && mediaIdList.length > 0) {
+      const { data: mediaRecords } = await supabase
+        .from("media")
+        .select("id, url")
+        .in("id", mediaIdList);
+
+      for (const m of (mediaRecords || [])) {
+        if (m.url && !m.url.startsWith("private://")) {
+          try {
+            const moved = await moveMediaToPrivate(m.url, petId, m.id);
+            const privateRef = `private://${moved.storageBucket}/${moved.storagePath}`;
+            await supabase.from("media").update({ url: privateRef }).eq("id", m.id);
+          } catch (transErr: any) {
+            console.error(`Failed to privatize media ${m.id} on pet ${petId}:`, transErr);
+            // Fail closed: throw error and do not finalize visibility transition
+            const err: any = new Error(`Failed to secure pet media during privacy transition: ${transErr.message}`);
+            err.status = 500;
+            throw err;
+          }
+        }
+      }
+    }
+
+    // 2. Less-restrictive transitions: PRIVATE/CONNECTIONS -> PUBLIC
+    if (wasProtected && isNowPublic && mediaIdList.length > 0) {
+      const { data: mediaRecords } = await supabase
+        .from("media")
+        .select("id, url")
+        .in("id", mediaIdList);
+
+      for (const m of (mediaRecords || [])) {
+        if (m.url && m.url.startsWith("private://")) {
+          try {
+            const parsed = parseStorageUrl(m.url);
+            if (parsed) {
+              const pub = await moveMediaToPublic(parsed.path);
+              await supabase.from("media").update({ url: pub.publicUrl }).eq("id", m.id);
+            }
+          } catch (pubErr: any) {
+            console.error(`Failed to publish media ${m.id} on pet ${petId}:`, pubErr);
+          }
+        }
+      }
+    }
   }
 
   const { error } = await supabase
@@ -515,20 +664,20 @@ export async function getUserPetsService(
         .select("url")
         .eq("id", pet.profile_media_id)
         .maybeSingle();
-      if (m?.url) avatarUrl = m.url;
+      if (m?.url) avatarUrl = await resolveDeliverablePetMediaUrl(m.url, pet.profile_visibility, pet.id, pet.profile_media_id);
     }
 
     if (!avatarUrl) {
       const { data: petMediaRows } = await supabase
         .from("pet_media")
-        .select("media:media_id(url), role, is_primary")
+        .select("media:media_id(url), media_id, role, is_primary")
         .eq("pet_id", pet.id)
         .order("is_primary", { ascending: false });
 
       if (petMediaRows && petMediaRows.length > 0) {
         const profileMedia = petMediaRows.find((pm: any) => pm.role === "PROFILE") || petMediaRows[0];
         if ((profileMedia as any)?.media?.url) {
-          avatarUrl = (profileMedia as any).media.url;
+          avatarUrl = await resolveDeliverablePetMediaUrl((profileMedia as any).media.url, pet.profile_visibility, pet.id, (profileMedia as any).media_id);
         }
       }
     }
@@ -580,20 +729,20 @@ export async function getMyPetsService(userId: string): Promise<Pet[]> {
         .select("url")
         .eq("id", pet.profile_media_id)
         .maybeSingle();
-      if (m?.url) avatarUrl = m.url;
+      if (m?.url) avatarUrl = await resolveDeliverablePetMediaUrl(m.url, pet.profile_visibility, pet.id, pet.profile_media_id);
     }
 
     if (!avatarUrl) {
       const { data: petMediaRows } = await supabase
         .from("pet_media")
-        .select("media:media_id(url), role, is_primary")
+        .select("media:media_id(url), media_id, role, is_primary")
         .eq("pet_id", pet.id)
         .order("is_primary", { ascending: false });
 
       if (petMediaRows && petMediaRows.length > 0) {
         const profileMedia = petMediaRows.find((pm: any) => pm.role === "PROFILE") || petMediaRows[0];
         if ((profileMedia as any)?.media?.url) {
-          avatarUrl = (profileMedia as any).media.url;
+          avatarUrl = await resolveDeliverablePetMediaUrl((profileMedia as any).media.url, pet.profile_visibility, pet.id, (profileMedia as any).media_id);
         }
       }
     }
@@ -604,7 +753,7 @@ export async function getMyPetsService(userId: string): Promise<Pet[]> {
         .select("url")
         .eq("id", pet.cover_media_id)
         .maybeSingle();
-      if (m?.url) coverUrl = m.url;
+      if (m?.url) coverUrl = await resolveDeliverablePetMediaUrl(m.url, pet.profile_visibility, pet.id, pet.cover_media_id);
     }
 
     results.push({
@@ -770,6 +919,33 @@ export async function addPetMediaService(
     mediaUrl?.toLowerCase().endsWith(".mov");
   const mediaType = isVideo ? "VIDEO" : "IMAGE";
 
+  // If pet is protected, secure the media in private storage
+  const { data: petRow } = await supabase
+    .from("pets")
+    .select("id, profile_visibility")
+    .eq("id", petId)
+    .single();
+
+  let effectiveMediaUrl = mediaUrl;
+  if (petRow && (petRow.profile_visibility === "PRIVATE" || petRow.profile_visibility === "CONNECTIONS")) {
+    const { data: mRow } = await supabase.from("media").select("id, url").eq("id", mediaId).single();
+    if (mRow?.url && !mRow.url.startsWith("private://")) {
+      try {
+        const moved = await moveMediaToPrivate(mRow.url, petId, mediaId);
+        const privateRef = `private://${moved.storageBucket}/${moved.storagePath}`;
+        await supabase.from("media").update({ url: privateRef }).eq("id", mediaId);
+        effectiveMediaUrl = await generateSignedPetMediaUrl(moved.storagePath, PROTECTED_SIGNED_URL_TTL_SECONDS);
+      } catch (privErr) {
+        console.warn("Failed to privatize media during addPetMediaService:", privErr);
+      }
+    } else if (mRow?.url?.startsWith("private://")) {
+      const parsed = parseStorageUrl(mRow.url);
+      if (parsed) {
+        effectiveMediaUrl = await generateSignedPetMediaUrl(parsed.path, PROTECTED_SIGNED_URL_TTL_SECONDS);
+      }
+    }
+  }
+
   return {
     id: mediaRecord.id,
     pet_id: mediaRecord.pet_id,
@@ -782,8 +958,8 @@ export async function addPetMediaService(
     is_primary: mediaRecord.is_primary,
     created_by: mediaRecord.created_by,
     created_at: mediaRecord.created_at,
-    url: mediaUrl,
-    media_url: mediaUrl,
+    url: effectiveMediaUrl,
+    media_url: effectiveMediaUrl,
     type: mediaObj?.type || (isVideo ? "video" : "image"),
     media_type: mediaType,
     thumbnail_url: mediaObj?.thumbnail_url || null,
@@ -821,6 +997,24 @@ export async function deletePetMediaService(
     await supabase.from("pets").update({ cover_media_id: null }).eq("id", petId);
   }
 
+  // Load media row to identify storage location
+  const { data: mediaRec } = await supabase
+    .from("media")
+    .select("id, url")
+    .eq("id", mediaId)
+    .maybeSingle();
+
+  if (mediaRec?.url) {
+    if (mediaRec.url.startsWith("private://")) {
+      const parsed = parseStorageUrl(mediaRec.url);
+      if (parsed?.path) {
+        await deletePrivatePetMedia(parsed.path);
+      }
+    } else {
+      await deleteStorageFile(mediaRec.url);
+    }
+  }
+
   const { error } = await supabase
     .from("pet_media")
     .delete()
@@ -828,6 +1022,10 @@ export async function deletePetMediaService(
     .or(`media_id.eq.${mediaId},id.eq.${mediaId}`);
 
   if (error) throw error;
+
+  if (mediaRec?.id) {
+    await supabase.from("media").delete().eq("id", mediaRec.id);
+  }
 }
 
 /**
@@ -1247,5 +1445,102 @@ export async function searchTaggablePetsService(
   }
 
   return taggablePets;
+}
+
+/**
+ * 14. Authorized Pet Media Access
+ * Authoritatively verifies pet visibility and delivers a short-lived signed URL
+ * for protected pet media or returns the public URL for public pets.
+ */
+export async function getPetMediaAccessService(
+  petId: string,
+  mediaId: string,
+  requesterId: string | null
+): Promise<{
+  url: string;
+  is_public: boolean;
+  expires_in_seconds?: number;
+  mime_type?: string;
+  media_type: string;
+}> {
+  // 1. Load pet
+  const { data: pet } = await supabase
+    .from("pets")
+    .select("id, profile_visibility, status, profile_media_id, cover_media_id")
+    .eq("id", petId)
+    .single();
+
+  if (!pet) {
+    const error: any = new Error("Pet not found.");
+    error.status = 404;
+    throw error;
+  }
+
+  // 2. Authoritative visibility check
+  const { allowed } = await evaluatePetVisibility(requesterId, pet);
+  if (!allowed) {
+    const error: any = new Error("Pet not found.");
+    error.status = 404; // Opaque boundary
+    throw error;
+  }
+
+  // 3. Confirm media belongs to pet (either via pet_media or as profile/cover media)
+  const isProfileOrCover = pet.profile_media_id === mediaId || pet.cover_media_id === mediaId;
+  const { data: petMediaLink } = await supabase
+    .from("pet_media")
+    .select("id, media_id, role")
+    .eq("pet_id", petId)
+    .or(`media_id.eq.${mediaId},id.eq.${mediaId}`)
+    .maybeSingle();
+
+  if (!isProfileOrCover && !petMediaLink) {
+    const error: any = new Error("Media item not found for this pet.");
+    error.status = 404;
+    throw error;
+  }
+
+  const effectiveMediaId = petMediaLink?.media_id || mediaId;
+
+  // 4. Load media record
+  const { data: media } = await supabase
+    .from("media")
+    .select("*")
+    .eq("id", effectiveMediaId)
+    .single();
+
+  if (!media) {
+    const error: any = new Error("Media object not found.");
+    error.status = 404;
+    throw error;
+  }
+
+  const isVideo = media.type === "video" || media.url?.toLowerCase().endsWith(".mp4");
+  const mediaType = isVideo ? "VIDEO" : "IMAGE";
+
+  // 5. Evaluate delivery mechanism
+  const isProtectedPet = pet.profile_visibility === "PRIVATE" || pet.profile_visibility === "CONNECTIONS";
+  const parsed = parseStorageUrl(media.url || "");
+  const isPrivateStorage = parsed?.bucket === PET_MEDIA_PRIVATE_BUCKET;
+
+  if (isProtectedPet || isPrivateStorage) {
+    const storagePath = parsed?.path || `pets/${petId}/${effectiveMediaId}.${media.mime_type?.includes("video") ? "mp4" : "webp"}`;
+    const signedUrl = await generateSignedPetMediaUrl(storagePath, PROTECTED_SIGNED_URL_TTL_SECONDS);
+
+    return {
+      url: signedUrl,
+      is_public: false,
+      expires_in_seconds: PROTECTED_SIGNED_URL_TTL_SECONDS,
+      mime_type: media.mime_type,
+      media_type: mediaType,
+    };
+  }
+
+  // Public pet media
+  return {
+    url: media.url,
+    is_public: true,
+    mime_type: media.mime_type,
+    media_type: mediaType,
+  };
 }
 

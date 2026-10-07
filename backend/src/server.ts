@@ -252,10 +252,12 @@ app.use(globalErrorHandler);
 // ----------------------
 
 import { ensurePrivateVerificationBucket } from "./media/secureStorage.service";
+import { ensurePetMediaPrivateBucket } from "./media/petStorage.service";
 
 const server = app.listen(PORT, () => {
   ensurePublicBuckets();
   ensurePrivateVerificationBucket();
+  ensurePetMediaPrivateBucket();
   console.log("");
   console.log("====================================");
   console.log("🚀 Peto Backend Started");

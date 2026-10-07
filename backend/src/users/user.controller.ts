@@ -200,6 +200,20 @@ export const updateProfile = async (req: Request, res: Response) => {
 
         const willRequireReverification = isChangingCriticalName && wasVerified;
 
+        // PETO-SEC-16: Ensure client cannot self-grant or alter verification flags via mass-assignment
+        delete (updateData as any).verified;
+        delete (updateData as any).is_verified;
+        delete (updateData as any).verification_badge_type;
+
+        // PETO-SEC-16: If critical real name changed for a verified identity,
+        // atomically strip verification flags from profiles table
+        if (willRequireReverification) {
+            updateData.verified = false;
+            updateData.is_verified = false;
+            updateData.verification_badge_type = "NONE";
+            updateData.status_reason = "Critical legal/display name altered in profile settings; reverification required";
+        }
+
         const { data, error } = await supabase
             .from("profiles")
             .update(updateData)
@@ -212,6 +226,24 @@ export const updateProfile = async (req: Request, res: Response) => {
                 success: false,
                 message: error.message,
             });
+        }
+
+        // PETO-SEC-16: Authoritatively update verification_applications record
+        if (willRequireReverification) {
+            try {
+                await supabase
+                    .from("verification_applications")
+                    .update({
+                        status: "REVERIFICATION_REQUIRED",
+                        reverification_reason: "Critical legal/display name altered in profile settings",
+                        updated_at: new Date().toISOString(),
+                    })
+                    .eq("user_id", user.id)
+                    .eq("verification_type", "INDIVIDUAL_IDENTITY")
+                    .eq("status", "APPROVED");
+            } catch (verifErr: any) {
+                console.warn("[updateProfile] Notice updating verification_applications:", verifErr?.message || verifErr);
+            }
         }
 
         return res.json({

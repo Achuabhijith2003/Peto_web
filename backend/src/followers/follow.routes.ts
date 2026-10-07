@@ -10,6 +10,7 @@ import {
 } from "./follow.controller";
 
 import { authenticate, optionalAuthenticate } from "../auth/auth.middleware";
+import { validateUuidParams } from "../middleware/validateUuid.middleware";
 
 const router = Router();
 
@@ -25,6 +26,7 @@ router.get(
 router.post(
     "/:id/follow",
     authenticate,
+    validateUuidParams("id"),
     follow
 );
 
@@ -34,6 +36,7 @@ router.post(
 router.delete(
     "/:id/follow",
     authenticate,
+    validateUuidParams("id"),
     unfollow
 );
 
@@ -43,6 +46,7 @@ router.delete(
 router.get(
     "/:id/follow-status",
     optionalAuthenticate,
+    validateUuidParams("id"),
     followStatus
 );
 
@@ -52,6 +56,7 @@ router.get(
 router.get(
     "/:id/followers",
     optionalAuthenticate,
+    validateUuidParams("id"),
     followers
 );
 
@@ -61,6 +66,7 @@ router.get(
 router.get(
     "/:id/following",
     optionalAuthenticate,
+    validateUuidParams("id"),
     following
 );
 

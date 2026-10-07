@@ -1,5 +1,6 @@
 import { supabase } from "../../config/supabase";
 import { createAuditLog } from "./adminAudit.service";
+import { buildPostgrestOrIlike } from "../../utils/postgrestSanitizer";
 
 export type PolicyType =
   | "TERMS_OF_SERVICE"
@@ -258,8 +259,11 @@ export async function getPoliciesService(filters?: {
     if (filters?.status && filters.status !== "ALL") {
       query = query.eq("status", filters.status);
     }
-    if (filters?.search) {
-      query = query.or(`title.ilike.%${filters.search}%,slug.ilike.%${filters.search}%`);
+    if (filters?.search && filters.search.trim()) {
+      const compOr = buildPostgrestOrIlike(["title", "slug"], filters.search);
+      if (compOr) {
+        query = query.or(compOr);
+      }
     }
 
     const { data, error } = await query;

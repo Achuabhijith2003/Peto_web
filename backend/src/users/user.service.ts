@@ -1,4 +1,5 @@
 import { supabase } from "../config/supabase";
+import { buildPostgrestOrIlike, sanitizeSearchQuery } from "../utils/postgrestSanitizer";
 
 export async function getUserProfile(
     currentUserId: string,
@@ -43,8 +44,11 @@ export async function getUserProfile(
             if (isUuid) {
                 bizQuery = bizQuery.eq("id", profileUserId);
             } else {
-                const cleanSlug = profileUserId.replace(/^@+/, "").trim();
-                bizQuery = bizQuery.or(`username.ilike.${cleanSlug},name.ilike.${cleanSlug}`);
+                const cleanSlug = sanitizeSearchQuery(profileUserId.replace(/^@+/, ""));
+                const bizOr = buildPostgrestOrIlike(["username", "name"], cleanSlug);
+                if (bizOr) {
+                    bizQuery = bizQuery.or(bizOr);
+                }
             }
 
             const { data: biz } = await bizQuery.maybeSingle();
@@ -156,7 +160,10 @@ export async function searchUsers(
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
-    const cleanQuery = query.replace(/^@+/, "").trim();
+    const cleanQuery = sanitizeSearchQuery(query.replace(/^@+/, ""));
+    if (!cleanQuery) {
+        return [];
+    }
 
     let q = supabase
         .from("profiles")
@@ -167,16 +174,29 @@ export async function searchUsers(
             avatar_url,
             verified,
             bio
-        `)
-        .or(`username.ilike.%${cleanQuery}%,full_name.ilike.%${cleanQuery}%`);
+        `);
+
+    const orFilter = buildPostgrestOrIlike(["username", "full_name"], cleanQuery);
+    if (orFilter) {
+        q = q.or(orFilter);
+    }
 
     if (currentUserId) {
         q = q.neq("id", currentUserId);
     }
 
-    const { data: users, error } = await q.range(from, to);
-
-    if (error) throw error;
+    let users: any[] = [];
+    try {
+        const { data, error } = await q.range(from, to);
+        if (error) {
+            console.warn("[searchUsers] PostgREST query notice:", error.message);
+            return [];
+        }
+        users = data || [];
+    } catch (queryErr: any) {
+        console.warn("[searchUsers] Exception during user search query:", queryErr?.message || queryErr);
+        return [];
+    }
 
     let blockedUserIds = new Set<string>();
     if (currentUserId) {
@@ -202,11 +222,17 @@ export async function searchUsers(
     // Search business identities
     if (cleanQuery.length > 0) {
         try {
-            const { data: businesses, error: bizErr } = await supabase
-                .from("business_identities")
-                .select("id, name, legal_name, username, avatar_url, business_category, description, country_code")
-                .or(`name.ilike.%${cleanQuery}%,legal_name.ilike.%${cleanQuery}%,username.ilike.%${cleanQuery}%,business_category.ilike.%${cleanQuery}%`)
-                .limit(limit);
+            const bizFilter = buildPostgrestOrIlike(
+                ["name", "legal_name", "username", "business_category"],
+                cleanQuery
+            );
+            const { data: businesses, error: bizErr } = bizFilter
+                ? await supabase
+                    .from("business_identities")
+                    .select("id, name, legal_name, username, avatar_url, business_category, description, country_code")
+                    .or(bizFilter)
+                    .limit(limit)
+                : { data: [], error: null };
 
             if (bizErr) {
                 console.error("Error querying business_identities in searchUsers:", bizErr);

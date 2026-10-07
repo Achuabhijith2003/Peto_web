@@ -15,6 +15,10 @@ export class StripeAdapter implements PaymentAdapter {
   constructor() {
     this.secretKey = process.env.STRIPE_SECRET_KEY;
     this.webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+    if (!this.webhookSecret || !this.webhookSecret.trim()) {
+      console.warn("[StripeAdapter] Warning: STRIPE_WEBHOOK_SECRET is unconfigured or empty. Incoming webhook signature verification will fail closed.");
+    }
   }
 
   isConfigured(): boolean {
@@ -160,25 +164,37 @@ export class StripeAdapter implements PaymentAdapter {
   }
 
   verifyWebhookSignature(headers: Record<string, any>, rawBody: any): boolean {
-    if (!this.webhookSecret) return true; // Allowed in development/testing
+    const secret = (this.webhookSecret || "").trim();
+    if (!secret) {
+      // PETO-SEC-15: Fail-closed. Unconfigured or missing secret must NEVER accept webhooks.
+      return false;
+    }
 
     const signature = headers["stripe-signature"];
-    if (!signature) return false;
+    if (!signature || typeof signature !== "string" || !signature.trim()) {
+      return false;
+    }
 
     try {
       const parts = signature.split(",");
-      const timestamp = parts.find((p: string) => p.startsWith("t="))?.split("=")[1];
-      const sig = parts.find((p: string) => p.startsWith("v1="))?.split("=")[1];
+      const timestamp = parts.find((p: string) => p.trim().startsWith("t="))?.split("=")[1]?.trim();
+      const sig = parts.find((p: string) => p.trim().startsWith("v1="))?.split("=")[1]?.trim();
 
       if (!timestamp || !sig) return false;
 
       const payload = `${timestamp}.${typeof rawBody === "string" ? rawBody : JSON.stringify(rawBody)}`;
       const expected = crypto
-        .createHmac("sha256", this.webhookSecret)
+        .createHmac("sha256", secret)
         .update(payload)
         .digest("hex");
 
-      return crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected));
+      const sigBuf = Buffer.from(sig);
+      const expBuf = Buffer.from(expected);
+      if (sigBuf.length !== expBuf.length) {
+        return false;
+      }
+
+      return crypto.timingSafeEqual(sigBuf, expBuf);
     } catch {
       return false;
     }

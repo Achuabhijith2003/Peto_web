@@ -24,6 +24,18 @@ export function globalErrorHandler(
     return next(err);
   }
 
+  // PETO-SEC-18: PostgreSQL 22P02 (invalid input syntax for type uuid)
+  if (
+    err?.code === "22P02" ||
+    (typeof err?.message === "string" && err.message.includes("invalid input syntax for type uuid"))
+  ) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid resource identifier format.",
+      code: "INVALID_UUID",
+    });
+  }
+
   // 1. Specific upload limit errors
   if (err?.code === "LIMIT_FILE_SIZE") {
     return res.status(413).json({
