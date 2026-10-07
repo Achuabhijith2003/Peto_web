@@ -31,7 +31,7 @@ const SuggestedFriends: React.FC = () => {
     }
     try {
       setLoading(true);
-      const res = await api.get("/user/suggested?page=1&limit=20");
+      const res = await api.get("/users/suggested?page=1&limit=20");
       if (res.data?.success) {
         setSuggestions(res.data.data || []);
       }

@@ -1,4 +1,5 @@
 import { supabase } from "../config/supabase";
+import { buildPostgrestOrIlike } from "../utils/postgrestSanitizer";
 import {
     CreateCommunityInput,
     UpdateCommunityInput,
@@ -713,8 +714,11 @@ export async function queryCommunitiesService(params: QueryCommunitiesInput) {
         `, { count: "exact" })
         .eq("is_archived", false);
 
-    if (search) {
-        query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%,slug.ilike.%${search}%`);
+    if (search && search.trim()) {
+        const commOr = buildPostgrestOrIlike(["name", "description", "slug"], search);
+        if (commOr) {
+            query = query.or(commOr);
+        }
     }
 
     if (category && category.toLowerCase() !== "all") {
@@ -750,8 +754,26 @@ export async function queryCommunitiesService(params: QueryCommunitiesInput) {
         query = query.order("member_count", { ascending: false }).order("post_count", { ascending: false });
     }
 
-    const { data: communities, error, count } = await query.range(offset, offset + limit - 1);
-    if (error) throw error;
+    let communities: any[] = [];
+    let count: number | null = 0;
+    try {
+        const res = await query.range(offset, offset + limit - 1);
+        if (res.error) {
+            console.warn("[queryCommunitiesService] Query notice:", res.error.message);
+            return {
+                communities: [],
+                pagination: { page, limit, total: 0, totalPages: 0 },
+            };
+        }
+        communities = res.data || [];
+        count = res.count;
+    } catch (qErr: any) {
+        console.warn("[queryCommunitiesService] Query error caught safely:", qErr?.message || qErr);
+        return {
+            communities: [],
+            pagination: { page, limit, total: 0, totalPages: 0 },
+        };
+    }
 
     // Attach viewer membership state if user logged in
     let userMembershipsMap = new Map<string, { role: CommunityRole; status: CommunityMemberStatus }>();

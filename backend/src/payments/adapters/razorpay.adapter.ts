@@ -17,6 +17,10 @@ export class RazorpayAdapter implements PaymentAdapter {
     this.keyId = process.env.RAZORPAY_KEY_ID;
     this.keySecret = process.env.RAZORPAY_KEY_SECRET;
     this.webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+
+    if (!this.webhookSecret || !this.webhookSecret.trim()) {
+      console.warn("[RazorpayAdapter] Warning: RAZORPAY_WEBHOOK_SECRET is unconfigured or empty. Incoming webhook signature verification will fail closed.");
+    }
   }
 
   isConfigured(): boolean {
@@ -147,19 +151,31 @@ export class RazorpayAdapter implements PaymentAdapter {
   }
 
   verifyWebhookSignature(headers: Record<string, any>, rawBody: any): boolean {
-    if (!this.webhookSecret) return true; // Allowed in development/testing
+    const secret = (this.webhookSecret || "").trim();
+    if (!secret) {
+      // PETO-SEC-15: Fail-closed. Unconfigured or missing secret must NEVER accept webhooks.
+      return false;
+    }
 
     const signature = headers["x-razorpay-signature"];
-    if (!signature) return false;
+    if (!signature || typeof signature !== "string" || !signature.trim()) {
+      return false;
+    }
 
     try {
       const payload = typeof rawBody === "string" ? rawBody : JSON.stringify(rawBody);
       const expected = crypto
-        .createHmac("sha256", this.webhookSecret)
+        .createHmac("sha256", secret)
         .update(payload)
         .digest("hex");
 
-      return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+      const sigBuf = Buffer.from(signature.trim());
+      const expBuf = Buffer.from(expected);
+      if (sigBuf.length !== expBuf.length) {
+        return false;
+      }
+
+      return crypto.timingSafeEqual(sigBuf, expBuf);
     } catch {
       return false;
     }

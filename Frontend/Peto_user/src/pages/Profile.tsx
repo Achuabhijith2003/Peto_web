@@ -9,7 +9,6 @@ import LeftSidebar from "../components/social/LeftSidebar";
 import RightSidebar from "../components/social/RightSidebar";
 import SocialLayout from "../components/social/SocialLayout";
 import MobileBottomNav from "../components/social/MobileBottomNav";
-import FloatingChatButton from "../components/social/FloatingChatButton";
 import PostCard from "../components/social/PostCard";
 import SponsoredPostCard from "../components/social/SponsoredPostCard";
 import WebExternalAdCard from "../components/social/WebExternalAdCard";
@@ -427,7 +426,6 @@ const Profile = () => {
         right={<RightSidebar />}
       />
 
-      <FloatingChatButton />
       <MobileBottomNav />
     </main>
   );

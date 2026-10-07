@@ -23,7 +23,6 @@ import LeftSidebar from "../components/social/LeftSidebar";
 import RightSidebar from "../components/social/RightSidebar";
 import SocialLayout from "../components/social/SocialLayout";
 import MobileBottomNav from "../components/social/MobileBottomNav";
-import FloatingChatButton from "../components/social/FloatingChatButton";
 
 const EditProfileContent = () => {
   const navigate = useNavigate();
@@ -721,7 +720,6 @@ const EditProfile = () => {
         right={<RightSidebar />}
       />
 
-      <FloatingChatButton />
       <MobileBottomNav />
     </main>
   );

@@ -127,6 +127,9 @@ export async function processVideo(
     const inputPath = file.path ? file.path : path.join(tempDir, `${id}-input.mp4`);
     const outputPath = path.join(tempDir, `${id}.mp4`);
     const thumbnailPath = path.join(tempDir, `${id}.jpg`);
+    let uploadedVideo = false;
+    let uploadedThumbnail = false;
+    let mediaSaved = false;
 
     try {
         // If file was in memory (no disk path), save buffer to disk
@@ -172,12 +175,14 @@ export async function processVideo(
             finalVideoPath,
             `${id}.mp4`
         );
+        uploadedVideo = true;
 
         // Generate and upload thumbnail
         let thumbnailUrl = null;
         try {
             await createThumbnail(finalVideoPath, thumbnailPath);
             thumbnailUrl = await uploadThumbnail(thumbnailPath, `${id}.jpg`);
+            uploadedThumbnail = true;
         } catch (thumbErr) {
             console.warn("Thumbnail generation skipped/failed:", thumbErr);
         }
@@ -206,7 +211,21 @@ export async function processVideo(
             throw error;
         }
 
+        mediaSaved = true;
+
         return data;
+    } catch (error) {
+        // Storage and DB writes are separate. Reclaim only objects created by
+        // this invocation if no authoritative media row was committed.
+        if (!mediaSaved) {
+            if (uploadedThumbnail) {
+                await supabase.storage.from("thumbnails").remove([`${id}.jpg`]);
+            }
+            if (uploadedVideo) {
+                await supabase.storage.from("posts-videos").remove([`${id}.mp4`]);
+            }
+        }
+        throw error;
     } finally {
         // Cleanup temp files
         await deleteIfExists(inputPath);

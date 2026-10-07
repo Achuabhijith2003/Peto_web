@@ -223,7 +223,7 @@ export default function PetProfilePage() {
     try {
       setUpdatingVisibility(true);
       await api.patch(`/pets/${pet.id}/visibility`, { visibility: newVisibility });
-      setPet((prev) => (prev ? { ...prev, visibility: newVisibility } : null));
+      await fetchPet();
     } catch (err: any) {
       console.error("Failed to update visibility:", err);
       alert(err.response?.data?.message || "Failed to update visibility");

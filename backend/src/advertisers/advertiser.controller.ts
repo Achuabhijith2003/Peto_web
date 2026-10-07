@@ -134,16 +134,14 @@ export async function getAdvertiserBillingHandler(req: Request, res: Response): 
 
 /**
  * POST /api/advertisers/billing/deposit
+ * PETO-SEC-02: Blocked. Direct balance injection without verified payment evidence is strictly prohibited.
  */
 export async function depositAdvertiserFundsHandler(req: Request, res: Response): Promise<void> {
-  try {
-    const userId = (req as any).user?.id;
-    const { amount, currency, paymentMethod } = req.body;
-    const result = await AdvertiserService.depositFunds(userId, Number(amount), currency, paymentMethod);
-    res.status(200).json(result);
-  } catch (err: any) {
-    res.status(err.status || 400).json({ success: false, error: err.message });
-  }
+  res.status(403).json({
+    success: false,
+    code: "DIRECT_DEPOSIT_DISABLED",
+    error: "Direct balance injection without verified payment evidence is strictly prohibited.",
+  });
 }
 
 /**

@@ -93,7 +93,7 @@ const CommunityCard = ({ community, onJoinChange }: CommunityCardProps) => {
       className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-card transition-all duration-150 hover:border-slate-300 hover:shadow-card-hover cursor-pointer"
     >
       {/* Header Banner Cover */}
-      <div className="relative h-24 w-full bg-slate-100 overflow-hidden border-b border-slate-100">
+      <div className="relative aspect-[16/9] w-full bg-slate-100 overflow-hidden border-b border-slate-100">
         {community.cover_image_url ? (
           <img
             src={community.cover_image_url}

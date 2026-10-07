@@ -228,6 +228,9 @@ export async function getPostById(
     postId: string,
     currentUserId?: string
 ) {
+    if (!postId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(postId.trim())) {
+        return null;
+    }
 
     const { data: post, error } = await supabase
         .from("posts")
@@ -304,6 +307,9 @@ export async function updatePostById(
     mentionedUserIds?: string[],
     taggedPetIds?: string[]
 ) {
+    if (!postId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(postId.trim())) {
+        return null;
+    }
 
     //--------------------------------------------------
     // Check ownership or business permission
@@ -377,25 +383,25 @@ export async function updatePostById(
 
 
 export async function deletePostById(
-
     postId: string,
-
     userId: string
-
 ) {
+    if (!postId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(postId.trim())) {
+        return {
+            success: false,
+            status: 404,
+            message: "Post not found."
+        };
+    }
 
     //--------------------------------------------------
     // Find post
     //--------------------------------------------------
 
     const { data: post } = await supabase
-
         .from("posts")
-
         .select("*")
-
         .eq("id", postId)
-
         .maybeSingle();
 
     if (!post) {

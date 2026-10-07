@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { authenticate, optionalAuthenticate } from "../auth/auth.middleware";
+import { validateUuidParams } from "../middleware/validateUuid.middleware";
 import {
   createPetHandler,
   getPetHandler,
@@ -16,6 +17,7 @@ import {
   removePetParentHandler,
   getPetPostsHandler,
   searchTaggablePetsHandler,
+  getPetMediaAccessHandler,
 } from "./pet.controller";
 
 const router = Router();
@@ -27,30 +29,31 @@ router.get("/taggable", authenticate, searchTaggablePetsHandler);
 
 // Pending Pet Parent Invitations (MUST be before /:id)
 router.get("/invites/pending", authenticate, getMyPendingPetInvitesHandler);
-router.post("/invites/:inviteId/respond", authenticate, respondPetParentInviteHandler);
+router.post("/invites/:inviteId/respond", authenticate, validateUuidParams("inviteId"), respondPetParentInviteHandler);
 
 // User Showcase Pets
-router.get("/user/:userId", optionalAuthenticate, getUserPetsHandler);
+router.get("/user/:userId", optionalAuthenticate, validateUuidParams("userId"), getUserPetsHandler);
 
 // Individual Pet Operations (With Server-Side Visibility Enforcement)
-router.get("/:id", optionalAuthenticate, getPetHandler);
-router.patch("/:id", authenticate, updatePetHandler);
-router.delete("/:id", authenticate, deletePetHandler);
+router.get("/:id", optionalAuthenticate, validateUuidParams("id", { opaqueNotFound: true }), getPetHandler);
+router.patch("/:id", authenticate, validateUuidParams("id", { opaqueNotFound: true }), updatePetHandler);
+router.delete("/:id", authenticate, validateUuidParams("id", { opaqueNotFound: true }), deletePetHandler);
 
 // Visibility Control
-router.patch("/:id/visibility", authenticate, updatePetVisibilityHandler);
+router.patch("/:id/visibility", authenticate, validateUuidParams("id"), updatePetVisibilityHandler);
 
 // Pet Posts Stream
-router.get("/:id/posts", optionalAuthenticate, getPetPostsHandler);
+router.get("/:id/posts", optionalAuthenticate, validateUuidParams("id"), getPetPostsHandler);
 
-// Pet Media Management
-router.post("/:id/media", authenticate, addPetMediaHandler);
-router.delete("/:id/media/:mediaId", authenticate, deletePetMediaHandler);
+// Pet Media Management & Authorized Delivery
+router.get("/:id/media/:mediaId/access", optionalAuthenticate, validateUuidParams(["id", "mediaId"]), getPetMediaAccessHandler);
+router.post("/:id/media", authenticate, validateUuidParams("id"), addPetMediaHandler);
+router.delete("/:id/media/:mediaId", authenticate, validateUuidParams(["id", "mediaId"]), deletePetMediaHandler);
 
 // Pet Parent Authorization & Invitations
-router.post("/:id/parents/invite", authenticate, invitePetParentHandler);
-router.post("/:id/parents/respond", authenticate, respondPetParentInviteHandler);
-router.post("/:id/parents/invites/:inviteId/respond", authenticate, respondPetParentInviteHandler);
-router.delete("/:id/parents/:parentUserId", authenticate, removePetParentHandler);
+router.post("/:id/parents/invite", authenticate, validateUuidParams("id"), invitePetParentHandler);
+router.post("/:id/parents/respond", authenticate, validateUuidParams("id"), respondPetParentInviteHandler);
+router.post("/:id/parents/invites/:inviteId/respond", authenticate, validateUuidParams(["id", "inviteId"]), respondPetParentInviteHandler);
+router.delete("/:id/parents/:parentUserId", authenticate, validateUuidParams(["id", "parentUserId"]), removePetParentHandler);
 
 export default router;

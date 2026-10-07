@@ -12,6 +12,7 @@ import {
   rollbackPolicy,
   getAdminPolicyPdfUrl,
   downloadAdminPolicyPdf,
+  viewAdminPolicyPdf,
 } from "../../api/adminApi";
 import { PolicyRenderer } from "./PolicyRenderer";
 
@@ -305,7 +306,11 @@ export const PolicyHistoryModal: React.FC<PolicyHistoryModalProps> = ({
                           const filename = `peto-${selectedVersion.slug || selectedVersion.policy_type.toLowerCase().replace(/_/g, "-")}-v${selectedVersion.version}.pdf`;
                           await downloadAdminPolicyPdf(selectedVersion.id, filename);
                         } catch (_) {
-                          window.open(getAdminPolicyPdfUrl(selectedVersion.id), "_blank");
+                          try {
+                            await viewAdminPolicyPdf(selectedVersion.id);
+                          } catch (err) {
+                            console.error("Failed to view policy PDF:", err);
+                          }
                         }
                       }}
                       className="px-3 py-1.5 rounded-xl bg-muted/40 hover:bg-[#e2e8f8] text-primary text-xs font-semibold border border-border transition flex items-center gap-1.5 cursor-pointer"

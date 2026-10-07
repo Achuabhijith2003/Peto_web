@@ -156,7 +156,7 @@ const Register = () => {
           <p className="text-sm text-red-500 text-center">{serverError}</p>
         )}
 
-        <Button type="submit">
+        <Button type="submit" fullWidth variant="amber" size="lg" className="w-full py-3 text-sm font-bold shadow-md cursor-pointer">
           Create Account
         </Button>
 

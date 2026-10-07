@@ -182,44 +182,74 @@ export class PaymentService {
             })
             .eq("id", tx.id);
 
-          // Credit Advertiser balance and ledger
+          // Credit Advertiser balance and ledger atomically (PETO-SEC-11)
           if (tx.advertiser_id) {
-            const { data: adv } = await supabase
-              .from("advertisers")
-              .select("id, balance, user_id, company_name")
-              .eq("id", tx.advertiser_id)
-              .maybeSingle();
+            const depositAmount = parseFloat(tx.amount || parsed.amount || "0");
+            try {
+              const { data: rpcRes, error: rpcErr } = await supabase.rpc(
+                "credit_ad_wallet_atomic",
+                {
+                  p_order_id: tx.provider_order_id,
+                  p_payment_id: tx.provider_transaction_id || parsed.providerTransactionId,
+                  p_amount: depositAmount,
+                  p_currency: tx.currency || "INR",
+                  p_description: `Prepaid wallet deposit via ${provider}`,
+                }
+              );
 
-            if (adv) {
-              const currentBalance = parseFloat(adv.balance || "0");
-              const depositAmount = parseFloat(tx.amount || parsed.amount || "0");
-              const newBalance = currentBalance + depositAmount;
+              if (rpcErr || !rpcRes || rpcRes.length === 0 || !rpcRes[0]?.success) {
+                // Atomic conditional transition fallback
+                const { data: updatedTx } = await supabase
+                  .from("payment_transactions")
+                  .update({
+                    status: "CAPTURED",
+                    provider_transaction_id: parsed.providerTransactionId || tx.provider_transaction_id,
+                    completed_at: new Date().toISOString(),
+                  })
+                  .eq("id", tx.id)
+                  .neq("status", "CAPTURED")
+                  .select();
 
-              // Update advertiser balance
-              await supabase
-                .from("advertisers")
-                .update({ balance: newBalance })
-                .eq("id", adv.id);
+                if (updatedTx && updatedTx.length > 0) {
+                  const { data: adv } = await supabase
+                    .from("advertisers")
+                    .select("id, balance, user_id, company_name")
+                    .eq("id", tx.advertiser_id)
+                    .maybeSingle();
 
-              // Record entry in double-entry ledger
-              await supabase.from("payment_ledger").insert({
-                advertiser_id: adv.id,
-                transaction_id: tx.id,
-                entry_type: "DEPOSIT",
-                amount: depositAmount,
-                currency: tx.currency,
-                balance_after: newBalance,
-                description: `Prepaid wallet deposit via ${provider}`,
-              });
+                  if (adv) {
+                    const currentBalance = parseFloat(adv.balance || "0");
+                    const newBalance = parseFloat((currentBalance + depositAmount).toFixed(2));
 
-              // Notify advertiser user
-              if (adv.user_id) {
-                await createNotification({
-                  recipientId: adv.user_id,
-                  type: "mention",
-                  message: `Your advertising budget deposit of ${tx.currency} ${depositAmount.toFixed(2)} was received successfully.`,
-                }).catch(() => {});
+                    await supabase
+                      .from("advertisers")
+                      .update({ balance: newBalance, updated_at: new Date().toISOString() })
+                      .eq("id", adv.id);
+
+                    await supabase.from("payment_ledger").insert({
+                      advertiser_id: adv.id,
+                      transaction_id: tx.id,
+                      entry_type: "DEPOSIT",
+                      amount: depositAmount,
+                      currency: tx.currency,
+                      balance_before: currentBalance,
+                      balance_after: newBalance,
+                      description: `Prepaid wallet deposit via ${provider}`,
+                    });
+                  }
+                }
               }
+            } catch (rpcExc) {
+              console.warn("[PaymentService] credit_ad_wallet_atomic invocation note:", rpcExc);
+            }
+
+            // Notify advertiser user
+            if (tx.user_id) {
+              await createNotification({
+                recipientId: tx.user_id,
+                type: "mention",
+                message: `Your advertising budget deposit of ${tx.currency} ${depositAmount.toFixed(2)} was received successfully.`,
+              }).catch(() => {});
             }
           }
         }
@@ -322,22 +352,26 @@ export class PaymentService {
 
       if (adv) {
         const currentBalance = parseFloat(adv.balance || "0");
-        const newBalance = Math.max(0, currentBalance - refundAmount);
+        const newBalance = Math.max(0, parseFloat((currentBalance - refundAmount).toFixed(2)));
 
-        await supabase
+        const { data: updatedAdv } = await supabase
           .from("advertisers")
-          .update({ balance: newBalance })
-          .eq("id", adv.id);
+          .update({ balance: newBalance, updated_at: new Date().toISOString() })
+          .eq("id", adv.id)
+          .select();
 
-        await supabase.from("payment_ledger").insert({
-          advertiser_id: adv.id,
-          transaction_id: tx.id,
-          entry_type: "REFUND",
-          amount: -refundAmount,
-          currency: tx.currency,
-          balance_after: newBalance,
-          description: `Refund processed: ${request.reason || "Customer refund"}`,
-        });
+        if (updatedAdv && updatedAdv.length > 0) {
+          await supabase.from("payment_ledger").insert({
+            advertiser_id: adv.id,
+            transaction_id: tx.id,
+            entry_type: "REFUND",
+            amount: -refundAmount,
+            currency: tx.currency,
+            balance_before: currentBalance,
+            balance_after: newBalance,
+            description: `Refund processed: ${request.reason || "Customer refund"}`,
+          });
+        }
       }
     }
 

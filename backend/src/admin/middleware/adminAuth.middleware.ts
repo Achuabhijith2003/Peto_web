@@ -16,16 +16,22 @@ export async function requireAdminAuth(
   res: Response,
   next: NextFunction
 ) {
+  // PETO-SEC-04: Accept credentials through Authorization: Bearer <token> only.
+  // Query parameters (?token= or ?access_token=) are strictly disallowed to prevent credential exposure in access logs, browser history, and Referer headers.
   const authHeader = req.headers.authorization;
-  const token =
-    (authHeader?.startsWith("Bearer ") ? authHeader.substring(7) : null) ||
-    (typeof req.query.token === "string" ? req.query.token : null) ||
-    (typeof req.query.access_token === "string" ? req.query.access_token : null);
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({
+      success: false,
+      message: "Authentication required: Missing access token in Authorization header.",
+      code: "UNAUTHORIZED_NO_TOKEN",
+    });
+  }
 
+  const token = authHeader.substring(7).trim();
   if (!token) {
     return res.status(401).json({
       success: false,
-      message: "Authentication required: Missing access token.",
+      message: "Authentication required: Empty access token.",
       code: "UNAUTHORIZED_NO_TOKEN",
     });
   }

@@ -64,7 +64,7 @@ export const Maintenance503: React.FC<Maintenance503Props> = ({
       {/* Background ambient lighting */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#f59e0b]/10 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#0058be]/8 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"></div>
       </div>
 
       <div className="w-full max-w-lg relative z-10 text-center">
@@ -141,8 +141,8 @@ export const Maintenance503: React.FC<Maintenance503Props> = ({
           </p>
 
           {statusMessage && (
-            <div className="p-3 rounded-xl bg-[#f0f3ff] border border-[#dae2f3] text-xs font-medium text-[#0058be] flex items-center space-x-2 animate-in fade-in duration-200">
-              <ShieldCheck className="w-4 h-4 shrink-0" />
+            <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs font-medium text-amber-800 flex items-center space-x-2 animate-in fade-in duration-200">
+              <ShieldCheck className="w-4 h-4 shrink-0 text-amber-600" />
               <span>{statusMessage}</span>
             </div>
           )}
@@ -171,7 +171,7 @@ export const Maintenance503: React.FC<Maintenance503Props> = ({
         {/* Footer Note */}
         <p className="text-xs text-[#534434]/70">
           Need urgent help? Reach out to{" "}
-          <a href="mailto:support@peto.com" className="text-[#0058be] font-semibold hover:underline">
+          <a href="mailto:support@peto.com" className="text-amber-600 font-semibold hover:underline">
             support@peto.com
           </a>
         </p>

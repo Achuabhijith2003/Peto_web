@@ -111,17 +111,18 @@ export async function getPost(req: Request, res: Response) {
     }
 
     catch (err: any) {
-
         console.error(err);
-
+        if (err?.code === "22P02" || err?.message?.includes("invalid input syntax for type uuid")) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid post identifier format. Must be a valid UUID.",
+                code: "INVALID_UUID",
+            });
+        }
         return res.status(500).json({
-
             success: false,
-
             message: err.message
-
         });
-
     }
 
 }
