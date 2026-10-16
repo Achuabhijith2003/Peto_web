@@ -14,6 +14,7 @@ import {
   isRedisReady,
   isRedisRateLimitActive,
   isRedisCacheActive,
+  initRedis,
 } from "../src/config/redis.js";
 import { redisConfig } from "../src/config/env.js";
 import {
@@ -529,4 +530,49 @@ test("REDIS-11: Admin Health Diagnostics: getRedisHealth returns sanitized statu
   assert.equal(health.metrics?.hits, 88);
 
   _setMockRedisClient(null, "disabled");
+});
+
+test("REDIS-12: Startup Diagnostics: initRedis verifies PING/PONG and reports CONNECTED without credentials", async () => {
+  const mockRedis = new MockRedisStore();
+  _setMockRedisClient(mockRedis as any, "ready");
+
+  const diag = await initRedis();
+  assert.equal(diag.status, "CONNECTED");
+  assert.equal(diag.ping, "PONG");
+  assert.ok(typeof diag.latencyMs === "number");
+  assert.ok(!diag.sanitizedUrl.includes("renderSecretPass123"), "Endpoint in diagnostics must never expose passwords");
+  assert.ok(diag.sanitizedUrl.includes("***"), "Endpoint must have masked password");
+  assert.equal(isRedisReady(), true);
+
+  _setMockRedisClient(null, "disabled");
+});
+
+test("REDIS-13: Startup Diagnostics: initRedis handles connection/ping failures safely as FAILED without throwing", async () => {
+  const failingRedis: any = {
+    status: "ready",
+    ping: async () => {
+      throw new Error("Simulated connection timeout");
+    },
+  };
+  _setMockRedisClient(failingRedis, "ready");
+
+  const diag = await initRedis();
+  assert.equal(diag.status, "FAILED");
+  assert.ok(diag.error?.includes("Simulated connection timeout"));
+  assert.ok(!diag.sanitizedUrl.includes("renderSecretPass123"));
+  assert.equal(isRedisReady(), false, "Must fail-safe to false when ping fails");
+
+  _setMockRedisClient(null, "disabled");
+});
+
+test("REDIS-14: Startup Diagnostics: initRedis reports DISABLED when Redis is disabled", async () => {
+  const origEnabled = process.env.REDIS_ENABLED;
+  try {
+    process.env.REDIS_ENABLED = "false";
+    const diag = await initRedis();
+    assert.equal(diag.status, "DISABLED");
+    assert.equal(isRedisReady(), false);
+  } finally {
+    process.env.REDIS_ENABLED = origEnabled;
+  }
 });

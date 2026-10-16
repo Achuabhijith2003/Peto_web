@@ -35,6 +35,15 @@ export interface RedisHealthInfo {
 let redisInstance: Redis | null = null;
 let connectionState: RedisConnectionState = redisConfig.enabled ? "uninitialized" : "disabled";
 let lastPingLatency: number | null = null;
+let connectingPromise: Promise<void> | null = null;
+
+export interface RedisDiagnosticResult {
+  status: "CONNECTED" | "DISABLED" | "FAILED";
+  sanitizedUrl: string;
+  latencyMs: number | null;
+  ping: string | null;
+  error?: string;
+}
 
 /**
  * Sanitizes Redis connection URL to prevent credentials leakage in logs/APIs.
@@ -120,7 +129,9 @@ export function getRedisClient(): Redis | null {
     });
 
     // Initiate non-blocking connection
-    redisInstance.connect().catch((err) => {
+    connectingPromise = redisInstance.connect().then(() => {
+      connectionState = "ready";
+    }).catch((err) => {
       connectionState = "error";
       console.warn(`[Redis] Initial connect attempt failed (${err?.message || "unreachable"}). System falling back safely.`);
     });
@@ -128,16 +139,136 @@ export function getRedisClient(): Redis | null {
     connectionState = "error";
     console.warn(`[Redis] Initialization exception: ${err?.message || "failed"}`);
     redisInstance = null;
+    connectingPromise = null;
   }
 
   return redisInstance;
 }
 
 /**
+ * Non-blocking startup diagnostic and verification for Redis.
+ * Executes PING to verify PONG response, outputs sanitized status (CONNECTED, DISABLED, FAILED),
+ * and reports feature flags without logging credentials.
+ * Ensures connection errors never crash the backend server or bypass protections.
+ */
+export async function initRedis(): Promise<RedisDiagnosticResult> {
+  if (!redisConfig.enabled) {
+    connectionState = "disabled";
+    console.log("[Redis] Status: DISABLED (REDIS_ENABLED is false)");
+    return {
+      status: "DISABLED",
+      sanitizedUrl: "",
+      latencyMs: null,
+      ping: null,
+    };
+  }
+
+  if (!redisConfig.url) {
+    connectionState = "disabled";
+    console.log("[Redis] Status: DISABLED (REDIS_URL is not configured)");
+    return {
+      status: "DISABLED",
+      sanitizedUrl: "",
+      latencyMs: null,
+      ping: null,
+    };
+  }
+
+  const sanitizedUrl = sanitizeRedisUrl(redisConfig.url);
+
+  try {
+    const client = getRedisClient();
+    if (!client) {
+      connectionState = "disabled";
+      console.log("[Redis] Status: DISABLED");
+      return {
+        status: "DISABLED",
+        sanitizedUrl,
+        latencyMs: null,
+        ping: null,
+      };
+    }
+
+    // Await connection readiness if not already ready
+    if (client.status !== "ready") {
+      await Promise.race([
+        connectingPromise || Promise.resolve(),
+        new Promise<void>((_, reject) =>
+          setTimeout(
+            () => reject(new Error(`Connection timeout after ${redisConfig.connectTimeoutMs}ms`)),
+            redisConfig.connectTimeoutMs
+          )
+        ),
+      ]);
+    }
+
+    if (client.status !== "ready") {
+      throw new Error(`Client not ready (status: ${client.status})`);
+    }
+
+    // Execute Redis PING and verify PONG response
+    const start = Date.now();
+    const pongResponse = await Promise.race([
+      client.ping(),
+      new Promise<string>((_, reject) =>
+        setTimeout(
+          () => reject(new Error(`PING timeout after ${redisConfig.commandTimeoutMs}ms`)),
+          redisConfig.commandTimeoutMs
+        )
+      ),
+    ]);
+
+    const latency = Date.now() - start;
+    lastPingLatency = latency;
+
+    if (pongResponse === "PONG") {
+      connectionState = "ready";
+      console.log("[Redis] Status: CONNECTED");
+      console.log(`[Redis] Endpoint: ${sanitizedUrl} | Ping: ${pongResponse} | Latency: ${latency}ms`);
+      console.log(`[Redis] Feature Flags: Cache=${redisConfig.cacheEnabled ? "ENABLED" : "DISABLED"}, RateLimit=${redisConfig.rateLimitEnabled ? "ENABLED" : "DISABLED"}`);
+      return {
+        status: "CONNECTED",
+        sanitizedUrl,
+        latencyMs: latency,
+        ping: pongResponse,
+      };
+    } else {
+      connectionState = "error";
+      console.warn(`[Redis] Status: FAILED (Unexpected PING response: ${pongResponse})`);
+      console.warn(`[Redis] Endpoint: ${sanitizedUrl}`);
+      console.warn(`[Redis] System operating safely in local failover mode.`);
+      return {
+        status: "FAILED",
+        sanitizedUrl,
+        latencyMs: latency,
+        ping: pongResponse,
+        error: `Unexpected PING response: ${pongResponse}`,
+      };
+    }
+  } catch (err: any) {
+    connectionState = "error";
+    const safeError = err?.message || "Connection failed";
+    console.warn(`[Redis] Status: FAILED (${safeError})`);
+    console.warn(`[Redis] Endpoint: ${sanitizedUrl}`);
+    console.warn(`[Redis] System operating safely in local failover mode. Security protections and rate limits fall back to in-memory store.`);
+    return {
+      status: "FAILED",
+      sanitizedUrl,
+      latencyMs: null,
+      ping: null,
+      error: safeError,
+    };
+  }
+}
+
+/**
  * Checks whether Redis is connected and ready to process commands.
  */
 export function isRedisReady(): boolean {
-  return redisConfig.enabled && redisInstance !== null && connectionState === "ready" && redisInstance.status === "ready";
+  if (!redisConfig.enabled || !redisInstance) return false;
+  const status = (redisInstance as any).status;
+  const isStatusReady = status ? status === "ready" : true;
+  return connectionState === "ready" && isStatusReady;
 }
 
 /**
@@ -242,6 +373,7 @@ export async function closeRedis(): Promise<void> {
       redisInstance.disconnect();
     } finally {
       redisInstance = null;
+      connectingPromise = null;
       connectionState = redisConfig.enabled ? "close" : "disabled";
     }
   }
@@ -257,5 +389,6 @@ export function _setMockRedisClient(mock: Redis | null, state: RedisConnectionSt
     } catch {}
   }
   redisInstance = mock;
+  connectingPromise = null;
   connectionState = state;
 }

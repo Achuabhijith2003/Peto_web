@@ -253,13 +253,13 @@ app.use(globalErrorHandler);
 
 import { ensurePrivateVerificationBucket } from "./media/secureStorage.service";
 import { ensurePetMediaPrivateBucket } from "./media/petStorage.service";
-import { getRedisClient, closeRedis } from "./config/redis";
+import { initRedis, closeRedis } from "./config/redis";
 
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, async () => {
   ensurePublicBuckets();
   ensurePrivateVerificationBucket();
   ensurePetMediaPrivateBucket();
-  getRedisClient(); // Non-blocking background Redis initialization
+  await initRedis(); // Non-blocking background Redis initialization and diagnostics
   console.log("");
   console.log("====================================");
   console.log("🚀 Peto Backend Started");
