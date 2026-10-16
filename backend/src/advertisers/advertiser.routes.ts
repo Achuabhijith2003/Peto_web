@@ -52,7 +52,7 @@ router.delete("/campaigns/:id", requireAdsMarketplaceEnabled, deleteAdvertiserCa
 
 // Financials & Reporting
 router.get("/billing", requireAdsMarketplaceEnabled, getAdvertiserBillingHandler);
-router.post("/billing/deposit", requireAdsMarketplaceEnabled, depositAdvertiserFundsHandler);
+router.post("/billing/deposit", depositAdvertiserFundsHandler);
 router.get("/analytics", requireAdsMarketplaceEnabled, getAdvertiserAnalyticsHandler);
 
 export default router;

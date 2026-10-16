@@ -45,6 +45,9 @@ test("SEC-TEST-27: Trusted Peto Web origin is CORS allowed", async () => {
 
   const result2 = await checkCorsOrigin("http://localhost:5173");
   assert.equal(result2.allowed, true, "Localhost Web origin must be allowed in dev");
+
+  const backendHosted = await checkCorsOrigin("http://localhost:5000");
+  assert.equal(backendHosted.allowed, true, "Backend-hosted Web assets must load in dev");
 });
 
 test("SEC-TEST-28: Trusted Peto Admin origin is CORS allowed", async () => {

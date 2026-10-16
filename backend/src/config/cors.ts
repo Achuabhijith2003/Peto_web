@@ -36,6 +36,9 @@ export function getAllowedOrigins(): Set<string> {
   // 3. Local development origins enabled ONLY in non-production environments
   const isProduction = process.env.NODE_ENV === "production";
   if (!isProduction) {
+    // The backend also serves the built web app on port 5000 in development.
+    allowed.add("http://localhost:5000");
+    allowed.add("http://127.0.0.1:5000");
     allowed.add("http://localhost:5173");
     allowed.add("http://localhost:5174");
     allowed.add("http://localhost:5175");

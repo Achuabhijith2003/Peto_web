@@ -220,13 +220,6 @@ async function runPhase5() {
   });
   const petAId = petARes.data?.data?.id || petARes.data?.id;
 
-  // Register User A as advertiser for payment order validation
-  await request("/api/advertisers/register", {
-    method: "POST",
-    token: tokenUserA,
-    body: { company_name: "SEC User A Advertising LLC" },
-  });
-
   console.log(`- Provisioned Post A: ${postAId}`);
   console.log(`- Provisioned Private Pet A: ${petAId}`);
 
@@ -1205,20 +1198,49 @@ async function runPhase5() {
 
   // TEST-Q02: Negative Payment Amount in Order Creation
   {
+    const advertiserFixture = await serviceSupabase.from("advertisers")
+      .insert({
+        user_id: userA.id,
+        company_name: "SEC User A Advertising LLC",
+        contact_name: "SEC User A",
+        contact_email: emailUserA,
+      })
+      .select("id, balance")
+      .single();
+    if (advertiserFixture.error || !advertiserFixture.data) {
+      throw advertiserFixture.error || new Error("Payment advertiser fixture failed");
+    }
+    const advertiserId = advertiserFixture.data.id;
+    const beforeTransactions = await serviceSupabase.from("payment_transactions")
+      .select("id", { count: "exact", head: true }).eq("advertiser_id", advertiserId);
+    const beforeLedger = await serviceSupabase.from("payment_ledger")
+      .select("id", { count: "exact", head: true }).eq("advertiser_id", advertiserId);
+    if (beforeTransactions.error || beforeLedger.error) {
+      throw beforeTransactions.error || beforeLedger.error;
+    }
     const res = await request("/api/payments/razorpay/order", {
       method: "POST",
       token: tokenUserA,
       body: { amount: -500, currency: "INR" },
     });
+    const [afterTransactions, afterLedger, afterAdvertiser] = await Promise.all([
+      serviceSupabase.from("payment_transactions").select("id", { count: "exact", head: true }).eq("advertiser_id", advertiserId),
+      serviceSupabase.from("payment_ledger").select("id", { count: "exact", head: true }).eq("advertiser_id", advertiserId),
+      serviceSupabase.from("advertisers").select("balance").eq("id", advertiserId).single(),
+    ]);
+    const noFinancialMutation = !afterTransactions.error && !afterLedger.error && !afterAdvertiser.error
+      && beforeTransactions.count === afterTransactions.count
+      && beforeLedger.count === afterLedger.count
+      && advertiserFixture.data.balance === afterAdvertiser.data?.balance;
     record({
       testId: "PAY-02-NEGATIVE-AMOUNT-ORDER",
       category: "Payment Security",
       target: "POST /api/payments/razorpay/order",
       attacker: "SEC-USER-A",
-      expected: "HTTP 400 Bad Request (Negative amount rejected)",
-      actual: `HTTP ${res.status}`,
-      status: res.status === 400 ? "PASS" : "FAIL",
-      evidence: `HTTP ${res.status}: ${JSON.stringify(res.data)}`,
+      expected: "HTTP 400 Bad Request; no transaction, ledger, or balance change",
+      actual: `HTTP ${res.status}; financial state unchanged: ${noFinancialMutation}`,
+      status: res.status === 400 && noFinancialMutation ? "PASS" : "FAIL",
+      evidence: `HTTP ${res.status}: ${JSON.stringify(res.data)}; financial state unchanged: ${noFinancialMutation}`,
       securityImpact: "Negative payment amounts cannot create payment orders.",
     });
   }
