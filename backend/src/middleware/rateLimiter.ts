@@ -72,7 +72,7 @@ export function createRateLimiter(options: RateLimiterOptions = {}) {
   }
 
   // Synchronous local execution fallback
-  const executeLocal = (req: Request, res: Response, next: NextFunction) => {
+  const executeLocal = (req: Request, res: Response, next: NextFunction): void => {
     const clientKey = options.keyGenerator
       ? options.keyGenerator(req)
       : getClientIp(req);
@@ -101,19 +101,20 @@ export function createRateLimiter(options: RateLimiterOptions = {}) {
 
     if (record.count > maxRequests) {
       res.setHeader("Retry-After", resetSeconds);
-      return res.status(429).json({
+      res.status(429).json({
         success: false,
         message,
         code,
         retryAfterSeconds: resetSeconds,
       });
+      return;
     }
 
     next();
   };
 
   // Distributed Redis execution
-  const executeRedis = async (req: Request, res: Response, next: NextFunction) => {
+  const executeRedis = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const clientKey = options.keyGenerator
       ? options.keyGenerator(req)
       : getClientIp(req);
@@ -143,12 +144,13 @@ export function createRateLimiter(options: RateLimiterOptions = {}) {
 
       if (count > maxRequests) {
         res.setHeader("Retry-After", resetSeconds);
-        return res.status(429).json({
+        res.status(429).json({
           success: false,
           message,
           code,
           retryAfterSeconds: resetSeconds,
         });
+        return;
       }
 
       next();
@@ -158,7 +160,7 @@ export function createRateLimiter(options: RateLimiterOptions = {}) {
     }
   };
 
-  const limiter = (req: Request, res: Response, next: NextFunction): Promise<any> | void => {
+  const limiter = (req: Request, res: Response, next: NextFunction): Promise<void> | void => {
     if (isRedisRateLimitActive()) {
       return executeRedis(req, res, next);
     }
