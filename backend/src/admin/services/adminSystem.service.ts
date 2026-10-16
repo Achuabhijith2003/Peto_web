@@ -10,6 +10,8 @@ import sharp from "sharp";
 import ffmpegPath from "ffmpeg-static";
 import ffprobe from "ffprobe-static";
 import fs from "fs";
+import { getRedisHealth } from "../../config/redis";
+import { getCacheMetrics } from "../../cache/cache.service";
 
 export interface ServiceHealthItem {
   id: string;
@@ -268,6 +270,36 @@ export async function getSystemHealthService(): Promise<SystemHealthReport> {
       status: "DOWN",
       latencyMs: Date.now() - notifStart,
       details: err.message || "Notification queue unreachable",
+      lastChecked: now,
+    });
+  }
+
+  // 10. Redis / Render Key Value
+  const redisStart = Date.now();
+  try {
+    const redisHealth = await getRedisHealth();
+    const cacheMetrics = getCacheMetrics();
+    services.push({
+      id: "redis",
+      name: "Render Key Value (Redis)",
+      category: "infrastructure",
+      status: !redisHealth.enabled ? "HEALTHY" : redisHealth.isReady ? "HEALTHY" : "DEGRADED",
+      latencyMs: redisHealth.latencyMs || (Date.now() - redisStart),
+      details: !redisHealth.enabled
+        ? "Redis disabled in configuration (local in-memory fallback active)"
+        : redisHealth.isReady
+        ? `Connected (${redisHealth.latencyMs}ms) | Memory: ${redisHealth.memory?.usedMemoryHuman || "N/A"} | Cache hit-ratio: ${(cacheMetrics.hitRatio * 100).toFixed(1)}%`
+        : `Redis connection ${redisHealth.state} (local in-memory fallback active)`,
+      lastChecked: now,
+    });
+  } catch (err: any) {
+    services.push({
+      id: "redis",
+      name: "Render Key Value (Redis)",
+      category: "infrastructure",
+      status: "DEGRADED",
+      latencyMs: Date.now() - redisStart,
+      details: err.message || "Redis health probe error",
       lastChecked: now,
     });
   }
@@ -568,4 +600,16 @@ export async function updateMaintenanceModeService(
   });
 
   return value;
+}
+
+/**
+ * Retrieves detailed, sanitized Redis diagnostics and cache metrics for admin view.
+ */
+export async function getRedisDiagnosticsService() {
+  const health = await getRedisHealth();
+  const cacheMetrics = getCacheMetrics();
+  return {
+    ...health,
+    cacheMetrics,
+  };
 }

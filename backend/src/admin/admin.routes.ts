@@ -46,6 +46,7 @@ import {
   deleteFeatureFlag,
   getMaintenanceMode,
   updateMaintenanceMode,
+  getRedisDiagnostics,
 } from "./controllers/adminSystem.controller";
 import {
   getPolicies,
@@ -164,6 +165,7 @@ router.patch("/system/flags/:id", requirePermission("feature_flags.manage"), upd
 router.delete("/system/flags/:id", requirePermission("feature_flags.manage"), deleteFeatureFlag);
 router.get("/system/maintenance", requirePermission("system.view"), getMaintenanceMode);
 router.post("/system/maintenance", requirePermission("system.manage"), updateMaintenanceMode);
+router.get("/system/redis", requirePermission("system.view"), getRedisDiagnostics);
 
 // Compliance & Legal Management (Phase 7)
 router.get("/compliance/policies", requirePermission("compliance.view"), getPolicies);

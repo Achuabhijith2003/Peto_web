@@ -8,5 +8,8 @@
     "test": "tsx --test tests/**/*.test.ts",
     "storage:cleanup": "tsx src/media/storageCleanup.cli.ts",
     "start": "tsx src/server.ts"
+  },
+  "dependencies": {
+    "ioredis": "^5.6.1"
   }
 }

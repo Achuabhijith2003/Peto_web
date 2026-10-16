@@ -9,6 +9,7 @@ import {
   deleteFeatureFlagService,
   getMaintenanceModeService,
   updateMaintenanceModeService,
+  getRedisDiagnosticsService,
 } from "../services/adminSystem.service";
 
 export async function getSystemHealth(req: Request, res: Response) {
@@ -113,5 +114,14 @@ export async function updateMaintenanceMode(req: Request, res: Response) {
     });
   } catch (error: any) {
     return res.status(400).json({ success: false, message: error.message || "Failed to update maintenance mode." });
+  }
+}
+
+export async function getRedisDiagnostics(req: Request, res: Response) {
+  try {
+    const data = await getRedisDiagnosticsService();
+    return res.status(200).json({ success: true, data });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, message: error.message || "Failed to retrieve Redis diagnostics." });
   }
 }

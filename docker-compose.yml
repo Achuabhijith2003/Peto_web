@@ -42,6 +42,21 @@ services:
     networks:
       - peto-network
 
+  redis:
+    image: redis:7-alpine
+    container_name: peto-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "25mb", "--maxmemory-policy", "volatile-lru"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks:
+      - peto-network
+
 networks:
   peto-network:
     driver: bridge

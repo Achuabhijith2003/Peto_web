@@ -6,6 +6,7 @@ import {
   updateUserStatusService,
   updateUserVerificationService,
 } from "../services/adminUserManagement.service";
+import { invalidatePublicProfileCache } from "../../cache/cache.service";
 
 export async function getUsers(req: Request, res: Response) {
   try {
@@ -100,6 +101,8 @@ export async function updateUserStatus(req: Request, res: Response) {
       req
     );
 
+    invalidatePublicProfileCache(id).catch(() => {});
+
     return res.status(200).json({
       success: true,
       message: `User status successfully updated to ${status}.`,
@@ -140,6 +143,8 @@ export async function updateUserVerification(req: Request, res: Response) {
       adminReq.admin!,
       req
     );
+
+    invalidatePublicProfileCache(id).catch(() => {});
 
     return res.status(200).json({
       success: true,

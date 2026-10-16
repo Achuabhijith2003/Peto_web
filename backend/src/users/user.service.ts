@@ -1,5 +1,6 @@
 import { supabase } from "../config/supabase";
 import { buildPostgrestOrIlike, sanitizeSearchQuery } from "../utils/postgrestSanitizer";
+import { getPublicProfileFromCache, setPublicProfileToCache } from "../cache/cache.service";
 
 export async function getUserProfile(
     currentUserId: string,
@@ -9,30 +10,45 @@ export async function getUserProfile(
     // ---------------- Profile ----------------
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(profileUserId);
 
-    let profileQuery = supabase
-        .from("profiles")
-        .select(`
-            id,
-            username,
-            full_name,
-            bio,
-            avatar_url,
-            cover_url,
-            location,
-            website,
-            phone,
-            date_of_birth,
-            verified,
-            created_at
-        `);
-
-    if (isUuid) {
-        profileQuery = profileQuery.eq("id", profileUserId);
-    } else {
-        profileQuery = profileQuery.ilike("username", profileUserId.trim());
+    let profile: any = null;
+    let profileError: any = null;
+    try {
+        profile = await getPublicProfileFromCache(profileUserId);
+    } catch {
+        profile = null;
     }
 
-    const { data: profile, error: profileError } = await profileQuery.maybeSingle();
+    if (!profile) {
+        let profileQuery = supabase
+            .from("profiles")
+            .select(`
+                id,
+                username,
+                full_name,
+                bio,
+                avatar_url,
+                cover_url,
+                location,
+                website,
+                phone,
+                date_of_birth,
+                verified,
+                created_at
+            `);
+
+        if (isUuid) {
+            profileQuery = profileQuery.eq("id", profileUserId);
+        } else {
+            profileQuery = profileQuery.ilike("username", profileUserId.trim());
+        }
+
+        const res = await profileQuery.maybeSingle();
+        profileError = res.error;
+        if (res.data) {
+            profile = res.data;
+            setPublicProfileToCache(res.data).catch(() => {});
+        }
+    }
 
     if (profileError || !profile) {
         // Fallback: check if profileUserId is a business ID or business username

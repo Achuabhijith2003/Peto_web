@@ -5,6 +5,11 @@ import { supabase } from "../config/supabase";
 import { getUserProfile, searchUsers } from "./user.service";
 import { uploadAvatarToStorage, uploadCoverToStorage } from "../media/storage.service";
 import { validateUploadedFile, cleanupFile } from "../media/fileValidator";
+import {
+    getPublicProfileFromCache,
+    setPublicProfileToCache,
+    invalidatePublicProfileCache
+} from "../cache/cache.service";
 
 export const getCurrentUser = async (
     req: Request,
@@ -71,37 +76,48 @@ export const getUserById = async (
 
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
-        let query = supabase
-            .from("profiles")
-            .select(`
-        id,
-        username,
-        full_name,
-        bio,
-        avatar_url,
-        cover_url,
-        location,
-        website,
-        verified,
-        followers_count,
-        following_count,
-        posts_count,
-        created_at
-      `);
-
-        if (isUuid) {
-            query = query.eq("id", id);
-        } else {
-            query = query.ilike("username", id.trim());
+        let data: any = null;
+        try {
+            data = await getPublicProfileFromCache(id);
+        } catch {
+            data = null;
         }
 
-        const { data, error } = await query.maybeSingle();
+        if (!data) {
+            let query = supabase
+                .from("profiles")
+                .select(`
+            id,
+            username,
+            full_name,
+            bio,
+            avatar_url,
+            cover_url,
+            location,
+            website,
+            verified,
+            followers_count,
+            following_count,
+            posts_count,
+            created_at
+          `);
 
-        if (error || !data) {
-            return res.status(404).json({
-                success: false,
-                message: "User not found.",
-            });
+            if (isUuid) {
+                query = query.eq("id", id);
+            } else {
+                query = query.ilike("username", id.trim());
+            }
+
+            const { data: dbData, error } = await query.maybeSingle();
+
+            if (error || !dbData) {
+                return res.status(404).json({
+                    success: false,
+                    message: "User not found.",
+                });
+            }
+            data = dbData;
+            setPublicProfileToCache(dbData).catch(() => {});
         }
 
         const currentUserId = (req as any).user?.id;
@@ -183,7 +199,7 @@ export const updateProfile = async (req: Request, res: Response) => {
         // Fetch current profile to check verification status and existing full_name
         const { data: currentProfile } = await supabase
             .from("profiles")
-            .select("id, full_name, verified, is_verified, verification_badge_type")
+            .select("id, username, full_name, verified, is_verified, verification_badge_type")
             .eq("id", user.id)
             .single();
 
@@ -245,6 +261,8 @@ export const updateProfile = async (req: Request, res: Response) => {
                 console.warn("[updateProfile] Notice updating verification_applications:", verifErr?.message || verifErr);
             }
         }
+
+        invalidatePublicProfileCache(user.id, currentProfile?.username).catch(() => {});
 
         return res.json({
             success: true,
@@ -332,6 +350,8 @@ export const updateAvatar = async (req: Request, res: Response) => {
                 message: error.message,
             });
         }
+
+        invalidatePublicProfileCache(user.id).catch(() => {});
 
         return res.json({
             success: true,
@@ -424,6 +444,8 @@ export const updateCover = async (req: Request, res: Response) => {
             });
         }
 
+        invalidatePublicProfileCache(user.id).catch(() => {});
+
         return res.json({
             success: true,
             message: "Cover image updated successfully",
@@ -446,7 +468,11 @@ export const updateCover = async (req: Request, res: Response) => {
     }
 };
 
-export const deleteAccount = async (_req: Request, res: Response) => {
+export const deleteAccount = async (req: Request, res: Response) => {
+    const user = (req as any).user;
+    if (user?.id) {
+        invalidatePublicProfileCache(user.id).catch(() => {});
+    }
     res.json({
         success: true,
         message: "Account deleted",

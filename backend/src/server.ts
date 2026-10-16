@@ -253,11 +253,13 @@ app.use(globalErrorHandler);
 
 import { ensurePrivateVerificationBucket } from "./media/secureStorage.service";
 import { ensurePetMediaPrivateBucket } from "./media/petStorage.service";
+import { getRedisClient, closeRedis } from "./config/redis";
 
 const server = app.listen(PORT, () => {
   ensurePublicBuckets();
   ensurePrivateVerificationBucket();
   ensurePetMediaPrivateBucket();
+  getRedisClient(); // Non-blocking background Redis initialization
   console.log("");
   console.log("====================================");
   console.log("🚀 Peto Backend Started");
@@ -271,4 +273,15 @@ const server = app.listen(PORT, () => {
 server.setTimeout(300000);
 server.keepAliveTimeout = 120000;
 server.headersTimeout = 125000; // Strictly greater than keepAliveTimeout
-server.requestTimeout = 300000; // 5 minutes request timeout
+server.requestTimeout = 300000; // 5 minutes request timeout
+
+const handleShutdown = async (signal: string) => {
+  console.log(`[Server] Received ${signal}, closing connections...`);
+  await closeRedis();
+  server.close(() => {
+    process.exit(0);
+  });
+};
+
+process.on("SIGTERM", () => handleShutdown("SIGTERM"));
+process.on("SIGINT", () => handleShutdown("SIGINT"));
