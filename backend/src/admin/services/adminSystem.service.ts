@@ -288,7 +288,7 @@ export async function getSystemHealthService(): Promise<SystemHealthReport> {
       details: !redisHealth.enabled
         ? "Redis disabled in configuration (local in-memory fallback active)"
         : redisHealth.isReady
-        ? `Connected (${redisHealth.latencyMs}ms) | Memory: ${redisHealth.memory?.usedMemoryHuman || "N/A"} | Cache hit-ratio: ${(cacheMetrics.hitRatio * 100).toFixed(1)}%`
+        ? `Connected (${redisHealth.latencyMs}ms) | Memory: ${redisHealth.memory?.usedMemoryHuman || "N/A"} | Cache hits: ${cacheMetrics.hits}, misses: ${cacheMetrics.misses}, errors: ${cacheMetrics.errors}, bypasses: ${cacheMetrics.bypasses} (hit-ratio: ${(cacheMetrics.hitRatio * 100).toFixed(1)}%)`
         : `Redis connection ${redisHealth.state} (local in-memory fallback active)`,
       lastChecked: now,
     });

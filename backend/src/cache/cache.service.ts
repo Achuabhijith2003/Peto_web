@@ -19,6 +19,8 @@ export interface CachedPublicProfile {
 export interface CacheMetrics {
   hits: number;
   misses: number;
+  errors: number;
+  bypasses: number;
   hitRatio: number;
 }
 
@@ -28,15 +30,20 @@ const KEY_PREFIX = "peto:v1";
 
 let cacheHits = 0;
 let cacheMisses = 0;
+let cacheErrors = 0;
+let cacheBypasses = 0;
 
 /**
- * Returns current cache hits/misses metrics.
+ * Returns current sanitized cache metrics (hits, misses, errors, bypasses).
+ * Never exposes credentials or personal data.
  */
 export function getCacheMetrics(): CacheMetrics {
   const total = cacheHits + cacheMisses;
   return {
     hits: cacheHits,
     misses: cacheMisses,
+    errors: cacheErrors,
+    bypasses: cacheBypasses,
     hitRatio: total > 0 ? Number((cacheHits / total).toFixed(4)) : 0,
   };
 }
@@ -47,6 +54,8 @@ export function getCacheMetrics(): CacheMetrics {
 export function resetCacheMetrics(): void {
   cacheHits = 0;
   cacheMisses = 0;
+  cacheErrors = 0;
+  cacheBypasses = 0;
 }
 
 /**
@@ -104,14 +113,14 @@ export async function cacheGet<T>(
   validator?: (val: any) => boolean
 ): Promise<T | null> {
   if (!isRedisCacheActive()) {
-    cacheMisses++;
+    cacheBypasses++;
     return null;
   }
 
   try {
     const redis = getRedisClient();
     if (!redis) {
-      cacheMisses++;
+      cacheBypasses++;
       return null;
     }
 
@@ -132,6 +141,7 @@ export async function cacheGet<T>(
     cacheHits++;
     return parsed as T;
   } catch (err: any) {
+    cacheErrors++;
     cacheMisses++;
     console.warn(`[Cache] Get error for key ${key}: ${err?.message || "error"}`);
     return null;
@@ -146,16 +156,23 @@ export async function cacheSet<T>(
   value: T,
   ttlSeconds: number = DEFAULT_TTL_SECONDS
 ): Promise<void> {
-  if (!isRedisCacheActive()) return;
+  if (!isRedisCacheActive()) {
+    cacheBypasses++;
+    return;
+  }
 
   try {
     const redis = getRedisClient();
-    if (!redis) return;
+    if (!redis) {
+      cacheBypasses++;
+      return;
+    }
 
     const boundedTtl = Math.max(1, Math.min(MAX_TTL_SECONDS, ttlSeconds));
     const serialized = JSON.stringify(value);
     await redis.set(key, serialized, "EX", boundedTtl);
   } catch (err: any) {
+    cacheErrors++;
     console.warn(`[Cache] Set error for key ${key}: ${err?.message || "error"}`);
   }
 }
@@ -164,16 +181,23 @@ export async function cacheSet<T>(
  * Generic safe delete helper.
  */
 export async function cacheDel(keys: string | string[]): Promise<void> {
-  if (!isRedisCacheActive()) return;
+  if (!isRedisCacheActive()) {
+    cacheBypasses++;
+    return;
+  }
 
   try {
     const redis = getRedisClient();
-    if (!redis) return;
+    if (!redis) {
+      cacheBypasses++;
+      return;
+    }
 
     const keyList = Array.isArray(keys) ? keys : [keys];
     if (keyList.length === 0) return;
     await redis.del(...keyList);
   } catch (err: any) {
+    cacheErrors++;
     console.warn(`[Cache] Del error: ${err?.message || "error"}`);
   }
 }
@@ -182,11 +206,17 @@ export async function cacheDel(keys: string | string[]): Promise<void> {
  * Non-blocking pattern invalidation using SCAN (never uses KEYS *).
  */
 export async function cacheInvalidatePattern(pattern: string): Promise<void> {
-  if (!isRedisCacheActive()) return;
+  if (!isRedisCacheActive()) {
+    cacheBypasses++;
+    return;
+  }
 
   try {
     const redis = getRedisClient();
-    if (!redis) return;
+    if (!redis) {
+      cacheBypasses++;
+      return;
+    }
 
     let cursor = "0";
     do {
@@ -197,6 +227,7 @@ export async function cacheInvalidatePattern(pattern: string): Promise<void> {
       }
     } while (cursor !== "0");
   } catch (err: any) {
+    cacheErrors++;
     console.warn(`[Cache] Invalidate pattern error for ${pattern}: ${err?.message || "error"}`);
   }
 }
