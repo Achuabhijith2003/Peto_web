@@ -1,5 +1,5 @@
 import React from "react";
-import { X, ArrowRight, ExternalLink } from "lucide-react";
+import { ArrowRight, ExternalLink } from "lucide-react";
 import { useAndroidPromotion } from "../../hooks/useAndroidPromotion";
 
 export interface AndroidAppBannerProps {
@@ -57,7 +57,7 @@ export const AndroidAppBanner: React.FC<AndroidAppBannerProps> = ({
           <button
             type="button"
             onClick={dismiss}
-            className="hidden md:inline-flex text-xs text-slate-300 hover:text-white underline underline-offset-2 transition-colors py-1 px-1.5 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 motion-reduce:transition-none"
+            className="inline-flex text-[11px] sm:text-xs text-slate-300 hover:text-white underline underline-offset-2 transition-colors py-1 px-1.5 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 motion-reduce:transition-none"
             aria-label="Continue using the Peto website and dismiss this banner for two weeks"
           >
             Continue on web
@@ -75,17 +75,6 @@ export const AndroidAppBanner: React.FC<AndroidAppBannerProps> = ({
             <ExternalLink className="w-3.5 h-3.5 sm:hidden shrink-0" aria-hidden="true" />
             <ArrowRight className="w-3.5 h-3.5 hidden sm:inline-block shrink-0" aria-hidden="true" />
           </a>
-
-          {/* Close button */}
-          <button
-            type="button"
-            onClick={dismiss}
-            className="flex h-7 w-7 items-center justify-center rounded-full text-slate-400 hover:bg-slate-800 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 motion-reduce:transition-none"
-            aria-label="Dismiss Android app promotion banner"
-            title="Dismiss for 14 days"
-          >
-            <X className="h-4 w-4" aria-hidden="true" />
-          </button>
         </div>
       </div>
     </aside>

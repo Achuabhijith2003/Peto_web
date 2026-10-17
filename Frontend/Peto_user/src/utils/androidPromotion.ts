@@ -64,6 +64,15 @@ export function isAndroidWebViewOrStandalone(ua: string, isStandalone?: boolean)
  * Strictly excludes iOS (iPhone, iPad, iPod) and desktop browsers (Windows, Mac, ChromeOS, Linux desktop).
  */
 export function isAndroidMobileDevice(uaInput?: string, isStandaloneInput?: boolean): boolean {
+  // Allow manual previewing for testing on desktop when explicitly enabled via ?preview_android=true
+  if (
+    uaInput === undefined &&
+    typeof window !== "undefined" &&
+    window.location?.search?.includes("preview_android=true")
+  ) {
+    return true;
+  }
+
   const ua =
     uaInput !== undefined
       ? uaInput

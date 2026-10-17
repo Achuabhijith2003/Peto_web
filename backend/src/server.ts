@@ -212,6 +212,20 @@ app.get("/api", (_, res) => {
   });
 });
 
+app.get("/api/app-config", (_, res) => {
+  const rawUrl =
+    process.env.PLAY_STORE_URL ||
+    process.env.VITE_PLAY_STORE_URL ||
+    process.env.ANDROID_PLAY_STORE_URL ||
+    "";
+
+  const trimmed = rawUrl.trim();
+  res.json({
+    success: true,
+    playStoreUrl: trimmed && /^(https?:\/\/|market:\/\/)/i.test(trimmed) ? trimmed : null,
+  });
+});
+
 // ----------------------
 // Frontend Serving
 // ----------------------
