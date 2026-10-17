@@ -3,6 +3,7 @@ import { Circle, Loader2, Wifi, LogIn } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import api from "../../utils/api";
 import { useAuth } from "../../context/AuthContext";
+import { isPresenceEnabled } from "../../utils/presenceConfig";
 
 export interface OnlineUser {
   id: string;
@@ -18,25 +19,26 @@ export interface OnlineFriendsProps {
 }
 
 const OnlineFriends: React.FC<OnlineFriendsProps> = ({ variant = "vertical" }) => {
+  const presenceActive = isPresenceEnabled();
   const { user: currentUser, openAuthModal } = useAuth();
   const navigate = useNavigate();
   const [onlineList, setOnlineList] = useState<OnlineUser[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [visibleCount, setVisibleCount] = useState<number>(5);
 
-  // Send heartbeat to mark self online
+  // Send heartbeat to mark self online (only when presence is enabled)
   const sendHeartbeat = useCallback(async () => {
-    if (!currentUser) return;
+    if (!presenceActive || !currentUser) return;
     try {
       await api.post("/presence/heartbeat");
     } catch {
       // Ignore heartbeat errors
     }
-  }, [currentUser]);
+  }, [presenceActive, currentUser]);
 
-  // Fetch online friends list
+  // Fetch online friends list (only when presence is enabled)
   const fetchOnlineFriends = useCallback(async () => {
-    if (!currentUser) {
+    if (!presenceActive || !currentUser) {
       setLoading(false);
       return;
     }
@@ -50,10 +52,11 @@ const OnlineFriends: React.FC<OnlineFriendsProps> = ({ variant = "vertical" }) =
     } finally {
       setLoading(false);
     }
-  }, [currentUser]);
+  }, [presenceActive, currentUser]);
 
   useEffect(() => {
-    if (!currentUser) {
+    // If presence is disabled, ensure no timers or requests are ever created
+    if (!presenceActive || !currentUser) {
       setLoading(false);
       setOnlineList([]);
       return;
@@ -77,6 +80,11 @@ const OnlineFriends: React.FC<OnlineFriendsProps> = ({ variant = "vertical" }) =
   const handleProfileClick = (targetId: string) => {
     navigate(`/profile/${targetId}`);
   };
+
+  // When presence is disabled, completely hide Active Pals and online indicators
+  if (!presenceActive) {
+    return null;
+  }
 
   const visibleFriends = onlineList.slice(0, visibleCount);
   const hasMoreVisible = onlineList.length > visibleCount;

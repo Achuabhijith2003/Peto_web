@@ -6,6 +6,7 @@ import SponsoredPostCard from "./SponsoredPostCard";
 import WebExternalAdCard from "./WebExternalAdCard";
 import OnlineFriends from "./OnlineFriends";
 import SuggestedFriends from "./SuggestedFriends";
+import { isPresenceEnabled } from "../../utils/presenceConfig";
 import { Loader2, CheckCircle2, RefreshCw } from "lucide-react";
 import { getAutoDetectedLocation } from "../../utils/geoDetector";
 
@@ -156,9 +157,11 @@ const Feed = () => {
 
 
             {/* Mobile Online Friends (Horizontal Presence Tray) */}
-            <div className="lg:hidden">
-                <OnlineFriends variant="horizontal" />
-            </div>
+            {isPresenceEnabled() && (
+                <div className="lg:hidden">
+                    <OnlineFriends variant="horizontal" />
+                </div>
+            )}
 
             {/* Initial Loading Skeleton */}
             {loading && posts.length === 0 ? (

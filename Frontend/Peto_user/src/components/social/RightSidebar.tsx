@@ -4,6 +4,7 @@ import SuggestedFriends from "./SuggestedFriends";
 // import SponsoredCard from "./SponsoredCard";
 import OnlineFriends from "./OnlineFriends";
 import NotificationPanel from "./NotificationPanel";
+import { isPresenceEnabled } from "../../utils/presenceConfig";
 // import ChatWidget from "./ChatWidget";
 
 const RightSidebar = () => {
@@ -18,7 +19,7 @@ const RightSidebar = () => {
 
         {/* <UpcomingEvents /> */}
 
-        <OnlineFriends />
+        {isPresenceEnabled() && <OnlineFriends />}
 
         {/* <SponsoredCard /> */}
 
