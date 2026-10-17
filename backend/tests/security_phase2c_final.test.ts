@@ -54,6 +54,9 @@ test("SEC-TEST-28: Trusted Peto Admin origin is CORS allowed", async () => {
   const result1 = await checkCorsOrigin("https://peto-admin.onrender.com");
   assert.equal(result1.allowed, true, "Production Peto Admin origin must be allowed");
 
+  const result1b = await checkCorsOrigin("https://peto-web-admin.onrender.com");
+  assert.equal(result1b.allowed, true, "Production Peto Web Admin origin must be allowed");
+
   const result2 = await checkCorsOrigin("http://localhost:5174");
   assert.equal(result2.allowed, true, "Localhost Admin origin must be allowed in dev");
 });

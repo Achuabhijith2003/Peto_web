@@ -32,6 +32,7 @@ export function getAllowedOrigins(): Set<string> {
   // 2. Known production domains for Peto Web and Admin
   allowed.add(normalizeOrigin("https://peto-web.onrender.com"));
   allowed.add(normalizeOrigin("https://peto-admin.onrender.com"));
+  allowed.add(normalizeOrigin("https://peto-web-admin.onrender.com"));
 
   // 3. Local development origins enabled ONLY in non-production environments
   const isProduction = process.env.NODE_ENV === "production";
