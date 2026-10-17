@@ -246,10 +246,14 @@ export async function getPostById(
             media(*)
         `)
         .eq("id", postId)
-        .single();
+        .maybeSingle();
 
     if (error)
         throw error;
+
+    if (!post) {
+        return null;
+    }
 
     let likeData = null;
     let bookmarkData = null;
@@ -529,8 +533,8 @@ export async function deletePostById(
 
 export async function getMyPostsService(
     userId: string,
-    page: number,
-    limit: number
+    page: number = 1,
+    limit: number = 10
 ) {
 
     const from = (page - 1) * limit;
