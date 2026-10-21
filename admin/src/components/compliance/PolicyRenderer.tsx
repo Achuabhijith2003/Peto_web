@@ -106,7 +106,15 @@ function renderInlineMarkdown(text: string): React.ReactNode[] {
  * Parses markdown body into high-level structured blocks.
  */
 function parseMarkdown(rawContent: string): ParsedBlock[] {
-  const lines = rawContent.split(/\r?\n/);
+  if (!rawContent) return [];
+
+  // Normalize escaped newlines from JSON/DB strings (\r\n, \n, \r)
+  const normalized = rawContent
+    .replace(/\\r\\n/g, "\n")
+    .replace(/\\n/g, "\n")
+    .replace(/\\r/g, "\n");
+
+  const lines = normalized.split(/\r?\n/);
   const blocks: ParsedBlock[] = [];
   let currentList: { type: "ul" | "ol"; items: string[] } | null = null;
   let currentTable: { headers: string[]; rows: string[][] } | null = null;
@@ -263,13 +271,13 @@ export const PolicyRenderer: React.FC<PolicyRendererProps> = ({
     <div className={`space-y-4 text-xs sm:text-sm text-foreground leading-relaxed select-text ${className}`}>
       {/* Policy Header Box if metadata provided */}
       {title && (
-        <div className="bg-[#f9faff] border border-border rounded-2xl p-5 mb-6 space-y-2">
+        <div className="bg-card border border-border rounded-2xl p-5 mb-6 space-y-2 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h1 className="text-xl sm:text-2xl font-bold font-heading text-foreground">
               {title}
             </h1>
             {version && (
-              <span className="px-3 py-1 rounded-full bg-muted/40 text-primary font-mono text-xs font-bold border border-border">
+              <span className="px-3 py-1 rounded-full bg-primary/10 text-primary font-mono text-xs font-bold border border-primary/20">
                 Version {version}
               </span>
             )}
@@ -291,7 +299,7 @@ export const PolicyRenderer: React.FC<PolicyRendererProps> = ({
 
       {/* Table of Contents */}
       {showToc && headings.length > 2 && (
-        <div className="bg-[#fcfdff] border border-border rounded-2xl p-4 mb-6 text-xs">
+        <div className="bg-card border border-border rounded-2xl p-4 mb-6 text-xs shadow-sm">
           <span className="font-bold text-muted-foreground uppercase tracking-wider text-[11px] block mb-2 font-heading">
             Table of Contents
           </span>
@@ -388,7 +396,7 @@ export const PolicyRenderer: React.FC<PolicyRendererProps> = ({
               return (
                 <blockquote
                   key={idx}
-                  className="border-l-4 border-primary bg-muted/40/60 px-4 py-3 rounded-r-xl text-xs text-muted-foreground italic"
+                  className="border-l-4 border-primary bg-muted/40 px-4 py-3 rounded-r-xl text-xs text-muted-foreground italic"
                 >
                   {renderInlineMarkdown(block.content || "")}
                 </blockquote>
@@ -410,7 +418,7 @@ export const PolicyRenderer: React.FC<PolicyRendererProps> = ({
                         ))}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#e2e8f8]">
+                    <tbody className="divide-y divide-border">
                       {block.rows?.map((row, rIdx) => (
                         <tr key={rIdx} className="hover:bg-muted/20">
                           {row.map((cell, cIdx) => (

@@ -85,25 +85,25 @@ export const PolicyHistoryModal: React.FC<PolicyHistoryModalProps> = ({
     switch (status) {
       case "PUBLISHED":
         return (
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10/50 text-emerald-600 dark:text-emerald-400 border border-[#006c49]/30">
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/30">
             ACTIVE
           </span>
         );
       case "DRAFT":
         return (
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-500 border border-amber-500/30">
             DRAFT
           </span>
         );
       case "SUPERSEDED":
         return (
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-300">
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-muted text-muted-foreground border border-border">
             SUPERSEDED
           </span>
         );
       default:
         return (
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200">
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-muted text-muted-foreground border border-border">
             {status}
           </span>
         );
@@ -182,7 +182,7 @@ export const PolicyHistoryModal: React.FC<PolicyHistoryModalProps> = ({
         {/* Content */}
         <div className="flex-1 flex overflow-hidden min-h-0">
           {/* Left Column: Version Timeline */}
-          <div className="w-80 border-r border-border bg-[#f9faff] flex flex-col overflow-hidden">
+          <div className="w-80 border-r border-border bg-background flex flex-col overflow-hidden">
             <div className="p-4 border-b border-border bg-card text-xs font-semibold text-muted-foreground flex items-center justify-between">
               <span>All Revisions ({versions.length})</span>
             </div>
@@ -252,7 +252,7 @@ export const PolicyHistoryModal: React.FC<PolicyHistoryModalProps> = ({
             {selectedVersion ? (
               <>
                 {/* Inspector Header */}
-                <div className="px-6 py-3 border-b border-border bg-[#fcfdff] flex flex-wrap items-center justify-between gap-3 flex-shrink-0">
+                <div className="px-6 py-3 border-b border-border bg-muted/30 flex flex-wrap items-center justify-between gap-3 flex-shrink-0">
                   <div className="flex items-center gap-3">
                     <div>
                       <div className="flex items-center gap-2">
@@ -313,7 +313,7 @@ export const PolicyHistoryModal: React.FC<PolicyHistoryModalProps> = ({
                           }
                         }
                       }}
-                      className="px-3 py-1.5 rounded-xl bg-muted/40 hover:bg-[#e2e8f8] text-primary text-xs font-semibold border border-border transition flex items-center gap-1.5 cursor-pointer"
+                      className="px-3 py-1.5 rounded-xl bg-muted/40 hover:bg-muted text-primary text-xs font-semibold border border-border transition flex items-center gap-1.5 cursor-pointer"
                     >
                       <Download size={13} />
                       <span>Download PDF</span>
@@ -364,7 +364,7 @@ export const PolicyHistoryModal: React.FC<PolicyHistoryModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-3 border-t border-border bg-[#fcfdff] flex items-center justify-between text-xs text-muted-foreground flex-shrink-0">
+        <div className="px-6 py-3 border-t border-border bg-card flex items-center justify-between text-xs text-muted-foreground flex-shrink-0">
           <div className="flex items-center gap-1.5">
             <AlertCircle size={14} className="text-primary" />
             <span>
@@ -373,7 +373,7 @@ export const PolicyHistoryModal: React.FC<PolicyHistoryModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="px-4 py-1.5 rounded-xl bg-muted/40 hover:bg-[#e2e8f8] text-muted-foreground font-semibold border border-border cursor-pointer"
+            className="px-4 py-1.5 rounded-xl bg-muted/40 hover:bg-muted text-muted-foreground font-semibold border border-border cursor-pointer"
           >
             Close
           </button>

@@ -83,7 +83,11 @@ function renderInlineMarkdown(text: string): React.ReactNode[] {
 
 function parseMarkdown(md: string): ParsedBlock[] {
   if (!md) return [];
-  const lines = md.replace(/\r\n/g, "\n").split("\n");
+  const normalized = md
+    .replace(/\\r\\n/g, "\n")
+    .replace(/\\n/g, "\n")
+    .replace(/\\r/g, "\n");
+  const lines = normalized.replace(/\r\n/g, "\n").split("\n");
   const blocks: ParsedBlock[] = [];
 
   let currentList: { type: "ul" | "ol"; items: string[] } | null = null;

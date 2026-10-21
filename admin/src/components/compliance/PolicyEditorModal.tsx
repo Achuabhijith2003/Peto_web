@@ -99,7 +99,12 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
       setPolicyType(policyToEdit.policy_type);
       setTitle(policyToEdit.title);
       setVersion(policyToEdit.version);
-      setContent(policyToEdit.content || "");
+      setContent(
+        (policyToEdit.content || "")
+          .replace(/\\r\\n/g, "\n")
+          .replace(/\\n/g, "\n")
+          .replace(/\\r/g, "\n")
+      );
       setSummaryOfChanges(policyToEdit.summary_of_changes || "");
       setEffectiveDate(
         policyToEdit.effective_date
@@ -442,7 +447,7 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
               }`}
             >
               {/* Markdown Toolbar */}
-              <div className="px-4 py-2 border-b border-border bg-[#fcfdff] flex flex-wrap items-center gap-1 text-muted-foreground">
+              <div className="px-4 py-2 border-b border-border bg-muted/30 flex flex-wrap items-center gap-1 text-muted-foreground">
                 <button
                   type="button"
                   onClick={() => insertMarkdown("**", "**", "bold text")}
@@ -459,7 +464,7 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
                 >
                   <Italic size={14} />
                 </button>
-                <div className="w-[1px] h-4 bg-[#dae2f3] mx-1" />
+                <div className="w-[1px] h-4 bg-border mx-1" />
                 <button
                   type="button"
                   onClick={() => insertMarkdown("# ", "", "Heading 1")}
@@ -484,7 +489,7 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
                 >
                   <Heading3 size={14} />
                 </button>
-                <div className="w-[1px] h-4 bg-[#dae2f3] mx-1" />
+                <div className="w-[1px] h-4 bg-border mx-1" />
                 <button
                   type="button"
                   onClick={() => insertMarkdown("- ", "", "List item")}
@@ -551,11 +556,11 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
           {/* Right Panel: Live User Web / Mobile Preview */}
           {(viewMode === "split" || viewMode === "preview") && (
             <div
-              className={`flex-1 flex flex-col bg-muted/40/40 overflow-hidden ${
+              className={`flex-1 flex flex-col bg-background overflow-hidden ${
                 viewMode === "preview" ? "w-full" : "w-1/2"
               }`}
             >
-              <div className="px-4 py-2 border-b border-border bg-[#f8faff] flex items-center justify-between text-xs text-muted-foreground">
+              <div className="px-4 py-2 border-b border-border bg-muted/30 flex items-center justify-between text-xs text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                   <span className="font-semibold font-heading">
@@ -594,7 +599,7 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl bg-muted/40 hover:bg-[#e2e8f8] text-muted-foreground text-xs font-semibold border border-border transition cursor-pointer"
+              className="px-4 py-2 rounded-xl bg-muted/40 hover:bg-muted text-muted-foreground text-xs font-semibold border border-border transition cursor-pointer"
             >
               Cancel
             </button>

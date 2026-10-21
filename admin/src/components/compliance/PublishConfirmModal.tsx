@@ -137,12 +137,12 @@ export const PublishConfirmModal: React.FC<PublishConfirmModalProps> = ({
         </div>
 
         {/* Actions */}
-        <div className="px-6 py-4 border-t border-border bg-[#fcfdff] flex justify-end gap-3">
+        <div className="px-6 py-4 border-t border-border bg-card flex justify-end gap-3">
           <button
             type="button"
             onClick={onClose}
             disabled={isLoading}
-            className="px-4 py-2 rounded-xl bg-muted/40 hover:bg-[#e2e8f8] text-muted-foreground text-xs font-semibold border border-border transition cursor-pointer"
+            className="px-4 py-2 rounded-xl bg-muted/40 hover:bg-muted text-muted-foreground text-xs font-semibold border border-border transition cursor-pointer"
           >
             Cancel
           </button>
