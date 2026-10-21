@@ -22,6 +22,7 @@ import {
   Tablet,
   Smartphone,
   X,
+  Trash2,
 } from "lucide-react";
 import {
   CompliancePolicyItem,
@@ -38,6 +39,7 @@ import {
   createPolicyDraft,
   publishPolicy,
   updatePolicyDraft,
+  deleteCompliancePolicy,
   getAdminPolicyPdfUrl,
   downloadAdminPolicyPdf,
   viewAdminPolicyPdf,
@@ -261,6 +263,24 @@ export const AdminCompliance: React.FC = () => {
       loadPolicies();
     } catch (err: any) {
       showNotification("error", err.response?.data?.message || "Failed to publish policy.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeletePolicy = async (policy: CompliancePolicyItem) => {
+    const isConfirmed = window.confirm(
+      `Are you sure you want to permanently delete "${policy.title}" (v${policy.version})?\n\nStatus: ${policy.status}\nThis action cannot be undone.`
+    );
+    if (!isConfirmed) return;
+
+    try {
+      setActionLoading(true);
+      await deleteCompliancePolicy(policy.id);
+      showNotification("success", `Policy "${policy.title}" (v${policy.version}) has been deleted.`);
+      loadPolicies();
+    } catch (err: any) {
+      showNotification("error", err.response?.data?.message || "Failed to delete policy.");
     } finally {
       setActionLoading(false);
     }
@@ -683,7 +703,7 @@ export const AdminCompliance: React.FC = () => {
                                 setSelectedPolicyForEditor(p);
                                 setIsEditorModalOpen(true);
                               }}
-                              className="px-3 py-1.5 rounded-xl bg-muted/40 hover:bg-[#e2e8f8] text-primary text-xs font-semibold border border-border transition flex items-center gap-1 cursor-pointer"
+                              className="px-3 py-1.5 rounded-xl bg-muted/40 hover:bg-muted text-primary text-xs font-semibold border border-border transition flex items-center gap-1 cursor-pointer"
                             >
                               <Edit3 size={12} />
                               <span>Edit</span>
@@ -714,12 +734,23 @@ export const AdminCompliance: React.FC = () => {
                               });
                               setIsEditorModalOpen(true);
                             }}
-                            className="px-3 py-1.5 rounded-xl bg-muted/40 hover:bg-[#e2e8f8] text-primary text-xs font-semibold border border-border transition flex items-center gap-1 cursor-pointer"
+                            className="px-3 py-1.5 rounded-xl bg-muted/40 hover:bg-muted text-primary text-xs font-semibold border border-border transition flex items-center gap-1 cursor-pointer"
                           >
                             <Edit3 size={12} />
                             <span>New Version</span>
                           </button>
                         )}
+
+                        {/* Delete policy button */}
+                        <button
+                          type="button"
+                          onClick={() => handleDeletePolicy(p)}
+                          disabled={actionLoading}
+                          className="p-1.5 rounded-xl bg-destructive/10 hover:bg-destructive/20 text-destructive border border-destructive/20 transition cursor-pointer disabled:opacity-50"
+                          title="Delete policy"
+                        >
+                          <Trash2 size={13} />
+                        </button>
                       </div>
                     )}
                   </div>

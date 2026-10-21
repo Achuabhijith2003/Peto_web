@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   X,
   Eye,
@@ -127,33 +127,104 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
     }
   }, [policyToEdit, isOpen]);
 
-  if (!isOpen) return null;
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const previewContainerRef = useRef<HTMLDivElement>(null);
+  const isScrollingSync = useRef<"editor" | "preview" | null>(null);
 
-  const insertMarkdown = (prefix: string, suffix: string = "", placeholder: string = "") => {
-    const textarea = document.getElementById("policy-editor-textarea") as HTMLTextAreaElement | null;
+  const handleEditorScroll = () => {
+    if (isScrollingSync.current === "preview") return;
+    const editor = textareaRef.current;
+    const preview = previewContainerRef.current;
+    if (!editor || !preview) return;
+
+    isScrollingSync.current = "editor";
+    const editorScrollable = editor.scrollHeight - editor.clientHeight;
+    if (editorScrollable > 0) {
+      const scrollRatio = editor.scrollTop / editorScrollable;
+      const previewScrollable = preview.scrollHeight - preview.clientHeight;
+      preview.scrollTop = scrollRatio * previewScrollable;
+    }
+    requestAnimationFrame(() => {
+      isScrollingSync.current = null;
+    });
+  };
+
+  const handlePreviewScroll = () => {
+    if (isScrollingSync.current === "editor") return;
+    const editor = textareaRef.current;
+    const preview = previewContainerRef.current;
+    if (!editor || !preview) return;
+
+    isScrollingSync.current = "preview";
+    const previewScrollable = preview.scrollHeight - preview.clientHeight;
+    if (previewScrollable > 0) {
+      const scrollRatio = preview.scrollTop / previewScrollable;
+      const editorScrollable = editor.scrollHeight - editor.clientHeight;
+      editor.scrollTop = scrollRatio * editorScrollable;
+    }
+    requestAnimationFrame(() => {
+      isScrollingSync.current = null;
+    });
+  };
+
+  const insertMarkdown = (
+    prefix: string,
+    suffix: string = "",
+    placeholder: string = "",
+    isLineLevel: boolean = false
+  ) => {
+    const textarea = textareaRef.current || (document.getElementById("policy-editor-textarea") as HTMLTextAreaElement | null);
     if (!textarea) return;
 
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const currentText = textarea.value;
-    const selected = currentText.substring(start, end) || placeholder;
+    const currentScrollTop = textarea.scrollTop;
 
-    const newText =
-      currentText.substring(0, start) +
-      prefix +
-      selected +
-      suffix +
-      currentText.substring(end);
+    let newText = "";
+    let newSelectionStart = start;
+    let newSelectionEnd = end;
+
+    if (isLineLevel) {
+      // Find beginning and end of the line(s) around the selection
+      const lineStart = currentText.lastIndexOf("\n", start - 1) + 1;
+      let lineEnd = currentText.indexOf("\n", end);
+      if (lineEnd === -1) lineEnd = currentText.length;
+
+      const fullLine = currentText.substring(lineStart, lineEnd);
+      // Remove any existing leading markdown heading or list prefix
+      const strippedLine = fullLine.replace(/^(#{1,6}\s+|-\s+|\*\s+|\d+\.\s+|>\[!.*\]\s+|>+\s*)/, "");
+      const formattedLine = prefix + (strippedLine || placeholder) + suffix;
+
+      newText = currentText.substring(0, lineStart) + formattedLine + currentText.substring(lineEnd);
+      newSelectionStart = lineStart + prefix.length;
+      newSelectionEnd = lineStart + formattedLine.length;
+    } else {
+      const selected = currentText.substring(start, end) || placeholder;
+      newText =
+        currentText.substring(0, start) +
+        prefix +
+        selected +
+        suffix +
+        currentText.substring(end);
+      newSelectionStart = start + prefix.length;
+      newSelectionEnd = start + prefix.length + selected.length;
+    }
 
     setContent(newText);
-    setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(
-        start + prefix.length,
-        start + prefix.length + selected.length
-      );
-    }, 10);
+
+    // Maintain scroll position & selection without jumping to the bottom
+    requestAnimationFrame(() => {
+      if (textarea) {
+        textarea.focus({ preventScroll: true });
+        textarea.scrollTop = currentScrollTop;
+        textarea.setSelectionRange(newSelectionStart, newSelectionEnd);
+        handleEditorScroll();
+      }
+    });
   };
+
+  if (!isOpen) return null;
 
   const handleSave = async (andPublish = false) => {
     if (!title.trim() || !version.trim() || !content.trim()) {
@@ -467,7 +538,7 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
                 <div className="w-[1px] h-4 bg-border mx-1" />
                 <button
                   type="button"
-                  onClick={() => insertMarkdown("# ", "", "Heading 1")}
+                  onClick={() => insertMarkdown("# ", "", "Heading 1", true)}
                   className="p-1.5 rounded-lg hover:bg-muted/40 hover:text-primary transition text-xs"
                   title="H1"
                 >
@@ -475,7 +546,7 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
                 </button>
                 <button
                   type="button"
-                  onClick={() => insertMarkdown("## ", "", "Heading 2")}
+                  onClick={() => insertMarkdown("## ", "", "Heading 2", true)}
                   className="p-1.5 rounded-lg hover:bg-muted/40 hover:text-primary transition text-xs"
                   title="H2"
                 >
@@ -483,7 +554,7 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
                 </button>
                 <button
                   type="button"
-                  onClick={() => insertMarkdown("### ", "", "Heading 3")}
+                  onClick={() => insertMarkdown("### ", "", "Heading 3", true)}
                   className="p-1.5 rounded-lg hover:bg-muted/40 hover:text-primary transition text-xs"
                   title="H3"
                 >
@@ -492,7 +563,7 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
                 <div className="w-[1px] h-4 bg-border mx-1" />
                 <button
                   type="button"
-                  onClick={() => insertMarkdown("- ", "", "List item")}
+                  onClick={() => insertMarkdown("- ", "", "List item", true)}
                   className="p-1.5 rounded-lg hover:bg-muted/40 hover:text-primary transition text-xs"
                   title="Bullet List"
                 >
@@ -500,7 +571,7 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
                 </button>
                 <button
                   type="button"
-                  onClick={() => insertMarkdown("1. ", "", "Ordered item")}
+                  onClick={() => insertMarkdown("1. ", "", "Ordered item", true)}
                   className="p-1.5 rounded-lg hover:bg-muted/40 hover:text-primary transition text-xs"
                   title="Numbered List"
                 >
@@ -545,6 +616,8 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
               {/* Textarea */}
               <textarea
                 id="policy-editor-textarea"
+                ref={textareaRef}
+                onScroll={handleEditorScroll}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="Enter markdown policy content here..."
@@ -572,7 +645,11 @@ export const PolicyEditorModal: React.FC<PolicyEditorModalProps> = ({
                 </span>
               </div>
 
-              <div className="flex-1 overflow-y-auto p-4 flex justify-center">
+              <div
+                ref={previewContainerRef}
+                onScroll={handlePreviewScroll}
+                className="flex-1 overflow-y-auto p-4 flex justify-center"
+              >
                 <PolicyRenderer
                   title={title}
                   version={version}

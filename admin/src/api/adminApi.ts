@@ -474,6 +474,10 @@ export async function rollbackPolicy(
   return res.data.data;
 }
 
+export async function deleteCompliancePolicy(id: string): Promise<void> {
+  await adminApi.delete(`/admin/compliance/policies/${id}`);
+}
+
 export function getAdminPolicyPdfUrl(id: string): string {
   const baseURL = adminApi.defaults.baseURL || "http://localhost:5000/api";
   return `${baseURL}/admin/compliance/policies/${id}/pdf`;

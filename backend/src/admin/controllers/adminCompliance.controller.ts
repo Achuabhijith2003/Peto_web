@@ -7,6 +7,7 @@ import {
   publishPolicyService,
   getPolicyVersionsService,
   rollbackPolicyService,
+  deletePolicyService,
   getDataRequestsService,
   getDataRequestDetailService,
   createDataRequestService,
@@ -189,6 +190,28 @@ export async function rollbackPolicy(req: Request, res: Response) {
     return res.status(error.status || 500).json({
       success: false,
       message: error.message || "Failed to create rollback revision.",
+    });
+  }
+}
+
+export async function deletePolicy(req: Request, res: Response) {
+  try {
+    const adminUser = (req as any).admin;
+    const adminUserId = adminUser?.userId || adminUser?.id;
+    const id = String(req.params.id);
+
+    const deleted = await deletePolicyService(id, adminUserId);
+
+    return res.status(200).json({
+      success: true,
+      message: "Policy document deleted successfully.",
+      data: deleted,
+    });
+  } catch (error: any) {
+    console.error("[ComplianceController] deletePolicy error:", error);
+    return res.status(error.status || 500).json({
+      success: false,
+      message: error.message || "Failed to delete policy document.",
     });
   }
 }

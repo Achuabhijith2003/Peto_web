@@ -56,6 +56,7 @@ import {
   publishPolicy,
   getPolicyVersions,
   rollbackPolicy,
+  deletePolicy,
   getAdminPolicyPdf,
   getDataRequests,
   getDataRequestDetail,
@@ -175,6 +176,7 @@ router.patch("/compliance/policies/:id", requirePermission("compliance.manage"),
 router.post("/compliance/policies/:id/publish", requirePermission("compliance.manage"), publishPolicy);
 router.get("/compliance/policies/:id/versions", requirePermission("compliance.view"), getPolicyVersions);
 router.post("/compliance/policies/:id/rollback", requirePermission("compliance.manage"), rollbackPolicy);
+router.delete("/compliance/policies/:id", requirePermission("compliance.manage"), deletePolicy);
 router.get("/compliance/policies/:id/pdf", requirePermission("compliance.view"), getAdminPolicyPdf);
 
 router.get("/compliance/data-requests", requirePermission("compliance.view"), getDataRequests);

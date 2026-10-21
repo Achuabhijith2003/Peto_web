@@ -715,6 +715,57 @@ export async function rollbackPolicyService(
   return rollbackDraft;
 }
 
+export async function deletePolicyService(id: string, adminUserId?: string) {
+  let existingPolicy: any = null;
+
+  try {
+    const { data, error } = await supabase
+      .from("compliance_policies")
+      .select("id, title, policy_type, version, status")
+      .eq("id", id)
+      .single();
+
+    if (!error && data) {
+      existingPolicy = data;
+      const { error: delError } = await supabase
+        .from("compliance_policies")
+        .delete()
+        .eq("id", id);
+
+      if (delError) throw delError;
+    }
+  } catch (err: any) {
+    // Check runtime fallback
+  }
+
+  const idx = runtimePolicies.findIndex((p) => p.id === id);
+  if (idx !== -1) {
+    existingPolicy = existingPolicy || runtimePolicies[idx];
+    runtimePolicies.splice(idx, 1);
+  }
+
+  if (!existingPolicy) {
+    const error: any = new Error("Policy document not found.");
+    error.status = 404;
+    throw error;
+  }
+
+  await createAuditLog({
+    adminId: adminUserId,
+    action: "POLICY_DELETED",
+    resourceType: "COMPLIANCE_POLICY",
+    resourceId: id,
+    details: {
+      title: existingPolicy.title,
+      policyType: existingPolicy.policy_type,
+      version: existingPolicy.version,
+      status: existingPolicy.status,
+    },
+  });
+
+  return existingPolicy;
+}
+
 // ============================================================
 // PUBLIC / CLIENT FACING POLICY SERVICES
 // ============================================================
