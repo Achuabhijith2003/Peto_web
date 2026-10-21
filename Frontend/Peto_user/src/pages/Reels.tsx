@@ -12,6 +12,7 @@ const Reels = () => {
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [muted, setMuted] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const fetchReels = async (pageNum = 1) => {
@@ -58,7 +59,17 @@ const Reels = () => {
     if (!containerRef.current) return;
     const container = containerRef.current;
     const height = container.clientHeight;
-    const index = Math.round(container.scrollTop / height);
+    if (!height) return;
+    const items = Array.from(container.querySelectorAll<HTMLElement>('[data-reel-index]'));
+    // Use actual layout positions: flex sizing and desktop padding affect offsets.
+    const center = container.getBoundingClientRect().top + height / 2;
+    let index = activeIndex;
+    let distance = Infinity;
+    for (const item of items) {
+      const rect = item.getBoundingClientRect();
+      const next = Math.abs(rect.top + rect.height / 2 - center);
+      if (next < distance) { distance = next; index = Number(item.dataset.reelIndex); }
+    }
     if (index !== activeIndex) {
       setActiveIndex(index);
     }
@@ -107,8 +118,8 @@ const Reels = () => {
             className="w-full max-w-[480px] lg:max-w-5xl xl:max-w-6xl h-[calc(100vh-5rem)] snap-y snap-mandatory overflow-y-scroll scrollbar-none relative px-0 lg:px-4 py-0 lg:py-4 flex flex-col items-center"
           >
             {reels.map((post, idx) => (
-              <div key={post.id || idx} className="h-full w-full snap-start flex items-center justify-center pb-0 lg:pb-6">
-                <ReelItem post={post} isActive={idx === activeIndex} />
+              <div key={post.id || idx} data-reel-index={idx} className="h-full shrink-0 w-full snap-start flex items-center justify-center pb-0 lg:pb-6">
+                <ReelItem post={post} isActive={idx === activeIndex} muted={muted} onMutedChange={setMuted} />
               </div>
             ))}
             {loadingMore && (

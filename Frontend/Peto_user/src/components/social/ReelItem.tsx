@@ -25,19 +25,22 @@ import { useAuth } from "../../context/AuthContext";
 import VerifiedBadge from "../common/VerifiedBadge";
 import MentionText from "./MentionText";
 import { ReportModal } from "../common/ReportModal";
+import { reelPlayback } from "../../utils/reelPlayback";
 
 interface ReelItemProps {
   post: any;
   isActive: boolean;
+  muted: boolean;
+  onMutedChange: (muted: boolean) => void;
 }
 
-const ReelItem = ({ post, isActive }: ReelItemProps) => {
+const ReelItem = ({ post, isActive, muted, onMutedChange }: ReelItemProps) => {
   const { user, openAuthModal } = useAuth();
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const [playing, setPlaying] = useState(true);
-  const [muted, setMuted] = useState(true);
+  const [soundBlocked, setSoundBlocked] = useState(false);
   const [loading, setLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [isLandscape, setIsLandscape] = useState(false);
@@ -84,43 +87,35 @@ const ReelItem = ({ post, isActive }: ReelItemProps) => {
 
   useEffect(() => {
     const video = videoRef.current;
-    if (isActive && video && videoUrl) {
-      setHasError(false);
-      try {
-        video.currentTime = 0;
-        const playPromise = video.play();
-        if (playPromise !== undefined) {
-          playPromise
-            .then(() => setPlaying(true))
-            .catch(() => setPlaying(false));
-        }
-      } catch {
-        setPlaying(false);
-      }
-    } else if (video) {
-      video.pause();
-      setPlaying(false);
-    }
-
+    if (!video) return;
+    let disposed = false;
+    const start = () => {
+      if (!isActive || document.hidden || !videoUrl) return;
+      void reelPlayback.play(video, muted).then((result) => {
+        if (disposed || result === 'superseded') return;
+        setPlaying(result !== 'stopped');
+        setSoundBlocked(result === 'muted');
+      });
+    };
+    if (isActive && !document.hidden) start();
+    else { reelPlayback.pause(video); setPlaying(false); }
     const handleVisibilityChange = () => {
-      if (document.hidden && videoRef.current) {
-        videoRef.current.pause();
+      if (document.hidden) {
+        reelPlayback.pause(video);
         setPlaying(false);
-      } else if (!document.hidden && isActive && videoRef.current) {
-        videoRef.current.play().catch(() => {});
-        setPlaying(true);
-      }
+      } else start();
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
+      disposed = true;
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       if (video) {
-        video.pause();
+        reelPlayback.pause(video);
       }
     };
-  }, [isActive, videoUrl]);
+  }, [isActive, videoUrl, muted]);
 
   useEffect(() => {
     if (isActive && comments.length === 0) {
@@ -149,23 +144,40 @@ const ReelItem = ({ post, isActive }: ReelItemProps) => {
   };
 
   const handleRetry = () => {
+    if (!isActive || document.hidden) return;
     setHasError(false);
     setLoading(true);
     if (videoRef.current) {
       videoRef.current.load();
-      videoRef.current.play().catch(() => {});
+      void startPlayback(muted);
     }
   };
 
   const togglePlay = () => {
-    if (!videoRef.current) return;
+    if (!videoRef.current || !isActive || document.hidden) return;
     if (playing) {
-      videoRef.current.pause();
+      reelPlayback.pause(videoRef.current);
       setPlaying(false);
     } else {
-      videoRef.current.play();
-      setPlaying(true);
+      void startPlayback(muted);
     }
+  };
+
+  const startPlayback = async (nextMuted: boolean) => {
+    const video = videoRef.current;
+    if (!video || !isActive || document.hidden) return;
+    const result = await reelPlayback.play(video, nextMuted);
+    if (!reelPlayback.owns(video) || result === 'superseded') return;
+    setPlaying(result !== 'stopped');
+    setSoundBlocked(result === 'muted');
+  };
+
+  const toggleSound = () => {
+    if (!isActive) return;
+    const next = soundBlocked ? false : !muted;
+    onMutedChange(next);
+    // Call play() during the click gesture, rather than waiting for an effect.
+    void startPlayback(next);
   };
 
   const handleLike = async (e: React.MouseEvent) => {
@@ -497,11 +509,16 @@ const ReelItem = ({ post, isActive }: ReelItemProps) => {
             src={videoUrl}
             loop
             playsInline
-            muted={muted}
+            muted={!isActive || muted || soundBlocked}
             onClick={togglePlay}
             onLoadedMetadata={handleLoadedMetadata}
             onWaiting={() => setLoading(true)}
             onPlaying={() => {
+              const video = videoRef.current;
+              if (video && (!isActive || document.hidden || !reelPlayback.owns(video))) {
+                reelPlayback.pause(video);
+                return;
+              }
               setLoading(false);
               setPlaying(true);
             }}
@@ -559,11 +576,17 @@ const ReelItem = ({ post, isActive }: ReelItemProps) => {
 
         {/* Sound Mute Toggle Button */}
         <button
-          onClick={() => setMuted(!muted)}
+          onClick={toggleSound}
+          aria-label={muted || soundBlocked ? 'Enable sound' : 'Mute sound'}
           className="absolute top-6 right-6 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-slate-900/60 text-white backdrop-blur-md hover:bg-slate-900 transition"
         >
-          {muted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+          {muted || soundBlocked ? <VolumeX size={20} /> : <Volume2 size={20} />}
         </button>
+        {isActive && soundBlocked && !muted && (
+          <button onClick={toggleSound} className="absolute top-20 right-6 z-20 rounded-full bg-slate-900/80 px-3 py-2 text-xs font-semibold text-white">
+            Enable sound
+          </button>
+        )}
 
         {/* Mobile-Only Overlays */}
         <div className="lg:hidden">
