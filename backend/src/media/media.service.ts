@@ -6,7 +6,8 @@ import { processVideo } from "./video.service";
 
 export async function processMedia(
     userId: string,
-    file: Express.Multer.File
+    file: Express.Multer.File,
+    requestId?: string
 ) {
     const ext = path.extname(file.originalname || "").toLowerCase();
     const videoExtensions = [".mp4", ".mov", ".avi", ".mkv", ".webm", ".3gp", ".m4v", ".ts", ".flv"];
@@ -18,14 +19,16 @@ export async function processMedia(
     if (isVideo) {
         return await processVideo(
             userId,
-            file
+            file,
+            requestId
         );
     }
 
     if (isImage) {
         return await processImage(
             userId,
-            file
+            file,
+            requestId
         );
     }
 

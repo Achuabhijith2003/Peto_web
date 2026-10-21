@@ -19,6 +19,9 @@ const CreatePost = ({ onPostCreated, communityId, communityName, petId }: Create
   const [uploadingMedia, setUploadingMedia] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [uploadPercent, setUploadPercent] = useState<number | null>(null);
+  const [uploadLabel, setUploadLabel] = useState("");
+  const [processingMedia, setProcessingMedia] = useState(false);
   const [selectedPetId, setSelectedPetId] = useState<string>(petId || "");
   const [taggedPets, setTaggedPets] = useState<TaggablePet[]>([]);
   const [isPetPickerOpen, setIsPetPickerOpen] = useState(false);
@@ -92,6 +95,7 @@ const CreatePost = ({ onPostCreated, communityId, communityName, petId }: Create
   };
 
   const removeMedia = (index: number) => {
+    if (submitting) return;
     setMediaFiles((prev) => {
       const updated = [...prev];
       URL.revokeObjectURL(updated[index].preview);
@@ -144,6 +148,7 @@ const CreatePost = ({ onPostCreated, communityId, communityName, petId }: Create
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
     if (!user) {
       openAuthModal("share posts with pet lovers");
       return;
@@ -154,16 +159,35 @@ const CreatePost = ({ onPostCreated, communityId, communityName, petId }: Create
     try {
       setSubmitError(null);
       setSubmitting(true);
+      setUploadLabel("Preparing your post…");
+      setUploadPercent(null);
+      setProcessingMedia(false);
       const mediaPayload: any[] = [];
 
       if (mediaFiles.length > 0) {
         setUploadingMedia(true);
-        for (const item of mediaFiles) {
+        for (const [index, item] of mediaFiles.entries()) {
+          const fileLabel = `File ${index + 1} of ${mediaFiles.length}`;
+          setUploadLabel(`Uploading ${fileLabel.toLowerCase()}…`);
+          setUploadPercent(0);
+          setProcessingMedia(false);
           const formData = new FormData();
           formData.append("media", item.file);
 
           const uploadRes = await api.post("/media/upload", formData, {
             timeout: 300000,
+            onUploadProgress: ({ loaded, total }) => {
+              if (!total || total <= 0) {
+                setUploadPercent(null);
+                return;
+              }
+              const percent = Math.min(100, Math.floor((loaded / total) * 100));
+              setUploadPercent(percent);
+              if (loaded >= total) {
+                setProcessingMedia(true);
+                setUploadLabel(`${fileLabel} transferred — processing ${item.type === "video" ? "video" : "image"}…`);
+              }
+            },
           });
 
           if (uploadRes.data?.success) {
@@ -187,6 +211,10 @@ const CreatePost = ({ onPostCreated, communityId, communityName, petId }: Create
         }
       }
 
+      setUploadingMedia(false);
+      setProcessingMedia(false);
+      setUploadPercent(null);
+      setUploadLabel("Publishing your post…");
       await api.post("/posts", {
         text: text.trim(),
         content: text.trim(),
@@ -211,12 +239,30 @@ const CreatePost = ({ onPostCreated, communityId, communityName, petId }: Create
     } finally {
       setSubmitting(false);
       setUploadingMedia(false);
+      setUploadPercent(null);
+      setUploadLabel("");
+      setProcessingMedia(false);
     }
   };
 
   const renderComposerForm = () => (
     <form onSubmit={handleSubmit}>
       {submitError && <p role="alert" className="mb-3 text-sm text-red-600">{submitError}</p>}
+      {submitting && (
+        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3" aria-live="polite">
+          <div className="mb-2 flex items-center justify-between gap-3 text-sm text-slate-700">
+            <span>{uploadLabel}</span>
+            {uploadPercent !== null && <span className="shrink-0 font-semibold">{uploadPercent}%{processingMedia ? " transferred" : ""}</span>}
+          </div>
+          <progress
+            aria-label={processingMedia ? "Processing uploaded media" : uploadLabel}
+            max={100}
+            value={processingMedia ? undefined : uploadPercent ?? undefined}
+            className="h-2 w-full accent-amber-500"
+          />
+          {processingMedia && <p className="mt-1 text-xs text-slate-500">Upload received. We’re preparing your media; video processing may take a few minutes. Keep this screen open.</p>}
+        </div>
+      )}
       <div className="flex gap-4">
         {user?.profile?.avatar_url && user.profile.avatar_url !== "null" ? (
           <img
@@ -446,6 +492,7 @@ const CreatePost = ({ onPostCreated, communityId, communityName, petId }: Create
               <button
                 type="button"
                 onClick={() => setIsMobileModalOpen(false)}
+                disabled={submitting}
                 className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition cursor-pointer"
                 aria-label="Close composer"
               >

@@ -6,6 +6,7 @@ import { uploadThumbnail, uploadVideo } from "./storage.service";
 import { supabase } from "../config/supabase";
 import path from "path";
 import crypto from "crypto";
+import { saveMediaRecord } from "./mediaRecord.service";
 
 ffmpeg.setFfmpegPath(ffmpegPath!);
 ffmpeg.setFfprobePath(ffprobe.path);
@@ -132,7 +133,8 @@ async function deleteIfExists(file: string) {
 
 export async function processVideo(
     userId: string,
-    file: Express.Multer.File
+    file: Express.Multer.File,
+    requestId?: string
 ) {
     const id = crypto.randomUUID();
     const tempDir = path.join(process.cwd(), "temp");
@@ -207,9 +209,7 @@ export async function processVideo(
 
         // Save media record in Supabase
         reportStage("database");
-        const { data, error } = await supabase
-            .from("media")
-            .insert({
+        const { data, created } = await saveMediaRecord({
                 user_id: userId,
                 type: "video",
                 url: videoUrl,
@@ -219,15 +219,9 @@ export async function processVideo(
                 duration: Math.round(metadata.duration || 0),
                 size: stats.size,
                 mime_type: "video/mp4",
-            })
-            .select()
-            .single();
+            }, requestId);
 
-        if (error) {
-            throw error;
-        }
-
-        mediaSaved = true;
+        mediaSaved = created;
         reportStage("complete", { mediaId: data.id });
 
         return data;
@@ -238,6 +232,8 @@ export async function processVideo(
             code: (error as any)?.code,
             statusCode: (error as any)?.statusCode,
         }));
+        throw new Error(`Video upload failed during ${stage}. Reference: ${id}. Please try again or share this reference with support.`);
+    } finally {
         // Storage and DB writes are separate. Reclaim only objects created by
         // this invocation if no authoritative media row was committed.
         if (!mediaSaved) {
@@ -248,8 +244,6 @@ export async function processVideo(
                 await supabase.storage.from("posts-videos").remove([`${id}.mp4`]);
             }
         }
-        throw new Error(`Video upload failed during ${stage}. Reference: ${id}. Please try again or share this reference with support.`);
-    } finally {
         // Cleanup temp files
         await deleteIfExists(inputPath);
         await deleteIfExists(outputPath);

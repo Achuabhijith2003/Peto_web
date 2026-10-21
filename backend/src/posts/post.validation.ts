@@ -2,6 +2,7 @@ import { z } from "zod";
 import { Request, Response, NextFunction } from "express";
 
 export const createPostSchema = z.object({
+    client_post_id: z.string().uuid("Invalid post request ID").optional(),
     text: z.string().max(5000).optional(),
     content: z.string().max(5000).optional(),
     visibility: z.enum([

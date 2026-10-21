@@ -24,6 +24,7 @@ export const createPost = async (req: Request, res: Response) => {
         const petId = req.body.pet_id || req.body.petId || undefined;
 
         const parsed = createPostSchema.safeParse({
+            client_post_id: req.body.client_post_id,
             text: textContent,
             content: textContent,
             visibility,
@@ -43,6 +44,7 @@ export const createPost = async (req: Request, res: Response) => {
         const taggedPetIds = req.body.tagged_pet_ids || req.body.taggedPetIds || [];
 
         const post = await createPostService({
+            clientPostId: parsed.data.client_post_id,
             userId: user.id,
             text: textContent,
             visibility,

@@ -2,6 +2,19 @@ import { Request, Response } from "express";
 import { processMedia } from "./media.service";
 import { processImage } from "./image.service";
 import { validateUploadedFile, cleanupFile } from "./fileValidator";
+import { findOwnedMedia, isMediaRequestId } from "./mediaRecord.service";
+
+export const getUploadStatus = async (req: Request, res: Response) => {
+    res.setHeader("Cache-Control", "no-store");
+    if (!isMediaRequestId(req.params.id)) return res.status(400).json({ success: false, message: "Invalid upload ID" });
+    try {
+        const media = await findOwnedMedia(req.params.id, (req as any).user.id);
+        if (!media) return res.status(404).json({ success: false });
+        return res.json({ success: true, data: media, mediaId: media.id, mediaUrl: media.url });
+    } catch (_) {
+        return res.status(503).json({ success: false, message: "Unable to check upload status. Please retry." });
+    }
+};
 
 const getFilesFromReq = (req: Request): Express.Multer.File[] => {
     if (Array.isArray(req.files) && req.files.length > 0) {
@@ -118,6 +131,19 @@ export const uploadMedia = async (req: Request, res: Response) => {
             });
         }
 
+        const requestId = req.body?.client_media_id;
+        if (requestId !== undefined && (!isMediaRequestId(requestId) || files.length !== 1)) {
+            await Promise.all(files.map(cleanupFile));
+            return res.status(400).json({ success: false, message: "A media request ID must be a UUID for a single file." });
+        }
+        if (requestId) {
+            const existing = await findOwnedMedia(requestId, user.id);
+            if (existing) {
+                await Promise.all(files.map(cleanupFile));
+                return res.status(201).json({ success: true, data: [existing], mediaId: existing.id, mediaUrl: existing.url });
+            }
+        }
+
         // Validate all files with magic bytes
         for (const file of files) {
             const validation = await validateUploadedFile(file, "any");
@@ -134,7 +160,7 @@ export const uploadMedia = async (req: Request, res: Response) => {
 
         const uploaded = [];
         for (const file of files) {
-            uploaded.push(await processMedia(user.id, file));
+            uploaded.push(await processMedia(user.id, file, requestId));
         }
 
         const firstResult = uploaded[0];

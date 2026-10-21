@@ -5,6 +5,7 @@ import { syncPostMentionsAndTags, getMentionsAndTagsForPosts } from "./mention_t
 import { hasBusinessPermission } from "../businesses/business.rbac";
 
 interface CreatePostData {
+    clientPostId?: string;
     userId: string;
     text?: string;
     visibility: "public" | "followers" | "private";
@@ -87,6 +88,10 @@ export async function createPostService(
         pet_id: petId || null,
         media_count: mediaList.length
     };
+    if (data.clientPostId) {
+        if (!isUUID(data.clientPostId)) throw new Error("Invalid post request ID");
+        insertPayload.id = data.clientPostId;
+    }
 
     if (data.businessId) {
         insertPayload.business_id = data.businessId;
@@ -94,6 +99,7 @@ export async function createPostService(
     }
 
     let post: any;
+    let replayed = false;
     const { data: createdPost, error } = await supabase
         .from("posts")
         .insert(insertPayload)
@@ -101,7 +107,18 @@ export async function createPostService(
         .single();
 
     if (error) {
-        if (error.code === "42703" && data.businessId) {
+        if (error.code === "23505" && data.clientPostId) {
+            const existing = await supabase.from("posts").select("*")
+                .eq("id", data.clientPostId).eq("user_id", userId).maybeSingle();
+            if (existing.error) throw existing.error;
+            if (!existing.data || existing.data.text !== (text || "") ||
+                (existing.data.community_id || null) !== (communityId || null) ||
+                (existing.data.business_id || null) !== (data.businessId || null)) {
+                throw Object.assign(new Error("Post request ID is already in use."), { status: 409 });
+            }
+            post = existing.data;
+            replayed = true;
+        } else if (error.code === "42703" && data.businessId) {
             // Graceful fallback if business_id column not yet created in PostgreSQL
             delete insertPayload.business_id;
             delete insertPayload.author_type;
@@ -116,7 +133,7 @@ export async function createPostService(
     }
 
     // If community post, increment post_count
-    if (communityId) {
+    if (communityId && !replayed) {
         const { data: commData } = await supabase
             .from("communities")
             .select("post_count")
@@ -146,6 +163,7 @@ export async function createPostService(
 
             if (updateError) {
                 console.error("Error linking UUID media to post:", updateError);
+                if (data.clientPostId) throw updateError;
             }
         }
 

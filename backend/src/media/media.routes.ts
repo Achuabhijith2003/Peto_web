@@ -1,10 +1,11 @@
 import { Router } from "express";
 import { authenticate } from "../auth/auth.middleware";
 import { uploadImage, uploadVideo, upload } from "./upload.middleware";
-import { uploadImages, uploadVideoController, uploadMedia } from "./media.controller";
+import { uploadImages, uploadVideoController, uploadMedia, getUploadStatus } from "./media.controller";
 import { uploadRateLimiter } from "../middleware/rateLimiter";
 
 const router = Router();
+router.get("/status/:id", authenticate, getUploadStatus);
 
 router.post(
   "/image",

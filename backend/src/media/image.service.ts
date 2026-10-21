@@ -4,6 +4,7 @@ import fs from "fs/promises";
 
 import { supabase } from "../config/supabase";
 import { uploadImageToStorage } from "./storage.service";
+import { saveMediaRecord } from "./mediaRecord.service";
 
 export async function compressImage(
     input: Buffer | string
@@ -23,7 +24,8 @@ export async function compressImage(
 
 export async function processImage(
     userId: string,
-    file: Express.Multer.File
+    file: Express.Multer.File,
+    requestId?: string
 ) {
     let uploadedFilename: string | null = null;
     let mediaSaved = false;
@@ -39,29 +41,21 @@ export async function processImage(
         );
         uploadedFilename = filename;
 
-        const { data, error } = await supabase
-            .from("media")
-            .insert({
+        const { data, created } = await saveMediaRecord({
                 user_id: userId,
                 type: "image",
                 url,
                 size: compressed.length,
                 mime_type: "image/webp"
-            })
-            .select()
-            .single();
+            }, requestId);
 
-        if (error) throw error;
-
-        mediaSaved = true;
+        mediaSaved = created;
 
         return data;
-    } catch (error) {
+    } finally {
         if (uploadedFilename && !mediaSaved) {
             await supabase.storage.from("posts-images").remove([uploadedFilename]);
         }
-        throw error;
-    } finally {
         if (file.path) {
             try {
                 await fs.unlink(file.path);
