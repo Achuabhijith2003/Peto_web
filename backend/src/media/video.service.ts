@@ -16,18 +16,22 @@ export async function compressVideo(
     hasAudio: boolean = true
 ): Promise<void> {
     return new Promise<void>((resolve, reject) => {
-        let command = ffmpeg(input)
+        let lastProgressLog = 0;
+        let command = ffmpeg(input, { timeout: 180 })
             .videoCodec("libx264")
             .outputOptions([
                 "-preset veryfast",
                 "-crf 25",
-                "-vf scale='trunc(iw*min(1,1080/iw)/2)*2:trunc(ih*min(1,1080/iw)/2)*2'",
+                "-threads 2",
+                "-filter_threads 1",
+                "-map 0:v:0",
+                "-vf scale='trunc(iw*min(1,min(1080/iw,1080/ih))/2)*2:trunc(ih*min(1,min(1080/iw,1080/ih))/2)*2'",
                 "-movflags +faststart",
                 "-pix_fmt yuv420p"
             ]);
 
         if (hasAudio) {
-            command = command.audioCodec("aac").outputOptions(["-b:a 128k"]);
+            command = command.audioCodec("aac").outputOptions(["-map 0:a:0?", "-b:a 128k"]);
         } else {
             command = command.noAudio();
         }
@@ -39,7 +43,20 @@ export async function compressVideo(
             .on("stderr", _line => {
                 // Keep verbose logs suppressed unless debugging
             })
-            .on("end", () => resolve())
+            .on("progress", progress => {
+                if (Date.now() - lastProgressLog >= 15000) {
+                    lastProgressLog = Date.now();
+                    console.log("Video compression progress:", JSON.stringify({
+                        uploadId: path.basename(output, ".mp4"),
+                        timemark: progress.timemark,
+                        percent: progress.percent,
+                    }));
+                }
+            })
+            .on("end", () => {
+                console.log("Video compression completed:", path.basename(output, ".mp4"));
+                resolve();
+            })
             .on("error", err => {
                 console.error("FFmpeg compression error:", err);
                 reject(err);
@@ -58,7 +75,7 @@ export async function createThumbnail(
     await fs.mkdir(folder, { recursive: true });
 
     return new Promise<void>((resolve, reject) => {
-        ffmpeg(input)
+        ffmpeg(input, { timeout: 20 })
             .on("end", async () => {
                 try {
                     await new Promise(resolve => setTimeout(resolve, 300));
@@ -71,12 +88,11 @@ export async function createThumbnail(
             .on("error", (err) => {
                 reject(err);
             })
-            .screenshots({
-                count: 1,
-                folder,
-                filename,
-                size: "720x?"
-            });
+            .seekInput(0)
+            .frames(1)
+            .outputOptions(["-threads 1", "-filter_threads 1"])
+            .size("720x?")
+            .save(path.join(folder, filename));
     });
 }
 
@@ -130,6 +146,14 @@ export async function processVideo(
     let uploadedVideo = false;
     let uploadedThumbnail = false;
     let mediaSaved = false;
+    let stage = "probe";
+    const startedAt = Date.now();
+    const reportStage = (next: string, details: Record<string, unknown> = {}) => {
+        stage = next;
+        console.log("Video upload stage:", JSON.stringify({
+            uploadId: id, stage, elapsedMs: Date.now() - startedAt, ...details,
+        }));
+    };
 
     try {
         // If file was in memory (no disk path), save buffer to disk
@@ -137,6 +161,7 @@ export async function processVideo(
             await fs.writeFile(inputPath, file.buffer);
         }
 
+        reportStage("probe", { inputBytes: file.size });
         // Read initial metadata from input
         let metadata: { width?: number; height?: number; duration: number; hasAudio: boolean } = {
             width: undefined,
@@ -150,27 +175,19 @@ export async function processVideo(
             console.warn("Probe input video warning:", probeErr);
         }
 
-        // Compress video with high quality CRF 25 + FastStart (or fallback to raw)
-        let finalVideoPath = inputPath;
+        reportStage("compression", { ...metadata });
+        // A raw MOV/HEVC file cannot safely be relabelled as a browser MP4.
+        await compressVideo(inputPath, outputPath, metadata.hasAudio);
+        const finalVideoPath = outputPath;
+
+        // Re-read metadata of compressed output.
         try {
-            await compressVideo(
-                inputPath,
-                outputPath,
-                metadata.hasAudio
-            );
-            finalVideoPath = outputPath;
-
-            // Re-read metadata of compressed output
-            try {
-                const compressedMeta = await getMetadata(outputPath);
-                metadata = { ...metadata, ...compressedMeta };
-            } catch (_) {}
-        } catch (compErr) {
-            console.warn("Video compression failed, falling back to original raw video:", compErr);
-            finalVideoPath = inputPath;
-        }
-
+            const compressedMeta = await getMetadata(outputPath);
+            metadata = { ...metadata, ...compressedMeta };
+        } catch (_) {}
         // Upload MP4 video to storage
+        const stats = await fs.stat(finalVideoPath);
+        reportStage("storage_video", { outputBytes: stats.size });
         const videoUrl = await uploadVideo(
             finalVideoPath,
             `${id}.mp4`
@@ -179,6 +196,7 @@ export async function processVideo(
 
         // Generate and upload thumbnail
         let thumbnailUrl = null;
+        reportStage("thumbnail");
         try {
             await createThumbnail(finalVideoPath, thumbnailPath);
             thumbnailUrl = await uploadThumbnail(thumbnailPath, `${id}.jpg`);
@@ -187,10 +205,8 @@ export async function processVideo(
             console.warn("Thumbnail generation skipped/failed:", thumbErr);
         }
 
-        // Final file size
-        const stats = await fs.stat(finalVideoPath);
-
         // Save media record in Supabase
+        reportStage("database");
         const { data, error } = await supabase
             .from("media")
             .insert({
@@ -212,9 +228,16 @@ export async function processVideo(
         }
 
         mediaSaved = true;
+        reportStage("complete", { mediaId: data.id });
 
         return data;
     } catch (error) {
+        console.error("Video upload failed:", JSON.stringify({
+            uploadId: id, stage, elapsedMs: Date.now() - startedAt,
+            message: (error as any)?.message || "Unknown error",
+            code: (error as any)?.code,
+            statusCode: (error as any)?.statusCode,
+        }));
         // Storage and DB writes are separate. Reclaim only objects created by
         // this invocation if no authoritative media row was committed.
         if (!mediaSaved) {
@@ -225,7 +248,7 @@ export async function processVideo(
                 await supabase.storage.from("posts-videos").remove([`${id}.mp4`]);
             }
         }
-        throw error;
+        throw new Error(`Video upload failed during ${stage}. Reference: ${id}. Please try again or share this reference with support.`);
     } finally {
         // Cleanup temp files
         await deleteIfExists(inputPath);

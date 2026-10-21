@@ -18,6 +18,7 @@ const CreatePost = ({ onPostCreated, communityId, communityName, petId }: Create
   const [mediaFiles, setMediaFiles] = useState<{ file: File; preview: string; type: "image" | "video" }[]>([]);
   const [uploadingMedia, setUploadingMedia] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [selectedPetId, setSelectedPetId] = useState<string>(petId || "");
   const [taggedPets, setTaggedPets] = useState<TaggablePet[]>([]);
   const [isPetPickerOpen, setIsPetPickerOpen] = useState(false);
@@ -151,6 +152,7 @@ const CreatePost = ({ onPostCreated, communityId, communityName, petId }: Create
     if (!text.trim() && mediaFiles.length === 0) return;
 
     try {
+      setSubmitError(null);
       setSubmitting(true);
       const mediaPayload: any[] = [];
 
@@ -176,7 +178,11 @@ const CreatePost = ({ onPostCreated, communityId, communityName, petId }: Create
                 url: mediaUrl,
                 type: item.type,
               });
+            } else {
+              throw new Error("Upload returned no media. Please try again.");
             }
+          } else {
+            throw new Error(uploadRes.data?.message || "Media upload failed. Please try again.");
           }
         }
       }
@@ -199,8 +205,9 @@ const CreatePost = ({ onPostCreated, communityId, communityName, petId }: Create
       if (!petId) setSelectedPetId("");
       setIsMobileModalOpen(false);
       if (onPostCreated) onPostCreated();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating post:", error);
+      setSubmitError(error?.response?.data?.message || error?.message || "Unable to create post. Please try again.");
     } finally {
       setSubmitting(false);
       setUploadingMedia(false);
@@ -209,6 +216,7 @@ const CreatePost = ({ onPostCreated, communityId, communityName, petId }: Create
 
   const renderComposerForm = () => (
     <form onSubmit={handleSubmit}>
+      {submitError && <p role="alert" className="mb-3 text-sm text-red-600">{submitError}</p>}
       <div className="flex gap-4">
         {user?.profile?.avatar_url && user.profile.avatar_url !== "null" ? (
           <img
