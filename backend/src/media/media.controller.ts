@@ -112,8 +112,10 @@ export const uploadVideoController = async (req: Request, res: Response) => {
         });
     } catch (err: any) {
         console.error("Upload video error:", err);
-        return res.status(500).json({
+        if (err?.status === 503) res.setHeader("Retry-After", "30");
+        return res.status(err?.status === 503 ? 503 : 500).json({
             success: false,
+            code: err?.code,
             message: err?.message || "Video upload failed."
         });
     }
@@ -175,8 +177,10 @@ export const uploadMedia = async (req: Request, res: Response) => {
         });
     } catch (err: any) {
         console.error("Upload media error:", err);
-        return res.status(500).json({
+        if (err?.status === 503) res.setHeader("Retry-After", "30");
+        return res.status(err?.status === 503 ? 503 : 500).json({
             success: false,
+            code: err?.code,
             message: err?.message || "Upload failed."
         });
     }

@@ -1,5 +1,6 @@
 import { supabase } from "../config/supabase";
 import fs from "fs/promises";
+import { createReadStream } from "fs";
 
 export async function ensurePublicBuckets() {
     try {
@@ -173,24 +174,31 @@ export async function uploadCoverToStorage(
 
 export async function uploadVideo(
     filePath: string,
-    filename: string
+    filename: string,
+    storage = supabase.storage
 ) {
-    const buffer = await fs.readFile(filePath);
+    const stats = await fs.stat(filePath);
+    const stream = createReadStream(filePath);
     const path = filename;
 
-    const { error } = await supabase.storage
+    try {
+    const { error } = await storage
         .from("posts-videos")
-        .upload(path, buffer, {
+        .upload(path, stream, {
             contentType: "video/mp4",
+            headers: { "Content-Length": String(stats.size) },
             upsert: true
         });
 
     if (error) throw error;
 
-    return supabase.storage
+    return storage
         .from("posts-videos")
         .getPublicUrl(path)
         .data.publicUrl;
+    } finally {
+        stream.destroy();
+    }
 }
 
 export async function uploadThumbnail(

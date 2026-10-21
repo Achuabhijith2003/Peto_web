@@ -58,5 +58,26 @@ Before release, test on the target Android device against the updated backend:
 
 No real account, storage, or device lifecycle test is performed by the unit tests.
 
+## Backend memory on small instances
+
+A reported 4K upload caused Render to terminate the API for exceeding 512 MB.
+The video pipeline now limits decoder and encoder threads separately, uses
+ultrafast/zero-latency encoding to reduce frame buffering, and caps output at
+1080 pixels on the longer side and 30 fps. The faster encoder can produce larger
+files than the previous preset at the same CRF.
+
+Only one video pipeline can run per Node process. Overlapping requests receive a
+retryable 503 with `VIDEO_PROCESSING_BUSY` and `Retry-After: 30`; their incoming
+temporary files are reclaimed. Output video uploads stream from disk instead of
+allocating a full-file buffer. Stage/progress logs include **Node-only** RSS; this
+does not include the FFmpeg child process. Use Render Metrics/Events to check the
+whole instance's memory.
+
+Tests cover a synthetic 4K 10-bit HEVC/60 fps conversion, capacity ownership and
+release, busy-request cleanup, streaming, audio, thumbnails, and retry ownership.
+They do not establish a 512 MB peak-memory guarantee for every phone recording.
+Deploy the backend changes and retry the original clip while watching Render's
+instance memory and restart events.
+
 Platform references: [Android long-running workers](https://developer.android.com/develop/background-work/background-tasks/persistent/how-to/long-running)
 and [Workmanager platform setup](https://docs.page/fluttercommunity/flutter_workmanager/quickstart).

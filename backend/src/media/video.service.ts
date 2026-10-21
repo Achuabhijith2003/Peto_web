@@ -7,6 +7,7 @@ import { supabase } from "../config/supabase";
 import path from "path";
 import crypto from "crypto";
 import { saveMediaRecord } from "./mediaRecord.service";
+import { videoCapacity } from "./videoCapacity";
 
 ffmpeg.setFfmpegPath(ffmpegPath!);
 ffmpeg.setFfprobePath(ffprobe.path);
@@ -19,14 +20,17 @@ export async function compressVideo(
     return new Promise<void>((resolve, reject) => {
         let lastProgressLog = 0;
         let command = ffmpeg(input, { timeout: 180 })
+            // Input options precede -i and limit the decoder, not just x264.
+            .inputOptions(["-threads 1"])
             .videoCodec("libx264")
             .outputOptions([
-                "-preset veryfast",
+                "-preset ultrafast",
+                "-tune zerolatency",
                 "-crf 25",
-                "-threads 2",
+                "-threads 1",
                 "-filter_threads 1",
                 "-map 0:v:0",
-                "-vf scale='trunc(iw*min(1,min(1080/iw,1080/ih))/2)*2:trunc(ih*min(1,min(1080/iw,1080/ih))/2)*2'",
+                "-vf fps='min(source_fps,30)',scale='trunc(iw*min(1,min(1080/iw,1080/ih))/2)*2:trunc(ih*min(1,min(1080/iw,1080/ih))/2)*2'",
                 "-movflags +faststart",
                 "-pix_fmt yuv420p"
             ]);
@@ -51,6 +55,7 @@ export async function compressVideo(
                         uploadId: path.basename(output, ".mp4"),
                         timemark: progress.timemark,
                         percent: progress.percent,
+                        nodeRssMiB: Math.round(process.memoryUsage().rss / 1048576),
                     }));
                 }
             })
@@ -77,6 +82,7 @@ export async function createThumbnail(
 
     return new Promise<void>((resolve, reject) => {
         ffmpeg(input, { timeout: 20 })
+            .inputOptions(["-threads 1"])
             .on("end", async () => {
                 try {
                     await new Promise(resolve => setTimeout(resolve, 300));
@@ -101,7 +107,7 @@ export async function getMetadata(
     input: string
 ): Promise<{ width?: number; height?: number; duration: number; hasAudio: boolean }> {
     return new Promise((resolve, reject) => {
-        ffmpeg.ffprobe(input, (err, metadata) => {
+        ffmpeg.ffprobe(input, ["-threads", "1"], (err, metadata) => {
             if (err) return reject(err);
 
             const video = metadata.streams?.find(
@@ -139,8 +145,6 @@ export async function processVideo(
     const id = crypto.randomUUID();
     const tempDir = path.join(process.cwd(), "temp");
 
-    await fs.mkdir(tempDir, { recursive: true });
-
     // If file was streamed to disk via multer diskStorage, use file.path directly
     const inputPath = file.path ? file.path : path.join(tempDir, `${id}-input.mp4`);
     const outputPath = path.join(tempDir, `${id}.mp4`);
@@ -148,16 +152,20 @@ export async function processVideo(
     let uploadedVideo = false;
     let uploadedThumbnail = false;
     let mediaSaved = false;
+    let releaseCapacity: (() => void) | undefined;
     let stage = "probe";
     const startedAt = Date.now();
     const reportStage = (next: string, details: Record<string, unknown> = {}) => {
         stage = next;
         console.log("Video upload stage:", JSON.stringify({
-            uploadId: id, stage, elapsedMs: Date.now() - startedAt, ...details,
+            uploadId: id, stage, elapsedMs: Date.now() - startedAt,
+            nodeRssMiB: Math.round(process.memoryUsage().rss / 1048576), ...details,
         }));
     };
 
     try {
+        releaseCapacity = videoCapacity.acquire();
+        await fs.mkdir(tempDir, { recursive: true });
         // If file was in memory (no disk path), save buffer to disk
         if (!file.path && file.buffer) {
             await fs.writeFile(inputPath, file.buffer);
@@ -232,8 +240,10 @@ export async function processVideo(
             code: (error as any)?.code,
             statusCode: (error as any)?.statusCode,
         }));
+        if ((error as any)?.status === 503) throw error;
         throw new Error(`Video upload failed during ${stage}. Reference: ${id}. Please try again or share this reference with support.`);
     } finally {
+        try {
         // Storage and DB writes are separate. Reclaim only objects created by
         // this invocation if no authoritative media row was committed.
         if (!mediaSaved) {
@@ -250,6 +260,9 @@ export async function processVideo(
         await deleteIfExists(thumbnailPath);
         if (file.path && file.path !== inputPath) {
             await deleteIfExists(file.path);
+        }
+        } finally {
+            releaseCapacity?.();
         }
     }
 }
