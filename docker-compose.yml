@@ -48,7 +48,16 @@ services:
     restart: unless-stopped
     ports:
       - "6379:6379"
-    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "25mb", "--maxmemory-policy", "volatile-lru"]
+    command:
+      [
+        "redis-server",
+        "--appendonly",
+        "yes",
+        "--maxmemory",
+        "25mb",
+        "--maxmemory-policy",
+        "volatile-lru",
+      ]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
