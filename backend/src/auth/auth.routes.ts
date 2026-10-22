@@ -321,6 +321,15 @@ router.post("/google", async (req, res) => {
     // Verify token with Supabase
     const { data: userData, error: userError } = await supabase.auth.getUser(token);
     if (userError || !userData?.user) {
+      const errMsg = userError?.message || "";
+      if (errMsg.includes("unrecognized JWT kid") || errMsg.includes("keyfunc")) {
+        return res.status(401).json({
+          success: false,
+          code: "JWT_KID_MISMATCH",
+          message:
+            "Authentication token was issued by a different Supabase project. Please clear your browser cookies/storage and log in again.",
+        });
+      }
       return res.status(401).json({
         success: false,
         message: userError?.message || "Invalid or expired Google authentication session.",

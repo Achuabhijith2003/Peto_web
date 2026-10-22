@@ -11,6 +11,12 @@ COPY Frontend/Peto_user/package*.json ./Frontend/Peto_user/
 # Install dependencies
 RUN npm install
 
+# Forward build arguments to Vite
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
+ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
+
 # Copy frontend source code & build frontend dist
 COPY Frontend/Peto_user/ ./Frontend/Peto_user/
 WORKDIR /app/Frontend/Peto_user

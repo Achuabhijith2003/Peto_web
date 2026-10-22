@@ -236,13 +236,36 @@ const frontendPath = path.join(__dirname, "../../Frontend/Peto_user/dist");
 const indexHtmlPath = path.join(frontendPath, "index.html");
 
 if (fs.existsSync(indexHtmlPath)) {
-  app.use(express.static(frontendPath));
+  // Prevent serving raw index.html directly from static so the injection middleware intercepts HTML requests
+  app.use(express.static(frontendPath, { index: false }));
 
   app.use((req, res, next) => {
     if (req.method !== "GET" || req.originalUrl.startsWith("/api")) {
       return next();
     }
-    res.sendFile(indexHtmlPath);
+    try {
+      let html = fs.readFileSync(indexHtmlPath, "utf-8");
+
+      // Inject runtime Supabase configuration matching the active backend environment
+      const runtimeConfig = {
+        VITE_SUPABASE_URL: process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "",
+        VITE_SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || "",
+      };
+
+      if (runtimeConfig.VITE_SUPABASE_URL) {
+        const injection = `<script id="peto-runtime-config">window.__PETO_CONFIG__=Object.freeze(${JSON.stringify(runtimeConfig)});</script>`;
+        if (html.includes("</head>")) {
+          html = html.replace("</head>", `${injection}</head>`);
+        } else {
+          html = injection + html;
+        }
+      }
+
+      res.setHeader("Content-Type", "text/html; charset=utf-8");
+      return res.send(html);
+    } catch {
+      return res.sendFile(indexHtmlPath);
+    }
   });
 }
 
