@@ -14,11 +14,14 @@ export const VALID_REPORT_REASONS = [
   "hate_speech",
   "violence",
   "sexual_content",
+  "child_safety",
   "animal_abuse",
   "scam_fraud",
+  "impersonation",
   "illegal_content",
   "copyright",
   "misinformation",
+  "dangerous_health_advice",
   "other",
 ];
 
@@ -37,9 +40,15 @@ export async function createUserReportService(input: CreateUserReportInput) {
   let targetAuthorId: string | null = null;
   let priority = "MEDIUM";
 
-  // Critical safety triggers raise default priority
-  if (["violence", "animal_abuse", "sexual_content"].includes(normalizedReason)) {
+  // Critical safety triggers raise priority automatically
+  if (normalizedReason === "child_safety") {
+    priority = "CRITICAL";
+  } else if (["animal_abuse", "violence", "dangerous_health_advice", "sexual_content", "illegal_content"].includes(normalizedReason)) {
     priority = "HIGH";
+  } else if (["harassment", "hate_speech", "copyright", "scam_fraud", "impersonation"].includes(normalizedReason)) {
+    priority = "MEDIUM";
+  } else {
+    priority = "LOW";
   }
 
   if (targetType === "post" || targetType === "reel") {

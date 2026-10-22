@@ -227,6 +227,24 @@ export const PolicyPage: React.FC = () => {
                   );
                 })}
               </nav>
+
+              <div className="pt-4 border-t border-slate-100 space-y-1">
+                <Link
+                  to="/copyright-complaint"
+                  className="flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 transition"
+                >
+                  <span>DMCA / Copyright Notice</span>
+                  <ChevronRight size={13} />
+                </Link>
+
+                <Link
+                  to="/settings?tab=privacy"
+                  className="flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+                >
+                  <span>Privacy Rights & Data Export</span>
+                  <ChevronRight size={13} />
+                </Link>
+              </div>
             </div>
 
             {/* Compliance Guarantee Box */}

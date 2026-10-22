@@ -11,15 +11,20 @@ interface ReportModalProps {
 }
 
 const REPORT_REASONS = [
-  { id: "spam", label: "Spam or commercial scam", desc: "Excessive advertising, bots, or deceptive links" },
-  { id: "harassment", label: "Bullying or harassment", desc: "Targeted insults, threats, or intimidation" },
-  { id: "hate_speech", label: "Hate speech or abuse", desc: "Attacks on protected groups or identities" },
-  { id: "animal_abuse", label: "Animal abuse or cruelty", desc: "Harm, neglect, or violent acts towards animals" },
-  { id: "violence", label: "Violence or dangerous acts", desc: "Depictions of severe injury or physical threat" },
-  { id: "sexual_content", label: "Nudity or sexual content", desc: "Sexually suggestive or explicit media" },
-  { id: "scam_fraud", label: "Scam or fraud", desc: "Financial fraud, fake donations, or impersonation" },
-  { id: "misinformation", label: "False information", desc: "Dangerous health, safety, or medical misinformation" },
-  { id: "other", label: "Other issue", desc: "Violates Peto's community guidelines" },
+  { id: "animal_abuse", label: "Animal abuse or cruelty", desc: "Harm, neglect, fighting, or violent acts towards animals (High Priority)" },
+  { id: "child_safety", label: "Child safety or exploitation concern", desc: "Zero tolerance; immediately escalated to safety leadership" },
+  { id: "harassment", label: "Bullying, harassment, or threats", desc: "Targeted insults, stalking, intimidation, or doxxing" },
+  { id: "hate_speech", label: "Hate speech or discrimination", desc: "Attacks on protected groups, race, religion, or identities" },
+  { id: "violence", label: "Violence or physical harm", desc: "Depictions of severe injury, weapons, or physical threats" },
+  { id: "sexual_content", label: "Sexually suggestive or explicit", desc: "Nudity, sexual exploitation, or adult material" },
+  { id: "dangerous_health_advice", label: "Dangerous pet medical / health advice", desc: "Toxic remedies, deceptive veterinary claims, or dangerous guidance" },
+  { id: "scam_fraud", label: "Scam or financial fraud", desc: "Deceptive sales, fraudulent adoptions, or fake charity appeals" },
+  { id: "impersonation", label: "Impersonation or stolen identity", desc: "Pretending to be another pet parent, business, or veterinarian" },
+  { id: "copyright", label: "Copyright or IP infringement", desc: "Using photos, videos, or creative content without authorization" },
+  { id: "illegal_content", label: "Illegal items or wildlife trade", desc: "Poaching, banned exotic animals, or illicit trade" },
+  { id: "spam", label: "Spam or commercial bots", desc: "Excessive advertising, automated bots, or deceptive links" },
+  { id: "misinformation", label: "Misleading or false information", desc: "Fabricated stories or platform manipulation" },
+  { id: "other", label: "Other community guideline violation", desc: "Other violation of Peto community standards" },
 ];
 
 export const ReportModal: React.FC<ReportModalProps> = ({

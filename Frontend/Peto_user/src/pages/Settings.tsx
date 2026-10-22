@@ -32,8 +32,9 @@ import SocialLayout from "../components/social/SocialLayout";
 import BusinessVerificationSection from "../components/verification/BusinessVerificationSection";
 import VerifiedBadge from "../components/common/VerifiedBadge";
 import { useFeature } from "../hooks/useFeatures";
+import PrivacyDataRightsSection from "../components/compliance/PrivacyDataRightsSection";
 
-type SettingsTab = "password" | "verification" | "policies" | "advertiser";
+type SettingsTab = "password" | "verification" | "policies" | "privacy" | "advertiser";
 
 export const Settings: React.FC = () => {
   const { user } = useAuth();
@@ -48,7 +49,7 @@ export const Settings: React.FC = () => {
   // Sync tab with URL query parameter if it changes
   useEffect(() => {
     const tabParam = searchParams.get("tab") as SettingsTab;
-    if (tabParam && ["password", "verification", "policies", "advertiser"].includes(tabParam)) {
+    if (tabParam && ["password", "verification", "policies", "privacy", "advertiser"].includes(tabParam)) {
       if (tabParam === "advertiser" && !isMarketplaceEnabled) {
         setActiveTab("password");
       } else {
@@ -85,6 +86,7 @@ export const Settings: React.FC = () => {
   const [vFile, setVFile] = useState<File | null>(null);
   const [vSubmitting, setVSubmitting] = useState(false);
   const [vMessage, setVMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [vTermsAccepted, setVTermsAccepted] = useState(false);
 
   // Load verification status
   useEffect(() => {
@@ -159,6 +161,14 @@ export const Settings: React.FC = () => {
 
     if (!vFirstName.trim() || !vLastName.trim() || !vDocNumber.trim()) {
       setVMessage({ type: "error", text: "Please provide your legal first name, last name, and document number." });
+      return;
+    }
+
+    if (!vTermsAccepted) {
+      setVMessage({
+        type: "error",
+        text: "You must affirmatively confirm that the submitted identity documents are authentic and agree to Peto's Verification Policy.",
+      });
       return;
     }
 
@@ -291,6 +301,13 @@ export const Settings: React.FC = () => {
       sublabel: "Legal & terms",
       icon: ShieldCheck,
       activeColor: "border-indigo-600 bg-indigo-600 text-white shadow-md shadow-indigo-600/10",
+    },
+    {
+      id: "privacy" as SettingsTab,
+      label: "Privacy & Data",
+      sublabel: "Rights & export",
+      icon: Shield,
+      activeColor: "border-purple-600 bg-purple-600 text-white shadow-md shadow-purple-600/10",
     },
     {
       id: "advertiser" as SettingsTab,
@@ -831,10 +848,28 @@ export const Settings: React.FC = () => {
                           </div>
                         </div>
 
+                        {/* Verification Terms Affirmation */}
+                        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
+                          <label className="flex items-start gap-3 text-xs text-slate-700 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={vTermsAccepted}
+                              onChange={(e) => setVTermsAccepted(e.target.checked)}
+                              className="mt-0.5 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
+                            />
+                            <span>
+                              I certify under penalty of perjury that all submitted details and documents are authentic and belong to me. I acknowledge that falsification of identity or unauthorized material alterations to verified profiles will result in immediate badge revocation and account termination in accordance with Peto's{" "}
+                              <Link to="/policies/terms-of-service" target="_blank" className="text-blue-600 underline font-semibold">
+                                Verification & Identity Terms
+                              </Link>.
+                            </span>
+                          </label>
+                        </div>
+
                         <div className="pt-2">
                           <button
                             type="submit"
-                            disabled={vSubmitting || !vFirstName.trim() || !vLastName.trim() || !vDocNumber.trim()}
+                            disabled={vSubmitting || !vFirstName.trim() || !vLastName.trim() || !vDocNumber.trim() || !vTermsAccepted}
                             className="px-8 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold shadow-md transition hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
                           >
                             {vSubmitting ? "Submitting Application..." : "Submit Verification Request"}
@@ -928,6 +963,11 @@ export const Settings: React.FC = () => {
                 </div>
               </div>
             )}
+
+            {/* ========================================================================= */}
+            {/* TAB: PRIVACY RIGHTS & DATA MANAGEMENT */}
+            {/* ========================================================================= */}
+            {activeTab === "privacy" && <PrivacyDataRightsSection />}
 
             {/* ========================================================================= */}
             {/* TAB: ADVERTISER PORTAL */}

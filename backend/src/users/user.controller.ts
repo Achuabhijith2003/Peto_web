@@ -32,19 +32,82 @@ export const getCurrentUser = async (
             });
         }
 
+        let profile = data;
+        if (!profile || !profile.username || profile.username.trim() === "") {
+            const fallbackUsername =
+                user?.user_metadata?.username ||
+                user?.user_metadata?.user_name ||
+                (user?.email ? user.email.split("@")[0].toLowerCase() : `user_${user.id.slice(0, 6)}`);
+            const fallbackFullName =
+                user?.user_metadata?.full_name ||
+                user?.user_metadata?.fullName ||
+                user?.user_metadata?.name ||
+                fallbackUsername;
+
+            try {
+                if (!profile) {
+                    const { data: newProfile } = await supabase
+                        .from("profiles")
+                        .insert({
+                            id: user.id,
+                            username: fallbackUsername,
+                            full_name: fallbackFullName,
+                            status: "ACTIVE",
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString(),
+                        })
+                        .select()
+                        .maybeSingle();
+                    if (newProfile) profile = newProfile;
+                } else if (!profile.username || profile.username.trim() === "") {
+                    const { data: updatedProfile } = await supabase
+                        .from("profiles")
+                        .update({
+                            username: fallbackUsername,
+                            updated_at: new Date().toISOString(),
+                        })
+                        .eq("id", user.id)
+                        .select()
+                        .maybeSingle();
+                    if (updatedProfile) profile = updatedProfile;
+                }
+            } catch (healErr) {
+                console.warn("[getCurrentUser] Self-healing profile warning:", healErr);
+            }
+        }
+
+        const resolvedUsername =
+            profile?.username ||
+            user?.user_metadata?.username ||
+            user?.user_metadata?.user_name ||
+            (user?.email ? user.email.split("@")[0].toLowerCase() : "");
+
+        const resolvedFullName =
+            profile?.full_name ||
+            user?.user_metadata?.full_name ||
+            user?.user_metadata?.fullName ||
+            resolvedUsername;
+
         const mergedUser = {
             ...user,
-            ...(data || {}),
-            avatar_url: data?.avatar_url || user?.avatar_url || user?.user_metadata?.avatar_url || null,
-            avatarUrl: data?.avatar_url || user?.avatar_url || user?.user_metadata?.avatar_url || null,
-            cover_url: data?.cover_url || user?.cover_url || user?.user_metadata?.cover_url || null,
-            coverUrl: data?.cover_url || user?.cover_url || user?.user_metadata?.cover_url || null,
+            ...(profile || {}),
+            id: user.id,
+            email: user.email,
+            username: resolvedUsername,
+            full_name: resolvedFullName,
+            fullName: resolvedFullName,
+            avatar_url: profile?.avatar_url || user?.avatar_url || user?.user_metadata?.avatar_url || null,
+            avatarUrl: profile?.avatar_url || user?.avatar_url || user?.user_metadata?.avatar_url || null,
+            cover_url: profile?.cover_url || user?.cover_url || user?.user_metadata?.cover_url || null,
+            coverUrl: profile?.cover_url || user?.cover_url || user?.user_metadata?.cover_url || null,
+            date_of_birth: profile?.date_of_birth || user?.user_metadata?.date_of_birth || null,
+            dateOfBirth: profile?.date_of_birth || user?.user_metadata?.date_of_birth || null,
         };
 
         return res.status(200).json({
             success: true,
             user: mergedUser,
-            profile: data || null,
+            profile: profile || null,
             data: mergedUser,
         });
 
@@ -161,8 +224,31 @@ export const updateProfile = async (req: Request, res: Response) => {
         if (bio !== undefined) updateData.bio = bio;
         if (location !== undefined) updateData.location = location;
         if (website !== undefined) updateData.website = website;
-        if (phone !== undefined) updateData.phone = phone;
-        if (dateOfBirth !== undefined || date_of_birth !== undefined) updateData.date_of_birth = dateOfBirth || date_of_birth;
+        if (dateOfBirth !== undefined || date_of_birth !== undefined) {
+            const rawDob = dateOfBirth || date_of_birth;
+            if (rawDob) {
+                const birthDate = new Date(rawDob);
+                if (isNaN(birthDate.getTime())) {
+                    return res.status(400).json({
+                        success: false,
+                        message: "Invalid date of birth provided.",
+                    });
+                }
+                const today = new Date();
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const m = today.getMonth() - birthDate.getMonth();
+                if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                    age--;
+                }
+                if (age < 13) {
+                    return res.status(400).json({
+                        success: false,
+                        message: "You must be at least 13 years old to use Peto.",
+                    });
+                }
+            }
+            updateData.date_of_birth = rawDob;
+        }
 
         const resolvedAvatar = avatar_url !== undefined ? avatar_url : (avatarUrl !== undefined ? avatarUrl : avatar);
         if (resolvedAvatar !== undefined) updateData.avatar_url = resolvedAvatar;
@@ -616,17 +702,56 @@ export const createProfile = async (
             date_of_birth,
         } = req.body;
 
+        const resolvedUsername = (
+            username ||
+            user?.user_metadata?.username ||
+            user?.user_metadata?.user_name ||
+            (user?.email ? user.email.split("@")[0] : `user_${user.id.slice(0, 6)}`)
+        ).trim().toLowerCase();
+
+        if (resolvedUsername) {
+            const usernameRegex = /^[a-z0-9_]{3,20}$/;
+            if (!usernameRegex.test(resolvedUsername)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Username must be 3-20 characters and contain only lowercase letters, numbers, and underscores.",
+                });
+            }
+        }
+
+        const resolvedDob = dateOfBirth || date_of_birth || null;
+        if (resolvedDob) {
+            const birthDate = new Date(resolvedDob);
+            if (isNaN(birthDate.getTime())) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid date of birth provided.",
+                });
+            }
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const m = today.getMonth() - birthDate.getMonth();
+            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+            if (age < 13) {
+                return res.status(400).json({
+                    success: false,
+                    message: "You must be at least 13 years old to use Peto.",
+                });
+            }
+        }
+
         const resolvedFullName =
             full_name ||
             fullName ||
             user?.user_metadata?.full_name ||
             user?.user_metadata?.fullName ||
             user?.user_metadata?.name ||
-            username ||
+            resolvedUsername ||
             "Pet Parent";
 
         const resolvedAvatarUrl = avatar_url || avatarUrl || null;
-        const resolvedDob = dateOfBirth || date_of_birth || null;
 
         const { data: existing } = await supabase
             .from("profiles")
@@ -638,7 +763,7 @@ export const createProfile = async (
             const { data: updated, error: updateError } = await supabase
                 .from("profiles")
                 .update({
-                    username,
+                    username: resolvedUsername,
                     full_name: resolvedFullName,
                     avatar_url: resolvedAvatarUrl,
                     bio,
@@ -646,6 +771,7 @@ export const createProfile = async (
                     website,
                     phone,
                     date_of_birth: resolvedDob,
+                    updated_at: new Date().toISOString(),
                 })
                 .eq("id", user.id)
                 .select()
@@ -670,7 +796,7 @@ export const createProfile = async (
             .insert([
                 {
                     id: user.id,
-                    username,
+                    username: resolvedUsername,
                     full_name: resolvedFullName,
                     avatar_url: resolvedAvatarUrl,
                     bio,
@@ -678,6 +804,9 @@ export const createProfile = async (
                     website,
                     phone,
                     date_of_birth: resolvedDob,
+                    status: "ACTIVE",
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
                 },
             ])
             .select()

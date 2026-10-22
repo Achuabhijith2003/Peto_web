@@ -29,6 +29,7 @@ import regionalRoutes from "./regions/regional.routes";
 import paymentRoutes from "./payments/payment.routes";
 import advertiserRoutes from "./advertisers/advertiser.routes";
 import publicPolicyRoutes from "./routes/publicPolicy.routes";
+import complianceRoutes from "./routes/compliance.routes";
 import petRoutes from "./pets/pet.routes";
 import verificationRoutes from "./advertisers/verification/identityVerification.routes";
 import businessRoutes from "./businesses/business.routes";
@@ -179,6 +180,7 @@ app.use("/api/advertisers", advertiserRoutes);
 app.use("/api/verification", verificationRoutes);
 app.use("/api/businesses", businessRoutes);
 app.use("/api/policies", publicPolicyRoutes);
+app.use("/api/compliance", complianceRoutes);
 app.use("/api/pets", petRoutes);
 app.use("/api/pet", petRoutes);
 

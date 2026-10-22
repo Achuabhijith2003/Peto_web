@@ -22,6 +22,8 @@ interface RegisterForm {
   password: string;
   confirmPassword: string;
   agree: boolean;
+  ageConfirmed: boolean;
+  marketingConsent?: boolean;
 }
 
 const Register = () => {
@@ -49,6 +51,9 @@ const Register = () => {
         firstName: data.firstName.trim(),
         lastName: data.lastName.trim(),
         username: fullName.toLowerCase().replace(/\s+/g, ""),
+        acceptedTerms: data.agree,
+        ageConfirmed: data.ageConfirmed,
+        marketingConsent: Boolean(data.marketingConsent),
       });
       if (response.data.success) {
         const token = response.data.token || response.data.session?.access_token;
@@ -65,11 +70,11 @@ const Register = () => {
     <AuthLayout
       image={heroImage}
       title="Create Your Account"
-      subtitle="Join Pawfect Pals and start giving your pet the best care."
+      subtitle="Join Peto and start giving your pet the best care."
     >
       <motion.form
         onSubmit={handleSubmit(onSubmit)}
-        className="space-y-5"
+        className="space-y-4"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >
@@ -126,31 +131,71 @@ const Register = () => {
           })}
         />
 
-        <label className="flex items-start gap-3 text-sm">
-          <input
-            type="checkbox"
-            className="mt-1"
-            {...register("agree", {
-              required: "Please accept the terms",
-            })}
-          />
+        {/* Legal & Age Assurance Checks */}
+        <div className="space-y-3 pt-2">
+          {/* Age Eligibility Affirmation */}
+          <label className="flex items-start gap-3 text-xs sm:text-sm text-slate-700 cursor-pointer">
+            <input
+              type="checkbox"
+              className="mt-1 rounded text-amber-600 focus:ring-amber-500 cursor-pointer"
+              {...register("ageConfirmed", {
+                required: "You must confirm you are at least 13 years old",
+              })}
+            />
+            <span>
+              I confirm that I am <strong className="text-slate-900 font-semibold">at least 13 years old</strong> (or the minimum legal age for digital services in my jurisdiction).
+            </span>
+          </label>
+          {errors.ageConfirmed && (
+            <p className="text-xs text-red-500 ml-7">{errors.ageConfirmed.message}</p>
+          )}
 
-          <span>
-            I agree to the{" "}
-            <Link
-              to="#"
-              className="text-blue-600 font-medium"
-            >
-              Terms & Conditions
-            </Link>
-          </span>
-        </label>
+          {/* Mandatory Terms & Privacy Affirmation */}
+          <label className="flex items-start gap-3 text-xs sm:text-sm text-slate-700 cursor-pointer">
+            <input
+              type="checkbox"
+              className="mt-1 rounded text-amber-600 focus:ring-amber-500 cursor-pointer"
+              {...register("agree", {
+                required: "Please affirmatively accept the Terms of Service and Privacy Policy",
+              })}
+            />
+            <span>
+              I agree to Peto's{" "}
+              <Link
+                to="/policies/terms-of-service"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-amber-700 hover:text-amber-800 font-semibold underline underline-offset-2"
+              >
+                Terms of Service
+              </Link>{" "}
+              and acknowledge the{" "}
+              <Link
+                to="/policies/privacy-policy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-amber-700 hover:text-amber-800 font-semibold underline underline-offset-2"
+              >
+                Privacy Policy
+              </Link>.
+            </span>
+          </label>
+          {errors.agree && (
+            <p className="text-xs text-red-500 ml-7">{errors.agree.message}</p>
+          )}
 
-        {errors.agree && (
-          <p className="text-sm text-red-500">
-            {errors.agree.message}
-          </p>
-        )}
+          {/* Separate Optional Marketing Consent */}
+          <label className="flex items-start gap-3 text-xs text-slate-500 cursor-pointer pt-1">
+            <input
+              type="checkbox"
+              className="mt-0.5 rounded text-amber-600 focus:ring-amber-500 cursor-pointer"
+              {...register("marketingConsent")}
+            />
+            <span>
+              (Optional) Send me pet care insights, product updates, and community highlights by email. You can unsubscribe anytime.
+            </span>
+          </label>
+        </div>
 
         {serverError && (
           <p className="text-sm text-red-500 text-center">{serverError}</p>

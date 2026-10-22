@@ -100,6 +100,16 @@ const Footer = () => {
                   All Policies & PDFs
                 </Link>
               </li>
+              <li>
+                <Link to="/copyright-complaint" className="hover:text-white transition">
+                  DMCA & IP Complaints
+                </Link>
+              </li>
+              <li>
+                <Link to="/settings?tab=privacy" className="hover:text-white transition">
+                  Privacy Rights & Export
+                </Link>
+              </li>
             </ul>
           </div>
         </div>

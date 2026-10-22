@@ -20,6 +20,7 @@ import ServerError500 from "../pages/ServerError500";
 import Forbidden403 from "../pages/Forbidden403";
 import AdvertiserRouteGuard from "../components/advertiser/AdvertiserRouteGuard";
 import PolicyPage from "../pages/PolicyPage";
+import CopyrightComplaint from "../pages/CopyrightComplaint";
 import Settings from "../pages/Settings";
 import AuthCallback from "../pages/AuthCallback";
 import GoogleLaunch from "../pages/GoogleLaunch";
@@ -46,6 +47,8 @@ const AppRoutes = () => {
       <Route path="/terms" element={<PolicyPage />} />
       <Route path="/privacy" element={<PolicyPage />} />
       <Route path="/community-guidelines" element={<PolicyPage />} />
+      <Route path="/copyright-complaint" element={<CopyrightComplaint />} />
+      <Route path="/dmca" element={<CopyrightComplaint />} />
 
       <Route path="/login" element={<Login />} />
 
