@@ -397,7 +397,7 @@ export async function getPetByIdService(
     viewer_permissions: {
       can_view: true,
       can_edit: canEdit,
-      can_upload_media: isParent,
+      can_upload_media: Boolean(isParent && (relationship?.is_primary || relationship?.permissions?.includes("UPLOAD_MEDIA"))),
       can_manage_parents: canManageParents,
       can_manage_privacy: canManagePrivacy,
     },
@@ -503,18 +503,7 @@ export async function updatePetService(
  * 4. Delete/Archive Pet (Requires primary OWNER)
  */
 export async function deletePetService(petId: string, userId: string): Promise<void> {
-  const relationship = await getPetParentRelationship(userId, petId);
-  if (!relationship || !relationship.is_primary) {
-    const error: any = new Error("Only the primary owner can delete this pet.");
-    error.status = 403;
-    throw error;
-  }
-
-  // Clean up private storage folder for this pet
-  await deletePetPrivateStorageFolder(petId);
-
-  const { error } = await supabase.from("pets").delete().eq("id", petId);
-  if (error) throw error;
+  await petLifecycle(petId, userId, "delete");
 }
 
 /**
@@ -651,7 +640,7 @@ export async function getUserPetsService(
 
   for (const row of parentRows) {
     const pet = Array.isArray(row.pets) ? row.pets[0] : row.pets;
-    if (!pet) continue;
+    if (!pet || pet.deleted_at) continue;
 
     const { allowed } = await evaluatePetVisibility(requesterId, pet);
     if (!allowed) continue;
@@ -718,7 +707,7 @@ export async function getMyPetsService(userId: string): Promise<Pet[]> {
 
   for (const row of parentRows) {
     const pet = Array.isArray(row.pets) ? row.pets[0] : row.pets;
-    if (!pet) continue;
+    if (!pet || pet.deleted_at) continue;
 
     let avatarUrl: string | null = null;
     let coverUrl: string | null = null;
@@ -871,9 +860,18 @@ export async function addPetMediaService(
   const altText = (input.altText || (input as any).alt_text)?.trim() || null;
   const isPrimary = Boolean(input.isPrimary ?? (input as any).is_primary);
 
-  const { data: mediaRecord, error } = await supabase
+  const requestId = (input as any).client_pet_media_id;
+  if (requestId !== undefined) {
+    if (typeof requestId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(requestId)) {
+      throw Object.assign(new Error("Invalid pet media request ID"), {status:400});
+    }
+    const {data: ownedMedia} = await supabase.from("media").select("id").eq("id",mediaId).eq("user_id",userId).maybeSingle();
+    if (!ownedMedia) throw Object.assign(new Error("Media not found"), {status:404});
+  }
+  let { data: mediaRecord, error } = await supabase
     .from("pet_media")
     .insert({
+      ...(requestId ? {id:requestId} : {}),
       pet_id: petId,
       media_id: mediaId,
       role: role,
@@ -899,6 +897,13 @@ export async function addPetMediaService(
     `)
     .single();
 
+  if (error?.code === "23505" && requestId) {
+    const recovered = await supabase.from("pet_media").select("*, media:media_id(id,url,type,thumbnail_url)")
+      .eq("id",requestId).eq("pet_id",petId).eq("media_id",mediaId).eq("created_by",userId).eq("role",role).maybeSingle();
+    mediaRecord = recovered.data as any;
+    error = recovered.error;
+    if (!mediaRecord && !error) throw Object.assign(new Error("Pet media request ID already used"), {status:409});
+  }
   if (error || !mediaRecord) {
     console.error("addPetMediaService error:", error);
     throw error || new Error("Failed to link media to pet.");
@@ -922,7 +927,7 @@ export async function addPetMediaService(
   // If pet is protected, secure the media in private storage
   const { data: petRow } = await supabase
     .from("pets")
-    .select("id, profile_visibility")
+    .select("id, profile_visibility, deleted_at")
     .eq("id", petId)
     .single();
 
@@ -1154,6 +1159,7 @@ export async function getMyPendingPetInvitesService(userId: string): Promise<any
         species_name,
         breed,
         profile_media_id,
+        deleted_at,
         status
       )
     `)
@@ -1165,7 +1171,7 @@ export async function getMyPendingPetInvitesService(userId: string): Promise<any
   const enrichedInvites: any[] = [];
   for (const inv of invites) {
     const pet = Array.isArray(inv.pets) ? inv.pets[0] : inv.pets;
-    if (!pet) continue;
+    if (!pet || pet.deleted_at) continue;
 
     // Resolve avatar
     let avatarUrl: string | null = null;
@@ -1296,36 +1302,7 @@ export async function removePetParentService(
   targetParentUserId: string,
   callerId: string
 ): Promise<void> {
-  const targetParent = await getPetParentRelationship(targetParentUserId, petId);
-  if (!targetParent) {
-    const error: any = new Error("Pet parent record not found.");
-    error.status = 404;
-    throw error;
-  }
-
-  if (targetParent.is_primary) {
-    const error: any = new Error("The primary owner cannot be removed.");
-    error.status = 400;
-    throw error;
-  }
-
-  // Caller can remove themselves, or must have MANAGE_PARENTS permission
-  const isSelf = callerId === targetParentUserId;
-  const canManage = await hasPetPermission(callerId, petId, "MANAGE_PARENTS");
-
-  if (!isSelf && !canManage) {
-    const error: any = new Error("You do not have permission to remove this pet parent.");
-    error.status = 403;
-    throw error;
-  }
-
-  const { error } = await supabase
-    .from("pet_parents")
-    .delete()
-    .eq("pet_id", petId)
-    .eq("user_id", targetParentUserId);
-
-  if (error) throw error;
+  await petLifecycle(petId, callerId, "remove", targetParentUserId);
 }
 
 /**
@@ -1338,7 +1315,7 @@ export async function getPetPostsService(
   limit: number = 10
 ): Promise<{ posts: any[]; count: number }> {
   // 1. Evaluate Pet visibility first
-  const { data: pet } = await supabase.from("pets").select("id, profile_visibility").eq("id", petId).single();
+  const { data: pet } = await supabase.from("pets").select("id, profile_visibility, deleted_at").eq("id", petId).single();
   if (!pet) {
     const err: any = new Error("Pet not found.");
     err.status = 404;
@@ -1361,7 +1338,7 @@ export async function getPetPostsService(
       user:user_id(id, username, full_name, avatar_url),
       post_media(id, media_id, sort_order, media(id, url, type)),
       pet:pet_id(id, name, species, profile_media_id)
-    `, { count: "exact" })
+    `, { count: "exact" }).is("community_deleted_at", null)
     .eq("pet_id", petId)
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
@@ -1466,7 +1443,7 @@ export async function getPetMediaAccessService(
   // 1. Load pet
   const { data: pet } = await supabase
     .from("pets")
-    .select("id, profile_visibility, status, profile_media_id, cover_media_id")
+    .select("id, profile_visibility, status, deleted_at, profile_media_id, cover_media_id")
     .eq("id", petId)
     .single();
 
@@ -1544,3 +1521,8 @@ export async function getPetMediaAccessService(
   };
 }
 
+
+export async function petLifecycle(petId: string, actorId: string, action: string, targetId: string | null = null) {
+ const { error } = await supabase.rpc("pet_membership_action", {p_pet:petId,p_actor:actorId,p_action:action,p_target:targetId});
+ if(error) throw Object.assign(new Error(error.message), {status:error.code === "42501" ? 403 : error.code === "P0002" ? 404 : 409});
+}

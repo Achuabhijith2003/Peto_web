@@ -20,6 +20,7 @@ import CommunityHeader from "../components/community/CommunityHeader";
 import CommunityTabs from "../components/community/CommunityTabs";
 import CommunityMemberItem from "../components/community/CommunityMemberItem";
 import CommunityRulesAccordion from "../components/community/CommunityRulesAccordion";
+import CommunityDeleteSettings from "../components/community/CommunityDeleteSettings";
 import CommunityModPanel from "../components/community/CommunityModPanel";
 import CreatePost from "../components/social/CreatePost";
 import PostCard from "../components/social/PostCard";
@@ -153,14 +154,26 @@ const CommunityDetail = () => {
     }
   };
 
+  const [roleError,setRoleError]=useState("");
+  const [changingRole,setChangingRole]=useState(false);
+  const handleTransferOwnership = async (targetUserId:string) => {
+    if(changingRole || !window.confirm("Transfer community ownership to this member? You will become a regular member and lose owner-only permissions."))return;
+    setChangingRole(true);setRoleError("");
+    try {
+      await api.patch(`/communities/${community.id}/members/${targetUserId}/role`,{role:"owner"});
+      await fetchCommunity();await fetchMembers(1,true);
+    } catch(err:any){setRoleError(err.response?.data?.message || "Unable to transfer ownership.");}
+    finally{setChangingRole(false);}
+  };
+
   const handlePromoteModerator = async (targetUserId: string) => {
     try {
       await api.patch(`/communities/${community.id}/members/${targetUserId}/role`, {
         role: "moderator",
       });
       fetchMembers(1, true);
-    } catch (err) {
-      console.error("Error promoting moderator:", err);
+    } catch (err:any) {
+      setRoleError(err.response?.data?.message || "Unable to promote moderator.");
     }
   };
 
@@ -170,8 +183,8 @@ const CommunityDetail = () => {
         role: "member",
       });
       fetchMembers(1, true);
-    } catch (err) {
-      console.error("Error demoting moderator:", err);
+    } catch (err:any) {
+      setRoleError(err.response?.data?.message || "Unable to demote moderator.");
     }
   };
 
@@ -260,6 +273,7 @@ const CommunityDetail = () => {
       <Navbar />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+        {roleError && <p role="alert" className="mb-3 text-sm text-red-700">{roleError}</p>}
         {/* Back link */}
         <button
           type="button"
@@ -505,6 +519,8 @@ const CommunityDetail = () => {
                       key={member.id}
                       member={member}
                       viewerRole={community.viewer?.role}
+                      onTransferOwnership={handleTransferOwnership}
+                      busy={changingRole}
                       onPromoteModerator={handlePromoteModerator}
                       onDemoteModerator={handleDemoteModerator}
                       onBanMember={(userId: string, username: string) => setBanningUser({ id: userId, username })}
@@ -584,7 +600,13 @@ const CommunityDetail = () => {
 
         {/* TAB 4: MODERATION DASHBOARD */}
         {activeTab === "moderation" && (isOwner || isModerator) && (
-          <CommunityModPanel communityId={community.id} isOwner={isOwner} />
+          <div className="space-y-6">
+            <CommunityModPanel communityId={community.id} isOwner={isOwner} />
+            {isOwner && <CommunityDeleteSettings community={community} onDelete={async confirmation=>{await api.delete(`/communities/${community.id}`,{data:{confirmation}});}} onDeleted={()=>{
+              setCommunity(null);setPosts([]);setMembers([]);
+              navigate("/community",{replace:true,state:{communityDeleted:true}});
+            }}/>}
+          </div>
         )}
       </main>
 

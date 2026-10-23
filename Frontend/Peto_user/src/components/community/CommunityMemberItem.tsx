@@ -18,6 +18,8 @@ interface CommunityMemberItemProps {
     };
   };
   viewerRole?: "owner" | "moderator" | "member" | null;
+  onTransferOwnership?: (userId:string)=>void;
+  busy?: boolean;
   onPromoteModerator?: (userId: string) => void;
   onDemoteModerator?: (userId: string) => void;
   onBanMember?: (userId: string, username: string) => void;
@@ -26,6 +28,8 @@ interface CommunityMemberItemProps {
 const CommunityMemberItem = ({
   member,
   viewerRole,
+  onTransferOwnership,
+  busy=false,
   onPromoteModerator,
   onDemoteModerator,
   onBanMember,
@@ -138,6 +142,7 @@ const CommunityMemberItem = ({
                 )
               )}
 
+              {isViewerOwner && onTransferOwnership && <button type="button" disabled={busy} onClick={()=>{setMenuOpen(false);onTransferOwnership(profile.id);}} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-amber-800 hover:bg-amber-50 disabled:opacity-50">Transfer ownership</button>}
               <button
                 type="button"
                 onClick={() => {

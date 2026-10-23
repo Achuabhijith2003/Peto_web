@@ -129,8 +129,8 @@ export async function getCommunityByIdService(
     }
 
     const { data: community, error } = await query.single();
-    if (error || !community) {
-        throw new Error("Community not found.");
+    if (error || !community || community.deleted_at) {
+        throw Object.assign(new Error("Community not found."), {status:404});
     }
 
     // Sort rules by position
@@ -240,21 +240,13 @@ export async function updateCommunityService(
     return getCommunityByIdService(communityId, userId);
 }
 
-export async function deleteCommunityService(communityId: string, userId: string) {
-    const { data: community, error: fetchError } = await supabase
-        .from("communities")
-        .select("owner_id")
-        .eq("id", communityId)
-        .single();
-
-    if (fetchError || !community) throw new Error("Community not found.");
-    if (community.owner_id !== userId) {
-        throw new Error("Unauthorized: Only the community owner can delete the community.");
-    }
-
-    const { error } = await supabase.from("communities").delete().eq("id", communityId);
-    if (error) throw error;
-    return { success: true };
+export async function communityOwnerAction(communityId: string, userId: string, action: string, target: string | null = null, confirmation: string | null = null) {
+    const {data,error} = await supabase.rpc("community_owner_action",{p_id:communityId,p_actor:userId,p_action:action,p_target:target,p_confirmation:confirmation});
+    if(error) throw Object.assign(new Error(error.message),{status:error.code === "42501" ? 403 : error.code === "P0002" ? 404 : error.code === "22023" ? 400 : 500});
+    return data;
+}
+export async function deleteCommunityService(communityId: string, userId: string, confirmation: string | null = null) {
+    return communityOwnerAction(communityId,userId,"delete",null,confirmation);
 }
 
 /*
@@ -267,6 +259,9 @@ export async function getCommunityUserRole(
     communityId: string,
     userId: string
 ): Promise<CommunityRole | null> {
+    const {data:community} = await supabase.from("communities").select("owner_id,deleted_at").eq("id",communityId).maybeSingle();
+    if (!community || community.deleted_at) return null;
+    if (community.owner_id === userId) return "owner";
     const { data } = await supabase
         .from("community_members")
         .select("role, status")
@@ -275,7 +270,7 @@ export async function getCommunityUserRole(
         .maybeSingle();
 
     if (!data || data.status !== "active") return null;
-    return data.role as CommunityRole;
+    return data.role === "owner" ? "member" : data.role as CommunityRole;
 }
 
 export async function isUserBannedFromCommunity(
@@ -308,7 +303,7 @@ export async function joinCommunityService(communityId: string, userId: string) 
     // 1. Fetch community
     const { data: community, error } = await supabase
         .from("communities")
-        .select("id, name, owner_id, visibility, member_count")
+        .select("id, name, owner_id, visibility, member_count").is("deleted_at", null)
         .eq("id", communityId)
         .single();
 
@@ -460,36 +455,15 @@ export async function getCommunityMembersService(
 export async function updateMemberRoleService(
     communityId: string,
     targetUserId: string,
-    newRole: "moderator" | "member",
+    newRole: "owner" | "moderator" | "member",
     currentUserId: string
 ) {
-    const callerRole = await getCommunityUserRole(communityId, currentUserId);
-    if (callerRole !== "owner") {
-        throw new Error("Unauthorized: Only the community owner can change member roles.");
-    }
-
-    if (targetUserId === currentUserId) {
-        throw new Error("Owner cannot change their own role.");
-    }
-
-    const { data, error } = await supabase
-        .from("community_members")
-        .update({ role: newRole, updated_at: new Date().toISOString() })
-        .eq("community_id", communityId)
-        .eq("user_id", targetUserId)
-        .select()
-        .single();
-
-    if (error) throw error;
-
-    await createNotification({
-        recipientId: targetUserId,
-        actorId: currentUserId,
-        type: "system",
-        message: `updated your role to ${newRole} in the community.`,
-    });
-
-    return data;
+    const result = await communityOwnerAction(communityId,currentUserId,newRole,targetUserId);
+    try {
+        await createNotification({recipientId:targetUserId,actorId:currentUserId,type:"system",
+            message:newRole === "owner" ? "transferred community ownership to you." : `updated your role to ${newRole} in the community.`});
+    } catch(error) {console.warn("Community role notification failed:",error);}
+    return result;
 }
 
 export async function getPendingJoinRequestsService(communityId: string, currentUserId: string) {
@@ -712,7 +686,7 @@ export async function queryCommunitiesService(params: QueryCommunitiesInput) {
                 verified
             )
         `, { count: "exact" })
-        .eq("is_archived", false);
+        .eq("is_archived", false).is("deleted_at", null);
 
     if (search && search.trim()) {
         const commOr = buildPostgrestOrIlike(["name", "description", "slug"], search);
@@ -876,7 +850,7 @@ export async function getSuggestedCommunitiesService(userId: string, limit: numb
             )
         `)
         .eq("visibility", "public")
-        .eq("is_archived", false);
+        .eq("is_archived", false).is("deleted_at", null);
 
     if (candidateIds.length > 0) {
         query = query.in("id", Array.from(new Set(candidateIds)));
@@ -1176,4 +1150,11 @@ export async function moderatePostService(
             message: newLockState ? "Discussion locked." : "Discussion unlocked.",
         };
     }
+}
+
+export async function assertCommunityLive(identifier: string) {
+    const key = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier) ? "id" : "slug";
+    const {data,error} = await supabase.from("communities").select("id").eq(key,identifier).is("deleted_at",null).maybeSingle();
+    if(error) throw Object.assign(new Error("Unable to load community"),{status:503});
+    if(!data) throw Object.assign(new Error("Community not found"),{status:404});
 }

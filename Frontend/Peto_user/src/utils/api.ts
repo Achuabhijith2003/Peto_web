@@ -1,6 +1,10 @@
 import axios from "axios";
 import { getAutoDetectedLocation } from "./geoDetector";
 
+declare module "axios" {
+  interface AxiosRequestConfig { expectedOwnerId?: string; }
+}
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 // Create an Axios instance
@@ -15,6 +19,11 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("peto_token");
+    if (config.expectedOwnerId) {
+      let tokenOwner: string | undefined;
+      try { tokenOwner = JSON.parse(atob(token!.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))).sub; } catch { /* missing/invalid token */ }
+      if (tokenOwner !== config.expectedOwnerId) throw new axios.CanceledError("Sign in to the account that queued this upload to retry.");
+    }
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -31,7 +40,7 @@ api.interceptors.request.use(
 
     // Attach active acting identity for business / personal social interactions
     const activeActing = localStorage.getItem("peto_active_acting_identity");
-    if (activeActing) {
+    if (activeActing && !config.expectedOwnerId) {
       try {
         const parsed = JSON.parse(activeActing);
         if (parsed?.type === "BUSINESS" && parsed?.id) {

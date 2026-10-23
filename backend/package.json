@@ -7,7 +7,9 @@
     "build": "tsc",
     "test": "tsx --test tests/**/*.test.ts",
     "storage:cleanup": "tsx src/media/storageCleanup.cli.ts",
-    "start": "tsx src/server.ts"
+    "start": "tsx src/server.ts",
+    "test:governance": "node tests/membership_rbac.database.test.mjs",
+    "test:community": "node tests/community_lifecycle.database.test.mjs"
   },
   "dependencies": {
     "ioredis": "^5.6.1"

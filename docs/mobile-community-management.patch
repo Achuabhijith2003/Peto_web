@@ -1,0 +1,307 @@
+diff --git a/Mobile/peto_user/lib/services/api_service.dart b/Mobile/peto_user/lib/services/api_service.dart
+index b805609..8b356fb 100644
+--- a/Mobile/peto_user/lib/services/api_service.dart
++++ b/Mobile/peto_user/lib/services/api_service.dart
+@@ -564,6 +564,10 @@ class ApiService {
+     );
+   }
+ 
++  Future<Response> deleteCommunity(String id, String confirmation) async {
++    return await _dio.delete('/communities/$id', data: {'confirmation': confirmation});
++  }
++
+   Future<Response> getCommunityDetail(String id) async {
+     return await _dio.get('/communities/$id');
+   }
+diff --git a/Mobile/peto_user/lib/providers/community_provider.dart b/Mobile/peto_user/lib/providers/community_provider.dart
+index 2c79a86..cbab5b3 100644
+--- a/Mobile/peto_user/lib/providers/community_provider.dart
++++ b/Mobile/peto_user/lib/providers/community_provider.dart
+@@ -121,6 +121,11 @@ class CommunityProvider extends ChangeNotifier {
+     return null;
+   }
+ 
++  void removeCommunityLocally(String id) {
++    _communities.removeWhere((community) => community.id == id);
++    notifyListeners();
++  }
++
+   void updateCommunityLocally(Community updated) {
+     final index = _communities.indexWhere((c) => c.id == updated.id);
+     if (index != -1) {
+diff --git a/Mobile/peto_user/lib/providers/post_provider.dart b/Mobile/peto_user/lib/providers/post_provider.dart
+index 706754b..fcdad56 100644
+--- a/Mobile/peto_user/lib/providers/post_provider.dart
++++ b/Mobile/peto_user/lib/providers/post_provider.dart
+@@ -32,6 +32,12 @@ class PostProvider extends ChangeNotifier {
+   bool get isLoadingBookmarks => _isLoadingBookmarks;
+   String? get selectedCategory => _selectedCategory;
+ 
++  void removeCommunityContent(String communityId) {
++    _posts.removeWhere((post) => post.communityId == communityId);
++    _bookmarkedPosts.removeWhere((post) => post.communityId == communityId);
++    notifyListeners();
++  }
++
+   Future<void> fetchPosts({String? category, bool refresh = false}) async {
+     final sameCategory = _selectedCategory == category;
+     final previousPage = _currentPage;
+diff --git a/Mobile/peto_user/lib/screens/community/edit_community_screen.dart b/Mobile/peto_user/lib/screens/community/edit_community_screen.dart
+index 151e62c..dddd77a 100644
+--- a/Mobile/peto_user/lib/screens/community/edit_community_screen.dart
++++ b/Mobile/peto_user/lib/screens/community/edit_community_screen.dart
+@@ -1,4 +1,10 @@
+ import 'package:flutter/material.dart';
++import 'package:provider/provider.dart';
++import '../../providers/auth_provider.dart';
++import '../../providers/community_provider.dart';
++import '../../providers/post_provider.dart';
++import '../../providers/reel_provider.dart';
++import '../../widgets/community_delete_section.dart';
+ import 'package:cached_network_image/cached_network_image.dart';
+ import '../../models/community_model.dart';
+ import '../../services/api_service.dart';
+@@ -435,6 +441,21 @@ class _EditCommunityScreenState extends State<EditCommunityScreen> {
+ 
+               const SizedBox(height: 32),
+ 
++              CommunityDeleteSection(communityId: widget.community.id, communityName: widget.community.name,
++                isOwner: widget.community.isUserOwner(context.watch<AuthProvider>().user?.id),
++                onDeleted: () async {
++                  final communities = context.read<CommunityProvider>();
++                  final posts = context.read<PostProvider>();
++                  final reels = context.read<ReelProvider>();
++                  posts.removeCommunityContent(widget.community.id);
++                  communities.removeCommunityLocally(widget.community.id);
++                  if (context.mounted) {
++                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Community deleted. All members have lost access.')));
++                    Navigator.pop(context, 'community_deleted');
++                  }
++                  await Future.wait([communities.fetchCommunities(), posts.fetchPosts(refresh: true), reels.fetchReels()]);
++                }),
++              const SizedBox(height: 16),
+               // Save Button
+               CustomButton(
+                 text: 'Save Community Changes',
+diff --git a/Mobile/peto_user/lib/screens/community/community_detail_screen.dart b/Mobile/peto_user/lib/screens/community/community_detail_screen.dart
+index f31f895..a1d9fb0 100644
+--- a/Mobile/peto_user/lib/screens/community/community_detail_screen.dart
++++ b/Mobile/peto_user/lib/screens/community/community_detail_screen.dart
+@@ -13,6 +13,7 @@ import '../../widgets/comments_bottom_sheet.dart';
+ import '../../widgets/auth_prompt_bottom_sheet.dart';
+ import '../posts/create_post_screen.dart';
+ import 'edit_community_screen.dart';
++import 'community_screen.dart';
+ 
+ class CommunityDetailScreen extends StatefulWidget {
+   final String communityId;
+@@ -212,26 +213,34 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen>
+     }
+   }
+ 
++  bool _changingMemberRole = false;
+   void _handleChangeMemberRole(CommunityMember member, String newRole) async {
++    if (_changingMemberRole) return;
++    if (newRole == 'owner') {
++      final accepted = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
++        title: const Text('Transfer community ownership?'),
++        content: Text('@${member.username} will become the owner. You will become a regular member and lose owner-only permissions.'),
++        actions: [TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
++          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Transfer'))]));
++      if (accepted != true || !mounted) return;
++    }
++    setState(() => _changingMemberRole = true);
+     try {
+       await _apiService.changeMemberRole(widget.communityId, member.userId, newRole);
++      await _fetchCommunityDetail();
++      await _fetchCommunityMembers();
+       if (mounted) {
+-        ScaffoldMessenger.of(context).showSnackBar(
+-          SnackBar(
+-            content: Text(newRole == 'moderator'
+-                ? 'Made @${member.username} a Moderator'
+-                : 'Demoted @${member.username} to Member'),
+-          ),
+-        );
+-        _fetchCommunityMembers();
++        if (_community != null) context.read<CommunityProvider>().updateCommunityLocally(_community!);
++        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(newRole == 'owner'
++          ? 'Ownership transferred to @${member.username}' : newRole == 'moderator'
++          ? 'Made @${member.username} a Moderator' : 'Demoted @${member.username} to Member')));
+       }
+-    } catch (e) {
++    } catch (_) {
+       if (mounted) {
+-        ScaffoldMessenger.of(context).showSnackBar(
+-          const SnackBar(content: Text('Failed to update member role.'), backgroundColor: AppColors.error),
+-        );
++        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
++          content: Text('Failed to update member role. Refresh and try again.'), backgroundColor: AppColors.error));
+       }
+-    }
++    } finally {if (mounted) setState(() => _changingMemberRole = false);}
+   }
+ 
+   void _showBanMemberDialog(CommunityMember member) {
+@@ -475,13 +484,18 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen>
+   }
+ 
+   void _openEditCommunity(Community community) async {
+-    final updated = await Navigator.push<Community>(
++    final updated = await Navigator.push<Object>(
+       context,
+       MaterialPageRoute(
+         builder: (_) => EditCommunityScreen(community: community),
+       ),
+     );
+-    if (updated != null && mounted) {
++    if (updated == 'community_deleted' && mounted) {
++      if (Navigator.canPop(context)) {Navigator.pop(context, true);}
++      else {Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const CommunityScreen()));}
++      return;
++    }
++    if (updated is Community && mounted) {
+       setState(() {
+         _community = updated;
+       });
+@@ -1058,7 +1072,9 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen>
+                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                   elevation: 6,
+                   onSelected: (action) {
+-                    if (action == 'make_mod') {
++                    if (action == 'transfer_owner') {
++                      _handleChangeMemberRole(member, 'owner');
++                    } else if (action == 'make_mod') {
+                       _handleChangeMemberRole(member, 'moderator');
+                     } else if (action == 'demote_mod') {
+                       _handleChangeMemberRole(member, 'member');
+@@ -1066,7 +1082,9 @@ class _CommunityDetailScreenState extends State<CommunityDetailScreen>
+                       _showBanMemberDialog(member);
+                     }
+                   },
++                  enabled: !_changingMemberRole,
+                   itemBuilder: (ctx) => [
++                    if (isViewerOwner) const PopupMenuItem<String>(value: 'transfer_owner', child: Text('Transfer ownership')),
+                     if (isViewerOwner && !isMemberMod)
+                       const PopupMenuItem<String>(
+                         value: 'make_mod',
+diff --git a/Mobile/peto_user/lib/widgets/community_delete_section.dart b/Mobile/peto_user/lib/widgets/community_delete_section.dart
+new file mode 100644
+--- /dev/null
++++ b/Mobile/peto_user/lib/widgets/community_delete_section.dart
+@@ -0,0 +1,62 @@
++﻿import 'package:flutter/material.dart';
++import '../services/api_service.dart';
++import '../theme/app_theme.dart';
++
++class CommunityDeleteSection extends StatelessWidget {
++  final String communityId;
++  final String communityName;
++  final bool isOwner;
++  final Future<void> Function() onDeleted;
++  final Future<void> Function(String)? deleteAction;
++  const CommunityDeleteSection({super.key, required this.communityId, required this.communityName,
++    required this.isOwner, required this.onDeleted, this.deleteAction});
++
++  @override
++  Widget build(BuildContext context) {
++    if (!isOwner) return const SizedBox.shrink();
++    return Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(
++      crossAxisAlignment: CrossAxisAlignment.start, children: [
++        const Text('Delete Community', style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.error)),
++        const SizedBox(height: 8),
++        const Text('All members will lose access. Community discussions and media will be retained under Peto’s retention policies.'),
++        const SizedBox(height: 12),
++        FilledButton.icon(style: FilledButton.styleFrom(backgroundColor: AppColors.error), icon: const Icon(Icons.delete_outline),
++          label: const Text('Delete Community'), onPressed: () async {
++            final deleted = await showDialog<bool>(context: context, barrierDismissible: false, builder: (_) => _DeleteCommunityDialog(
++              name: communityName, deleteAction: deleteAction ?? (name) async { await ApiService().deleteCommunity(communityId, name); }));
++            if (deleted == true && context.mounted) await onDeleted();
++          }),
++      ])));
++  }
++}
++
++class _DeleteCommunityDialog extends StatefulWidget {
++  final String name;
++  final Future<void> Function(String) deleteAction;
++  const _DeleteCommunityDialog({required this.name, required this.deleteAction});
++  @override
++  State<_DeleteCommunityDialog> createState() => _DeleteCommunityDialogState();
++}
++class _DeleteCommunityDialogState extends State<_DeleteCommunityDialog> {
++  String confirmation = '';
++  bool busy = false;
++  String? error;
++  @override
++  Widget build(BuildContext context) => PopScope(canPop: !busy, child: AlertDialog(
++    title: const Text('Delete community for everyone?'),
++    content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
++      const Text('All members will lose access. This action cannot be undone here.'),
++      TextField(autofocus: true, enabled: !busy, decoration: InputDecoration(labelText: 'Type ${widget.name} to confirm'),
++        onChanged: (value) => setState(() => confirmation = value)),
++      if (error != null) Text(error!, style: const TextStyle(color: AppColors.error)),
++    ])),
++    actions: [
++      TextButton(onPressed: busy ? null : () => Navigator.pop(context, false), child: const Text('Cancel')),
++      FilledButton(style: FilledButton.styleFrom(backgroundColor: AppColors.error), onPressed: busy || confirmation != widget.name ? null : () async {
++        setState(() {busy = true; error = null;});
++        try {await widget.deleteAction(confirmation); if (context.mounted) Navigator.pop(context, true);}
++        catch (_) {if (mounted) setState(() {busy = false; error = 'Unable to delete community. Check your access and try again.';});}
++      }, child: Text(busy ? 'Deleting…' : 'Delete for everyone')),
++    ],
++  ));
++}
+diff --git a/Mobile/peto_user/test/community_delete_test.dart b/Mobile/peto_user/test/community_delete_test.dart
+new file mode 100644
+--- /dev/null
++++ b/Mobile/peto_user/test/community_delete_test.dart
+@@ -0,0 +1,48 @@
++﻿import 'dart:async';
++import 'package:flutter/material.dart';
++import 'package:flutter_test/flutter_test.dart';
++import 'package:peto_user/widgets/community_delete_section.dart';
++
++void main() {
++  testWidgets('only owners see Delete Community', (tester) async {
++    await tester.pumpWidget(MaterialApp(home: Scaffold(body: CommunityDeleteSection(
++      communityId: 'circle', communityName: 'Circle', isOwner: false, onDeleted: () async {}))));
++    expect(find.text('Delete Community'), findsNothing);
++  });
++  testWidgets('typed name required; deletion disables controls and completes', (tester) async {
++    final gate = Completer<void>();
++    var calls = 0;
++    var completed = false;
++    await tester.pumpWidget(MaterialApp(home: Scaffold(body: CommunityDeleteSection(
++      communityId: 'circle', communityName: 'Circle', isOwner: true,
++      deleteAction: (name) async {expect(name, 'Circle'); calls++; await gate.future;}, onDeleted: () async {completed = true;}))));
++    await tester.tap(find.widgetWithText(FilledButton, 'Delete Community'));
++    await tester.pumpAndSettle();
++    expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Delete for everyone')).onPressed, isNull);
++    await tester.enterText(find.byType(TextField), 'wrong');
++    await tester.pump();
++    expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Delete for everyone')).onPressed, isNull);
++    await tester.enterText(find.byType(TextField), 'Circle');
++    await tester.pump();
++    await tester.tap(find.widgetWithText(FilledButton, 'Delete for everyone'));
++    await tester.pump();
++    expect(tester.widget<FilledButton>(find.byType(FilledButton).last).onPressed, isNull);
++    expect(tester.widget<TextButton>(find.widgetWithText(TextButton, 'Cancel')).onPressed, isNull);
++    gate.complete();
++    await tester.pumpAndSettle();
++    expect(calls, 1);expect(completed, isTrue);
++  });
++  testWidgets('deletion error keeps dialog and permits retry', (tester) async {
++    var completed = false;
++    await tester.pumpWidget(MaterialApp(home: Scaffold(body: CommunityDeleteSection(
++      communityId: 'circle', communityName: 'Circle', isOwner: true,
++      deleteAction: (_) async {throw StateError('Denied');}, onDeleted: () async {completed = true;}))));
++    await tester.tap(find.widgetWithText(FilledButton, 'Delete Community'));
++    await tester.pumpAndSettle();
++    await tester.enterText(find.byType(TextField), 'Circle');await tester.pump();
++    await tester.tap(find.widgetWithText(FilledButton, 'Delete for everyone'));await tester.pumpAndSettle();
++    expect(find.textContaining('Unable to delete community'), findsOneWidget);
++    expect(completed, isFalse);
++    expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Delete for everyone')).onPressed, isNotNull);
++  });
++}

@@ -56,5 +56,5 @@ export const createBanSchema = z.object({
 });
 
 export const updateMemberRoleSchema = z.object({
-    role: z.enum(["moderator", "member"]),
+    role: z.enum(["owner", "moderator", "member"]),
 });

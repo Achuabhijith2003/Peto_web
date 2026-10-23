@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { fetchRoles, fetchPermissions } from "../api/adminApi";
+import { fetchRoles, fetchPermissions, adminApi } from "../api/adminApi";
 import { AdminRole, AdminPermission } from "../types/admin";
+import { useAdminAuth } from "../context/AdminAuthContext";
 import { StatusBadge } from "../components/ui/StatusBadge";
 import { PageHeader } from "../components/layout/PageHeader";
 import { Card, CardContent } from "../components/ui/card";
@@ -13,6 +14,19 @@ import {
 } from "lucide-react";
 
 export const AdminRoles: React.FC = () => {
+  const {hasPermission, admin} = useAdminAuth();
+  const [draft,setDraft] = useState<{id?:string;name:string;description:string;permissionIds:string[]}|null>(null);
+  const [saving,setSaving] = useState(false);
+  const mutate = async (removeId?:string) => {
+    setSaving(true);setError(null);
+    try {
+      if(removeId) await adminApi.delete('/admin/roles/'+removeId);
+      else if(draft?.id) await adminApi.patch('/admin/roles/'+draft.id,draft);
+      else await adminApi.post('/admin/roles',draft);
+      setDraft(null);await loadData();
+    } catch(e:any) {setError(e.response?.data?.message || e.message);}
+    finally {setSaving(false);}
+  };
   const [roles, setRoles] = useState<AdminRole[]>([]);
   const [permissions, setPermissions] = useState<AdminPermission[]>([]);
   const [loading, setLoading] = useState(true);
@@ -22,6 +36,7 @@ export const AdminRoles: React.FC = () => {
   const loadData = async () => {
     try {
       setLoading(true);
+      setError(null);
       const [rolesRes, permsRes] = await Promise.all([
         fetchRoles(),
         fetchPermissions(),
@@ -99,6 +114,15 @@ export const AdminRoles: React.FC = () => {
         </Card>
       )}
 
+      {hasPermission('admins.view') && <a className="text-primary underline" href="/admins">Assign roles to administrators</a>}
+      {hasPermission('roles.manage') && <Button onClick={()=>setDraft({name:'',description:'',permissionIds:[]})}>Create custom role</Button>}
+      {draft && <form className="p-5 border rounded-xl space-y-4" onSubmit={e=>{e.preventDefault();void mutate();}}>
+        <h2>{draft.id ? 'Edit custom role':'Create custom role'}</h2>
+        <label className="block">Name <input className="border p-2" required maxLength={50} value={draft.name} onChange={e=>setDraft({...draft,name:e.target.value})}/></label>
+        <label className="block">Description <textarea className="border p-2" maxLength={2000} value={draft.description} onChange={e=>setDraft({...draft,description:e.target.value})}/></label>
+        {Object.entries(permsByModule).map(([module,perms])=><fieldset key={module}><legend>{module}</legend>{perms.map(p=><label key={p.id} className="block"><input type="checkbox" checked={draft.permissionIds.includes(p.id)} disabled={saving || (!admin?.permissions.includes(p.code) && admin?.role.name!=='Super Admin')} onChange={e=>setDraft({...draft,permissionIds:e.target.checked ? [...draft.permissionIds,p.id]:draft.permissionIds.filter(id=>id!==p.id)})}/> {p.code} ? {p.description}</label>)}</fieldset>)}
+        <Button disabled={saving || !draft.name.trim()} type="submit">{saving?'Saving?':'Save role'}</Button> <Button type="button" disabled={saving} onClick={()=>setDraft(null)}>Cancel</Button>
+      </form>}
       {/* Role Cards View */}
       {activeTab === "roles" && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -122,6 +146,11 @@ export const AdminRoles: React.FC = () => {
                 </p>
               </div>
 
+              <p>{role.assigned_count || 0} assigned administrators</p>
+              {!role.is_system && hasPermission('roles.manage') && <div className="flex gap-2">
+                <Button disabled={saving} onClick={()=>setDraft({id:role.id,name:role.name,description:role.description,permissionIds:(role.permissions || []).map(p=>p.id)})}>Edit</Button>
+                <Button disabled={saving || !!role.assigned_count} onClick={()=>{if(window.confirm('Delete custom role '+role.name+'? This cannot be undone.')) void mutate(role.id);}}>Delete</Button>
+              </div>}
               <div className="pt-4 border-t border-border">
                 <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
                   <span className="font-semibold font-heading text-foreground">Granted Permissions</span>

@@ -3,6 +3,12 @@ import { createNotification } from "../notifications/notification.service";
 import { syncCommentMentions } from "../posts/mention_tag.service";
 import { hasBusinessPermission } from "../businesses/business.rbac";
 
+async function assertLivePost(postId: string) {
+    const {data,error} = await supabase.from("posts").select("id").eq("id",postId).is("community_deleted_at",null).maybeSingle();
+    if(error) throw error;
+    if(!data) throw Object.assign(new Error("Post not found"),{status:404});
+}
+
 export async function createCommentService(
     userId: string,
     postId: string,
@@ -13,6 +19,7 @@ export async function createCommentService(
     authorType?: "USER" | "BUSINESS"
 ) {
 
+    await assertLivePost(postId);
     const insertPayload: any = {
         post_id: postId,
         user_id: userId,
@@ -109,6 +116,7 @@ export async function getCommentsService(
     limit: number
 ) {
 
+    await assertLivePost(postId);
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 

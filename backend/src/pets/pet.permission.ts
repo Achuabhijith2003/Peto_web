@@ -11,6 +11,8 @@ export async function getPetParentRelationship(
   if (!userId || !petId) return null;
 
   try {
+    const {data:pet} = await supabase.from("pets").select("deleted_at").eq("id",petId).maybeSingle();
+    if(!pet || pet.deleted_at) return null;
     const { data, error } = await supabase
       .from("pet_parents")
       .select("*")
@@ -51,8 +53,9 @@ export async function hasPetPermission(
  */
 export async function evaluatePetVisibility(
   requesterId: string | null,
-  pet: { id: string; profile_visibility: PetVisibility; parents?: any[] }
+  pet: { id: string; profile_visibility: PetVisibility; parents?: any[]; deleted_at?: string | null }
 ): Promise<{ allowed: boolean; isParent: boolean; relationship: PetParent | null }> {
+  if (pet.deleted_at) return {allowed:false,isParent:false,relationship:null};
   // 1. Check if requester is a pet parent
   let isParent = false;
   let relationship: PetParent | null = null;

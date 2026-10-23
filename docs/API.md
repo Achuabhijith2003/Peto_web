@@ -632,3 +632,46 @@ Reported content.
 - ⏳ Search
 - ⏳ AI
 - ⏳ Admin
+## Shared pet lifecycle
+
+All mutations require the signed-in user's Bearer token. Actor IDs are derived from authentication, never request bodies.
+
+| Endpoint | Body | Authorization and result |
+| --- | --- | --- |
+| `DELETE /api/pets/:id/membership` | none | Removes only the caller's association. A primary must transfer first. Repeated removal succeeds. |
+| `DELETE /api/pets/:id/parents/:parentUserId` | none | Self, primary, or active member with `MANAGE_PARENTS`; never removes an active primary. |
+| `POST /api/pets/:id/transfer-ownership` | `{ "userId": "recipient UUID" }` | Primary only; recipient must be an active existing member. |
+| `DELETE /api/pets/:id` | none | Primary only. Soft-deletes pet, revokes every membership, retains posts/media. Retry by deleting primary succeeds during retention. |
+
+Membership/ownership mutations serialize on the pet row. Errors: 401 unauthenticated, 403 unauthorized, 404 deleted/missing pet, 409 invalid lifecycle transition. Normal retrieval and media authorization return opaque 404 for deleted pets. Independent posts remain published with the deleted pet tag omitted; original associations remain during retention.
+
+## Custom administrative roles
+
+Existing `GET /api/admin/roles` now includes `assigned_count` (active and inactive assignments), permission definitions, and `is_system`. The existing admin create/update endpoints accept custom role IDs.
+
+| Endpoint | Body | Permission |
+| --- | --- | --- |
+| `POST /api/admin/roles` | `{ "name": "Review team", "description": "Read only", "permissionIds": ["permission UUID"] }` | `roles.manage` |
+| `PATCH /api/admin/roles/:id` | Same complete role definition; replaces mappings atomically | `roles.manage` |
+| `DELETE /api/admin/roles/:id` | none | `roles.manage`; custom role must have no assignments |
+| `PATCH /api/admin/admins/:id` | `{ "roleId": "role UUID", "isActive": true }` (either field optional) | `admins.update` |
+
+Names are unique after trimming and case folding. Built-in roles are protected. Non-Super Admins cannot manage roles or administrators exceeding their own effective permissions, or grant `roles.manage`, `admins.create`, `admins.update`, or `system.manage`. Only a built-in Super Admin can grant these privileged scopes or manage Super Admin assignments. Self-assignment changes are denied and the last active Super Admin is protected. Failed authorization returns 403; invalid input returns 400; duplicate names return 409. Permissions reload on every authenticated request. Every successful governance mutation writes its audit entry in the same database transaction, including previous and new permission mappings.
+
+### Retriable pet gallery attachments
+
+`POST /api/pets/:id/media` also accepts optional `client_pet_media_id` (UUID).
+Background clients persist this ID and the uploaded `media_id`. A matching repeat
+returns the existing association; an ID used for a different pet, media item,
+creator, or role returns 409. The uploaded media must belong to the caller when
+using a request ID. Normal pet upload permission checks apply on every attempt.
+No new database columns or tables are required for this idempotency key.
+
+## Community deletion and ownership management
+
+- `DELETE /api/communities/:id` requires authentication and body `{ "confirmation": "Exact current community name" }`. Only the database's current `owner_id` can delete. The request actor always comes from authentication; supplied owner/role fields are ignored. Success returns `{ "success": true }`; repeating the deletion as the deleting owner succeeds without duplicate audit entries. 401 means unauthenticated, 403 means not current owner, 404 means missing/deleted resource, and 400 means incorrect confirmation/invalid input.
+- Deletion is now soft: the community receives `deleted_at`, `deleted_by`, `purge_after` and `is_archived=true`. Posts receive `community_deleted_at` to filter service-role feeds, search, profiles, reels and bookmarks. Membership rows and content are retained but inaccessible. Public UUID/slug URLs, nested resources and comments on retained community posts return not found. Database guards reject new descendant writes even when deletion races an in-flight request.
+- Existing `PATCH /api/communities/:id/members/:userId/role` retains `moderator` and `member` and now also accepts `{ "role": "owner" }` for ownership transfer in this checkout. Only the current canonical owner may invoke it. Transfer requires an active existing, non-banned recipient, atomically updates `communities.owner_id` and membership roles, and leaves the previous owner as a regular member. Moderator promotion/demotion requires an active existing recipient; moderators cannot transfer or delete.
+- These governance operations lock the community row and write `COMMUNITY_DELETED`, `COMMUNITY_OWNERSHIP_TRANSFERRED` or `COMMUNITY_ROLE_UPDATED` to existing `admin_audit_logs` in the same transaction. A community owner is recorded as `admin_user_id` with `admin_id` null; the log schema already permits this.
+
+Web: community Settings/Moderation contains owner-only Delete Community; the member menu contains Transfer ownership alongside existing moderator controls. Mobile: Edit Community contains Delete Community; existing member menus expose the same transfer and moderator actions. Both deletion dialogs require the community name. Deletion returns to discovery and refreshes local state.

@@ -383,6 +383,7 @@ export async function getMentionsAndTagsForPosts(postIds: string[]): Promise<{
                     name,
                     species,
                     breed,
+                    deleted_at,
                     profile_visibility,
                     profile_media:media!pets_profile_media_id_fkey(url)
                 )
@@ -393,7 +394,7 @@ export async function getMentionsAndTagsForPosts(postIds: string[]): Promise<{
             for (const item of petTags) {
                 const pId = item.post_id;
                 const pet = item.pet as any;
-                if (pId && pet) {
+                if (pId && pet && !pet.deleted_at) {
                     const list = tagsByPostId.get(pId) || [];
                     list.push({
                         id: pet.id,
@@ -421,6 +422,7 @@ export async function getMentionsAndTagsForPosts(postIds: string[]): Promise<{
                         name,
                         species,
                         breed,
+                        deleted_at,
                         profile_visibility,
                         profile_media:media!pets_profile_media_id_fkey(url)
                     )
@@ -431,7 +433,7 @@ export async function getMentionsAndTagsForPosts(postIds: string[]): Promise<{
             if (Array.isArray(postsWithPet)) {
                 for (const item of postsWithPet) {
                     const pet = item.pet as any;
-                    if (item.id && pet) {
+                    if (item.id && pet && !pet.deleted_at) {
                         tagsByPostId.set(item.id, [{
                             id: pet.id,
                             name: pet.name,

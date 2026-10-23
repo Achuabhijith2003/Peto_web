@@ -22,9 +22,11 @@ import {
   Film,
 } from "lucide-react";
 import api from "../../utils/api";
+import { enqueuePetUpload, petUploadEvents } from "../../services/petUploadQueue";
 import { useAuth } from "../../context/AuthContext";
 import VerifiedBadge from "../../components/common/VerifiedBadge";
 import Navbar from "../../components/layout/Navbar";
+import { PetMembershipActions } from "../../components/pets/PetMembershipActions";
 import { PetParentModal } from "../../components/pets/PetParentModal";
 import { PetProfileSkeleton } from "../../components/common/Skeleton";
 
@@ -104,7 +106,7 @@ const speciesEmojis: Record<string, string> = {
 export default function PetProfilePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
 
   const [pet, setPet] = useState<PetDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -171,36 +173,27 @@ export default function PetProfilePage() {
     fetchPet();
   }, [id]);
 
-  const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !id) return;
+  useEffect(() => {
+    const completed = (event: Event) => {
+      const detail = (event as CustomEvent).detail;
+      if (detail.petId === id && detail.ownerId === user?.id) void fetchPet();
+    };
+    petUploadEvents.addEventListener("complete", completed);
+    return () => petUploadEvents.removeEventListener("complete", completed);
+  }, [id, user?.id]);
 
+  const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.currentTarget;
+    const file = input.files?.[0];
+    if (!file || !id || !user || !pet) return;
     try {
       setUploadingPhoto(true);
-      const formData = new FormData();
-      formData.append("media", file);
-
-      const uploadRes = await api.post("/media/upload", formData);
-      const returnedItem = Array.isArray(uploadRes.data?.data)
-        ? uploadRes.data.data[0]
-        : uploadRes.data?.data;
-      const mediaId = returnedItem?.id;
-
-      if (mediaId) {
-        await api.post(`/pets/${id}/media`, {
-          media_id: mediaId,
-          mediaId: mediaId,
-          url: uploadRes.data?.mediaUrl,
-          caption: "",
-        });
-        await fetchPet();
-      }
+      await enqueuePetUpload(user.id, id, pet.name, file);
     } catch (err: any) {
-      console.error("Failed to upload pet media:", err);
-      alert(err.response?.data?.message || "Failed to upload photo or video");
+      alert(err.message || "Unable to save the upload. Please check available browser storage and try again.");
     } finally {
       setUploadingPhoto(false);
-      if (e.target) e.target.value = "";
+      input.value = "";
     }
   };
 
@@ -477,6 +470,11 @@ export default function PetProfilePage() {
 
             {/* Action Buttons for Authorized Pet Parents */}
             <div className="flex flex-wrap items-center gap-2 self-stretch sm:self-center justify-end">
+              <PetMembershipActions pet={pet} userId={user?.id} onRefresh={fetchPet}
+                onCompleted={async () => {
+                  await refreshUser().catch(() => undefined);
+                  navigate("/profile", {replace: true});
+                }} />
               {permissions.can_manage_parents && (
                 <button
                   onClick={() => setShowParentModal(true)}
@@ -725,7 +723,7 @@ export default function PetProfilePage() {
                   <input
                     type="file"
                     ref={mediaInputRef}
-                    accept="image/*"
+                    accept="image/*,video/*"
                     onChange={handleMediaUpload}
                     className="hidden"
                   />
@@ -737,12 +735,12 @@ export default function PetProfilePage() {
                     {uploadingPhoto ? (
                       <>
                         <Loader2 size={13} className="animate-spin" />
-                        <span>Uploading...</span>
+                        <span>Saving upload...</span>
                       </>
                     ) : (
                       <>
                         <Plus size={14} />
-                        <span>Add Photo</span>
+                        <span>Add Photo or Video</span>
                       </>
                     )}
                   </button>

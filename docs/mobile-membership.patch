@@ -1,0 +1,97 @@
+diff --git a/Mobile/peto_user/lib/services/api_service.dart b/Mobile/peto_user/lib/services/api_service.dart
+index e870aa9..9c6a435 100644
+--- a/Mobile/peto_user/lib/services/api_service.dart
++++ b/Mobile/peto_user/lib/services/api_service.dart
+@@ -1539,6 +1539,12 @@ class ApiService {
+     }
+   }
+ 
++  Future<void> removePetMembership(String petId) async {
++    await _dio.delete('/pets/$petId/membership');
++  }
++  Future<void> transferPetOwnership(String petId, String userId) async {
++    await _dio.post('/pets/$petId/transfer-ownership', data: {'userId': userId});
++  }
+   /// Delete pet profile
+   Future<bool> deletePet(String petId) async {
+     try {
+diff --git a/Mobile/peto_user/lib/screens/pets/pet_profile_screen.dart b/Mobile/peto_user/lib/screens/pets/pet_profile_screen.dart
+index a7ecfcd..f02eadf 100644
+--- a/Mobile/peto_user/lib/screens/pets/pet_profile_screen.dart
++++ b/Mobile/peto_user/lib/screens/pets/pet_profile_screen.dart
+@@ -7,6 +7,7 @@ import '../../services/api_service.dart';
+ import '../../services/media_upload_helper.dart';
+ import '../../theme/app_theme.dart';
+ import '../../providers/auth_provider.dart';
++import '../../providers/post_provider.dart';
+ 
+ class PetProfileScreen extends StatefulWidget {
+   final String petId;
+@@ -82,6 +83,55 @@ class _PetProfileScreenState extends State<PetProfileScreen> with SingleTickerPr
+ 
+ 
+ 
++  Future<void> _leavePet(bool deleteEveryone, bool primary) async {
++    final pet = _pet!;
++    String? recipient;
++    if (primary && !deleteEveryone) {
++      final members = pet.parents.where((p) => !p.isPrimary && p.status == 'ACTIVE').toList();
++      if (members.isEmpty) {
++        await showDialog<void>(context: context, builder: (ctx) => AlertDialog(
++          title: const Text('Transfer ownership first'),
++          content: const Text('Invite another member and wait for acceptance before transferring ownership and leaving. You can also delete the pet for everyone.'),
++          actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK'))]));
++        return;
++      }
++      recipient = await showDialog<String>(context: context, builder: (ctx) => SimpleDialog(
++        title: const Text('Choose the new primary owner'), children: members.map((p) => SimpleDialogOption(
++          onPressed: () => Navigator.pop(ctx, p.userId), child: Text(p.fullName.isNotEmpty ? p.fullName : p.username))).toList()));
++      if (recipient == null || !mounted) return;
++    }
++    String typed = '';
++    final confirmed = await showDialog<bool>(context: context, builder: (ctx) => StatefulBuilder(builder: (ctx, update) => AlertDialog(
++      title: Text(deleteEveryone ? 'Delete pet for everyone?' : 'Remove from my account?'),
++      content: Column(mainAxisSize: MainAxisSize.min, children: [
++        Text(deleteEveryone ? 'All members will lose access. The pet will disappear from profiles and discovery. Posts and media are retained according to retention policy. Type DELETE to confirm.' : primary ? 'Primary ownership will transfer to the selected member, then this pet will be removed from your account. Other members retain access.' : 'Only your membership will be removed. Other members retain the pet.'),
++        if (deleteEveryone) TextField(onChanged: (v) => update(() => typed = v), decoration: const InputDecoration(labelText: 'Type DELETE')),
++      ]),
++      actions: [TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
++        FilledButton(onPressed: deleteEveryone && typed != 'DELETE' ? null : () => Navigator.pop(ctx, true), child: const Text('Confirm'))],
++    )));
++    if (confirmed != true || !mounted) return;
++    setState(() => _isActionLoading = true);
++    try {
++      if (deleteEveryone) {
++        if (!await _apiService.deletePet(pet.id)) throw Exception('Unable to delete pet. Please retry.');
++      } else {
++        if (recipient != null) await _apiService.transferPetOwnership(pet.id, recipient);
++        await _apiService.removePetMembership(pet.id);
++      }
++      if (!mounted) return;
++      await context.read<AuthProvider>().refreshUser();
++      if (!mounted) return;
++      await context.read<PostProvider>().fetchPosts(refresh: true);
++      if (mounted) Navigator.pop(context, true);
++    } catch (e) {
++      if (mounted) {
++        await _fetchPetDetails();
++        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Action failed: $e')));
++      }
++    } finally {if (mounted) setState(() => _isActionLoading = false);}
++  }
++
+   void _showEnlargedPhoto(String photoUrl) {
+     if (photoUrl.isEmpty) return;
+     showDialog(
+@@ -365,6 +415,11 @@ class _PetProfileScreenState extends State<PetProfileScreen> with SingleTickerPr
+                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+               ),
+               actions: [
++                if (pet.parents.any((p) => p.userId == currentUserId && p.status == 'ACTIVE'))
++                  PopupMenuButton<String>(enabled: !_isActionLoading, onSelected: (action) => _leavePet(action == 'delete', pet.parents.any((p) => p.userId == currentUserId && p.isPrimary)), itemBuilder: (_) => [
++                    const PopupMenuItem(value: 'leave', child: Text('Remove from my account')),
++                    if (pet.parents.any((p) => p.userId == currentUserId && p.isPrimary)) const PopupMenuItem(value: 'delete', child: Text('Delete pet for everyone')),
++                  ]),
+                 if (canManageParents)
+                   IconButton(
+                     icon: const Icon(Icons.person_add_alt_1_outlined),

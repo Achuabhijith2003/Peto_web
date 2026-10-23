@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { z } from "zod";
 import { requireAdminAuth, requirePermission, requireAnyPermission } from "./middleware/adminAuth.middleware";
 import { getAdminMe } from "./controllers/adminAuth.controller";
 import {
@@ -96,6 +97,8 @@ import {
 } from "../payments/payment.controller";
 import { adminRateLimiter } from "./middleware/adminRateLimiter.middleware";
 
+import { rbacAction } from "./services/adminManagement.service";
+import { AdminRequest } from "./middleware/adminAuth.middleware";
 const router = Router();
 
 // Protect admin control panel with rate limiting (120 req/min)
@@ -114,6 +117,18 @@ router.get("/dashboard", getDashboardOverview);
 router.get("/roles", requirePermission("roles.view"), getRoles);
 router.get("/permissions", requirePermission("roles.view"), getPermissions);
 
+for (const [method, path, action] of [["post","/roles","role_create"],["patch","/roles/:id","role_update"],["delete","/roles/:id","role_delete"]] as const) {
+ router[method](path,requirePermission("roles.manage"),async(req,res)=>{
+ try {
+ if (method !== "delete") {
+  const parsed = z.object({name:z.string().trim().min(1).max(50),description:z.string().max(2000).default(""),permissionIds:z.array(z.string().uuid()).max(1000)}).safeParse(req.body);
+  if (!parsed.success) {res.status(400).json({success:false,message:"A name, description and valid permission IDs are required"});return;}
+  req.body=parsed.data;
+ }
+ const data=await rbacAction((req as AdminRequest).admin!.userId,action,req.params.id ? String(req.params.id):null,req.body);res.status(method === "post" ? 201:200).json({success:true,data});}
+ catch(e:any){res.status(e.status || 500).json({success:false,message:e.message});}
+ });
+}
 // Administrator Management
 router.get("/admins", requirePermission("admins.view"), getAdmins);
 router.post("/admins", requirePermission("admins.create"), createAdmin);

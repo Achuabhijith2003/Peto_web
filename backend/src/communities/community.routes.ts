@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { validateUuidParams } from "../middleware/validateUuid.middleware";
 import { authenticate, optionalAuthenticate } from "../auth/auth.middleware";
 import {
     createCommunity,
@@ -30,6 +31,7 @@ import {
     lockCommunityPost,
 } from "./community.controller";
 
+import { assertCommunityLive } from "./community.service";
 const router = Router();
 
 /*
@@ -47,9 +49,15 @@ router.get("/suggestions", authenticate, getSuggestedCommunities);
 |--------------------------------------------------------------------------
 */
 router.post("/", authenticate, createCommunity);
+// Resolve live state for every nested surface. Deletion handles tombstone retries atomically.
+router.use("/:id", async (req,res,next) => {
+    if (req.method === "DELETE" && (req.path === "/" || req.path === "")) {next();return;}
+    try { await assertCommunityLive(String(req.params.id)); next(); }
+    catch (error:any) {res.status(error.status || 404).json({success:false,message:"Community not found."});}
+});
 router.get("/:id", optionalAuthenticate, getCommunity);
 router.patch("/:id", authenticate, updateCommunity);
-router.delete("/:id", authenticate, deleteCommunity);
+router.delete("/:id", authenticate, validateUuidParams("id"), deleteCommunity);
 
 /*
 |--------------------------------------------------------------------------
@@ -66,7 +74,7 @@ router.get("/:id/posts", optionalAuthenticate, getCommunityFeed);
 router.post("/:id/join", authenticate, joinCommunity);
 router.delete("/:id/membership", authenticate, leaveCommunity);
 router.get("/:id/members", optionalAuthenticate, getMembers);
-router.patch("/:id/members/:userId/role", authenticate, updateMemberRole);
+router.patch("/:id/members/:userId/role", authenticate, validateUuidParams(["id","userId"]), updateMemberRole);
 
 /*
 |--------------------------------------------------------------------------

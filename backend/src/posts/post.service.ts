@@ -108,7 +108,7 @@ export async function createPostService(
 
     if (error) {
         if (error.code === "23505" && data.clientPostId) {
-            const existing = await supabase.from("posts").select("*")
+            const existing = await supabase.from("posts").select("*").is("community_deleted_at", null)
                 .eq("id", data.clientPostId).eq("user_id", userId).maybeSingle();
             if (existing.error) throw existing.error;
             if (!existing.data || existing.data.text !== (text || "") ||
@@ -262,7 +262,7 @@ export async function getPostById(
                 verified
             ),
             media(*)
-        `)
+        `).is("community_deleted_at", null)
         .eq("id", postId)
         .maybeSingle();
 
@@ -339,7 +339,7 @@ export async function updatePostById(
 
     const { data: existing } = await supabase
         .from("posts")
-        .select("id, user_id, business_id")
+        .select("id, user_id, business_id").is("community_deleted_at", null)
         .eq("id", postId)
         .maybeSingle();
 
@@ -422,7 +422,7 @@ export async function deletePostById(
 
     const { data: post } = await supabase
         .from("posts")
-        .select("*")
+        .select("*").is("community_deleted_at", null)
         .eq("id", postId)
         .maybeSingle();
 
@@ -573,7 +573,7 @@ export async function getMyPostsService(
                 verified
             ),
             media(*)
-        `, { count: "exact" })
+        `, { count: "exact" }).is("community_deleted_at", null)
 
         .eq("user_id", userId)
 
@@ -701,7 +701,7 @@ export async function getUserPostsService(
                 verified
             ),
             media(*)
-        `, { count: "exact" })
+        `, { count: "exact" }).is("community_deleted_at", null)
         .eq("user_id", targetUserId)
         .eq("visibility", "public")
         .order("created_at", { ascending: false })
@@ -774,7 +774,7 @@ export async function getGlobalFeedService(
                 verified
             ),
             media(*)
-        `, { count: "exact" })
+        `, { count: "exact" }).is("community_deleted_at", null)
         .eq("visibility", "public")
         .order("created_at", { ascending: false })
         .range(from, to);
@@ -861,7 +861,7 @@ export async function searchPostsService(
                 verified
             ),
             media(*)
-        `, { count: "exact" })
+        `, { count: "exact" }).is("community_deleted_at", null)
         .ilike("text", `%${query}%`)
         .eq("visibility", "public")
         .order("created_at", { ascending: false })
@@ -933,7 +933,7 @@ export async function getReelsFeedService(
                 verified
             ),
             media!inner(*)
-        `, { count: "exact" })
+        `, { count: "exact" }).is("community_deleted_at", null)
         .eq("visibility", "public")
         .or("type.eq.video,url.ilike.%.mp4%,url.ilike.%posts-videos%", { foreignTable: "media" })
         .order("created_at", { ascending: false })
@@ -1054,7 +1054,7 @@ export async function getCommunityFeedService(
                 visibility
             ),
             media(*)
-        `, { count: "exact" })
+        `, { count: "exact" }).is("community_deleted_at", null)
         .eq("community_id", resolvedCommId);
 
     if (sort === "popular") {

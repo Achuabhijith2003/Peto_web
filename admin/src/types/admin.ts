@@ -5,6 +5,7 @@ export interface AdminRole {
   is_system: boolean;
   createdAt?: string;
   permissions?: AdminPermission[];
+  assigned_count?: number;
 }
 
 export interface AdminPermission {

@@ -99,7 +99,7 @@ export function requirePermission(...requiredPermissions: string[]) {
     }
 
     // Super Admin has unrestricted access
-    if (adminReq.admin.role.name === "Super Admin") {
+    if (adminReq.admin.role.is_system && adminReq.admin.role.name === "Super Admin") {
       return next();
     }
 
@@ -138,7 +138,7 @@ export function requireAnyPermission(...allowedPermissions: string[]) {
     }
 
     // Super Admin has unrestricted access
-    if (adminReq.admin.role.name === "Super Admin") {
+    if (adminReq.admin.role.is_system && adminReq.admin.role.name === "Super Admin") {
       return next();
     }
 

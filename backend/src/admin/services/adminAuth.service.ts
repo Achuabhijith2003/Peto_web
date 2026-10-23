@@ -55,7 +55,7 @@ export async function resolveAdminContext(userId: string): Promise<AdminSessionC
   // 4. Load assigned permissions
   let permissions: string[] = [];
 
-  if (roleRecord.name === "Super Admin") {
+  if (roleRecord.is_system && roleRecord.name === "Super Admin") {
     // Super Admin inherits all registered system permissions
     const { data: allPerms } = await supabase
       .from("admin_permissions")

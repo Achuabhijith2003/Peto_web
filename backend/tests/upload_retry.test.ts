@@ -12,10 +12,10 @@ test('stable media/post IDs recover lost responses without crossing account owne
     let insert: any;
     const q: any = {
       insert(value: any) { insert = value; return q; },
-      select() { return q; }, eq(key: string, value: any) { filters[key] = value; return q; },
+      select() { return q; }, is(key:string,value:any) {filters[key]=value;return q;}, eq(key: string, value: any) { filters[key] = value; return q; },
       async single() {
         if (tables[table].has(insert.id)) return { data: null, error: { code: '23505' } };
-        tables[table].set(insert.id, { ...insert });
+        tables[table].set(insert.id, { ...(table === "posts" ? {community_deleted_at:null} : {}), ...insert });
         return { data: { ...insert }, error: null };
       },
       async maybeSingle() {

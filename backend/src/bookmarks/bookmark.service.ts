@@ -154,7 +154,7 @@ export async function getBookmarksService(
 
     let countQuery = supabase
         .from("bookmarks")
-        .select("*", { count: "exact", head: true });
+        .select("*,posts!inner(id)", { count: "exact", head: true }).is("posts.community_deleted_at",null);
 
     if (businessId) {
         countQuery = countQuery.eq("business_id", businessId);
@@ -168,7 +168,7 @@ export async function getBookmarksService(
         .from("bookmarks")
         .select(`
             created_at,
-            posts(
+            posts!inner(
                 *,
                 profiles(
                     id,
@@ -188,6 +188,7 @@ export async function getBookmarksService(
     }
 
     const { data, error } = await dataQuery
+        .is("posts.community_deleted_at",null)
         .order("created_at", { ascending: false })
         .range(from, to);
 

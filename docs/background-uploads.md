@@ -81,3 +81,56 @@ instance memory and restart events.
 
 Platform references: [Android long-running workers](https://developer.android.com/develop/background-work/background-tasks/persistent/how-to/long-running)
 and [Workmanager platform setup](https://docs.page/fluttercommunity/flutter_workmanager/quickstart).
+
+# Pet profile gallery uploads — web and Flutter
+
+Selecting a photo or video on an existing pet profile now saves it to a background
+queue before releasing the picker. The screen remains usable and uploads continue
+while navigating elsewhere. Completion reloads the open pet gallery.
+
+Flutter reuses the existing PostUploadStore, Workmanager worker, notifications,
+account guard, media checkpoints, recovery and retry controls. A pet destination in
+the saved payload selects gallery attachment instead of post publication; no social
+post is created. Progress appears on the pet's Photos tab and in the Home upload
+queue. Existing saved post jobs remain compatible. Android/iOS lifecycle limits
+above still apply.
+
+Web saves file Blobs and job metadata in IndexedDB. An app-level queue displays
+transfer/processing/attachment states, failure messages, Retry and Dismiss while
+navigating across pages. Reopening Peto under the original account resumes saved
+work. Browser closure, suspension or discarded tabs pause execution; this does not
+use a service worker or promise uploads while the browser is closed. Keep a Peto
+tab open for active transfers. Storage must be available; clearing site data removes
+pending browser files. Files are released from the saved job after gallery attachment
+succeeds. Web Locks serialize tabs where supported; server idempotency protects
+retries as well.
+
+Both clients pin the queued account and recheck pet access before upload. Losing
+membership or deleting the pet prevents attachment; failed jobs require attention.
+`POST /api/pets/:id/media` accepts optional `client_pet_media_id` (UUID), uses it as
+the existing association primary key, and reuses that association on a matching
+retry. Media must belong to the authenticated uploader. Reusing the ID with a
+different pet/media/creator/role is rejected. Completed media uploads are checkpointed
+before attachment. No additional SQL migration is needed for this upload change;
+deploy the updated backend before the clients.
+
+## Pet-upload verification
+
+Executed: web production build, backend TypeScript build, 3 web queue tests,
+1 backend attachment retry test, and all 10 Flutter post/pet queue tests. Flutter
+analysis covers the changed queue, API, provider, widget, pet screen and tests.
+Real device backgrounding, browser quota/reload tests, multi-tab execution and
+live storage uploads still require staging checks.
+
+```powershell
+node_modules/.bin/tsx.cmd --test Frontend/Peto_user/tests/petUploadQueue.test.ts backend/tests/pet_media_retry.test.ts
+npm.cmd run build --prefix Frontend/Peto_user
+npm.cmd run build --prefix backend
+# From Mobile/peto_user:
+flutter test --no-pub test/post_upload_queue_test.dart
+```
+
+The parent repository ignores `Mobile/peto_user`. Changes are made in place and
+also packaged in `docs/mobile-background-uploads.patch` (six files, including tests).
+Apply it after `docs/mobile-membership.patch` when transferring the earlier pet
+management changes into a separate Flutter checkout.

@@ -89,7 +89,7 @@ export async function updateCommunity(req: Request, res: Response) {
         return res.status(200).json({ success: true, data });
     } catch (err: any) {
         console.error("updateCommunity error:", err);
-        return res.status(400).json({ success: false, message: err.message || "Failed to update community." });
+        return res.status(err.status || 400).json({ success: false, message: err.message || "Failed to update community." });
     }
 }
 
@@ -99,11 +99,11 @@ export async function deleteCommunity(req: Request, res: Response) {
         const id = req.params.id as string;
         if (!userId) return res.status(401).json({ success: false, message: "Unauthorized." });
 
-        const result = await deleteCommunityService(id, userId);
+        const result = await deleteCommunityService(id, userId, typeof req.body?.confirmation === "string" ? req.body.confirmation : null);
         return res.status(200).json(result);
     } catch (err: any) {
         console.error("deleteCommunity error:", err);
-        return res.status(400).json({ success: false, message: err.message || "Failed to delete community." });
+        return res.status(err.status || 400).json({ success: false, message: err.message || "Failed to delete community." });
     }
 }
 
@@ -123,7 +123,7 @@ export async function joinCommunity(req: Request, res: Response) {
         return res.status(200).json({ success: true, ...result });
     } catch (err: any) {
         console.error("joinCommunity error:", err);
-        return res.status(400).json({ success: false, message: err.message || "Failed to join community." });
+        return res.status(err.status || 400).json({ success: false, message: err.message || "Failed to join community." });
     }
 }
 
@@ -137,7 +137,7 @@ export async function leaveCommunity(req: Request, res: Response) {
         return res.status(200).json(result);
     } catch (err: any) {
         console.error("leaveCommunity error:", err);
-        return res.status(400).json({ success: false, message: err.message || "Failed to leave community." });
+        return res.status(err.status || 400).json({ success: false, message: err.message || "Failed to leave community." });
     }
 }
 
@@ -172,7 +172,7 @@ export async function updateMemberRole(req: Request, res: Response) {
         return res.status(200).json({ success: true, data });
     } catch (err: any) {
         console.error("updateMemberRole error:", err);
-        return res.status(400).json({ success: false, message: err.message || "Failed to update role." });
+        return res.status(err.status || 400).json({ success: false, message: err.message || "Failed to update role." });
     }
 }
 
@@ -192,7 +192,7 @@ export async function getJoinRequests(req: Request, res: Response) {
         return res.status(200).json({ success: true, data });
     } catch (err: any) {
         console.error("getJoinRequests error:", err);
-        return res.status(400).json({ success: false, message: err.message || "Failed to get requests." });
+        return res.status(err.status || 400).json({ success: false, message: err.message || "Failed to get requests." });
     }
 }
 
@@ -207,7 +207,7 @@ export async function approveJoinRequest(req: Request, res: Response) {
         return res.status(200).json(result);
     } catch (err: any) {
         console.error("approveJoinRequest error:", err);
-        return res.status(400).json({ success: false, message: err.message || "Failed to approve request." });
+        return res.status(err.status || 400).json({ success: false, message: err.message || "Failed to approve request." });
     }
 }
 
@@ -222,7 +222,7 @@ export async function rejectJoinRequest(req: Request, res: Response) {
         return res.status(200).json(result);
     } catch (err: any) {
         console.error("rejectJoinRequest error:", err);
-        return res.status(400).json({ success: false, message: err.message || "Failed to reject request." });
+        return res.status(err.status || 400).json({ success: false, message: err.message || "Failed to reject request." });
     }
 }
 
@@ -258,7 +258,7 @@ export async function createRule(req: Request, res: Response) {
         return res.status(201).json({ success: true, data });
     } catch (err: any) {
         console.error("createRule error:", err);
-        return res.status(400).json({ success: false, message: err.message || "Failed to create rule." });
+        return res.status(err.status || 400).json({ success: false, message: err.message || "Failed to create rule." });
     }
 }
 
@@ -278,7 +278,7 @@ export async function updateRule(req: Request, res: Response) {
         return res.status(200).json({ success: true, data });
     } catch (err: any) {
         console.error("updateRule error:", err);
-        return res.status(400).json({ success: false, message: err.message || "Failed to update rule." });
+        return res.status(err.status || 400).json({ success: false, message: err.message || "Failed to update rule." });
     }
 }
 
@@ -293,7 +293,7 @@ export async function deleteRule(req: Request, res: Response) {
         return res.status(200).json(result);
     } catch (err: any) {
         console.error("deleteRule error:", err);
-        return res.status(400).json({ success: false, message: err.message || "Failed to delete rule." });
+        return res.status(err.status || 400).json({ success: false, message: err.message || "Failed to delete rule." });
     }
 }
 
@@ -370,7 +370,7 @@ export async function getCommunityFeed(req: Request, res: Response) {
         return res.status(200).json({ success: true, data });
     } catch (err: any) {
         console.error("getCommunityFeed error:", err);
-        return res.status(400).json({ success: false, message: err.message || "Failed to fetch community feed." });
+        return res.status(err.status || 400).json({ success: false, message: err.message || "Failed to fetch community feed." });
     }
 }
 
@@ -395,7 +395,7 @@ export async function createReport(req: Request, res: Response) {
         return res.status(201).json({ success: true, data, message: "Report submitted to community moderators." });
     } catch (err: any) {
         console.error("createReport error:", err);
-        return res.status(400).json({ success: false, message: err.message || "Failed to create report." });
+        return res.status(err.status || 400).json({ success: false, message: err.message || "Failed to create report." });
     }
 }
 
@@ -409,7 +409,7 @@ export async function getReports(req: Request, res: Response) {
         return res.status(200).json({ success: true, data });
     } catch (err: any) {
         console.error("getReports error:", err);
-        return res.status(400).json({ success: false, message: err.message || "Failed to get reports." });
+        return res.status(err.status || 400).json({ success: false, message: err.message || "Failed to get reports." });
     }
 }
 
@@ -429,7 +429,7 @@ export async function updateReport(req: Request, res: Response) {
         return res.status(200).json({ success: true, data });
     } catch (err: any) {
         console.error("updateReport error:", err);
-        return res.status(400).json({ success: false, message: err.message || "Failed to update report." });
+        return res.status(err.status || 400).json({ success: false, message: err.message || "Failed to update report." });
     }
 }
 
@@ -454,7 +454,7 @@ export async function banUser(req: Request, res: Response) {
         return res.status(200).json({ success: true, data, message: "User banned from community." });
     } catch (err: any) {
         console.error("banUser error:", err);
-        return res.status(400).json({ success: false, message: err.message || "Failed to ban user." });
+        return res.status(err.status || 400).json({ success: false, message: err.message || "Failed to ban user." });
     }
 }
 
@@ -469,7 +469,7 @@ export async function unbanUser(req: Request, res: Response) {
         return res.status(200).json(result);
     } catch (err: any) {
         console.error("unbanUser error:", err);
-        return res.status(400).json({ success: false, message: err.message || "Failed to unban user." });
+        return res.status(err.status || 400).json({ success: false, message: err.message || "Failed to unban user." });
     }
 }
 
@@ -483,7 +483,7 @@ export async function getBans(req: Request, res: Response) {
         return res.status(200).json({ success: true, data });
     } catch (err: any) {
         console.error("getBans error:", err);
-        return res.status(400).json({ success: false, message: err.message || "Failed to get bans." });
+        return res.status(err.status || 400).json({ success: false, message: err.message || "Failed to get bans." });
     }
 }
 
@@ -498,7 +498,7 @@ export async function deleteCommunityPost(req: Request, res: Response) {
         return res.status(200).json(result);
     } catch (err: any) {
         console.error("deleteCommunityPost error:", err);
-        return res.status(400).json({ success: false, message: err.message || "Failed to delete post." });
+        return res.status(err.status || 400).json({ success: false, message: err.message || "Failed to delete post." });
     }
 }
 
@@ -513,6 +513,6 @@ export async function lockCommunityPost(req: Request, res: Response) {
         return res.status(200).json(result);
     } catch (err: any) {
         console.error("lockCommunityPost error:", err);
-        return res.status(400).json({ success: false, message: err.message || "Failed to lock/unlock post." });
+        return res.status(err.status || 400).json({ success: false, message: err.message || "Failed to lock/unlock post." });
     }
 }

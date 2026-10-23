@@ -467,7 +467,7 @@ export class BusinessService {
         media(*)
       `,
         { count: "exact" }
-      )
+      ).is("community_deleted_at", null)
       .eq("business_id", businessId)
       .eq("visibility", "public")
       .order("created_at", { ascending: false })

@@ -1,7 +1,6 @@
 import { Request } from "express";
 import { supabase } from "../../config/supabase";
 import { AdminSessionContext, CreateAdminInput, UpdateAdminInput } from "../admin.types";
-import { createAuditLog } from "./adminAudit.service";
 
 /**
  * Fetch paginated list of administrators
@@ -78,91 +77,7 @@ export async function createAdminService(
   currentAdmin: AdminSessionContext,
   req?: Request
 ) {
-  const { userId, roleId } = input;
-
-  if (!userId || !roleId) {
-    throw new Error("Both userId and roleId are required.");
-  }
-
-  // 1. Verify user profile exists
-  const { data: userProfile, error: profileErr } = await supabase
-    .from("profiles")
-    .select("id, username, full_name")
-    .eq("id", userId)
-    .single();
-
-  if (profileErr || !userProfile) {
-    throw new Error("Target user profile was not found.");
-  }
-
-  // 2. Check if already an admin
-  const { data: existingAdmin } = await supabase
-    .from("admin_users")
-    .select("id")
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (existingAdmin) {
-    throw new Error("User already holds an administrative role.");
-  }
-
-  // 3. Verify role exists
-  const { data: roleData, error: roleErr } = await supabase
-    .from("admin_roles")
-    .select("id, name")
-    .eq("id", roleId)
-    .single();
-
-  if (roleErr || !roleData) {
-    throw new Error("Target administrative role not found.");
-  }
-
-  // Prevent non-Super Admin from granting the Super Admin role
-  if (roleData.name === "Super Admin" && currentAdmin.role.name !== "Super Admin") {
-    throw new Error("Forbidden: Only a Super Admin can assign the Super Admin role.");
-  }
-
-  // 4. Create admin user
-  const { data: newAdmin, error: insertErr } = await supabase
-    .from("admin_users")
-    .insert({
-      user_id: userId,
-      role_id: roleId,
-      is_active: true,
-      invited_by: currentAdmin.userId,
-    })
-    .select(`
-      id,
-      user_id,
-      role_id,
-      is_active,
-      created_at
-    `)
-    .single();
-
-  if (insertErr) {
-    throw insertErr;
-  }
-
-  // 5. Audit Log
-  await createAuditLog(
-    {
-      adminId: currentAdmin.id,
-      adminUserId: currentAdmin.userId,
-      action: "ADMIN_CREATED",
-      resourceType: "admin_user",
-      resourceId: newAdmin.id,
-      details: {
-        targetUserId: userId,
-        targetUsername: userProfile.username,
-        roleId,
-        roleName: roleData.name,
-      },
-    },
-    req
-  );
-
-  return newAdmin;
+  return rbacAction(currentAdmin.userId, "admin_create", null, input);
 }
 
 /**
@@ -174,99 +89,7 @@ export async function updateAdminService(
   currentAdmin: AdminSessionContext,
   req?: Request
 ) {
-  // 1. Fetch current admin record
-  const { data: targetAdmin, error: findErr } = await supabase
-    .from("admin_users")
-    .select(`
-      id,
-      user_id,
-      role_id,
-      is_active,
-      role:admin_roles(name)
-    `)
-    .eq("id", adminId)
-    .single();
-
-  if (findErr || !targetAdmin) {
-    throw new Error("Administrator record not found.");
-  }
-
-  // Prevent self-deactivation if caller is modifying themselves
-  if (targetAdmin.id === currentAdmin.id && input.isActive === false) {
-    throw new Error("Administrators cannot deactivate their own account.");
-  }
-
-  // Prevent self-privilege escalation (cannot modify own role)
-  if (
-    targetAdmin.id === currentAdmin.id &&
-    input.roleId !== undefined &&
-    input.roleId !== targetAdmin.role_id
-  ) {
-    throw new Error("Administrators cannot alter or elevate their own administrative role.");
-  }
-
-  // Restrict granting the Super Admin role strictly to existing Super Admins
-  if (input.roleId !== undefined && input.roleId !== targetAdmin.role_id) {
-    const { data: targetRole } = await supabase
-      .from("admin_roles")
-      .select("id, name")
-      .eq("id", input.roleId)
-      .single();
-
-    if (targetRole?.name === "Super Admin" && currentAdmin.role.name !== "Super Admin") {
-      throw new Error("Forbidden: Only a Super Admin can grant the Super Admin role.");
-    }
-  }
-
-  const updates: Record<string, any> = {
-    updated_at: new Date().toISOString(),
-  };
-
-  if (input.roleId !== undefined) {
-    updates.role_id = input.roleId;
-  }
-
-  if (input.isActive !== undefined) {
-    updates.is_active = input.isActive;
-  }
-
-  const { data: updatedAdmin, error: updateErr } = await supabase
-    .from("admin_users")
-    .update(updates)
-    .eq("id", adminId)
-    .select(`
-      id,
-      user_id,
-      role_id,
-      is_active,
-      updated_at
-    `)
-    .single();
-
-  if (updateErr) {
-    throw updateErr;
-  }
-
-  // 2. Audit Log
-  await createAuditLog(
-    {
-      adminId: currentAdmin.id,
-      adminUserId: currentAdmin.userId,
-      action: input.roleId ? "ROLE_CHANGED" : "ADMIN_UPDATED",
-      resourceType: "admin_user",
-      resourceId: adminId,
-      details: {
-        previousState: {
-          roleId: targetAdmin.role_id,
-          isActive: targetAdmin.is_active,
-        },
-        newState: input,
-      },
-    },
-    req
-  );
-
-  return updatedAdmin;
+  return rbacAction(currentAdmin.userId, "admin_update", adminId, input);
 }
 
 /**
@@ -277,45 +100,7 @@ export async function deleteAdminService(
   currentAdmin: AdminSessionContext,
   req?: Request
 ) {
-  if (adminId === currentAdmin.id) {
-    throw new Error("You cannot revoke your own administrator account.");
-  }
-
-  const { data: targetAdmin, error: findErr } = await supabase
-    .from("admin_users")
-    .select("id, user_id, role_id")
-    .eq("id", adminId)
-    .single();
-
-  if (findErr || !targetAdmin) {
-    throw new Error("Administrator record not found.");
-  }
-
-  const { error: deleteErr } = await supabase
-    .from("admin_users")
-    .delete()
-    .eq("id", adminId);
-
-  if (deleteErr) {
-    throw deleteErr;
-  }
-
-  await createAuditLog(
-    {
-      adminId: currentAdmin.id,
-      adminUserId: currentAdmin.userId,
-      action: "ADMIN_REMOVED",
-      resourceType: "admin_user",
-      resourceId: adminId,
-      details: {
-        revokedUserId: targetAdmin.user_id,
-        previousRoleId: targetAdmin.role_id,
-      },
-    },
-    req
-  );
-
-  return { success: true, message: "Administrator access revoked successfully." };
+  await rbacAction(currentAdmin.userId, "admin_delete", adminId); return {success:true};
 }
 
 /**
@@ -330,6 +115,7 @@ export async function getAllRolesService() {
       description,
       is_system,
       created_at,
+      admin_users(count),
       admin_role_permissions (
         admin_permissions (
           id,
@@ -354,6 +140,7 @@ export async function getAllRolesService() {
     description: role.description,
     is_system: role.is_system,
     createdAt: role.created_at,
+    assigned_count: role.admin_users?.[0]?.count || 0,
     permissions: (role.admin_role_permissions || [])
       .map((rp: any) => rp.admin_permissions)
       .filter(Boolean),
@@ -378,4 +165,10 @@ export async function getAllPermissionsService() {
   }
 
   return permissions || [];
+}
+
+export async function rbacAction(actor: string, action: string, id: string | null, input: unknown = {}) {
+ const {data,error} = await supabase.rpc("admin_rbac_action",{p_actor:actor,p_action:action,p_id:id,p_input:input});
+ if(error) throw Object.assign(new Error(error.message),{status:error.code === "42501" ? 403 : error.code === "P0002" ? 404 : error.code === "23505" ? 409 : 400});
+ return data;
 }

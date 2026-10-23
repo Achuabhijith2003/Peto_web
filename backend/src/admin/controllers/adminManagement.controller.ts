@@ -55,7 +55,7 @@ export async function createAdmin(req: Request, res: Response) {
     });
   } catch (err: any) {
     console.error("[createAdmin] Error:", err);
-    return res.status(400).json({
+    return res.status(err.status || 400).json({
       success: false,
       message: err.message || "Failed to create administrator.",
     });
@@ -96,7 +96,7 @@ export async function updateAdmin(req: Request, res: Response) {
     });
   } catch (err: any) {
     console.error("[updateAdmin] Error:", err);
-    return res.status(400).json({
+    return res.status(err.status || 400).json({
       success: false,
       message: err.message || "Failed to update administrator.",
     });
@@ -119,7 +119,7 @@ export async function deleteAdmin(req: Request, res: Response) {
     return res.status(200).json(result);
   } catch (err: any) {
     console.error("[deleteAdmin] Error:", err);
-    return res.status(400).json({
+    return res.status(err.status || 400).json({
       success: false,
       message: err.message || "Failed to revoke administrator access.",
     });

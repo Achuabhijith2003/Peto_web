@@ -1,0 +1,360 @@
+diff --git a/Mobile/peto_user/lib/services/api_service.dart b/Mobile/peto_user/lib/services/api_service.dart
+index 9c6a435..b805609 100644
+--- a/Mobile/peto_user/lib/services/api_service.dart
++++ b/Mobile/peto_user/lib/services/api_service.dart
+@@ -1655,6 +1655,20 @@ class ApiService {
+     }
+   }
+ 
++  Future<void> verifyPetMediaUpload(String petId) async {
++    final response = await _dio.get('/pets/$petId');
++    final data = response.data['data'];
++    if (data?['viewer_permissions']?['can_upload_media'] != true) {
++      throw StateError('You no longer have permission to upload to this pet.');
++    }
++  }
++
++  Future<void> attachQueuedPetMedia(String petId, String mediaId, String requestId) async {
++    await _dio.post('/pets/$petId/media', data: {
++      'media_id': mediaId, 'client_pet_media_id': requestId, 'role': 'GALLERY',
++    });
++  }
++
+   /// Attach an uploaded media item to a pet's gallery or profile
+   Future<bool> addPetMedia(
+     String petId, {
+diff --git a/Mobile/peto_user/lib/screens/pets/pet_profile_screen.dart b/Mobile/peto_user/lib/screens/pets/pet_profile_screen.dart
+index f02eadf..a72d0b6 100644
+--- a/Mobile/peto_user/lib/screens/pets/pet_profile_screen.dart
++++ b/Mobile/peto_user/lib/screens/pets/pet_profile_screen.dart
+@@ -8,6 +8,8 @@ import '../../services/media_upload_helper.dart';
+ import '../../theme/app_theme.dart';
+ import '../../providers/auth_provider.dart';
+ import '../../providers/post_provider.dart';
++import '../../providers/post_upload_provider.dart';
++import '../../widgets/home_upload_queue.dart';
+ 
+ class PetProfileScreen extends StatefulWidget {
+   final String petId;
+@@ -27,6 +29,26 @@ class _PetProfileScreenState extends State<PetProfileScreen> with SingleTickerPr
+   late TabController _tabController;
+   final ApiService _apiService = ApiService();
+ 
++  PostUploadProvider? _uploadQueue;
++  final Set<String> _completedPetUploads = {};
++  @override
++  void didChangeDependencies() {
++    super.didChangeDependencies();
++    final queue = context.read<PostUploadProvider>();
++    if (_uploadQueue != queue) {
++      _uploadQueue?.removeListener(_onPetUploadsChanged);
++      _uploadQueue = queue;
++      queue.addListener(_onPetUploadsChanged);
++    }
++  }
++  void _onPetUploadsChanged() {
++    if (!mounted) return;
++    final owner = context.read<AuthProvider>().user?.id;
++    final completed = _uploadQueue!.jobs.where((j) => j.ownerId == owner && j.petId == widget.petId && j.state == 'complete');
++    var changed = false;
++    for (final job in completed) { if (_completedPetUploads.add(job.id)) changed = true; }
++    if (changed) _fetchPetDetails();
++  }
+   Pet? _pet;
+   bool _isLoading = true;
+   String? _errorMessage;
+@@ -46,6 +68,7 @@ class _PetProfileScreenState extends State<PetProfileScreen> with SingleTickerPr
+ 
+   @override
+   void dispose() {
++    _uploadQueue?.removeListener(_onPetUploadsChanged);
+     _tabController.dispose();
+     super.dispose();
+   }
+@@ -237,52 +260,24 @@ class _PetProfileScreenState extends State<PetProfileScreen> with SingleTickerPr
+ 
+   Future<void> _uploadGalleryPhoto() async {
+     final pet = _pet;
+-    if (pet == null) return;
+-
+-    final uploadResult = await MediaUploadHelper.showPickerAndUpload(
+-      context,
+-      title: 'Add to Showcase (Photo / Video)',
+-      allowVideo: true,
+-    );
+-
+-    if (uploadResult != null && (uploadResult.mediaId != null || uploadResult.uploadedUrl != null)) {
+-      setState(() => _isUploadingPhoto = true);
+-      try {
+-        final success = await _apiService.addPetMedia(
+-          pet.id,
+-          mediaId: uploadResult.mediaId ?? '',
+-          mediaUrl: uploadResult.uploadedUrl,
+-          role: 'GALLERY',
+-        );
+-
+-        if (success && mounted) {
+-          ScaffoldMessenger.of(context).showSnackBar(
+-            SnackBar(
+-              content: Text(uploadResult.isVideo
+-                  ? 'Video added to pet showcase!'
+-                  : 'Photo added to pet showcase!'),
+-              backgroundColor: Colors.green,
+-            ),
+-          );
+-          _fetchPetDetails();
+-        } else if (mounted) {
+-          ScaffoldMessenger.of(context).showSnackBar(
+-            const SnackBar(
+-              content: Text('Failed to link media to gallery.'),
+-              backgroundColor: AppColors.error,
+-            ),
+-          );
+-        }
+-      } catch (e) {
+-        if (mounted) {
+-          ScaffoldMessenger.of(context).showSnackBar(
+-            SnackBar(content: Text('Upload error: $e'), backgroundColor: AppColors.error),
+-          );
+-        }
+-      } finally {
+-        if (mounted) setState(() => _isUploadingPhoto = false);
++    final owner = context.read<AuthProvider>().user?.id;
++    if (pet == null || owner == null || _isUploadingPhoto) return;
++    final selection = await MediaUploadHelper.showPickerAndUpload(context,
++      title: 'Add to Showcase (Photo / Video)', allowVideo: true, uploadImmediately: false);
++    if (selection == null || !mounted) return;
++    setState(() => _isUploadingPhoto = true);
++    try {
++      await context.read<PostUploadProvider>().enqueue(ownerId: owner, identityType: 'PERSON',
++        payload: {'_petMedia': {'id': pet.id, 'name': pet.name}}, media: [selection]);
++      if (mounted) {
++        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
++          content: Text('Upload saved. You can keep browsing; progress is shown below and on Home.')));
+       }
+-    }
++    } catch (e) {
++      if (mounted) {
++        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Unable to queue upload: $e')));
++      }
++    } finally { if (mounted) setState(() => _isUploadingPhoto = false); }
+   }
+ 
+   void _showInviteCoParentSheet() {
+@@ -911,6 +906,14 @@ class _PetProfileScreenState extends State<PetProfileScreen> with SingleTickerPr
+   // TAB 2: GALLERY
+   // ----------------------------------------------------
+   Widget _buildGalleryTab(Pet pet, bool canUpload) {
++    return Column(children: [
++      ConstrainedBox(constraints: const BoxConstraints(maxHeight: 220),
++        child: SingleChildScrollView(child: HomeUploadQueue(petId: pet.id))),
++      Expanded(child: _buildGalleryContents(pet, canUpload)),
++    ]);
++  }
++
++  Widget _buildGalleryContents(Pet pet, bool canUpload) {
+     final mediaList = pet.media;
+ 
+     if (mediaList.isEmpty) {
+diff --git a/Mobile/peto_user/lib/services/post_upload_queue.dart b/Mobile/peto_user/lib/services/post_upload_queue.dart
+index 1e5d66e..eeb1d94 100644
+--- a/Mobile/peto_user/lib/services/post_upload_queue.dart
++++ b/Mobile/peto_user/lib/services/post_upload_queue.dart
+@@ -31,14 +31,14 @@ String uploadFailureMessage(Object error) {
+       return error.error as String;
+     }
+     if (error.response?.statusCode != null) {
+-      return 'The server could not finish your post (HTTP ${error.response!.statusCode}). Your post is saved.';
++      return 'The server could not finish your post (HTTP ${error.response!.statusCode}). Your upload is saved.';
+     }
+     if (error.type == DioExceptionType.receiveTimeout) {
+-      return 'The server response timed out. Your post is saved for recovery.';
++      return 'The server response timed out. Your upload is saved for recovery.';
+     }
+-    return 'The connection was interrupted. Your post is saved for retry.';
++    return 'The connection was interrupted. Your upload is saved for retry.';
+   }
+-  return 'Unable to finish uploading. Your post is saved. Please retry.';
++  return 'Unable to finish uploading. Your upload is saved. Please retry.';
+ }
+ 
+ class QueuedPost {
+@@ -70,12 +70,15 @@ class QueuedPost {
+     this.attempts = 0,
+   });
+ 
++  bool get isPetMedia => payload['_petMedia'] is Map;
++  String? get petId => isPetMedia ? payload['_petMedia']['id'] as String? : null;
++  String get subject => isPetMedia ? 'Pet gallery upload' : 'Post upload';
+   bool get terminal =>
+       state == 'complete' || state == 'failed' || state == 'login';
+   bool get processing =>
+       state == 'processing' || state == 'publishing' || state == 'checking';
+   String get statusHint => state == 'retrying'
+-      ? 'Your post is saved. We will retry automatically when the connection or server recovers.'
++      ? 'Your upload is saved. We will retry automatically when the connection or server recovers.'
+       : state == 'checking'
+       ? 'File transferred. Checking whether the server has finished preparing it. You can leave the app.'
+       : processing
+@@ -248,8 +251,8 @@ class UploadNotifications {
+     await plugin.show(
+       id: done ? 7402 : 7401,
+       title: job.state == 'complete'
+-          ? 'Your post is published'
+-          : 'Peto post upload',
++          ? (job.isPetMedia ? 'Pet gallery updated' : 'Your post is published')
++          : 'Peto media upload',
+       body:
+           job.error ??
+           '${job.label} (${(job.progress * 100).floor()}% transferred)',
+@@ -360,6 +363,7 @@ Future<bool> runQueuedPost(
+ 
+     job.attempts++;
+     try {
++      if (job.isPetMedia) await api.verifyPetMediaUpload(job.petId!);
+       for (var i = 0; i < job.media.length; i++) {
+         final item = job.media[i];
+         if (item['mediaId'] != null) continue;
+@@ -435,18 +439,27 @@ Future<bool> runQueuedPost(
+         await report();
+       }
+       job.state = 'publishing';
+-      job.label = 'Publishing your post';
++      job.label = job.isPetMedia ? 'Adding media to pet gallery' : 'Publishing your post';
+       job.progress = 1;
+       await report();
+-      final response = await api.createPost({
+-        ...job.payload,
+-        'media': job.media.map((m) => m['mediaId']).toList(),
+-      });
+-      if (response.data is Map && response.data['success'] == false) {
+-        throw StateError(response.data['message'] ?? 'Unable to publish post');
++      if (job.isPetMedia) {
++        for (final item in job.media) {
++          if (item['linked'] == true) continue;
++          await api.attachQueuedPetMedia(job.petId!, item['mediaId'], item['uploadId']);
++          item['linked'] = true;
++          await report();
++        }
++      } else {
++        final response = await api.createPost({
++          ...job.payload,
++          'media': job.media.map((m) => m['mediaId']).toList(),
++        });
++        if (response.data is Map && response.data['success'] == false) {
++          throw StateError(response.data['message'] ?? 'Unable to publish post');
++        }
+       }
+       job.state = 'complete';
+-      job.label = 'Your post is published';
++      job.label = job.isPetMedia ? 'Pet gallery updated' : 'Your post is published';
+       await report();
+       try {
+         await store.removeMedia(job);
+@@ -495,7 +508,7 @@ Future<void> scheduleQueuedPost(String id) async {
+       backoffPolicy: BackoffPolicy.exponential,
+       backoffPolicyDelay: const Duration(seconds: 30),
+       foregroundServiceConfig: ForegroundServiceConfig(
+-        notificationTitle: 'Peto post upload',
++        notificationTitle: 'Peto media upload',
+         notificationText: 'Uploading your post in the background',
+         notificationChannelId: 'peto_uploads',
+         notificationChannelName: 'Post uploads',
+diff --git a/Mobile/peto_user/lib/providers/post_upload_provider.dart b/Mobile/peto_user/lib/providers/post_upload_provider.dart
+index 7204982..d6abeb1 100644
+--- a/Mobile/peto_user/lib/providers/post_upload_provider.dart
++++ b/Mobile/peto_user/lib/providers/post_upload_provider.dart
+@@ -85,7 +85,7 @@ class PostUploadProvider extends ChangeNotifier with WidgetsBindingObserver {
+     } catch (error) {
+       job.state = 'failed';
+       job.label = 'Could not start background upload';
+-      job.error = 'Your post is saved. Tap Retry to schedule it again.';
++      job.error = 'Your upload is saved. Tap Retry to schedule it again.';
+       await _store.save(job);
+     }
+     await refresh();
+diff --git a/Mobile/peto_user/lib/widgets/home_upload_queue.dart b/Mobile/peto_user/lib/widgets/home_upload_queue.dart
+index 5ca4b40..126645a 100644
+--- a/Mobile/peto_user/lib/widgets/home_upload_queue.dart
++++ b/Mobile/peto_user/lib/widgets/home_upload_queue.dart
+@@ -4,12 +4,13 @@ import '../providers/auth_provider.dart';
+ import '../providers/post_upload_provider.dart';
+ 
+ class HomeUploadQueue extends StatelessWidget {
+-  const HomeUploadQueue({super.key});
++  final String? petId;
++  const HomeUploadQueue({super.key, this.petId});
+   @override
+   Widget build(BuildContext context) {
+     final owner = context.watch<AuthProvider>().user?.id;
+     final queue = context.watch<PostUploadProvider>();
+-    final jobs = queue.jobs.where((job) => job.ownerId == owner).toList();
++    final jobs = queue.jobs.where((job) => job.ownerId == owner && (petId == null || job.petId == petId)).toList();
+     return Column(
+       children: jobs
+           .map(
+@@ -30,7 +31,7 @@ class HomeUploadQueue extends StatelessWidget {
+                         const SizedBox(width: 10),
+                         Expanded(
+                           child: Text(
+-                            job.label,
++                            job.isPetMedia ? '${job.subject}: ${job.label}' : job.label,
+                             style: const TextStyle(fontWeight: FontWeight.w600),
+                           ),
+                         ),
+diff --git a/Mobile/peto_user/test/post_upload_queue_test.dart b/Mobile/peto_user/test/post_upload_queue_test.dart
+index 9672318..8815549 100644
+--- a/Mobile/peto_user/test/post_upload_queue_test.dart
++++ b/Mobile/peto_user/test/post_upload_queue_test.dart
+@@ -44,6 +44,51 @@ void main() {
+     );
+   }
+ 
++  test('pet gallery job persists and retries attachment without creating a post', () async {
++    final job = await createJob();
++    job.payload['_petMedia'] = {'id': 'pet', 'name': 'Poppy'};
++    await store.save(job);
++    expect((await PostUploadStore(store.root).read(job.id))!.petId, 'pet');
++    final api = ApiService();
++    var uploads = 0;
++    var attachments = 0;
++    api.client.httpClientAdapter = StubAdapter((options, bytes) async {
++      if (options.path.startsWith('/media/status/')) return jsonResponse(404, {'success': false});
++      if (options.path == '/pets/pet') return jsonResponse(200, {'data': {'viewer_permissions': {'can_upload_media': true}}});
++      if (options.path == '/media/upload') {
++        uploads++;
++        return jsonResponse(201, {'success': true, 'mediaId': 'media-id', 'mediaUrl': 'https://example.com/video.mp4'});
++      }
++      expect(options.path, '/pets/pet/media');
++      attachments++;
++      expect(options.data['client_pet_media_id'], job.media.single['uploadId']);
++      expect(options.data['media_id'], 'media-id');
++      return jsonResponse(attachments == 1 ? 503 : 201, {'success': attachments != 1});
++    });
++    expect(await runQueuedPost(store, job.id, apiOverride: api, notificationsOverride: SilentNotifications()), false);
++    expect((await store.read(job.id))!.media.single['mediaId'], 'media-id');
++    expect(await runQueuedPost(store, job.id, apiOverride: api, notificationsOverride: SilentNotifications()), true);
++    expect(uploads, 1);
++    expect(attachments, 2);
++    expect((await store.read(job.id))!.state, 'complete');
++  });
++
++  test('pet access revoked before worker execution prevents upload', () async {
++    final job = await createJob();
++    job.payload['_petMedia'] = {'id': 'pet'};
++    await store.save(job);
++    final api = ApiService();
++    var requests = 0;
++    api.client.httpClientAdapter = StubAdapter((options, bytes) async {
++      requests++;
++      expect(options.path, '/pets/pet');
++      return jsonResponse(200, {'data': {'viewer_permissions': {'can_upload_media': false}}});
++    });
++    expect(await runQueuedPost(store, job.id, apiOverride: api, notificationsOverride: SilentNotifications()), true);
++    expect(requests, 1);
++    expect((await store.read(job.id))!.state, 'failed');
++  });
++
+   test(
+     'queue survives picker-cache removal and a new store instance',
+     () async {

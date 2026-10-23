@@ -20,7 +20,18 @@ import {
   getPetMediaAccessHandler,
 } from "./pet.controller";
 
+import { petLifecycle } from "./pet.service";
 const router = Router();
+router.post("/:id/transfer-ownership", authenticate, validateUuidParams("id"), async (req, res) => {
+ try {
+ if(typeof req.body.userId !== "string" || !/^[0-9a-f-]{36}$/i.test(req.body.userId)) {res.status(400).json({success:false,message:"Valid userId required"});return;}
+ await petLifecycle(String(req.params.id),(req as any).user.id,"transfer",req.body.userId);res.json({success:true});
+ } catch(e:any) {res.status(e.status || 500).json({success:false,message:e.message});}
+});
+router.delete("/:id/membership", authenticate, validateUuidParams("id"), async (req,res)=>{
+ try {await petLifecycle(String(req.params.id),(req as any).user.id,"remove",(req as any).user.id);res.json({success:true});}
+ catch(e:any){res.status(e.status || 500).json({success:false,message:e.message});}
+});
 
 // Pet Creation & My Pets
 router.post("/", authenticate, createPetHandler);
